@@ -1,16 +1,35 @@
-# React + Vite
+# Agency Client Portal Aggregator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Client-facing portal layer for marketing agencies. The product aggregates client status, progress, visible tasks, dashboard links, monthly summaries, and needed client actions without replacing analytics, CRM, reporting, or project-management tools.
 
-Currently, two official plugins are available:
+## Product Documentation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [UC-001 - Client Overview / Status Hub](docs/use-cases/UC-001-client-overview-status-hub.md)
+- [UC-002 - Embedded Marketing Dashboard](docs/use-cases/UC-002-embedded-marketing-dashboard.md)
+- [UC-003 - Monthly Summary / Report Archive](docs/use-cases/UC-003-monthly-summary-report-archive.md)
+- [Frontend Architecture](docs/frontend-architecture.md)
+- [Design System](docs/design-system.md)
+- [UC-001 Implementation Checklist](docs/implementation/UC-001-implementation-checklist.md)
+- [UC-001 Local Storage Architecture](docs/implementation/UC-001-local-storage-architecture.md)
+- [Backend Readiness Plan](docs/implementation/backend-readiness-plan.md)
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Useful checks:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run test
+npm run lint
+npm run build
+```
+
+Deploy to GitHub Pages:
+
+```bash
+npm run go
+```

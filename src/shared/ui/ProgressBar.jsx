@@ -1,11 +1,13 @@
+import { Progress } from '@/components/ui/progress'
+
 export function ProgressBar({ label, showLabel = true, value, tone = 'blue' }) {
   const normalizedValue = Math.max(0, Math.min(100, value))
   const toneClass = {
-    blue: 'bg-indigo-600',
-    green: 'bg-emerald-600',
-    orange: 'bg-orange-600',
-    purple: 'bg-purple-600',
-    rose: 'bg-rose-600',
+    blue: '[&_[data-slot=progress-indicator]]:bg-indigo-600',
+    green: '[&_[data-slot=progress-indicator]]:bg-emerald-600',
+    orange: '[&_[data-slot=progress-indicator]]:bg-orange-600',
+    purple: '[&_[data-slot=progress-indicator]]:bg-purple-600',
+    rose: '[&_[data-slot=progress-indicator]]:bg-rose-600',
   }[tone]
 
   return (
@@ -16,12 +18,7 @@ export function ProgressBar({ label, showLabel = true, value, tone = 'blue' }) {
           <strong className="font-semibold text-slate-900">{normalizedValue}%</strong>
         </div>
       ) : null}
-      <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-        <span
-          className={`block h-2.5 rounded-full transition-all duration-500 ease-in-out ${toneClass}`}
-          style={{ width: `${normalizedValue}%` }}
-        />
-      </div>
+      <Progress className={toneClass} value={normalizedValue} />
     </div>
   )
 }

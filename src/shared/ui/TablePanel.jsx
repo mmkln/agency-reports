@@ -1,3 +1,13 @@
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
 import { Panel, PanelBody, PanelHeader } from './Panel'
 
 const toneClass = {
@@ -11,35 +21,33 @@ export function TablePanel({ columns, rows, title }) {
     <Panel>
       <PanelHeader title={title} />
       <PanelBody>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-700">
-                {columns.map((column) => (
-                  <th className="px-3 py-3 font-semibold first:pl-3 last:text-right" key={column.key}>
-                    {column.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr className="border-b border-slate-200 last:border-b-0" key={row.id ?? row.channel ?? row.label}>
-                  {columns.map((column) => (
-                    <td className={`px-3 py-3.5 ${column.align === 'right' ? 'text-right' : ''}`} key={column.key}>
-                      {column.render ? column.render(row) : row[column.key]}
-                    </td>
-                  ))}
-                </tr>
+        <Table className="min-w-[760px]">
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead className={column.align === 'right' ? 'text-right' : ''} key={column.key}>
+                  {column.label}
+                </TableHead>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow key={row.id ?? row.channel ?? row.label}>
+                {columns.map((column) => (
+                  <TableCell className={column.align === 'right' ? 'text-right' : ''} key={column.key}>
+                    {column.render ? column.render(row) : row[column.key]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </PanelBody>
     </Panel>
   )
 }
 
 export function TableBadge({ children, tone = 'blue' }) {
-  return <span className={`inline-flex rounded px-2 py-1 font-semibold ${toneClass[tone]}`}>{children}</span>
+  return <Badge className={toneClass[tone]} variant="outline">{children}</Badge>
 }

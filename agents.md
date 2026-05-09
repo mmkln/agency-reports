@@ -2,29 +2,83 @@
 
 ## Project Memory
 
-- After every significant resolved question, bug, implementation issue, or workflow problem, update this `agents.md` file with a concise new instruction that prevents the same mistake, confusion, or repeated question in the future.
-- Add only instructions that are reusable and specific to this project. Avoid logging one-off details that will not help future work.
-- Keep new instructions short, actionable, and placed in the most relevant section. Create a new section only when it improves clarity.
+- Keep this file as a compact set of reusable working rules, not a changelog of individual fixes.
+- Add or refine an instruction after a user-corrected issue only when the lesson applies across multiple future cases.
+- Prefer abstract, actionable wording over references to one component, page, bug, or conversation.
 - Before making changes, read this file and follow its current instructions.
-- Before UI/style changes, read `docs/design-system.md`; treat DentalFlow Design System as the single canon, with `#landing` as the public/auth reference context and `#crm-dashboard` as the internal app reference context unless the user provides a newer screenshot or snippet.
-- When example files are Figma Make HTML exports, do not copy the Figma wrapper DOM into React. Extract reusable visual patterns from the design metadata/thumbnail and implement them as shared UI components.
-- If multiple example HTML exports are byte-identical Figma files, derive page modules from the visible navigation/page names and keep them behind a central route registry instead of duplicating page code.
-- Keep extracted SVG assets in `src/shared/icons` behind an `Icon` registry/named exports API. Normalize reusable monochrome icons to `currentColor` and preserve brand colors only for brand marks.
-- Use route `iconName` values and `src/shared/icons` components for navigation/page icons instead of text abbreviations or inline SVG in page modules.
-- Tailwind is installed with the v4 Vite plugin flow: keep `@tailwindcss/vite` in `vite.config.js` and `@import "tailwindcss";` at the top of `src/index.css`; do not add legacy v3 config unless a concrete need appears.
-- Component and page styling should use Tailwind utility classes in JSX. Keep `src/index.css` limited to Tailwind import and minimal global base styles; do not reintroduce `App.css` or component-specific global selectors.
-- Use design tokens such as `brand`, `brand-hover`, `heading`, and `public-background` in JSX instead of repeating raw brand hex values.
-- When fully implementing a page from Figma wrapper HTML, use the visible thumbnail/metadata as the source of truth for above-the-fold structure, then complete the page with coherent domain sections using existing page modules, shared UI, icons, and Tailwind.
-- Do not invent full page content when example HTML lacks the actual page DOM. If the files only contain a Figma wrapper/canvas/iframe bootstrap, report that limitation and ask for a real page export, screenshot set, or accessible preview payload before implementing exact pages.
-- When the user provides screenshots, treat them as higher-confidence design evidence than Figma wrapper HTML. Update labels, icons, spacing, and active states to match the screenshots before inferring anything else.
-- When the user provides exact SVG markup for an icon, preserve its viewBox, geometry, stroke settings, and semantic icon name in `src/shared/icons` instead of using an approximate replacement.
-- When the user provides a React reference snippet as a visual target, mirror its layout, spacing, Tailwind states, and component hierarchy using the local architecture and icon registry; do not add new UI dependencies unless the user asks.
-- Reuse `src/shared/layout`, `src/shared/ui`, and `src/shared/charts` for shell, page headers, KPI cards, panels, progress rows, legends, activity rows, and charts instead of duplicating those structures inside page modules.
-- Use shared `TaskItem` for operational task rows instead of page-local colored task card implementations.
-- Task completion indicators should be simple circular checkbox controls; do not place circular check icons inside another circular checkbox.
-- Use shared `PhaseCard` for development roadmap phase rows instead of page-local phase card layouts; keep phase rows full-width with shared progress and checklist components.
-- Buildout technical documentation sections should stay on the Buildout page and use shared dashboard surfaces (`Panel`, `PanelBody`, icon registry) rather than being mixed into operational CRM pages.
-- Use the shared `BrandLogo` component for DentalFlow branding across public, auth, and dashboard layouts instead of recreating logo markup in pages; dashboard navigation should use its static variant without hover motion or logo shadow.
-- Auth-only pages such as login should use route metadata `layout: 'auth'` and `showInNav: false` so they render outside `AppShell` and do not appear in dashboard navigation.
-- Public marketing pages such as landing should use `layout: 'public'` and `showInNav: false`, rendering outside the dashboard shell while remaining in the central route registry.
-- When adding shadcn components, keep generated files compatible with this project's ESLint rules by removing unused React imports and preserving intentional non-component exports only with a narrow file-level exception.
+
+## Sources Of Truth
+
+- Read the relevant use-case document before changing product flow, permissions, data shape, or screen behavior.
+- Read the frontend architecture guide before changing structure, ownership boundaries, or cross-layer responsibilities.
+- Read the design system before UI or styling work, and treat it as the baseline unless the user provides newer visual evidence.
+- When source materials conflict, prioritize explicit user direction, then product rules, then architecture, then visual examples.
+- Treat screenshots and concrete reference snippets as higher-confidence design evidence than inferred intent.
+- Use examples and exports as references for patterns, not as code to copy blindly.
+
+## Architecture
+
+- Keep domain behavior in services and policies; page components should orchestrate data and compose UI.
+- Access persisted data through repository adapters, not direct browser storage calls from pages, widgets, or domain code.
+- Keep persistence schema/version validation and reset/reseed behavior inside repository adapters and implementation docs; do not add page-level storage repair logic.
+- Keep entity identifiers stable string IDs in fixtures, repositories, and tests.
+- Add product pages deliberately from a use case or requested workflow, not as placeholder shells.
+- Centralize routing and route metadata instead of scattering navigation behavior across pages.
+- Keep shared infrastructure generic and product-specific behavior near the feature or domain that owns it.
+
+## UI Composition
+
+- Reuse existing shared layout, UI, chart, icon, and primitive components before creating page-local equivalents.
+- Prefer shadcn primitives from `src/components/ui` for low-level controls and compose business UI around them.
+- Do not build parallel base components when an existing primitive can express the same interaction.
+- Avoid borders when spacing, background, typography, or state color can communicate structure clearly; too many borders make dense admin UI feel overloaded.
+- Keep primitive defaults aligned through shared tokens and component defaults instead of repeated page-level corrective classes.
+- Keep dropdown list spacing in the primitive itself: select/dropdown content should use consistent popper placement, viewport padding, and item padding.
+- Use the project icon registry for navigation and common actions instead of inline SVG or text stand-ins.
+- Use established branding, shell, header, and layout components instead of recreating them inside pages.
+- Keep section header icons unframed by default and align header title, icon, and actions on the same centerline.
+- Render status option groups as compact controls with clean, unframed icons, restrained active states, and clear selected markers; omit repeated per-option descriptions when height is constrained.
+- Hide creation controls when a hard item limit is already reached; do not leave disabled input rows visible unless they explain an actionable state.
+- Avoid duplicate interfaces for the same workflow; when a new interaction model replaces an old one, remove the superseded UI unless the user asks to keep both.
+
+## Page Layout
+
+- Put page-level entity context, primary status, filters, and main actions in the route header when they control the whole screen.
+- Avoid redundant local headers or top cards that repeat information already owned by the page header.
+- Keep filters close to the page-level controls they affect, with accessible hidden headings when the visual title is intentionally omitted.
+- Keep page-header status metadata inline and unboxed; do not put status labels inside bordered containers.
+- Do not wrap header toggles in input-like bordered containers; render them as lightweight label-and-switch controls aligned with the header actions.
+- Keep toggle labels stable across on/off states; use the switch state to express the value instead of changing adjacent label text.
+- Use compact, task-focused layouts for internal tools; avoid decorative or marketing-style composition in operational screens.
+- Avoid nested card-on-card structures unless the inner card is a repeated item, modal, or genuinely framed tool.
+
+## Forms And Inputs
+
+- Keep field rendering, upload behavior, overlay content, table rows, and native input details in feature/shared components or hooks rather than large page components.
+- Use native HTML constraints for immediate field feedback, while keeping business validation and normalization in domain services.
+- Auto-derived editable values may auto-fill until the user edits them; after that, preserve user control while continuing validation.
+- Put file parsing, preview, size/type checks, and `FileReader` behavior in dedicated inputs or feature hooks.
+- Keep internal notes, client-visible text, and reusable summaries as separate fields when they have different audiences.
+
+## Data Visibility And Permissions
+
+- Enforce access, visibility, and status-transition rules in domain policies/services, then reflect only allowed actions in UI.
+- Never expose internal-only records, notes, draft content, or hidden workflow state through client-facing surfaces.
+- Treat contact metadata, account identity, assignee information, and viewer identity as separate concepts.
+- On client-facing routes, treat route `clientId` as the requested resource only; pass the authenticated viewer/session unchanged into domain services so access checks cannot be bypassed by URL params.
+- Preserve controlled fallback states for unavailable external resources, but do not use fallback UI as a reason to duplicate an active workflow.
+
+## Product Behavior
+
+- Keep dashboard integrations embed/link oriented unless a use case explicitly requires custom analytics.
+- Keep report and summary content human-authored unless a use case explicitly requires generated content.
+- Link overview blocks to dedicated surfaces for deeper workflows instead of embedding full secondary experiences inside summaries.
+- In task detail drawers, keep the structure workflow-first: entity badges and meta, status actions, conditional status reason panel, private/internal notes, client-safe summary, and primary actions in the actual drawer footer.
+- Preserve empty, loading, unavailable, and permission-denied states as intentional product behavior rather than accidental blanks.
+
+## Implementation Hygiene
+
+- Keep Tailwind and styling aligned with the project's current setup; do not introduce legacy configuration or global CSS patterns without a concrete need.
+- Keep generated or third-party component files compatible with lint rules through minimal, targeted adjustments.
+- Avoid broad refactors while implementing a specific user request unless the refactor is necessary to complete it safely.
+- Do not verify results in the browser unless the user explicitly asks for browser verification; rely on code review, lint, tests, and builds by default.

@@ -113,6 +113,11 @@ Logo:
 
 ## Components
 
+Component library contract:
+- shadcn primitives in `src/components/ui` must inherit DentalFlow tokens from `src/index.css`.
+- Default `Button`, `Input`, `Select`, `Sheet`, `Card`, `Table`, `Badge`, and `Progress` styles should be usable without page-level corrective classes.
+- If a primitive default conflicts with this design system, update the primitive or token once instead of repeating overrides in feature/page components.
+
 Brand:
 - Use `BrandLogo` from `src/shared/ui`.
 - Do not recreate DentalFlow logo markup in pages.
