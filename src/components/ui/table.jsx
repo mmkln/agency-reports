@@ -10,7 +10,7 @@ function Table({
     <div data-slot="table-container" className="relative w-full overflow-x-auto">
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom text-ui", className)}
         {...props} />
     </div>
   );
@@ -23,7 +23,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-slate-50 text-xs font-semibold tracking-wide text-muted-foreground uppercase [&_tr]:border-b", className)}
+      className={cn("bg-surface-subtle text-label text-text-secondary uppercase [&_tr]:border-b", className)}
       {...props} />
   );
 }
@@ -47,7 +47,7 @@ function TableFooter({
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
+      className={cn("border-t border-separator bg-surface-subtle font-medium [&>tr]:last:border-b-0", className)}
       {...props} />
   );
 }
@@ -60,7 +60,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-border transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b border-separator transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover has-aria-expanded:bg-control-hover data-[state=selected]:bg-control-selected",
         className
       )}
       {...props} />
@@ -75,7 +75,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-11 px-4 text-left align-middle font-semibold whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        "h-target px-component text-left align-middle font-semibold whitespace-nowrap text-text-secondary [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -90,7 +90,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "px-4 py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-component py-control align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -104,7 +104,7 @@ function TableCaption({
   return (
     <caption
       data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      className={cn("mt-4 text-ui text-text-secondary", className)}
       {...props} />
   );
 }

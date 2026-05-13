@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui'
 
 import { PageHeader } from '../../../shared/layout/PageHeader'
 import { Icon } from '../../../shared/icons'

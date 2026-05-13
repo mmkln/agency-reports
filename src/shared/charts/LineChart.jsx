@@ -1,3 +1,5 @@
+import { chartColors } from '../theme'
+
 export function LineChart({
   ariaLabel,
   data,
@@ -28,8 +30,8 @@ export function LineChart({
         const y = yBottom - (value / yMax) * chartHeight
         return (
           <g key={value}>
-            <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke="#d1d5db" strokeDasharray="3 3" />
-            <text x={xStart - 8} y={y + 5} fill="#666" fontSize="15" textAnchor="end">
+            <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke={chartColors.grid} strokeDasharray="3 3" />
+            <text x={xStart - 8} y={y + 5} fill={chartColors.label} fontSize="15" textAnchor="end">
               {value}
             </text>
           </g>
@@ -39,7 +41,7 @@ export function LineChart({
         ? rightTicks.map((tick) => {
             const y = yBottom - (tick.value / yMax) * chartHeight
             return (
-              <text fill="#666" fontSize="15" key={tick.label} x={xEnd + 10} y={y + 5}>
+              <text fill={chartColors.label} fontSize="15" key={tick.label} x={xEnd + 10} y={y + 5}>
                 {tick.label}
               </text>
             )
@@ -47,11 +49,11 @@ export function LineChart({
         : null}
       {data.map((item, index) => {
         const x = xStart + index * xStep
-        return <line key={item[xKey]} x1={x} x2={x} y1={yTop} y2={yBottom} stroke="#d1d5db" strokeDasharray="3 3" />
+        return <line key={item[xKey]} x1={x} x2={x} y1={yTop} y2={yBottom} stroke={chartColors.grid} strokeDasharray="3 3" />
       })}
-      <line x1={xStart} x2={xEnd} y1={yBottom} y2={yBottom} stroke="#888" />
-      <line x1={xStart} x2={xStart} y1={yTop} y2={yBottom} stroke="#888" />
-      {rightTicks ? <line x1={xEnd} x2={xEnd} y1={yTop} y2={yBottom} stroke="#888" /> : null}
+      <line x1={xStart} x2={xEnd} y1={yBottom} y2={yBottom} stroke={chartColors.axis} />
+      <line x1={xStart} x2={xStart} y1={yTop} y2={yBottom} stroke={chartColors.axis} />
+      {rightTicks ? <line x1={xEnd} x2={xEnd} y1={yTop} y2={yBottom} stroke={chartColors.axis} /> : null}
       {series.map((line) => {
         const points = data.map((item, index) => {
           const point = getPoint(item, index, line.key)
@@ -63,13 +65,13 @@ export function LineChart({
             <polyline fill="none" points={points.join(' ')} stroke={line.color} strokeWidth="2" />
             {data.map((item, index) => {
               const point = getPoint(item, index, line.key)
-              return <circle cx={point.x} cy={point.y} fill="white" key={`${line.key}-${item[xKey]}`} r="3" stroke={line.color} strokeWidth="2" />
+              return <circle cx={point.x} cy={point.y} fill={chartColors.surface} key={`${line.key}-${item[xKey]}`} r="3" stroke={line.color} strokeWidth="2" />
             })}
           </g>
         )
       })}
       {data.map((item, index) => (
-        <text fill="#666" fontSize="15" key={item[xKey]} textAnchor="middle" x={xStart + index * xStep} y={yBottom + 20}>
+        <text fill={chartColors.label} fontSize="15" key={item[xKey]} textAnchor="middle" x={xStart + index * xStep} y={yBottom + 20}>
           {item[xKey]}
         </text>
       ))}

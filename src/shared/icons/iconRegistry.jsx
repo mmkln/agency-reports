@@ -35,6 +35,172 @@ export const iconRegistry = {
       </>
     ),
   },
+  wrench: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <path
+        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    ),
+  },
+  triangleAlert: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M12 9v4"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M12 17h.01"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  circleX: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <circle
+          cx="12"
+          cy="12"
+          fill="none"
+          r="10"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="m15 9-6 6"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="m9 9 6 6"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  circle: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <circle
+        cx="12"
+        cy="12"
+        fill="none"
+        r="10"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    ),
+  },
+  circlePause: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <circle
+          cx="12"
+          cy="12"
+          fill="none"
+          r="10"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M10 15V9"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M14 15V9"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  archive: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <rect
+          width="20"
+          height="5"
+          x="2"
+          y="3"
+          fill="none"
+          rx="1"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M10 12h4"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
   code: {
     defaultSize: 18,
     viewBox: '0 0 24 24',

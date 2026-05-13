@@ -1,25 +1,17 @@
 import { useState } from 'react'
 
 import { deleteAdminClient, listAdminClients } from '../../../domain/services/adminClientService'
-import { CLIENT_STATUSES } from '../../../entities/client'
 import {
   ClientsTable,
   ClientsTableSkeleton,
-  CreateClientDrawer,
+  CreateClientModal,
   EmptyClientsState,
 } from '../../../features/admin-client-setup/components'
-import { useCreateClientForm } from '../../../features/admin-client-setup/model'
+import { useCreateClientForm, useEditClientForm } from '../../../features/admin-client-setup/model'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 
-const statusOptions = [
-  CLIENT_STATUSES.ON_TRACK,
-  CLIENT_STATUSES.NEEDS_ATTENTION,
-  CLIENT_STATUSES.WAITING_CLIENT,
-  CLIENT_STATUSES.BLOCKED,
-  CLIENT_STATUSES.PAUSED,
-]
-
-function closeCreateClientDrawer() {
+function closeCreateClientModal() {
   window.location.hash = 'admin-clients'
 }
 
@@ -27,39 +19,69 @@ function createUuid() {
   return crypto.randomUUID()
 }
 
+function EditClientModalController({
+  client,
+  onClose,
+  onUpdated,
+  repositories,
+  viewer,
+}) {
+  const editClientForm = useEditClientForm({
+    client,
+    onUpdated,
+    repositories,
+    viewer,
+  })
+
+  return (
+    <CreateClientModal
+      error={editClientForm.error}
+      form={editClientForm.form}
+      isOpen
+      mode="edit"
+      onClose={onClose}
+      onSubmit={editClientForm.handleSubmit}
+      onUpdateField={editClientForm.updateField}
+      slugIssue={editClientForm.slugIssue}
+    />
+  )
+}
+
 export function AdminClientsPage({ routeParams = {}, runtime }) {
-  const isCreateDrawerOpen = routeParams.newClient === 'true'
-  const isLoading = false
+  const isCreateModalOpen = routeParams.newClient === 'true'
+  const [clientPendingEdit, setClientPendingEdit] = useState(null)
   const toast = useToast()
-  const [clients, setClients] = useState(() => listAdminClients({
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }))
+  const clientsResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-clients`,
+    initialData: [],
+    load: () => runtime.dataClient.read((repositories) => listAdminClients({
+      repositories,
+      viewer: runtime.viewer,
+    })),
+  })
+  const clients = clientsResource.data ?? []
   const createClientForm = useCreateClientForm({
     idGenerator: createUuid,
     onCreated: (client) => {
-      setClients(listAdminClients({
-        repositories: runtime.repositories,
-        viewer: runtime.viewer,
-      }))
+      void clientsResource.reload()
       toast.success('Client created', `${client.name} is ready in the admin workspace.`)
-      closeCreateClientDrawer()
+      closeCreateClientModal()
     },
     repositories: runtime.repositories,
     viewer: runtime.viewer,
   })
-
   function refreshClients() {
-    setClients(listAdminClients({
-      repositories: runtime.repositories,
-      viewer: runtime.viewer,
-    }))
+    void clientsResource.reload()
   }
 
   return (
     <>
-      {isLoading ? (
+      {clientsResource.status === 'loading' ? (
         <ClientsTableSkeleton />
+      ) : clientsResource.status === 'error' ? (
+        <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {clientsResource.error}
+        </div>
       ) : clients.length > 0 ? (
         <ClientsTable
           clients={clients}
@@ -74,22 +96,36 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
             refreshClients()
             toast.success('Client deleted', `${deletedClient?.name ?? 'Client'} was removed from local demo data.`)
           }}
+          onEditClient={setClientPendingEdit}
           repositories={runtime.repositories}
         />
       ) : (
         <EmptyClientsState />
       )}
-      <CreateClientDrawer
+      <CreateClientModal
         error={createClientForm.error}
         form={createClientForm.form}
-        isOpen={isCreateDrawerOpen}
+        isOpen={isCreateModalOpen}
         lastCreatedClient={createClientForm.lastCreatedClient}
-        onClose={closeCreateClientDrawer}
+        onClose={closeCreateClientModal}
         onSubmit={createClientForm.handleSubmit}
         onUpdateField={createClientForm.updateField}
         slugIssue={createClientForm.slugIssue}
-        statusOptions={statusOptions}
       />
+      {clientPendingEdit ? (
+        <EditClientModalController
+          client={clientPendingEdit}
+          key={clientPendingEdit.id}
+          onClose={() => setClientPendingEdit(null)}
+          onUpdated={(client) => {
+            void clientsResource.reload()
+            toast.success('Client updated', `${client.name} workspace details were saved.`)
+            setClientPendingEdit(null)
+          }}
+          repositories={runtime.repositories}
+          viewer={runtime.viewer}
+        />
+      ) : null}
     </>
   )
 }

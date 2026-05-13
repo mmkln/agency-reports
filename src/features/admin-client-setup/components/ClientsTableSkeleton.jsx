@@ -1,15 +1,14 @@
-import { Card } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PrimitiveCard as Card, Skeleton } from '@/shared/ui'
 
 export function ClientsTableSkeleton() {
   return (
-    <Card className="border-slate-200 bg-white py-0 shadow-xs">
-      <Skeleton className="h-12 rounded-none border-b border-slate-200 bg-slate-50" />
-      <div className="divide-y divide-slate-100">
+    <Card className="border-control-border bg-block py-0 shadow-none">
+      <Skeleton className="h-12 rounded-none border-b border-control-border bg-surface-subtle" />
+      <div className="divide-y divide-separator">
         {Array.from({ length: 5 }).map((_, index) => (
           <div className="grid grid-cols-[minmax(280px,1.4fr)_minmax(170px,0.8fr)_minmax(220px,1fr)_minmax(140px,0.7fr)_140px] items-center gap-6 px-6 py-5" key={index}>
             <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-lg" />
+              <Skeleton className="h-10 w-10 rounded-control" />
               <div className="grid gap-2">
                 <Skeleton className="h-3 w-32" />
                 <Skeleton className="h-3 w-20" />

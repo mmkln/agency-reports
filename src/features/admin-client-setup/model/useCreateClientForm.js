@@ -5,7 +5,6 @@ import {
   getPortalSlugIssue,
   normalizePortalSlug,
 } from '../../../domain/services/adminClientService'
-import { CLIENT_STATUSES } from '../../../entities/client'
 
 const emptyForm = {
   logoFileName: '',
@@ -14,7 +13,6 @@ const emptyForm = {
   portalSlug: '',
   primaryContactEmail: '',
   primaryContactName: '',
-  status: CLIENT_STATUSES.ON_TRACK,
 }
 
 export function useCreateClientForm({

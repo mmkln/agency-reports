@@ -11,12 +11,12 @@ export function Panel({ children, className = '' }) {
 
 export function PanelHeader({ action, children, eyebrow, subtitle, title }) {
   return (
-    <CardHeader className="flex-row items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/50 px-6 py-5">
+    <CardHeader className="flex-row items-start justify-between gap-component border-b border-separator bg-surface-subtle px-card py-component">
       {title ? (
         <div>
-          {eyebrow ? <p className="mb-1 text-xs font-semibold tracking-wide text-indigo-600 uppercase">{eyebrow}</p> : null}
-          <h2 className="m-0 text-lg font-semibold text-slate-800">{title}</h2>
-          {subtitle ? <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p> : null}
+          {eyebrow ? <p className="mb-1 text-xs font-semibold text-action uppercase">{eyebrow}</p> : null}
+          <h2 className="m-0 text-lg font-semibold text-text-primary">{title}</h2>
+          {subtitle ? <p className="mt-1 text-sm leading-6 text-text-secondary">{subtitle}</p> : null}
         </div>
       ) : (
         children
@@ -27,5 +27,5 @@ export function PanelHeader({ action, children, eyebrow, subtitle, title }) {
 }
 
 export function PanelBody({ children, className = '' }) {
-  return <CardContent className={cn('p-6', className)}>{children}</CardContent>
+  return <CardContent className={cn('p-card', className)}>{children}</CardContent>
 }

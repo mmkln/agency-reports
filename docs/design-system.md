@@ -1,9 +1,11 @@
-# DentalFlow Design System
+# Agency Client Portal Aggregator - Design System
 
 This document is the visual source of truth for new UI work in this project.
 
 Canonical system:
-- DentalFlow Design System is the single project canon.
+- Agency Design System is the single project canon for this portal.
+- The shared UI foundation is integrated as Tailwind v4 CSS-first semantic tokens in `src/index.css`; use those tokens for shared primitives and application chrome.
+- Detailed foundation rules are maintained in `src/index.css` and shared component files; review token definitions before changing primitives, overlays, motion, or app-structure patterns.
 
 Reference contexts:
 - `#landing` defines the public marketing and auth expression of the system.
@@ -37,58 +39,55 @@ Type scale:
 ## Colors
 
 Brand colors:
-- Brand primary: `#5A45FF`
-- Brand hover: `#4836E0`
-- Heading navy: `#0A1128`
-- Public page background: `#F8FAFF`
+- Brand primary is exposed as `bg-brand`, `text-brand`, and `hover:bg-brand-hover`.
+- Platform action blue is exposed as `bg-action`, `text-action`, `hover:bg-action-hover`, and `bg-action-muted`.
+- Premium neutrals are exposed as `bg-premium-athens`, `bg-premium-shark`, `text-premium-graphite`, and related semantic roles.
 
 Token usage:
-- Prefer `bg-brand`, `text-brand`, `hover:bg-brand-hover`, and `text-heading` over repeated arbitrary brand hex values.
-- shadcn `primary` is mapped to the DentalFlow brand color.
+- Prefer semantic roles over palette ramps: `bg-background`, `bg-surface`, `bg-surface-subtle`, `bg-block`, `bg-control`, `bg-control-hover`, `bg-control-selected`, `border-separator`, `border-control-border`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, and `text-text-placeholder`.
+- Use `bg-action` and `text-action` for platform-native actions; use `bg-primary` only for product-primary shadcn actions.
+- Use material tokens only for overlays, menus, tooltips, translucent chrome, and deliberate layered surfaces: `bg-material-liquid`, `bg-material-vibrant`, `bg-material-chrome`, `border-material-border`.
+- Do not use `slate`, `gray`, `indigo`, `blue`, `emerald`, `amber`, `orange`, `purple`, or hardcoded hex classes in page or feature JSX when a semantic role exists.
 
-Dashboard palette:
-- Page background: `bg-slate-50`
-- Surfaces: `bg-white`
-- Borders: `border-slate-100` for light cards, `border-slate-200` for panels and shell separators
-- Text strong: `text-slate-900`
-- Text body: `text-slate-600`
-- Text muted: `text-slate-500`
+Application palette:
+- Page background: `bg-background` or the shared page shell.
+- Content surfaces: `bg-block`; subtle grouped areas: `bg-surface-subtle`.
+- Standard controls: `bg-control`, `hover:bg-control-hover`, `bg-control-selected`, `border-control-border`.
+- Separators: `border-separator`; stronger control edges: `border-border-strong` only when needed.
+- Text: `text-text-primary`, `text-text-secondary`, `text-text-muted`, `text-text-quaternary`.
 
 Status and chart colors:
-- Indigo: `text-indigo-600`, `bg-indigo-50`, `#4f46e5`
-- Emerald: `text-emerald-600`, `bg-emerald-50`, `#10b981`
-- Purple/Violet: `text-purple-600`, `bg-purple-50`, `#8b5cf6`
-- Amber: `text-amber-600`, `bg-amber-50`, `#f59e0b`
-- Rose only for destructive or alert states.
+- Success: `bg-success`, `bg-success-muted`, `text-success-foreground`, `border-success/20`.
+- Warning: `bg-warning`, `bg-warning-muted`, `text-warning-foreground`, `border-warning/20`.
+- Destructive: `bg-destructive`, `text-destructive`, `border-destructive/20`.
+- Neutral action/info: `bg-action-muted`, `text-action`, `border-action/20`.
+- Chart colors are `chart-1` through `chart-5` in CSS and `chartColors` from `src/shared/theme/chartColors.js` for SVG, canvas, Recharts, and inline style values.
 
 Color rule:
-- Public/auth primary actions and brand accents should use `#5A45FF`.
-- Dashboard data/status UI may use Tailwind semantic palettes, with indigo as the primary app accent.
-- Do not introduce unrelated dominant palettes such as beige, brown, dark slate-heavy, or broad purple gradients outside the existing landing/buildout hero patterns.
+- Public/auth primary actions and brand accents should use semantic brand/action tokens.
+- Dashboard data/status UI may use status and chart tokens, not raw Tailwind palette ramps.
+- Do not introduce unrelated dominant palettes such as beige, brown, dark slate-heavy, or broad purple gradients outside an approved brand surface.
 
 ## Spacing
 
 Page containers:
-- Use `max-w-7xl mx-auto`.
-- Dashboard shell padding: `px-4 sm:px-6 lg:px-8`.
-- Landing/public padding: `px-6`.
-- Main dashboard vertical rhythm: `py-8 space/gap-6`.
+- Use shared page/layout wrappers where possible.
+- Prefer semantic spacing tokens: `p-page`, `gap-section`, `p-card`, `gap-card`, `p-control`, `gap-control`, `gap-item`, and `gap-layout`.
+- Keep dashboard shell spacing calm and consistent; do not create hierarchy by adding extra nested bordered blocks.
 
 Component spacing:
-- KPI cards: `p-6`, grid `gap-6`.
-- Panels: header `px-6 py-5`, body `p-6`.
-- Feature cards: `p-8`, grid `gap-8`.
-- Form fields: `gap-2` inside labels, `gap-5` between fields.
-- Use Tailwind spacing scale. Avoid one-off pixel values unless matching an existing component contract.
+- Controls should use control spacing tokens or shared primitive defaults.
+- Cards, panels, sheets, dialogs, tables, and form groups should inherit shared primitive spacing before page-local overrides.
+- Avoid one-off pixel values unless matching an existing component contract.
 
 ## Radius
 
 Canonical radii:
-- Buttons and compact controls: `rounded-lg` or `rounded-xl`.
-- KPI cards and dashboard panels: `rounded-2xl`.
-- Landing mockups and auth shell: `rounded-3xl`.
-- Icons inside cards: `rounded-xl` or `rounded-2xl`.
-- Pills and badges: `rounded-full`.
+- Buttons and compact controls: `rounded-control`.
+- Content blocks/cards: `rounded-block`.
+- Menus, popovers, dialogs, sheets, and raised overlays: `rounded-island`.
+- Compact repeated items: `rounded-item`.
+- Pills, avatars, and status dots: `rounded-full`.
 
 Avoid:
 - Random custom radius values.
@@ -96,15 +95,14 @@ Avoid:
 
 ## Shadows
 
-Dashboard:
-- Default cards and panels: `shadow-xs`.
-- Hover cards: `hover:shadow-sm`.
-- Avoid heavy shadows in dense application views.
+Application:
+- Content cards are borderless by default.
+- Use `shadow-none` for flat content, `shadow-block` for subtly raised blocks, and `shadow-premium` for overlays or deliberately elevated public/auth surfaces.
+- Add borders only for real separation needs, tables, overlays, controls, or error/alert states.
 
 Landing/auth:
-- CTA buttons may use `shadow-md shadow-indigo-100`.
-- Large mockups may use `shadow-2xl`.
-- Auth shell may use a soft brand shadow such as `shadow-[0_24px_70px_rgba(90,69,255,0.08)]`.
+- Prefer `shadow-premium` selectively for the primary shell or raised mockup.
+- Avoid arbitrary shadow values and old palette-colored shadows.
 
 Logo:
 - Public landing logo may keep the interactive hover/brand shadow.
@@ -114,9 +112,12 @@ Logo:
 ## Components
 
 Component library contract:
-- shadcn primitives in `src/components/ui` must inherit DentalFlow tokens from `src/index.css`.
-- Default `Button`, `Input`, `Select`, `Sheet`, `Card`, `Table`, `Badge`, and `Progress` styles should be usable without page-level corrective classes.
+- shadcn primitives in `src/components/ui` must inherit project tokens from `src/index.css`.
+- Default `Button`, `Input`, `Select`, `Sheet`, `Dialog`, `Card`, `Table`, `Badge`, and `Progress` styles should be usable without page-level corrective classes.
 - If a primitive default conflicts with this design system, update the primitive or token once instead of repeating overrides in feature/page components.
+- Public design-system components are exported from `src/shared/ui`; prefer that API for reusable structure and controls before adding page-local wrappers.
+- Appearance mode is owned by `ThemeProvider` from `src/shared/theme`; components should not toggle `.dark` or read/write theme storage directly.
+- Dropdowns, selects, and sheets use the shared material/motion tokens. Keep placement, padding, radius, shadow, and close-control behavior in the primitive unless a workflow has a concrete accessibility or layout requirement.
 
 Brand:
 - Use `BrandLogo` from `src/shared/ui`.
@@ -142,11 +143,11 @@ Tables and metrics:
 ## Canon Decisions
 
 - Font: `font-sans` / Geist is canonical across public, auth, and app UI.
-- Brand color: `#5A45FF` is exposed as `brand` and mapped to shadcn `primary`.
-- App accent: Tailwind indigo remains acceptable for internal dashboard data/status UI.
-- Radius split: landing/auth may use `rounded-3xl` for large brand surfaces; dashboard cards and panels use `rounded-2xl`.
-- Shadow split: dashboard remains low-shadow; public/auth can use stronger brand shadows selectively.
-- Raw brand hex values should live in `src/index.css` tokens, not repeated throughout JSX.
+- Brand/action/status/chart values live in `src/index.css` tokens and `src/shared/theme/chartColors.js`.
+- App accent uses semantic action tokens, not Tailwind indigo ramp classes.
+- Radius split is semantic: `rounded-control`, `rounded-block`, `rounded-island`, `rounded-item`.
+- Shadow split is semantic: `shadow-none`, `shadow-block`, `shadow-premium`.
+- Raw hex values should live in tokens or dedicated third-party brand assets, not repeated throughout JSX.
 
 ## Before Adding New UI
 

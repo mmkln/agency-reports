@@ -37,6 +37,7 @@ export const SEED_IDS = Object.freeze({
 })
 
 export const portalSeedData = Object.freeze({
+  activity_events: [],
   client_invitations: [
     {
       accepted_at: null,

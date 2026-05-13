@@ -1,3 +1,4 @@
 export {
   CLIENT_INVITATION_STATUSES,
+  CLIENT_INVITATION_STATUS_META,
 } from './model'

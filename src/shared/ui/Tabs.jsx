@@ -3,10 +3,10 @@ export function Tabs({ items }) {
     <nav className="flex items-center overflow-x-auto" aria-label="Dashboard pages">
       {items.map((item) => (
         <a
-          className={`inline-flex min-h-11 items-center gap-2 border-b-[3px] px-[17px] text-sm font-medium whitespace-nowrap no-underline first:pl-4 ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full px-component text-sm font-medium whitespace-nowrap no-underline transition-colors duration-motion-fast ease-motion-standard first:ml-4 ${
             item.active
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+              ? 'bg-control-selected text-text-primary'
+              : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
           }`}
           href={item.href}
           key={item.href}

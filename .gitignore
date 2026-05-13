@@ -13,6 +13,8 @@ dist-ssr
 .vite
 .cache
 coverage
+playwright-report
+test-results
 *.local
 
 # Environment files

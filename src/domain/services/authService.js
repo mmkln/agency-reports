@@ -1,9 +1,19 @@
 import { USER_ROLES } from '../../entities/profile'
 
 export const AUTH_SESSION_STORAGE_KEY = 'agency-reports.auth-session'
+export const DEMO_AUTH_PASSWORD = 'password'
+export const DEFAULT_SESSION_TTL_MS = 1000 * 60 * 60 * 8
 
-function safeReadSession(storage = window.localStorage) {
+function getDefaultStorage() {
+  return typeof window !== 'undefined' ? window.localStorage : null
+}
+
+function safeReadSession(storage = getDefaultStorage()) {
   try {
+    if (!storage) {
+      return null
+    }
+
     const rawSession = storage.getItem(AUTH_SESSION_STORAGE_KEY)
     return rawSession ? JSON.parse(rawSession) : null
   } catch {
@@ -11,11 +21,54 @@ function safeReadSession(storage = window.localStorage) {
   }
 }
 
-export function setAuthSession(userId, storage = window.localStorage) {
-  storage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({ userId }))
+function isSessionExpired(session, now = () => new Date().toISOString()) {
+  if (!session?.expiresAt) {
+    return false
+  }
+
+  const expiresAt = new Date(session.expiresAt).getTime()
+  const currentTime = new Date(now()).getTime()
+
+  if (Number.isNaN(expiresAt) || Number.isNaN(currentTime)) {
+    return true
+  }
+
+  return expiresAt <= currentTime
 }
 
-export function clearAuthSession(storage = window.localStorage) {
+function createExpiresAt(now, ttlMs) {
+  return new Date(new Date(now()).getTime() + ttlMs).toISOString()
+}
+
+function assertPassword(password) {
+  if (password !== DEMO_AUTH_PASSWORD) {
+    throw new Error('Invalid password.')
+  }
+}
+
+export function setAuthSession(
+  userId,
+  storage = getDefaultStorage(),
+  {
+    now = () => new Date().toISOString(),
+    ttlMs = DEFAULT_SESSION_TTL_MS,
+  } = {},
+) {
+  if (!storage) {
+    return
+  }
+
+  storage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({
+    expiresAt: createExpiresAt(now, ttlMs),
+    userId,
+  }))
+}
+
+export function clearAuthSession(storage = getDefaultStorage()) {
+  if (!storage) {
+    return
+  }
+
   storage.removeItem(AUTH_SESSION_STORAGE_KEY)
 }
 
@@ -24,6 +77,10 @@ function getClientIdsForProfile(profile, repositories) {
     .list()
     .filter((membership) => membership.user_id === profile.user_id)
     .map((membership) => membership.client_id)
+
+  if (profile.role === USER_ROLES.CLIENT_USER) {
+    return [...new Set(membershipClientIds)]
+  }
 
   return [...new Set([
     ...(profile.client_id ? [profile.client_id] : []),
@@ -41,7 +98,7 @@ export function buildViewerFromProfile({ profile, repositories }) {
 
   return {
     agencyId: profile.agency_id,
-    clientId: profile.role === USER_ROLES.CLIENT_USER ? clientIds[0] ?? profile.client_id ?? null : profile.client_id ?? null,
+    clientId: profile.role === USER_ROLES.CLIENT_USER ? clientIds[0] ?? null : profile.client_id ?? null,
     clientIds,
     email: profile.email,
     name: profile.name,
@@ -51,10 +108,19 @@ export function buildViewerFromProfile({ profile, repositories }) {
   }
 }
 
-export function getCurrentViewer({ repositories, storage = window.localStorage }) {
+export function getCurrentViewer({
+  now = () => new Date().toISOString(),
+  repositories,
+  storage = getDefaultStorage(),
+}) {
   const session = safeReadSession(storage)
 
   if (!session?.userId) {
+    return null
+  }
+
+  if (isSessionExpired(session, now)) {
+    clearAuthSession(storage)
     return null
   }
 
@@ -71,8 +137,10 @@ export function listLoginProfiles({ repositories }) {
 
 export function authenticateWithEmail({
   email,
+  now = () => new Date().toISOString(),
+  password,
   repositories,
-  storage = window.localStorage,
+  storage = getDefaultStorage(),
 }) {
   const normalizedEmail = String(email ?? '').trim().toLowerCase()
   const profile = repositories.profiles
@@ -83,7 +151,8 @@ export function authenticateWithEmail({
     throw new Error('No portal user exists for this email.')
   }
 
-  setAuthSession(profile.user_id, storage)
+  assertPassword(password)
+  setAuthSession(profile.user_id, storage, { now })
 
   return buildViewerFromProfile({ profile, repositories })
 }

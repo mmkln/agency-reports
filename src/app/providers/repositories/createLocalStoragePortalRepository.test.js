@@ -49,6 +49,8 @@ describe('createLocalStoragePortalRepository', () => {
 
     const storedSnapshot = JSON.parse(storage.getItem(PORTAL_STORAGE_KEY))
     expect(storedSnapshot.__schemaVersion).toBe(PORTAL_STORAGE_SCHEMA_VERSION)
+    expect(storedSnapshot.activity_events).toEqual([])
+    expect(repository.activityEvents.list()).toEqual([])
   })
 
   it('normalizes incomplete snapshots without leaking missing tables to callers', () => {

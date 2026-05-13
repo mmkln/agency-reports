@@ -1,1 +1,1 @@
-export { REPORT_STATUSES } from './model'
+export { REPORT_STATUSES, REPORT_STATUS_META } from './model'

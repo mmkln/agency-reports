@@ -1,11 +1,11 @@
 import {
-  Select,
+  RadixSelect as Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
+  Switch,
+} from '@/shared/ui'
 
 import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
@@ -15,7 +15,7 @@ function ScopeToggle({ filters, onChange }) {
 
   return (
     <div className="flex items-center justify-end gap-3 py-2">
-      <span className="text-sm font-medium text-slate-600">
+      <span className="text-sm font-medium text-text-secondary">
         My tasks
       </span>
       <Switch
@@ -31,7 +31,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="grid gap-4 sm:grid-cols-[220px_170px_170px]">
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-text-secondary">
           <span>Client</span>
           <Select
             onValueChange={(value) => onChange({ ...filters, clientId: value })}
@@ -48,7 +48,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
             </SelectContent>
           </Select>
         </label>
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-text-secondary">
           <span>Status</span>
           <Select
             onValueChange={(value) => onChange({ ...filters, status: value })}
@@ -65,7 +65,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
             </SelectContent>
           </Select>
         </label>
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="grid gap-2 text-sm font-medium text-text-secondary">
           <span>Visibility</span>
           <Select
             onValueChange={(value) => onChange({ ...filters, visibility: value })}

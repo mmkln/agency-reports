@@ -231,7 +231,16 @@ function createRepositories(overrides = {}) {
 function createClientViewer(clientId = IDS.CLIENT_A) {
   return {
     clientId,
+    clientIds: [clientId],
     role: USER_ROLES.CLIENT_USER,
+  }
+}
+
+function createAdminViewer() {
+  return {
+    agencyId: IDS.AGENCY,
+    role: USER_ROLES.AGENCY_ADMIN,
+    userId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
   }
 }
 
@@ -356,6 +365,70 @@ describe('getClientOverview', () => {
       isAvailable: false,
       name: 'Unavailable Dashboard',
       status: DASHBOARD_LINK_STATUSES.UNAVAILABLE,
+    })
+  })
+
+  it('keeps draft overview data hidden from client users but available to admin preview', () => {
+    const repositories = createRepositories({
+      clients: [
+        {
+          agency_id: IDS.AGENCY,
+          current_focus: ['Published focus'],
+          id: IDS.CLIENT_A,
+          name: 'Client A',
+          overview_draft: {
+            client: {
+              status: CLIENT_STATUSES.WAITING_CLIENT,
+            },
+            currentFocus: ['Draft focus'],
+            dashboardLinks: [],
+            neededActions: [],
+            projects: [
+              {
+                client_id: IDS.CLIENT_A,
+                id: IDS.PROJECT_A,
+                name: 'Draft Project',
+                progress_percent: 10,
+              },
+            ],
+            reports: [],
+            tasks: [],
+            updates: [],
+          },
+          portal_slug: 'client-a',
+          primary_contact_email: 'client-a@example.com',
+          primary_contact_name: 'Client A Contact',
+          status: CLIENT_STATUSES.ON_TRACK,
+        },
+      ],
+    })
+
+    const publishedOverview = getClientOverview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })
+    const draftPreview = getClientOverview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+    const deniedDraftPreview = getClientOverview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createClientViewer(),
+    })
+
+    expect(publishedOverview.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
+    expect(publishedOverview.currentFocus).toEqual(['Published focus'])
+    expect(draftPreview.client.status).toBe(CLIENT_STATUSES.WAITING_CLIENT)
+    expect(draftPreview.currentFocus).toEqual(['Draft focus'])
+    expect(draftPreview.progressSummary.map((project) => project.name)).toEqual(['Draft Project'])
+    expect(deniedDraftPreview).toEqual({
+      reason: 'access_denied',
+      status: 'error',
     })
   })
 })

@@ -9,13 +9,13 @@ const toneConfig = {
     confirmClassName: '',
     confirmVariant: 'destructive',
     icon: AlertTriangle,
-    iconClassName: 'border-rose-200 bg-rose-50 text-rose-600',
+    iconClassName: 'bg-control text-destructive',
   },
   primary: {
     confirmClassName: '',
     confirmVariant: 'default',
     icon: CheckCircle2,
-    iconClassName: 'border-indigo-200 bg-indigo-50 text-indigo-600',
+    iconClassName: 'bg-control text-text-secondary',
   },
 }
 
@@ -40,24 +40,24 @@ export function ConfirmationDialog({
   return (
     <DialogPrimitive.Root onOpenChange={onOpenChange} open={open}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-slate-950/45 backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[90] bg-black/35 backdrop-blur-sm duration-motion-fast data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Content
           className={cn(
-            'fixed top-1/2 left-1/2 z-[91] grid w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl shadow-slate-950/20 outline-none',
-            'data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+            'fixed top-1/2 left-1/2 z-[91] grid w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-island border border-island-border bg-material-vibrant text-text-primary shadow-premium outline-none backdrop-blur-2xl',
+            'duration-motion-medium ease-motion-emphasized data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:duration-motion-fast data-closed:ease-motion-exit data-closed:fade-out-0 data-closed:zoom-out-95',
           )}
         >
           <div className="grid gap-4 p-5">
             <div className="flex items-start gap-3">
-              <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg border', config.iconClassName)}>
+              <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control', config.iconClassName)}>
                 <Icon className="size-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <DialogPrimitive.Title className="text-base font-semibold leading-6 text-slate-950">
+                <DialogPrimitive.Title className="text-base font-semibold leading-6 text-text-primary">
                   {title}
                 </DialogPrimitive.Title>
                 {description ? (
-                  <DialogPrimitive.Description className="mt-1 text-sm leading-6 text-slate-500">
+                  <DialogPrimitive.Description className="mt-1 text-sm leading-6 text-text-secondary">
                     {description}
                   </DialogPrimitive.Description>
                 ) : null}
@@ -65,7 +65,7 @@ export function ConfirmationDialog({
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 border-t border-island-border bg-material-chrome px-5 py-4 sm:flex-row sm:justify-end">
             <DialogPrimitive.Close asChild>
               <Button disabled={isConfirming} type="button" variant="outline">
                 {cancelLabel}
@@ -85,7 +85,7 @@ export function ConfirmationDialog({
           <DialogPrimitive.Close asChild>
             <Button
               aria-label="Close confirmation dialog"
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-700"
+              className="absolute top-3 right-3 text-text-secondary hover:text-text-primary"
               disabled={isConfirming}
               size="icon-sm"
               type="button"

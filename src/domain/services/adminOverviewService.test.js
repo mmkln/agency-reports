@@ -8,6 +8,7 @@ import { REPORT_STATUSES } from '../../entities/report'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
 import {
+  discardAdminClientOverviewDraft,
   getAdminClientOverviewEditor,
   publishAdminClientOverview,
   saveAdminClientOverview,
@@ -167,7 +168,7 @@ describe('adminOverviewService', () => {
     })).toThrow('Client overview is not available for this admin.')
   })
 
-  it('saves client status, focus, and new overview records with UUID ids', () => {
+  it('saves client status, focus, and new overview records into a draft only', () => {
     const repositories = createRepositories()
     const generatedIds = [IDS.NEW_PROJECT, IDS.NEW_TASK, IDS.NEW_NEEDED_ACTION]
 
@@ -210,16 +211,166 @@ describe('adminOverviewService', () => {
       viewer: createAdminViewer(),
     })
 
+    const client = repositories.clients.findById(IDS.CLIENT_A)
+
+    expect(client.status).toBe(CLIENT_STATUSES.ON_TRACK)
+    expect(client.current_focus).toEqual(['Campaign launch'])
+    expect(client.overview_draft_saved_at).toBe('2026-05-09T10:00:00.000Z')
+    expect(client.overview_draft).toMatchObject({
+      client: {
+        status: CLIENT_STATUSES.WAITING_CLIENT,
+      },
+    })
+    expect(editor.client.hasDraft).toBe(true)
     expect(editor.client.status).toBe(CLIENT_STATUSES.WAITING_CLIENT)
     expect(editor.currentFocus).toEqual(['Approve creative batch', 'Budget review', 'Ignored fourth item'])
-    expect(repositories.projects.findById(IDS.NEW_PROJECT)).toMatchObject({
+    expect(editor.projects.find((project) => project.id === IDS.NEW_PROJECT)).toMatchObject({
       progress_percent: 100,
       name: 'New Project',
     })
-    expect(repositories.tasks.findById(IDS.NEW_TASK)).toMatchObject({
+    expect(editor.tasks.find((task) => task.id === IDS.NEW_TASK)).toMatchObject({
+      assignee_name: 'Team',
       client_visible: true,
       visibility: VISIBILITY.CLIENT_VISIBLE,
     })
+    expect(repositories.projects.findById(IDS.NEW_PROJECT)).toBeNull()
+    expect(repositories.tasks.findById(IDS.NEW_TASK)).toBeNull()
+  })
+
+  it('rejects unsafe client-visible records and invalid URLs', () => {
+    const repositories = createRepositories()
+
+    expect(() => saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => IDS.NEW_TASK,
+      input: {
+        client: {
+          status: CLIENT_STATUSES.ON_TRACK,
+        },
+        currentFocus: [],
+        dashboardLinks: [],
+        neededActions: [],
+        projects: [],
+        reports: [],
+        tasks: [
+          {
+            status: TASK_STATUSES.IN_PROGRESS,
+            title: 'Visible task without assignee',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+        ],
+        updates: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })).toThrow('must have an assignee')
+
+    expect(() => saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => IDS.DASHBOARD_A,
+      input: {
+        client: {
+          status: CLIENT_STATUSES.ON_TRACK,
+        },
+        currentFocus: [],
+        dashboardLinks: [
+          {
+            name: 'Dashboard',
+            public_url: 'not-a-url',
+            status: DASHBOARD_LINK_STATUSES.ACTIVE,
+          },
+        ],
+        neededActions: [],
+        projects: [],
+        reports: [],
+        tasks: [],
+        updates: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })).toThrow('Dashboard public URL must be a valid http(s) URL.')
+
+    expect(() => saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => IDS.UPDATE_A,
+      input: {
+        client: {
+          status: CLIENT_STATUSES.ON_TRACK,
+        },
+        currentFocus: [],
+        dashboardLinks: [],
+        neededActions: [],
+        projects: [],
+        reports: [],
+        tasks: [],
+        updates: [
+          {
+            title: 'Title only',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+        ],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })).toThrow('Client-visible updates must include update body text.')
+  })
+
+  it('preserves project and task ordering through sort_order', () => {
+    const repositories = createRepositories()
+    const generatedIds = [
+      IDS.NEW_PROJECT,
+      IDS.NEW_TASK,
+      '77777777-7777-4777-8777-777777777778',
+    ]
+
+    const editor = saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => generatedIds.shift(),
+      input: {
+        client: {
+          status: CLIENT_STATUSES.ON_TRACK,
+        },
+        currentFocus: [],
+        dashboardLinks: [],
+        neededActions: [],
+        projects: [
+          {
+            id: IDS.PROJECT_A,
+            name: 'Existing second',
+            progress_percent: 10,
+            sort_order: 20,
+          },
+          {
+            name: 'New first',
+            progress_percent: 30,
+            sort_order: 10,
+          },
+        ],
+        reports: [],
+        tasks: [
+          {
+            assignee_name: 'Owner',
+            sort_order: 20,
+            status: TASK_STATUSES.TODO,
+            title: 'Second',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+          {
+            assignee_name: 'Owner',
+            sort_order: 10,
+            status: TASK_STATUSES.TODO,
+            title: 'First',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+        ],
+        updates: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(editor.projects.map((project) => project.name)).toEqual(['New first', 'Existing second'])
+    expect(editor.tasks.map((task) => task.title)).toEqual(['First', 'Second'])
   })
 
   it('marks the overview as published on the client record', () => {
@@ -233,6 +384,102 @@ describe('adminOverviewService', () => {
     })
 
     expect(editor.client.overviewPublishedAt).toBe('2026-05-09T10:00:00.000Z')
+    expect(editor.client.overviewPublishedBy).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
     expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_at).toBe('2026-05-09T10:00:00.000Z')
+  })
+
+  it('publishes the saved draft into the client-facing records', () => {
+    const repositories = createRepositories()
+    const generatedIds = [IDS.NEW_PROJECT, IDS.NEW_TASK]
+
+    saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => generatedIds.shift(),
+      input: {
+        client: {
+          status: CLIENT_STATUSES.BLOCKED,
+        },
+        currentFocus: ['Fix attribution'],
+        dashboardLinks: [],
+        neededActions: [],
+        projects: [
+          {
+            name: 'Attribution repair',
+            progress_percent: 45,
+          },
+        ],
+        reports: [],
+        tasks: [
+          {
+            assignee_name: 'Analytics',
+            status: TASK_STATUSES.BLOCKED,
+            title: 'Reconnect GA4 event',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+        ],
+        updates: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    const editor = publishAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      now: () => '2026-05-10T10:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(editor.client.hasDraft).toBe(false)
+    expect(editor.client.status).toBe(CLIENT_STATUSES.BLOCKED)
+    expect(repositories.clients.findById(IDS.CLIENT_A)).toMatchObject({
+      current_focus: ['Fix attribution'],
+      overview_draft: null,
+      overview_published_at: '2026-05-10T10:00:00.000Z',
+      status: CLIENT_STATUSES.BLOCKED,
+    })
+    expect(repositories.projects.findById(IDS.NEW_PROJECT)).toMatchObject({
+      name: 'Attribution repair',
+      progress_percent: 45,
+    })
+    expect(repositories.tasks.findById(IDS.NEW_TASK)).toMatchObject({
+      title: 'Reconnect GA4 event',
+      visibility: VISIBILITY.CLIENT_VISIBLE,
+    })
+  })
+
+  it('discards draft changes and restores the published editor state', () => {
+    const repositories = createRepositories()
+
+    saveAdminClientOverview({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => IDS.NEW_PROJECT,
+      input: {
+        client: {
+          status: CLIENT_STATUSES.WAITING_CLIENT,
+        },
+        currentFocus: ['Draft-only focus'],
+        dashboardLinks: [],
+        neededActions: [],
+        projects: [],
+        reports: [],
+        tasks: [],
+        updates: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    const editor = discardAdminClientOverviewDraft({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(editor.client.hasDraft).toBe(false)
+    expect(editor.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
+    expect(editor.currentFocus).toEqual(['Campaign launch'])
+    expect(repositories.clients.findById(IDS.CLIENT_A).overview_draft).toBeNull()
   })
 })

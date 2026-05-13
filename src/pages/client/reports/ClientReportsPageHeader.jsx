@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/shared/ui'
 
 import { getClientReportsPage } from '../../../domain/services/clientReportsService'
 import { PageHeader } from '../../../shared/layout/PageHeader'
 
 function HeaderAction({ reportCount }) {
   return (
-    <Badge className="border-slate-200 bg-white text-slate-600" variant="outline">
+    <Badge className="border-control-border bg-block text-text-secondary" variant="outline">
       {reportCount} report{reportCount === 1 ? '' : 's'}
     </Badge>
   )

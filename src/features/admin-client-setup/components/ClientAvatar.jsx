@@ -11,14 +11,14 @@ export function ClientAvatar({ client, size = 'md' }) {
     return (
       <img
         alt=""
-        className={`${sizeClass} rounded-lg border border-slate-200 bg-slate-50 object-cover`}
+        className={`${sizeClass} rounded-control border border-control-border bg-surface-subtle object-cover`}
         src={client.logo_url}
       />
     )
   }
 
   return (
-    <span className={`${sizeClass} flex items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-xs font-bold text-indigo-600`}>
+    <span className={`${sizeClass} flex items-center justify-center rounded-control border border-action/20 bg-action-muted text-xs font-bold text-action`}>
       {initials}
     </span>
   )

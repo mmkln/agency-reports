@@ -12,4 +12,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  test: {
+    exclude: ['dist/**', 'e2e/**', 'node_modules/**'],
+  },
+  server: {
+    historyApiFallback: true,
+  },
 })

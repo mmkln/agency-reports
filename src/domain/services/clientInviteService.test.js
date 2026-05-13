@@ -5,7 +5,13 @@ import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import { USER_ROLES } from '../../entities/profile'
 import { createLocalStoragePortalRepository } from '../../app/providers/repositories/createLocalStoragePortalRepository'
-import { acceptClientInvitation, createClientInvitation } from './clientInviteService'
+import {
+  acceptClientInvitation,
+  cancelClientInvitation,
+  createClientInvitation,
+  getInvitationStatus,
+  listClientInvitations,
+} from './clientInviteService'
 
 const IDS = Object.freeze({
   AGENCY: '11111111-1111-4111-8111-111111111111',
@@ -88,6 +94,71 @@ describe('clientInviteService', () => {
     })
   })
 
+  it('lists invitations with effective expired status and selected role', () => {
+    const repositories = createRepositories()
+    const generatedIds = [IDS.INVITATION, IDS.TOKEN]
+
+    createClientInvitation({
+      clientId: IDS.CLIENT,
+      email: 'viewer@example.com',
+      expiresAt: '2026-05-01T00:00:00.000Z',
+      idGenerator: () => generatedIds.shift(),
+      name: 'Viewer Name',
+      repositories,
+      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })
+
+    expect(listClientInvitations({
+      clientId: IDS.CLIENT,
+      now: () => '2026-05-12T00:00:00.000Z',
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })).toEqual([
+      expect.objectContaining({
+        email: 'viewer@example.com',
+        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+        status: CLIENT_INVITATION_STATUSES.EXPIRED,
+      }),
+    ])
+  })
+
+  it('cancels pending invitations', () => {
+    const repositories = createRepositories()
+
+    repositories.clientInvitations.upsert({
+      client_id: IDS.CLIENT,
+      created_at: '2026-05-09T10:00:00.000Z',
+      email: 'owner@example.com',
+      id: IDS.INVITATION,
+      name: 'Owner Name',
+      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      status: CLIENT_INVITATION_STATUSES.PENDING,
+      token: 'invite-token',
+      updated_at: '2026-05-09T10:00:00.000Z',
+    })
+
+    const invitation = cancelClientInvitation({
+      invitationId: IDS.INVITATION,
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })
+
+    expect(invitation.status).toBe(CLIENT_INVITATION_STATUSES.CANCELLED)
+  })
+
   it('accepts an invitation, creates a client user membership, and stores a session', () => {
     const repositories = createRepositories()
     const storage = createMemoryStorage()
@@ -131,5 +202,71 @@ describe('clientInviteService', () => {
       status: CLIENT_INVITATION_STATUSES.ACCEPTED,
     })
     expect(storage.getItem('agency-reports.auth-session')).toContain(IDS.USER)
+  })
+
+  it('blocks accepting cancelled, accepted, and expired invitations', () => {
+    const repositories = createRepositories()
+
+    repositories.clientInvitations.upsert({
+      client_id: IDS.CLIENT,
+      created_at: '2026-05-09T10:00:00.000Z',
+      email: 'cancelled@example.com',
+      id: 'cancelled-invite',
+      name: 'Cancelled',
+      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      status: CLIENT_INVITATION_STATUSES.CANCELLED,
+      token: 'cancelled-token',
+      updated_at: '2026-05-09T10:00:00.000Z',
+    })
+    repositories.clientInvitations.upsert({
+      client_id: IDS.CLIENT,
+      created_at: '2026-05-09T10:00:00.000Z',
+      email: 'accepted@example.com',
+      id: 'accepted-invite',
+      name: 'Accepted',
+      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      status: CLIENT_INVITATION_STATUSES.ACCEPTED,
+      token: 'accepted-token',
+      updated_at: '2026-05-09T10:00:00.000Z',
+    })
+    repositories.clientInvitations.upsert({
+      client_id: IDS.CLIENT,
+      created_at: '2026-05-09T10:00:00.000Z',
+      email: 'expired@example.com',
+      expires_at: '2026-05-01T00:00:00.000Z',
+      id: 'expired-invite',
+      name: 'Expired',
+      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      status: CLIENT_INVITATION_STATUSES.PENDING,
+      token: 'expired-token',
+      updated_at: '2026-05-09T10:00:00.000Z',
+    })
+
+    expect(() => acceptClientInvitation({
+      email: 'cancelled@example.com',
+      idGenerator: () => crypto.randomUUID(),
+      name: 'Cancelled',
+      repositories,
+      token: 'cancelled-token',
+    })).toThrow('Invitation was cancelled.')
+    expect(() => acceptClientInvitation({
+      email: 'accepted@example.com',
+      idGenerator: () => crypto.randomUUID(),
+      name: 'Accepted',
+      repositories,
+      token: 'accepted-token',
+    })).toThrow('Invitation was already accepted.')
+    expect(() => acceptClientInvitation({
+      email: 'expired@example.com',
+      idGenerator: () => crypto.randomUUID(),
+      name: 'Expired',
+      now: () => '2026-05-12T00:00:00.000Z',
+      repositories,
+      token: 'expired-token',
+    })).toThrow('Invitation has expired.')
+
+    expect(getInvitationStatus(
+      repositories.clientInvitations.findById('expired-invite'),
+    )).toBe(CLIENT_INVITATION_STATUSES.EXPIRED)
   })
 })

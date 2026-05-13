@@ -11,6 +11,7 @@ export function createBlankProject() {
     id: '',
     name: '',
     progress_percent: 0,
+    sort_order: 10,
     start_date: '',
     status: 'in_progress',
   }
@@ -103,11 +104,33 @@ export function updateListItem(list, index, fieldName, value) {
   ))
 }
 
+export function applyListSortOrder(list) {
+  return list.map((item, index) => ({
+    ...item,
+    sort_order: (index + 1) * 10,
+  }))
+}
+
+export function moveListItem(list, index, direction) {
+  const nextIndex = index + direction
+
+  if (nextIndex < 0 || nextIndex >= list.length) {
+    return list
+  }
+
+  const nextList = [...list]
+  const currentItem = nextList[index]
+  nextList[index] = nextList[nextIndex]
+  nextList[nextIndex] = currentItem
+
+  return applyListSortOrder(nextList)
+}
+
 export function removeListItem(list, index, fallbackFactory) {
   const nextList = list.filter((_, itemIndex) => itemIndex !== index)
 
   if (nextList.length > 0 || !fallbackFactory) {
-    return nextList
+    return applyListSortOrder(nextList)
   }
 
   return [fallbackFactory()]

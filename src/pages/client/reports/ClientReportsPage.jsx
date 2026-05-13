@@ -1,21 +1,23 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { useEffect, useRef } from 'react'
+
 import {
-  Card,
+  Button,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+  PrimitiveCard as Card,
+  PrimitiveCardHeader as CardHeader,
+  StatusBadge,
+} from '@/shared/ui'
 
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from '../../../domain/services/activityTrackingService'
 import { getClientReportsPage } from '../../../domain/services/clientReportsService'
+import { USER_ROLES } from '../../../entities/profile'
 import { Icon } from '../../../shared/icons'
 import { AccessDeniedState } from '../../../widgets/client-overview'
-
-const reportStatusClasses = {
-  archived: 'border-slate-200 bg-slate-100 text-slate-600',
-  published: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-}
 
 function formatDate(date) {
   if (!date) {
@@ -35,14 +37,14 @@ function formatPeriod(report) {
 
 function EmptyReportsState() {
   return (
-    <Card className="border-dashed border-slate-300 bg-white shadow-xs">
+    <Card className="border-dashed border-border-strong bg-block shadow-none">
       <CardContent className="py-12">
         <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-slate-200">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-block bg-surface-subtle text-text-muted ring-1 ring-control-border">
             <Icon name="fileText" size={28} />
           </div>
           <h2 className="mt-5 text-xl font-semibold text-heading">No published report yet</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+          <p className="mt-2 text-sm leading-6 text-text-muted">
             The first monthly summary will appear here after the agency publishes it.
           </p>
         </div>
@@ -57,9 +59,9 @@ function ReportSection({ children, title }) {
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{children}</p>
+    <section className="rounded-block border border-control-border bg-block-subtle p-4">
+      <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-text-secondary">{children}</p>
     </section>
   )
 }
@@ -67,8 +69,8 @@ function ReportSection({ children, title }) {
 function ReportReader({ report }) {
   if (!report) {
     return (
-      <Card className="border-slate-200 bg-white shadow-xs">
-        <CardContent className="py-8 text-sm text-slate-500">
+      <Card className="border-control-border bg-block shadow-none">
+        <CardContent className="py-8 text-sm text-text-muted">
           This report is not available. Draft and ready reports are hidden from the client portal.
         </CardContent>
       </Card>
@@ -76,19 +78,14 @@ function ReportReader({ report }) {
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-xs">
-      <CardHeader className="border-b border-slate-100 bg-slate-50/50">
+    <Card className="border-control-border bg-block shadow-none">
+      <CardHeader className="border-b border-separator bg-surface-subtle">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle>{report.title}</CardTitle>
             <CardDescription className="mt-1">{formatPeriod(report)}</CardDescription>
           </div>
-          <Badge
-            className={reportStatusClasses[report.status] ?? 'border-slate-200 bg-slate-100 text-slate-600'}
-            variant="outline"
-          >
-            {report.status}
-          </Badge>
+          <StatusBadge meta={report.statusMeta} />
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 py-5">
@@ -130,8 +127,8 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
   }
 
   return (
-    <Card className="border-slate-200 bg-white shadow-xs">
-      <CardHeader className="border-b border-slate-100 bg-slate-50/50">
+    <Card className="border-control-border bg-block shadow-none">
+      <CardHeader className="border-b border-separator bg-surface-subtle">
         <CardTitle className="text-base">Report archive</CardTitle>
         <CardDescription>Published and archived reports, sorted by latest period first.</CardDescription>
       </CardHeader>
@@ -142,13 +139,13 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
           return (
             <a
               className={isSelected
-                ? 'rounded-xl border border-brand bg-indigo-50 px-4 py-3 text-sm shadow-xs'
-                : 'rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm transition-colors hover:bg-slate-50'}
+                ? 'rounded-block border border-brand bg-action-muted px-4 py-3 text-sm shadow-none'
+                : 'rounded-block border border-control-border bg-block px-4 py-3 text-sm transition-colors hover:bg-surface-subtle'}
               href={`#client-reports?clientId=${clientId}&reportId=${report.id}`}
               key={report.id}
             >
-              <span className="block font-semibold text-slate-900">{report.title}</span>
-              <span className="mt-1 block text-xs text-slate-500">{formatPeriod(report)}</span>
+              <span className="block font-semibold text-text-primary">{report.title}</span>
+              <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
             </a>
           )
         })}
@@ -157,7 +154,29 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
   )
 }
 
+function createUuid() {
+  return crypto.randomUUID()
+}
+
+function recordClientReportOpened({ clientId, reportId, runtime }) {
+  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER || !reportId) {
+    return
+  }
+
+  recordActivityEvent({
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.REPORT_OPENED,
+    idGenerator: createUuid,
+    metadata: {
+      reportId,
+    },
+    repositories: runtime.repositories,
+    viewer: runtime.viewer,
+  })
+}
+
 export function ClientReportsPage({ routeParams = {}, runtime }) {
+  const recordedReportOpenRef = useRef('')
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const page = getClientReportsPage({
     clientId,
@@ -165,6 +184,20 @@ export function ClientReportsPage({ routeParams = {}, runtime }) {
     repositories: runtime.repositories,
     viewer: runtime.viewer,
   })
+  const selectedReportId = page.selectedReport?.id ?? ''
+
+  useEffect(() => {
+    if (page.status !== 'ready' || !selectedReportId || recordedReportOpenRef.current === selectedReportId) {
+      return
+    }
+
+    recordedReportOpenRef.current = selectedReportId
+    recordClientReportOpened({
+      clientId,
+      reportId: selectedReportId,
+      runtime,
+    })
+  }, [clientId, page.status, runtime, selectedReportId])
 
   if (page.status === 'error') {
     return <AccessDeniedState />

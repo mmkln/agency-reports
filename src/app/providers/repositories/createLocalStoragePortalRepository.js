@@ -2,6 +2,7 @@ export const PORTAL_STORAGE_KEY = 'agency-reports.portal.v2'
 export const PORTAL_STORAGE_SCHEMA_VERSION = 1
 
 const TABLE_NAMES = Object.freeze([
+  'activity_events',
   'clients',
   'client_invitations',
   'client_memberships',
@@ -35,10 +36,18 @@ function createMemoryStorage() {
 }
 
 function createSeedSnapshot(seedData) {
-  return {
+  const seedSnapshot = {
     ...clone(seedData),
     __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
   }
+
+  for (const tableName of TABLE_NAMES) {
+    if (!Array.isArray(seedSnapshot[tableName])) {
+      seedSnapshot[tableName] = []
+    }
+  }
+
+  return seedSnapshot
 }
 
 function isPlainObject(value) {
@@ -151,6 +160,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
   }
 
   return {
+    activityEvents: createEntityRepository('activity_events', readSnapshot, writeSnapshot),
     clients: createEntityRepository('clients', readSnapshot, writeSnapshot),
     clientInvitations: createEntityRepository('client_invitations', readSnapshot, writeSnapshot),
     clientMemberships: createEntityRepository('client_memberships', readSnapshot, writeSnapshot),

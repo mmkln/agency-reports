@@ -5,6 +5,7 @@ export function AppShell({
   activeRoute,
   children,
   defaultRoute,
+  hasUnsavedChanges = false,
   onAuthChange,
   routeParams = {},
   runtime,
@@ -16,10 +17,11 @@ export function AppShell({
   const routeKey = `${activeRoute.id}:${JSON.stringify(routeParams)}`
 
   return (
-    <main className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <main className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
       <TopNav
         activeRoute={activeRoute}
         defaultRoute={defaultRoute}
+        hasUnsavedChanges={hasUnsavedChanges}
         onAuthChange={onAuthChange}
         runtime={runtime}
         routes={navRoutes}

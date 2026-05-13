@@ -9,23 +9,23 @@ import { ToastContext } from './toastContext'
 const toneConfig = {
   error: {
     icon: XCircle,
-    iconClassName: 'bg-rose-50 text-rose-600',
-    rootClassName: 'border-rose-200',
+    iconClassName: 'bg-destructive/10 text-rose-600',
+    rootClassName: 'border-destructive/20',
   },
   info: {
     icon: Info,
-    iconClassName: 'bg-indigo-50 text-indigo-600',
-    rootClassName: 'border-indigo-200',
+    iconClassName: 'bg-action-muted text-action',
+    rootClassName: 'border-action/20',
   },
   success: {
     icon: CheckCircle2,
-    iconClassName: 'bg-emerald-50 text-emerald-600',
-    rootClassName: 'border-emerald-200',
+    iconClassName: 'bg-success-muted text-success-foreground',
+    rootClassName: 'border-success/20',
   },
   warning: {
     icon: TriangleAlert,
-    iconClassName: 'bg-amber-50 text-amber-600',
-    rootClassName: 'border-amber-200',
+    iconClassName: 'bg-warning-muted text-warning-foreground',
+    rootClassName: 'border-warning/20',
   },
 }
 
@@ -44,7 +44,7 @@ function ToastItem({ toast, onDismiss }) {
   return (
     <ToastPrimitive.Root
       className={cn(
-        'grid w-[calc(100vw-2rem)] max-w-sm grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border bg-white p-4 shadow-xl shadow-slate-950/10 outline-none',
+        'grid w-[calc(100vw-2rem)] max-w-sm grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-control border bg-block p-4 shadow-premium outline-none',
         'data-open:animate-in data-open:slide-in-from-right-4 data-open:fade-in-0 data-closed:animate-out data-closed:slide-out-to-right-4 data-closed:fade-out-0',
         config.rootClassName,
       )}
@@ -56,15 +56,15 @@ function ToastItem({ toast, onDismiss }) {
       }}
       open
     >
-      <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg', config.iconClassName)}>
+      <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control', config.iconClassName)}>
         <Icon className="size-4" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <ToastPrimitive.Title className="text-sm font-semibold leading-5 text-slate-950">
+        <ToastPrimitive.Title className="text-sm font-semibold leading-5 text-text-primary">
           {toast.title}
         </ToastPrimitive.Title>
         {toast.description ? (
-          <ToastPrimitive.Description className="mt-1 text-sm leading-5 text-slate-500">
+          <ToastPrimitive.Description className="mt-1 text-sm leading-5 text-text-muted">
             {toast.description}
           </ToastPrimitive.Description>
         ) : null}
@@ -72,7 +72,7 @@ function ToastItem({ toast, onDismiss }) {
       <ToastPrimitive.Close asChild>
         <Button
           aria-label="Dismiss notification"
-          className="-mt-1 -mr-1 text-slate-400 hover:text-slate-700"
+          className="-mt-1 -mr-1 text-text-quaternary hover:text-text-secondary"
           size="icon-sm"
           type="button"
           variant="ghost"

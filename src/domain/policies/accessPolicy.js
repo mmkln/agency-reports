@@ -14,7 +14,7 @@ export function canAccessClient(viewer, clientId) {
   }
 
   if (viewer.role === USER_ROLES.CLIENT_USER) {
-    return viewer.clientId === clientId
+    return viewer.clientIds?.includes(clientId) ?? false
   }
 
   return false

@@ -3,6 +3,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -13,6 +15,7 @@ import { clearAuthSession } from '../../domain/services/authService'
 import { USER_ROLES } from '../../entities/profile'
 import { Icon } from '../icons'
 import { useToast } from '../notifications'
+import { useTheme } from '../theme'
 import { BrandLogo } from '../ui'
 
 const roleMeta = {
@@ -62,14 +65,14 @@ function NotificationsMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="Open notifications"
-          className="relative rounded-full text-slate-400 hover:text-slate-600"
+          className="relative rounded-full text-text-secondary hover:text-text-primary"
           size="icon"
           type="button"
           variant="ghost"
         >
           <Icon name="bell" size={20} />
           {unreadCount > 0 ? (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-action px-1 text-[10px] font-semibold leading-none text-action-foreground ring-2 ring-background">
               {unreadCount}
             </span>
           ) : null}
@@ -77,8 +80,8 @@ function NotificationsMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-2">
         <DropdownMenuLabel className="flex items-center justify-between px-2 py-2">
-          <span className="text-sm font-semibold text-slate-900">Notifications</span>
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+          <span className="text-sm font-semibold text-text-primary">Notifications</span>
+          <span className="rounded-full bg-action-muted px-2 py-0.5 text-xs font-medium text-action">
             {unreadCount} new
           </span>
         </DropdownMenuLabel>
@@ -86,22 +89,22 @@ function NotificationsMenu() {
         <div className="grid gap-1 py-1">
           {demoNotifications.map((notification) => (
             <div
-              className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-lg px-2 py-2.5 hover:bg-slate-50"
+              className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-item px-control py-item transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
               key={notification.id}
             >
-              <span className={`mt-1 h-2 w-2 rounded-full ${notification.isUnread ? 'bg-blue-600' : 'bg-slate-200'}`} />
+              <span className={`mt-1 h-2 w-2 rounded-full ${notification.isUnread ? 'bg-action' : 'bg-control-selected'}`} />
               <span className="min-w-0">
                 <span className="flex items-start justify-between gap-3">
-                  <span className="text-sm font-semibold leading-5 text-slate-900">{notification.title}</span>
-                  <span className="shrink-0 text-xs text-slate-400">{notification.time}</span>
+                  <span className="text-sm font-semibold leading-5 text-text-primary">{notification.title}</span>
+                  <span className="shrink-0 text-xs text-text-quaternary">{notification.time}</span>
                 </span>
-                <span className="mt-0.5 block text-xs leading-5 text-slate-500">{notification.body}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-text-secondary">{notification.body}</span>
               </span>
             </div>
           ))}
         </div>
         <DropdownMenuSeparator />
-        <div className="px-2 py-1.5 text-xs text-slate-500">
+        <div className="px-2 py-1.5 text-xs text-text-secondary">
           Demo notifications only. Live alerts will connect to workspace activity later.
         </div>
       </DropdownMenuContent>
@@ -109,7 +112,34 @@ function NotificationsMenu() {
   )
 }
 
-export function TopNav({ activeRoute, defaultRoute, onAuthChange, runtime, routes }) {
+function ThemeModeControl() {
+  const { resolvedTheme, setTheme, theme } = useTheme()
+
+  return (
+    <div className="px-1 py-1">
+      <DropdownMenuLabel className="px-control py-tag">
+        <span className="block text-label text-text-secondary">Appearance</span>
+        <span className="mt-0.5 block text-xs font-normal text-text-muted">
+          Current: {resolvedTheme === 'dark' ? 'dark' : 'light'}
+        </span>
+      </DropdownMenuLabel>
+      <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
+        <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+    </div>
+  )
+}
+
+export function TopNav({
+  activeRoute,
+  defaultRoute,
+  hasUnsavedChanges = false,
+  onAuthChange,
+  runtime,
+  routes,
+}) {
   const viewer = runtime.viewer
   const toast = useToast()
   const activeRole = roleMeta[viewer.role] ?? {
@@ -118,7 +148,7 @@ export function TopNav({ activeRoute, defaultRoute, onAuthChange, runtime, route
   }
 
   return (
-    <nav className="sticky top-0 z-20 border-b border-slate-200 bg-white">
+    <nav className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex items-center overflow-x-auto">
@@ -130,16 +160,16 @@ export function TopNav({ activeRoute, defaultRoute, onAuthChange, runtime, route
 
                 return (
                   <a
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium no-underline transition-all duration-200 ${
+                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
                       isActive
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        ? 'bg-control-selected text-text-primary'
+                        : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
                     }`}
                     href={route.href}
                     key={route.id}
                   >
                     <Icon
-                      className={isActive ? 'text-indigo-600' : 'text-slate-500'}
+                      className={isActive ? 'text-primary' : 'text-text-secondary'}
                       name={route.iconName}
                       size={16}
                     />
@@ -153,10 +183,10 @@ export function TopNav({ activeRoute, defaultRoute, onAuthChange, runtime, route
           <div className="ml-4 hidden items-center gap-4 md:flex">
             <label className="relative w-64 lg:w-80">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Icon className="text-slate-400" name="search" size={16} />
+                <Icon className="text-text-secondary" name="search" size={16} />
               </span>
               <Input
-                className="bg-slate-50/50 pl-10"
+                className="bg-control pl-10"
                 placeholder={activeRole.searchPlaceholder}
                 type="text"
               />
@@ -166,26 +196,35 @@ export function TopNav({ activeRoute, defaultRoute, onAuthChange, runtime, route
               <DropdownMenuTrigger asChild>
                 <Button
                   aria-label="Open account menu"
-                  className="rounded-full border-indigo-200 bg-gradient-to-tr from-indigo-100 to-indigo-50 hover:border-indigo-300 hover:bg-indigo-50"
+                  className="rounded-full border-control-border bg-control hover:bg-control-hover"
                   size="icon"
                   type="button"
                   variant="outline"
                 >
-                  <Icon className="text-indigo-600" name="user" size={18} />
+                  <Icon className="text-primary" name="user" size={18} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <span className="block text-sm font-semibold text-slate-900">{viewer.name}</span>
-                  <span className="mt-0.5 block text-xs font-normal text-slate-500">{viewer.email}</span>
-                  <span className="mt-2 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                  <span className="block text-sm font-semibold text-text-primary">{viewer.name}</span>
+                  <span className="mt-0.5 block text-xs font-normal text-text-secondary">{viewer.email}</span>
+                  <span className="mt-2 inline-flex rounded-full bg-control px-2 py-0.5 text-xs font-semibold text-text-secondary">
                     {activeRole.label}
                   </span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <ThemeModeControl />
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="cursor-pointer text-rose-600 focus:text-rose-700"
+                  className="cursor-pointer text-rose-600 focus:text-destructive"
                   onSelect={() => {
+                    if (
+                      hasUnsavedChanges
+                      && !window.confirm('You have unsaved editor changes. Sign out anyway?')
+                    ) {
+                      return
+                    }
+
                     toast.info('Signed out', 'You have returned to the login screen.')
                     clearAuthSession()
                     onAuthChange?.()

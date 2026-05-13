@@ -7,6 +7,7 @@ import {
   getPortalSlugIssue,
   listAdminClients,
   normalizePortalSlug,
+  updateAdminClient,
 } from './adminClientService'
 
 const IDS = Object.freeze({
@@ -102,7 +103,6 @@ describe('adminClientService', () => {
         portalSlug: '',
         primaryContactEmail: 'owner@example.com',
         primaryContactName: 'Owner Name',
-        status: CLIENT_STATUSES.WAITING_CLIENT,
       },
       now: () => '2026-05-09T10:00:00.000Z',
       repositories,
@@ -118,7 +118,7 @@ describe('adminClientService', () => {
       portal_slug: 'new-client',
       primary_contact_email: 'owner@example.com',
       primary_contact_name: 'Owner Name',
-      status: CLIENT_STATUSES.WAITING_CLIENT,
+      status: CLIENT_STATUSES.SETUP,
     })
     expect(result.invitation).toMatchObject({
       client_id: IDS.NEW_CLIENT,
@@ -150,6 +150,80 @@ describe('adminClientService', () => {
       input: {
         name: 'New Client',
         portalSlug: 'existing-client',
+        primaryContactEmail: 'owner@example.com',
+        primaryContactName: 'Owner Name',
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })).toThrow('This portal slug is already used by another client.')
+  })
+
+  it('updates client workspace details without treating its own portal slug as duplicate', () => {
+    const repositories = createRepositories([
+      {
+        agency_id: IDS.AGENCY_A,
+        created_at: '2026-05-01T10:00:00.000Z',
+        id: IDS.CLIENT_A,
+        logo_url: '',
+        name: 'Existing Client',
+        portal_slug: 'existing-client',
+        primary_contact_email: 'old@example.com',
+        primary_contact_name: 'Old Owner',
+        status: CLIENT_STATUSES.SETUP,
+        updated_at: '2026-05-01T10:00:00.000Z',
+      },
+    ])
+
+    const updatedClient = updateAdminClient({
+      clientId: IDS.CLIENT_A,
+      input: {
+        logoUrl: 'https://cdn.example.com/updated-logo.png',
+        name: 'Existing Client Updated',
+        portalSlug: 'existing-client',
+        primaryContactEmail: 'new@example.com',
+        primaryContactName: 'New Owner',
+        status: CLIENT_STATUSES.ON_TRACK,
+      },
+      now: () => '2026-05-10T10:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(updatedClient).toMatchObject({
+      created_at: '2026-05-01T10:00:00.000Z',
+      id: IDS.CLIENT_A,
+      logo_url: 'https://cdn.example.com/updated-logo.png',
+      name: 'Existing Client Updated',
+      portal_slug: 'existing-client',
+      primary_contact_email: 'new@example.com',
+      primary_contact_name: 'New Owner',
+      status: CLIENT_STATUSES.ON_TRACK,
+      updated_at: '2026-05-10T10:00:00.000Z',
+    })
+    expect(repositories.clients.findById(IDS.CLIENT_A).name).toBe('Existing Client Updated')
+  })
+
+  it('rejects updates that reuse another client portal slug', () => {
+    const repositories = createRepositories([
+      {
+        agency_id: IDS.AGENCY_A,
+        id: IDS.CLIENT_A,
+        name: 'Existing Client',
+        portal_slug: 'existing-client',
+      },
+      {
+        agency_id: IDS.AGENCY_A,
+        id: IDS.NEW_CLIENT,
+        name: 'Other Client',
+        portal_slug: 'other-client',
+      },
+    ])
+
+    expect(() => updateAdminClient({
+      clientId: IDS.CLIENT_A,
+      input: {
+        name: 'Existing Client',
+        portalSlug: 'other-client',
         primaryContactEmail: 'owner@example.com',
         primaryContactName: 'Owner Name',
       },
@@ -192,7 +266,7 @@ describe('adminClientService', () => {
       },
       repositories: createRepositories([]),
       viewer: createAdminViewer(),
-    })).toThrow('Project status is invalid.')
+    })).toThrow('Client status is invalid.')
   })
 
   it('rejects non-admin viewers', () => {

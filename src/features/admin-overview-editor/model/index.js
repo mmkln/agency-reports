@@ -6,6 +6,7 @@ export {
   createBlankTask,
   createBlankUpdate,
   createDraft,
+  moveListItem,
   removeListItem,
   updateListItem,
 } from './editorDraft'

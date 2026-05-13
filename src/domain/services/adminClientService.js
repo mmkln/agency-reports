@@ -68,16 +68,16 @@ function assertLogoValue(value) {
 }
 
 function assertClientStatus(status) {
-  const normalizedStatus = status || CLIENT_STATUSES.ON_TRACK
+  const normalizedStatus = status || CLIENT_STATUSES.SETUP
 
   if (!VALID_CLIENT_STATUSES.has(normalizedStatus)) {
-    throw new Error('Project status is invalid.')
+    throw new Error('Client status is invalid.')
   }
 
   return normalizedStatus
 }
 
-export function getPortalSlugIssue({ repositories, viewer, portalSlug }) {
+export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer, portalSlug }) {
   assertAgencyAdmin(viewer)
 
   const normalizedSlug = normalizePortalSlug(portalSlug)
@@ -96,7 +96,11 @@ export function getPortalSlugIssue({ repositories, viewer, portalSlug }) {
 
   const existingClient = repositories.clients
     .list()
-    .find((client) => client.agency_id === viewer.agencyId && client.portal_slug === normalizedSlug)
+    .find((client) => (
+      client.agency_id === viewer.agencyId
+      && client.portal_slug === normalizedSlug
+      && client.id !== ignoreClientId
+    ))
 
   if (existingClient) {
     return 'This portal slug is already used by another client.'
@@ -171,6 +175,52 @@ export function createAdminClient({
     client,
     invitation,
   }
+}
+
+export function updateAdminClient({
+  clientId,
+  input,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const existingClient = repositories.clients.findById(clientId)
+
+  if (!existingClient || existingClient.agency_id !== viewer.agencyId) {
+    throw new Error('Client was not found.')
+  }
+
+  const name = requireText(input.name, 'Client name')
+  const primaryContactEmail = assertEmail(input.primaryContactEmail, 'Primary contact email')
+  const primaryContactName = requireText(input.primaryContactName, 'Primary contact name')
+  const portalSlug = normalizePortalSlug(input.portalSlug || name)
+  const portalSlugIssue = getPortalSlugIssue({
+    ignoreClientId: existingClient.id,
+    portalSlug,
+    repositories,
+    viewer,
+  })
+
+  if (portalSlugIssue) {
+    throw new Error(portalSlugIssue)
+  }
+
+  const updatedClient = {
+    ...existingClient,
+    logo_url: assertLogoValue(input.logoUrl),
+    name,
+    portal_slug: portalSlug,
+    primary_contact_email: primaryContactEmail,
+    primary_contact_name: primaryContactName,
+    status: assertClientStatus(input.status || existingClient.status),
+    updated_at: now(),
+  }
+
+  repositories.clients.upsert(updatedClient)
+
+  return updatedClient
 }
 
 export function deleteAdminClient({

@@ -1,4 +1,4 @@
-import { DASHBOARD_LINK_STATUSES } from '../../entities/dashboard-link'
+import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import { canAccessClient } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -16,6 +16,10 @@ function mapDashboard(dashboardLink) {
     provider: dashboardLink.provider,
     publicUrl: dashboardLink.public_url,
     status: dashboardLink.status,
+    statusMeta: DASHBOARD_LINK_STATUS_META[dashboardLink.status] ?? {
+      label: dashboardLink.status,
+      tone: 'neutral',
+    },
   }
 }
 

@@ -1,41 +1,59 @@
 import { useMemo, useState } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import {
+  Badge,
+  Button,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+  OverlayBody,
+  OverlayFooter,
+  OverlayHeader,
+  PrimitiveCard as Card,
+  Separator,
+  StatusBadge as SharedStatusBadge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Textarea,
+} from '@/shared/ui'
 
 import { updateAssignedTask } from '../../../domain/services/teamTaskService'
+import { getTaskStatusSelectionOptions } from '../../../domain/policies/taskPolicy'
 import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
 
-const statusToneClasses = {
-  amber: 'border-amber-200 bg-amber-50 text-amber-700',
-  blue: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-  fuchsia: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700',
-  green: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  neutral: 'border-slate-200 bg-slate-100 text-slate-600',
-  rose: 'border-rose-200 bg-rose-50 text-rose-700',
+const statusIconClasses = {
+  amber: 'text-text-quaternary',
+  blue: 'text-text-quaternary',
+  purple: 'text-text-quaternary',
+  green: 'text-text-quaternary',
+  neutral: 'text-text-quaternary',
+  rose: 'text-text-quaternary',
+}
+
+function getTaskStatusTone(status) {
+  const meta = TASK_STATUS_META[status] ?? {
+    label: status,
+    tone: 'neutral',
+  }
+
+  return meta.tone
 }
 
 function StatusBadge({ status }) {
@@ -43,65 +61,29 @@ function StatusBadge({ status }) {
     label: status,
     tone: 'neutral',
   }
-  const tone = status === TASK_STATUSES.WAITING_CLIENT ? 'fuchsia' : meta.tone
+  return <SharedStatusBadge meta={meta} />
+}
+
+function StatusInlineValue({ status }) {
+  const meta = TASK_STATUS_META[status] ?? {
+    label: status,
+    tone: 'neutral',
+  }
+  const tone = getTaskStatusTone(status)
 
   return (
-    <Badge className={statusToneClasses[tone] ?? statusToneClasses.neutral} variant="outline">
+    <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
+      <Icon
+        className={`shrink-0 ${statusIconClasses[tone] ?? statusIconClasses.neutral}`}
+        name={meta.icon ?? 'circle'}
+        size={16}
+      />
       {meta.label}
-    </Badge>
+    </span>
   )
 }
 
-const actionToneClasses = {
-  green: 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
-  neutral: 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
-  purple: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-100',
-  red: 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100',
-  teal: 'border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100',
-}
-
-const statusActionOrder = [
-  TASK_STATUSES.DONE,
-  TASK_STATUSES.BLOCKED,
-  TASK_STATUSES.WAITING_CLIENT,
-  TASK_STATUSES.IN_PROGRESS,
-  TASK_STATUSES.TODO,
-]
-
-function getStatusAction(taskStatus, nextStatus) {
-  if (taskStatus === TASK_STATUSES.BLOCKED && nextStatus === TASK_STATUSES.IN_PROGRESS) {
-    return { label: 'Resume Work (Clear Blocker)', tone: 'teal' }
-  }
-
-  if (taskStatus === TASK_STATUSES.WAITING_CLIENT && nextStatus === TASK_STATUSES.IN_PROGRESS) {
-    return { label: 'Resume Work (Client Answered)', tone: 'teal' }
-  }
-
-  if (taskStatus === TASK_STATUSES.DONE && nextStatus === TASK_STATUSES.TODO) {
-    return { label: 'Re-open Task', tone: 'neutral' }
-  }
-
-  if (taskStatus === TASK_STATUSES.TODO && nextStatus === TASK_STATUSES.IN_PROGRESS) {
-    return { label: 'Start Work', tone: 'teal' }
-  }
-
-  if (nextStatus === TASK_STATUSES.DONE) {
-    return { label: 'Mark Done', tone: 'green' }
-  }
-
-  if (nextStatus === TASK_STATUSES.BLOCKED) {
-    return { label: 'Block Issue', tone: 'red' }
-  }
-
-  if (nextStatus === TASK_STATUSES.WAITING_CLIENT) {
-    return { label: 'Wait on Client', tone: 'purple' }
-  }
-
-  return {
-    label: TASK_STATUS_META[nextStatus]?.label ?? nextStatus,
-    tone: 'neutral',
-  }
-}
+const taskFieldTextareaClass = 'resize-none border-transparent bg-control px-component py-control text-sm leading-6 shadow-none hover:bg-control-hover focus-visible:border-ring focus-visible:bg-block focus-visible:ring-2 focus-visible:ring-ring/25'
 
 function formatTaskDueDate(date) {
   if (!date) {
@@ -138,8 +120,8 @@ function VisibilityBadge({ visibility }) {
   return (
     <Badge
       className={isClientVisible
-        ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-        : 'border-slate-200 bg-slate-100 text-slate-600'}
+        ? 'border-action/20 bg-action-muted text-action'
+        : 'border-control-border bg-control text-text-secondary'}
       variant="outline"
     >
       <Icon name={isClientVisible ? 'user' : 'lock'} size={12} />
@@ -161,16 +143,16 @@ function formatDueDate(date) {
 
 function EmptyTasksState({ hasFilters }) {
   return (
-    <Card className="border-slate-200 bg-white shadow-xs">
+    <Card className="border-control-border bg-block shadow-none">
       <CardContent className="flex min-h-[260px] items-center justify-center">
         <div className="max-w-sm text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-control text-text-quaternary">
             <Icon name="checkCircle2" size={30} />
           </div>
-          <h2 className="mt-5 text-base font-semibold text-slate-900">
+          <h2 className="mt-5 text-base font-semibold text-text-primary">
             {hasFilters ? 'No tasks match these filters' : 'No assigned tasks right now'}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+          <p className="mt-2 text-sm leading-6 text-text-muted">
             {hasFilters
               ? 'Adjust the filters to see more operational work.'
               : 'Assigned client work will appear here when tasks are created.'}
@@ -187,7 +169,7 @@ function TaskList({ onSelectTask, selectedTaskId, tasks }) {
   }
 
   return (
-    <Card className="overflow-hidden border-slate-200 bg-white py-0 shadow-xs">
+    <Card className="overflow-hidden border-control-border bg-block py-0 shadow-none">
       <Table className="min-w-[820px]">
           <TableHeader>
             <TableRow>
@@ -205,29 +187,29 @@ function TaskList({ onSelectTask, selectedTaskId, tasks }) {
               return (
                 <TableRow
                   className={`cursor-pointer align-top transition-colors ${
-                    isSelected ? 'bg-indigo-50/70' : 'hover:bg-slate-50'
+                    isSelected ? 'bg-action-muted' : 'hover:bg-surface-subtle'
                   }`}
                   key={task.id}
                   onClick={() => onSelectTask(task.id)}
                 >
                   <TableCell>
-                    <p className="font-semibold text-slate-900">{task.title}</p>
-                    <p className="mt-1 line-clamp-1 text-xs text-slate-500">{task.description}</p>
+                    <p className="font-semibold text-text-primary">{task.title}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-text-muted">{task.description}</p>
                     {task.blockerNote ? (
-                      <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
-                        <Icon name="warning" size={12} />
+                      <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                        <Icon name="triangleAlert" size={12} />
                         Blocker noted
                       </p>
                     ) : null}
                   </TableCell>
                   <TableCell>
-                    <p className="font-medium text-slate-700">{task.clientName}</p>
-                    <p className="mt-1 text-xs text-slate-500">{task.projectName}</p>
+                    <p className="font-medium text-text-secondary">{task.clientName}</p>
+                    <p className="mt-1 text-xs text-text-muted">{task.projectName}</p>
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={task.status} />
                   </TableCell>
-                  <TableCell className="text-slate-500">{formatDueDate(task.dueDate)}</TableCell>
+                  <TableCell className="text-text-muted">{formatDueDate(task.dueDate)}</TableCell>
                   <TableCell>
                     <VisibilityBadge visibility={task.visibility} />
                   </TableCell>
@@ -244,144 +226,159 @@ function TaskDetailsContent({
   draft,
   error,
   onChange,
-  saveState,
   task,
 }) {
   const nextStatus = draft.status
   const showBlockerReason = nextStatus === TASK_STATUSES.BLOCKED
   const showWaitingReason = nextStatus === TASK_STATUSES.WAITING_CLIENT
   const isDone = nextStatus === TASK_STATUSES.DONE
+  const blockerReasonError = showBlockerReason && error === 'Blocker reason is required.'
+  const selectableStatuses = getTaskStatusSelectionOptions({
+    currentStatus: task.status,
+    selectedStatus: nextStatus,
+  })
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge className="border-emerald-100 bg-emerald-50 text-[10px] font-bold uppercase tracking-wide text-emerald-700" variant="outline">
-            {task.clientName}
-          </Badge>
-          <VisibilityBadge visibility={draft.visibility} />
-        </div>
+    <div className="h-full overflow-y-auto px-panel py-card">
+      <div className="mx-auto grid max-w-readable gap-panel">
+        {task.description ? (
+          <section className="grid gap-1">
+            <p className="text-label text-text-muted">Details</p>
+            <p className="text-sm leading-6 text-text-secondary">{task.description}</p>
+          </section>
+        ) : null}
 
-        <h2 className="mt-3 text-lg font-bold leading-6 text-slate-900">{task.title}</h2>
-        <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="calendar" size={14} />
-            {formatTaskDueDate(task.dueDate)}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="user" size={14} />
-            {task.assigneeName || 'Unassigned'}
-          </span>
-        </div>
+        <section className="grid gap-item">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="grid gap-1">
+              <p className="text-label text-text-muted">Status</p>
+              {isDone ? <span className="text-sm text-text-muted">Completed. Re-open if needed.</span> : null}
+            </div>
+            {selectableStatuses.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="h-control-small gap-2 px-control-small" size="sm" type="button" variant="ghost">
+                    <StatusInlineValue status={nextStatus} />
+                    <Icon className="text-text-muted" name="chevronDown" size={14} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel>Change status</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    onValueChange={(status) => onChange({ ...draft, status })}
+                    value={nextStatus}
+                  >
+                    {selectableStatuses.map((status) => {
+                      const meta = TASK_STATUS_META[status] ?? {
+                        label: status,
+                        tone: 'neutral',
+                      }
+                      const tone = getTaskStatusTone(status)
 
-        <section className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-bold tracking-wide text-slate-500 uppercase">Status actions</p>
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <span className="text-sm text-slate-700">Current Status:</span>
-            <StatusBadge status={nextStatus} />
+                      return (
+                        <DropdownMenuRadioItem
+                          className="cursor-pointer"
+                          key={status}
+                          value={status}
+                        >
+                          <Icon
+                            className={`shrink-0 ${statusIconClasses[tone] ?? statusIconClasses.neutral}`}
+                            name={meta.icon ?? 'circle'}
+                            size={16}
+                          />
+                          <span className="min-w-0 flex-1 truncate">{meta.label}</span>
+                        </DropdownMenuRadioItem>
+                      )
+                    })}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <StatusInlineValue status={nextStatus} />
+            )}
           </div>
-          {isDone ? (
-            <p className="mt-4 px-2 text-sm italic text-slate-500">Task is completed. Re-open if needed.</p>
+
+          {showBlockerReason ? (
+            <label className="grid gap-2">
+              <span className="flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <Icon className="text-destructive" name="triangleAlert" size={14} />
+                  Blocker reason
+                </span>
+                <span className="text-xs text-text-muted">Required</span>
+              </span>
+              <Textarea
+                aria-invalid={Boolean(blockerReasonError)}
+                className={`${taskFieldTextareaClass} min-h-20 aria-invalid:border-destructive aria-invalid:ring-destructive/25`}
+                onChange={(event) => onChange({ ...draft, blockerNote: event.target.value })}
+                placeholder="What is blocking progress?"
+                value={draft.blockerNote}
+              />
+              <span className={`text-xs ${blockerReasonError ? 'text-destructive' : 'text-text-muted'}`}>
+                Required when a task is blocked.
+              </span>
+            </label>
           ) : null}
-          <div className="mt-4 grid gap-2">
-            {[...task.availableTransitions].sort(
-              (statusA, statusB) => statusActionOrder.indexOf(statusA) - statusActionOrder.indexOf(statusB),
-            ).map((status) => {
-              const action = getStatusAction(task.status, status)
 
-              return (
-                <button
-                  className={`h-10 rounded-md border px-3 text-sm font-medium transition ${
-                    actionToneClasses[action.tone] ?? actionToneClasses.neutral
-                  } ${nextStatus === status ? 'ring-2 ring-brand/20' : ''}`}
-                  key={status}
-                  onClick={() => onChange({ ...draft, status })}
-                  type="button"
-                >
-                  {action.label}
-                </button>
-              )
-            })}
-          </div>
+          {showWaitingReason ? (
+            <label className="grid gap-2">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
+                <Icon className="text-text-quaternary" name="clock" size={14} />
+                Waiting on
+              </span>
+              <Textarea
+                className={`${taskFieldTextareaClass} min-h-20`}
+                onChange={(event) => onChange({ ...draft, blockerNote: event.target.value })}
+                placeholder="What client answer or asset is needed?"
+                value={draft.blockerNote}
+              />
+              <span className="text-xs text-text-muted">Use this for context before creating a formal request.</span>
+            </label>
+          ) : null}
         </section>
 
-        {showBlockerReason ? (
-          <section className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-rose-700">
-              <Icon name="warning" size={14} />
-              Blocker reason
-            </div>
-            <Textarea
-              className="min-h-24 border-rose-200 bg-white focus-visible:border-rose-300 focus-visible:ring-rose-200"
-              onChange={(event) => onChange({ ...draft, blockerNote: event.target.value })}
-              placeholder="Provide details..."
-              value={draft.blockerNote}
-            />
-            <p className="mt-2 text-xs text-rose-600">Required. This helps the team understand why progress stopped.</p>
-          </section>
-        ) : null}
+        <Separator />
 
-        {showWaitingReason ? (
-          <section className="mt-5 rounded-lg border border-fuchsia-200 bg-fuchsia-50 p-4">
-            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-fuchsia-700">
-              <Icon name="clock" size={14} />
-              Waiting on what?
-            </div>
-            <Textarea
-              className="min-h-20 border-fuchsia-200 bg-white focus-visible:border-fuchsia-300 focus-visible:ring-fuchsia-200"
-              onChange={(event) => onChange({ ...draft, blockerNote: event.target.value })}
-              placeholder="Provide details..."
-              value={draft.blockerNote}
-            />
-            <p className="mt-2 text-xs text-fuchsia-700">If action is needed, Admin can turn this into a formal Request.</p>
-          </section>
-        ) : null}
-
-        <Separator className="my-6" />
-
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
-          <span className="inline-flex items-center gap-2">
-            <Icon className="text-slate-400" name="lock" size={14} />
-            Internal Notes
+        <label className="grid gap-2">
+          <span className="flex items-start justify-between gap-3">
+            <span>
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
+                <Icon className="text-text-quaternary" name="messageSquare" size={14} />
+                Client-safe update
+              </span>
+              <span className="mt-1 block text-xs font-normal text-text-muted">Short summary Admin can use on the Client Overview.</span>
+            </span>
+            <Badge className="shrink-0 bg-control text-text-secondary" variant="secondary">Suggestion</Badge>
           </span>
-          <span className="text-xs font-normal text-slate-500">Never appears in client overview. Private to agency.</span>
           <Textarea
-            className="min-h-28"
+            className={`${taskFieldTextareaClass} min-h-32`}
+            onChange={(event) => onChange({ ...draft, clientSafeSummary: event.target.value })}
+            placeholder="e.g. Completed initial setup, moving to testing phase."
+            value={draft.clientSafeSummary}
+          />
+        </label>
+
+        <label className="grid gap-2">
+          <span>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-text-primary">
+              <Icon className="text-text-quaternary" name="lock" size={14} />
+              Internal notes
+            </span>
+            <span className="mt-1 block text-xs font-normal text-text-muted">Private to agency. Never appears in the client overview.</span>
+          </span>
+          <Textarea
+            className={`${taskFieldTextareaClass} min-h-28`}
             onChange={(event) => onChange({ ...draft, internalNote: event.target.value })}
             placeholder="Only agency team can see this."
             value={draft.internalNote}
           />
         </label>
-
-        <section className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div>
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-blue-900">
-                <Icon name="messageSquare" size={14} />
-                Client-Safe Summary
-              </p>
-              <p className="mt-2 text-xs text-blue-700">Write an update Admin can use for the Client Overview.</p>
-            </div>
-            <Badge className="bg-blue-100 text-blue-700" variant="secondary">Suggestion</Badge>
-          </div>
-          <Textarea
-            className="min-h-20 border-blue-200 bg-white focus-visible:border-blue-300 focus-visible:ring-blue-200"
-            onChange={(event) => onChange({ ...draft, clientSafeSummary: event.target.value })}
-            placeholder="e.g. Completed initial setup, moving to testing phase."
-            value={draft.clientSafeSummary}
-          />
-        </section>
-
-        {error ? (
-          <p className="mt-5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
-        ) : null}
-        {saveState ? (
-          <p className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{saveState}</p>
-        ) : null}
+      </div>
     </div>
   )
 }
 
-function TaskDetailsDrawer({
+function TaskDetailsModal({
   draft,
   error,
   isOpen,
@@ -390,49 +387,77 @@ function TaskDetailsDrawer({
   onSave,
   saveState,
   task,
+  isDirty,
 }) {
   return (
-    <Sheet onOpenChange={(open) => {
+    <Dialog onOpenChange={(open) => {
       if (!open) {
         onClose()
       }
     }} open={isOpen}>
-      <SheetContent className="w-full max-w-[430px] gap-0 p-0 sm:max-w-[430px]" showCloseButton={false}>
+      <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
         {task && draft ? (
-          <>
-            <SheetHeader className="border-b border-slate-200 px-6 py-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <SheetTitle className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                    <Icon className="text-slate-400" name="grid" size={17} />
-                    Task Details
-                  </SheetTitle>
-                  <SheetDescription className="sr-only">{task.title}</SheetDescription>
+          <div className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]">
+            <OverlayHeader className="pr-control-xl">
+              <DialogHeader>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <DialogTitle className="text-lg font-semibold text-text-primary">{task.title}</DialogTitle>
+                    <DialogDescription className="sr-only">{task.description || task.title}</DialogDescription>
+                  </div>
                 </div>
-                <Button aria-label="Close task details" onClick={onClose} size="icon-lg" type="button" variant="outline">
-                  <Icon name="close" size={16} />
-                </Button>
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-text-muted">
+                  <span>{task.clientName}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Icon name="calendar" size={14} />
+                    {formatTaskDueDate(task.dueDate)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Icon name="user" size={14} />
+                    {task.assigneeName || 'Unassigned'}
+                  </span>
+                  <span>{draft.visibility === VISIBILITY.CLIENT_VISIBLE ? 'Client-facing' : 'Internal'}</span>
+                </div>
+              </DialogHeader>
+            </OverlayHeader>
+            <OverlayBody className="min-h-0 overflow-hidden p-0">
+                <TaskDetailsContent
+                  draft={draft}
+                  error={error}
+                  onChange={onChange}
+                  task={task}
+                />
+            </OverlayBody>
+            <OverlayFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-h-5 text-sm">
+                {error && error !== 'Blocker reason is required.' ? (
+                  <span className="text-destructive">{error}</span>
+                ) : saveState ? (
+                  <span className="text-text-muted">{saveState}</span>
+                ) : isDirty ? (
+                  <span className="text-text-muted">Unsaved changes</span>
+                ) : null}
               </div>
-            </SheetHeader>
-            <div className="min-h-0 flex-1">
-              <TaskDetailsContent
-                draft={draft}
-                error={error}
-                onChange={onChange}
-                saveState={saveState}
-                task={task}
-              />
-            </div>
-            <SheetFooter className="flex-row justify-end border-slate-200 bg-white px-6 py-4 shadow-[0_-8px_20px_rgb(15_23_42/0.04)]">
-              <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={onSave} size="lg" type="button">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button onClick={onClose} size="lg" type="button" variant="outline">
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-action text-action-foreground hover:bg-action-hover"
+                  disabled={!isDirty}
+                  onClick={onSave}
+                  size="lg"
+                  type="button"
+                >
                 <Icon name="fileText" size={15} />
                 Save Updates
-              </Button>
-            </SheetFooter>
-          </>
+                </Button>
+              </div>
+            </OverlayFooter>
+          </div>
         ) : null}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -450,6 +475,16 @@ function createTaskDraft(task) {
   }
 }
 
+function isTaskDraftChanged(task, draft) {
+  if (!task || !draft) {
+    return false
+  }
+
+  const persistedDraft = createTaskDraft(task)
+
+  return Object.keys(persistedDraft).some((key) => persistedDraft[key] !== draft[key])
+}
+
 export function TeamTasksPage({ routeParams = {}, runtime }) {
   const toast = useToast()
   const [reloadTick, setReloadTick] = useState(0)
@@ -464,15 +499,16 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
     [selectedTaskId, taskData.tasks],
   )
   const [taskDraft, setTaskDraft] = useState(() => createTaskDraft(selectedTask))
-  const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false)
+  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false)
   const [error, setError] = useState('')
   const [saveState, setSaveState] = useState('')
+  const isTaskDetailsDirty = isTaskDraftChanged(selectedTask, taskDraft)
 
   function selectTask(taskId) {
     const task = taskData.tasks.find((item) => item.id === taskId) ?? null
     setSelectedTaskId(taskId)
     setTaskDraft(createTaskDraft(task))
-    setIsTaskDrawerOpen(Boolean(task))
+    setIsTaskDetailsOpen(Boolean(task))
     setError('')
     setSaveState('')
   }
@@ -524,12 +560,13 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
           <EmptyTasksState hasFilters={hasFilters} />
         )}
       </div>
-      <TaskDetailsDrawer
+      <TaskDetailsModal
         draft={taskDraft}
         error={error}
-        isOpen={isTaskDrawerOpen}
+        isDirty={isTaskDetailsDirty}
+        isOpen={isTaskDetailsOpen}
         onChange={updateTaskDraft}
-        onClose={() => setIsTaskDrawerOpen(false)}
+        onClose={() => setIsTaskDetailsOpen(false)}
         onSave={saveTaskUpdate}
         saveState={saveState}
         task={selectedTask}

@@ -11,9 +11,9 @@ import {
 import { Panel, PanelBody, PanelHeader } from './Panel'
 
 const toneClass = {
-  blue: 'bg-indigo-100 text-indigo-700',
-  green: 'bg-emerald-100 text-emerald-700',
-  yellow: 'bg-amber-100 text-amber-700',
+  blue: 'bg-action-muted text-action',
+  green: 'bg-success-muted text-success-foreground',
+  yellow: 'bg-warning-muted text-warning-foreground',
 }
 
 export function TablePanel({ columns, rows, title }) {

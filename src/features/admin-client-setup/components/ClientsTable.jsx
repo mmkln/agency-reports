@@ -1,18 +1,18 @@
 import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
+  Button,
+  ConfirmationDialog,
+  PrimitiveCard as Card,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
-import { ConfirmationDialog } from '../../../shared/ui'
 import { ClientAvatar } from './ClientAvatar'
 import { ClientStatusBadge } from './ClientStatusBadge'
 
@@ -34,7 +34,7 @@ function getPendingInvite(client, repositories) {
     .find((invitation) => invitation.status === 'pending')
 }
 
-export function ClientsTable({ clients, onDeleteClient, repositories }) {
+export function ClientsTable({ clients, onDeleteClient, onEditClient, repositories }) {
   const [clientPendingDelete, setClientPendingDelete] = useState(null)
 
   function confirmDeleteClient() {
@@ -48,9 +48,9 @@ export function ClientsTable({ clients, onDeleteClient, repositories }) {
 
   return (
     <>
-      <Card className="border-slate-200 bg-white py-0 shadow-xs">
+      <Card className="border-control-border bg-block py-0 shadow-none">
         <Table className="min-w-[980px]">
-          <TableHeader className="border-b border-slate-200 bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+          <TableHeader className="border-b border-control-border bg-surface-subtle text-xs font-semibold tracking-wide text-text-muted uppercase">
             <TableRow className="hover:bg-transparent">
               <TableHead className="px-6 py-3">Client</TableHead>
               <TableHead className="px-6 py-3">Project Status</TableHead>
@@ -59,15 +59,15 @@ export function ClientsTable({ clients, onDeleteClient, repositories }) {
               <TableHead className="px-6 py-3 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-slate-100">
+          <TableBody className="divide-y divide-separator">
             {clients.map((client) => (
-              <TableRow className="transition-colors hover:bg-slate-50/70" key={client.id}>
+              <TableRow className="transition-colors hover:bg-block-subtle" key={client.id}>
                 <TableCell className="px-6 py-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <ClientAvatar client={client} />
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{client.name}</p>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                      <p className="truncate font-semibold text-text-primary">{client.name}</p>
+                      <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
                         <Icon name="arrowUpRight" size={13} />
                         <span className="truncate">/{client.portal_slug}</span>
                       </p>
@@ -78,10 +78,10 @@ export function ClientsTable({ clients, onDeleteClient, repositories }) {
                   <ClientStatusBadge status={client.status} />
                 </TableCell>
                 <TableCell className="px-6 py-4">
-                  <p className="font-medium text-slate-700">{client.primary_contact_name}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{client.primary_contact_email}</p>
+                  <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{client.primary_contact_email}</p>
                 </TableCell>
-                <TableCell className="px-6 py-4 text-slate-500">{formatDate(client.created_at)}</TableCell>
+                <TableCell className="px-6 py-4 text-text-muted">{formatDate(client.created_at)}</TableCell>
                 <TableCell className="px-6 py-4">
                   <div className="flex justify-end gap-2">
                     {getPendingInvite(client, repositories) ? (
@@ -91,6 +91,9 @@ export function ClientsTable({ clients, onDeleteClient, repositories }) {
                         </a>
                       </Button>
                     ) : null}
+                    <Button onClick={() => onEditClient(client)} size="sm" type="button" variant="ghost">
+                      Edit Client
+                    </Button>
                     <Button asChild size="sm" variant="outline">
                       <a href={`#admin-client-overview?clientId=${client.id}`}>
                         Edit Overview
@@ -103,7 +106,7 @@ export function ClientsTable({ clients, onDeleteClient, repositories }) {
                       </a>
                     </Button>
                     <Button
-                      className="text-slate-400 hover:text-rose-600"
+                      className="text-text-quaternary hover:text-destructive"
                       onClick={() => setClientPendingDelete(client)}
                       size="icon-sm"
                       title="Delete client"

@@ -1,3 +1,5 @@
+import { chartColors } from '../theme'
+
 export function GroupedBarChart({
   ariaLabel,
   bars,
@@ -22,8 +24,8 @@ export function GroupedBarChart({
         const y = yBottom - (value / yMax) * chartHeight
         return (
           <g key={value}>
-            <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke="#d1d5db" strokeDasharray="3 3" />
-            <text x={xStart - 8} y={y + 5} fill="#666" fontSize="15" textAnchor="end">
+            <line x1={xStart} x2={xEnd} y1={y} y2={y} stroke={chartColors.grid} strokeDasharray="3 3" />
+            <text x={xStart - 8} y={y + 5} fill={chartColors.label} fontSize="15" textAnchor="end">
               {value}
             </text>
           </g>
@@ -31,10 +33,10 @@ export function GroupedBarChart({
       })}
       {data.map((item, index) => {
         const center = xStart + xStep * index + xStep / 2
-        return <line key={item[xKey]} x1={center} x2={center} y1={yTop} y2={yBottom} stroke="#d1d5db" strokeDasharray="3 3" />
+        return <line key={item[xKey]} x1={center} x2={center} y1={yTop} y2={yBottom} stroke={chartColors.grid} strokeDasharray="3 3" />
       })}
-      <line x1={xStart} x2={xEnd} y1={yBottom} y2={yBottom} stroke="#888" />
-      <line x1={xStart} x2={xStart} y1={yTop} y2={yBottom} stroke="#888" />
+      <line x1={xStart} x2={xEnd} y1={yBottom} y2={yBottom} stroke={chartColors.axis} />
+      <line x1={xStart} x2={xStart} y1={yTop} y2={yBottom} stroke={chartColors.axis} />
       {data.map((item, index) => {
         const center = xStart + xStep * index + xStep / 2
         const totalWidth = bars.length * barWidth
@@ -46,7 +48,7 @@ export function GroupedBarChart({
               const x = center - totalWidth / 2 + barIndex * barWidth
               return <rect fill={bar.color} height={height} key={bar.key} width={barWidth} x={x} y={yBottom - height} />
             })}
-            <text fill="#666" fontSize="15" textAnchor="middle" x={center - 2} y={yBottom + 20}>
+            <text fill={chartColors.label} fontSize="15" textAnchor="middle" x={center - 2} y={yBottom + 20}>
               {item[xKey]}
             </text>
           </g>

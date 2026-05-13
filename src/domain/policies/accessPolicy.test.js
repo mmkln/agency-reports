@@ -32,14 +32,23 @@ describe('canAccessClient', () => {
     expect(canAccessClient(viewer, CLIENT_B_ID)).toBe(false)
   })
 
-  it('allows client users only for their own client id', () => {
+  it('allows client users only through assigned client memberships', () => {
     const viewer = {
       clientId: CLIENT_A_ID,
+      clientIds: [CLIENT_A_ID],
       role: USER_ROLES.CLIENT_USER,
     }
 
     expect(canAccessClient(viewer, CLIENT_A_ID)).toBe(true)
     expect(canAccessClient(viewer, CLIENT_B_ID)).toBe(false)
+  })
+
+  it('denies client users when clientIds no longer contains the client', () => {
+    expect(canAccessClient({
+      clientId: CLIENT_A_ID,
+      clientIds: [],
+      role: USER_ROLES.CLIENT_USER,
+    }, CLIENT_A_ID)).toBe(false)
   })
 
   it('denies missing viewer or client id', () => {

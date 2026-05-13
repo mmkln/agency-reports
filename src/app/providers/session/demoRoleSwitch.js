@@ -40,3 +40,23 @@ export function getDemoRoleOption(roleKey) {
 export function getDemoRoleOptionByRole(role) {
   return DEMO_ROLE_OPTIONS.find((option) => option.role === role) ?? DEMO_ROLE_OPTIONS[0]
 }
+
+function getDefaultStorage() {
+  return typeof window !== 'undefined' ? window.localStorage : null
+}
+
+export function readDemoRoleKey(storage = getDefaultStorage()) {
+  try {
+    return getDemoRoleOption(storage?.getItem(DEMO_ROLE_STORAGE_KEY)).key
+  } catch {
+    return getDemoRoleOption().key
+  }
+}
+
+export function writeDemoRoleKey(roleKey, storage = getDefaultStorage()) {
+  const option = getDemoRoleOption(roleKey)
+
+  storage?.setItem(DEMO_ROLE_STORAGE_KEY, option.key)
+
+  return option
+}

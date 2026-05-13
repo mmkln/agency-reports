@@ -27,7 +27,7 @@ function normalizeEmail(value) {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can create client invitations.')
+    throw new Error('Only agency admins can manage client invitations.')
   }
 }
 
@@ -35,26 +35,96 @@ function createToken(idGenerator) {
   return idGenerator().replace(/-/g, '')
 }
 
-export function createClientInvitation({
-  clientId,
-  email,
-  idGenerator,
-  name = '',
-  now = () => new Date().toISOString(),
-  repositories,
-  viewer,
-}) {
+function assertClientBelongsToAgency({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
-
-  if (!idGenerator) {
-    throw new Error('idGenerator is required.')
-  }
 
   const client = repositories.clients.findById(clientId)
 
   if (!client || client.agency_id !== viewer.agencyId) {
     throw new Error('Client was not found.')
   }
+
+  return client
+}
+
+function normalizeRole(role) {
+  const normalizedRole = role || CLIENT_MEMBERSHIP_ROLES.OWNER
+
+  if (!Object.values(CLIENT_MEMBERSHIP_ROLES).includes(normalizedRole)) {
+    throw new Error('Invitation role is invalid.')
+  }
+
+  return normalizedRole
+}
+
+export function getInvitationStatus(invitation, now = () => new Date().toISOString()) {
+  if (!invitation) {
+    return CLIENT_INVITATION_STATUSES.CANCELLED
+  }
+
+  if (invitation.status !== CLIENT_INVITATION_STATUSES.PENDING) {
+    return invitation.status
+  }
+
+  if (!invitation.expires_at) {
+    return invitation.status
+  }
+
+  const expiresAt = new Date(invitation.expires_at).getTime()
+  const currentTime = new Date(now()).getTime()
+
+  if (Number.isNaN(expiresAt) || Number.isNaN(currentTime)) {
+    return invitation.status
+  }
+
+  return expiresAt < currentTime
+    ? CLIENT_INVITATION_STATUSES.EXPIRED
+    : invitation.status
+}
+
+function assertInvitationIsPending(invitation, now) {
+  const status = getInvitationStatus(invitation, now)
+
+  if (status === CLIENT_INVITATION_STATUSES.ACCEPTED) {
+    throw new Error('Invitation was already accepted.')
+  }
+
+  if (status === CLIENT_INVITATION_STATUSES.CANCELLED) {
+    throw new Error('Invitation was cancelled.')
+  }
+
+  if (status === CLIENT_INVITATION_STATUSES.EXPIRED) {
+    throw new Error('Invitation has expired.')
+  }
+
+  if (status !== CLIENT_INVITATION_STATUSES.PENDING) {
+    throw new Error('Invitation is no longer active.')
+  }
+}
+
+function mapInvitation(invitation, now) {
+  return {
+    ...invitation,
+    status: getInvitationStatus(invitation, now),
+  }
+}
+
+export function createClientInvitation({
+  clientId,
+  email,
+  expiresAt = null,
+  idGenerator,
+  name = '',
+  now = () => new Date().toISOString(),
+  repositories,
+  role = CLIENT_MEMBERSHIP_ROLES.OWNER,
+  viewer,
+}) {
+  if (!idGenerator) {
+    throw new Error('idGenerator is required.')
+  }
+
+  const client = assertClientBelongsToAgency({ clientId, repositories, viewer })
 
   const normalizedEmail = normalizeEmail(email)
   const timestamp = now()
@@ -63,11 +133,11 @@ export function createClientInvitation({
     client_id: client.id,
     created_at: timestamp,
     email: normalizedEmail,
-    expires_at: null,
+    expires_at: expiresAt || null,
     id: idGenerator(),
     invited_by: viewer.userId,
     name: String(name ?? '').trim(),
-    role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+    role: normalizeRole(role),
     status: CLIENT_INVITATION_STATUSES.PENDING,
     token: createToken(idGenerator),
     updated_at: timestamp,
@@ -76,6 +146,20 @@ export function createClientInvitation({
   repositories.clientInvitations.upsert(invitation)
 
   return invitation
+}
+
+export function listClientInvitations({
+  clientId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertClientBelongsToAgency({ clientId, repositories, viewer })
+
+  return repositories.clientInvitations
+    .listByClientId(clientId)
+    .map((invitation) => mapInvitation(invitation, now))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
 
 export function getClientInvitationByToken({ repositories, token }) {
@@ -97,13 +181,50 @@ export function getClientInvitationByToken({ repositories, token }) {
   return { client, invitation }
 }
 
+export function cancelClientInvitation({
+  invitationId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const invitation = repositories.clientInvitations.findById(invitationId)
+
+  if (!invitation) {
+    throw new Error('Invitation was not found.')
+  }
+
+  assertClientBelongsToAgency({
+    clientId: invitation.client_id,
+    repositories,
+    viewer,
+  })
+
+  const status = getInvitationStatus(invitation, now)
+
+  if (status === CLIENT_INVITATION_STATUSES.ACCEPTED) {
+    throw new Error('Accepted invitations cannot be cancelled.')
+  }
+
+  const nextInvitation = {
+    ...invitation,
+    status: CLIENT_INVITATION_STATUSES.CANCELLED,
+    updated_at: now(),
+  }
+
+  repositories.clientInvitations.upsert(nextInvitation)
+
+  return mapInvitation(nextInvitation, now)
+}
+
 export function acceptClientInvitation({
   email,
   idGenerator,
   name,
   now = () => new Date().toISOString(),
   repositories,
-  storage = window.localStorage,
+  storage = typeof window !== 'undefined' ? window.localStorage : null,
   token,
 }) {
   if (!idGenerator) {
@@ -112,8 +233,18 @@ export function acceptClientInvitation({
 
   const { client, invitation } = getClientInvitationByToken({ repositories, token })
 
-  if (invitation.status !== CLIENT_INVITATION_STATUSES.PENDING) {
-    throw new Error('Invitation is no longer active.')
+  try {
+    assertInvitationIsPending(invitation, now)
+  } catch (caughtError) {
+    if (getInvitationStatus(invitation, now) === CLIENT_INVITATION_STATUSES.EXPIRED) {
+      repositories.clientInvitations.upsert({
+        ...invitation,
+        status: CLIENT_INVITATION_STATUSES.EXPIRED,
+        updated_at: now(),
+      })
+    }
+
+    throw caughtError
   }
 
   const normalizedEmail = normalizeEmail(email || invitation.email)

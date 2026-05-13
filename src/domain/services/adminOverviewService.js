@@ -40,6 +40,44 @@ function normalizeOptionalText(value = '') {
   return normalizeText(value)
 }
 
+function normalizeOptionalDate(value = '', fieldName) {
+  const normalizedValue = normalizeOptionalText(value)
+
+  if (!normalizedValue) {
+    return ''
+  }
+
+  if (Number.isNaN(new Date(normalizedValue).getTime())) {
+    throw new Error(`${fieldName} must be a valid date.`)
+  }
+
+  return normalizedValue
+}
+
+function normalizeOptionalUrl(value = '', fieldName) {
+  const normalizedValue = normalizeOptionalText(value)
+
+  if (!normalizedValue) {
+    return ''
+  }
+
+  try {
+    const parsedUrl = new URL(normalizedValue)
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error('Unsupported protocol.')
+    }
+  } catch {
+    throw new Error(`${fieldName} must be a valid http(s) URL.`)
+  }
+
+  return normalizedValue
+}
+
+function normalizeSortOrder(value, fallback) {
+  return Number.isFinite(Number(value)) ? Number(value) : fallback
+}
+
 function normalizeStatus(value, allowedStatuses, fallback, fieldName) {
   const status = value || fallback
 
@@ -54,7 +92,7 @@ function normalizeProgress(value) {
   const parsedValue = Number(value)
 
   if (Number.isNaN(parsedValue)) {
-    return 0
+    throw new Error('Project progress must be a number from 0 to 100.')
   }
 
   return Math.max(0, Math.min(100, Math.round(parsedValue)))
@@ -106,14 +144,20 @@ function sortReports(a, b) {
   return new Date(b.period_end ?? 0).getTime() - new Date(a.period_end ?? 0).getTime()
 }
 
-export function getAdminClientOverviewEditor({ clientId, repositories, viewer }) {
-  const client = getEditableClient({ clientId, repositories, viewer })
+function clone(value) {
+  return JSON.parse(JSON.stringify(value))
+}
 
+function readPublishedAdminClientOverviewEditor({ client, clientId, repositories }) {
   return {
     client: {
       id: client.id,
       name: client.name,
+      hasDraft: Boolean(client.overview_draft),
+      overviewDraftSavedAt: client.overview_draft_saved_at ?? client.overview_draft?.saved_at ?? null,
+      overviewDraftSavedBy: client.overview_draft_saved_by ?? client.overview_draft?.saved_by ?? null,
       overviewPublishedAt: client.overview_published_at ?? null,
+      overviewPublishedBy: client.overview_published_by ?? null,
       portalSlug: client.portal_slug,
       primaryContactEmail: client.primary_contact_email,
       primaryContactName: client.primary_contact_name,
@@ -129,7 +173,7 @@ export function getAdminClientOverviewEditor({ clientId, repositories, viewer })
       .sort((a, b) => new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime()),
     projects: repositories.projects
       .listByClientId(clientId)
-      .sort(sortByUpdatedDesc),
+      .sort(sortByOrderThenDate),
     reports: repositories.reports
       .listByClientId(clientId)
       .sort(sortReports),
@@ -143,6 +187,47 @@ export function getAdminClientOverviewEditor({ clientId, repositories, viewer })
   }
 }
 
+function readDraftAdminClientOverviewEditor({ client, draft }) {
+  return {
+    client: {
+      id: client.id,
+      name: client.name,
+      hasDraft: true,
+      overviewDraftSavedAt: client.overview_draft_saved_at ?? draft.saved_at ?? null,
+      overviewDraftSavedBy: client.overview_draft_saved_by ?? draft.saved_by ?? null,
+      overviewPublishedAt: client.overview_published_at ?? null,
+      overviewPublishedBy: client.overview_published_by ?? null,
+      portalSlug: client.portal_slug,
+      primaryContactEmail: client.primary_contact_email,
+      primaryContactName: client.primary_contact_name,
+      status: draft.client?.status ?? client.status,
+      updatedAt: client.updated_at,
+    },
+    currentFocus: clone(draft.currentFocus ?? []),
+    dashboardLinks: clone(draft.dashboardLinks ?? []).sort(sortByUpdatedDesc),
+    neededActions: clone(draft.neededActions ?? [])
+      .sort((a, b) => new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime()),
+    projects: clone(draft.projects ?? []).sort(sortByOrderThenDate),
+    reports: clone(draft.reports ?? []).sort(sortReports),
+    status: 'ready',
+    tasks: clone(draft.tasks ?? []).sort(sortByOrderThenDate),
+    updates: clone(draft.updates ?? []).sort(sortByUpdatedDesc),
+  }
+}
+
+export function getAdminClientOverviewEditor({ clientId, repositories, viewer }) {
+  const client = getEditableClient({ clientId, repositories, viewer })
+
+  if (client.overview_draft) {
+    return readDraftAdminClientOverviewEditor({
+      client,
+      draft: client.overview_draft,
+    })
+  }
+
+  return readPublishedAdminClientOverviewEditor({ client, clientId, repositories })
+}
+
 function upsertProjects({ clientId, idGenerator, projects = [], repositories, timestamp }) {
   projects
     .filter((project) => normalizeText(project.name))
@@ -152,11 +237,12 @@ function upsertProjects({ clientId, idGenerator, projects = [], repositories, ti
       repositories.projects.upsert({
         client_id: clientId,
         description: normalizeOptionalText(project.description),
-        end_date: normalizeOptionalText(project.end_date),
+        end_date: normalizeOptionalDate(project.end_date, 'Project end date'),
         id,
         name: normalizeText(project.name),
         progress_percent: normalizeProgress(project.progress_percent),
-        start_date: normalizeOptionalText(project.start_date),
+        sort_order: normalizeSortOrder(project.sort_order, (projects.indexOf(project) + 1) * 10),
+        start_date: normalizeOptionalDate(project.start_date, 'Project start date'),
         status: normalizeOptionalText(project.status) || 'in_progress',
         ...(project.id ? timestamped({}, timestamp) : createTimestamped({}, timestamp)),
       })
@@ -186,18 +272,24 @@ function upsertTasks({ clientId, idGenerator, repositories, tasks = [], timestam
         'Task visibility',
       )
       const id = task.id || idGenerator()
+      const title = normalizeText(task.title)
+      const assigneeName = normalizeOptionalText(task.assignee_name)
+
+      if (visibility === VISIBILITY.CLIENT_VISIBLE && !assigneeName) {
+        throw new Error(`Client-visible task "${title}" must have an assignee.`)
+      }
 
       repositories.tasks.upsert({
-        assignee_name: normalizeOptionalText(task.assignee_name),
+        assignee_name: assigneeName,
         client_id: clientId,
         client_visible: visibility === VISIBILITY.CLIENT_VISIBLE,
         description: normalizeOptionalText(task.description),
-        due_date: normalizeOptionalText(task.due_date),
+        due_date: normalizeOptionalDate(task.due_date, 'Task due date'),
         id,
         project_id: normalizeOptionalText(task.project_id),
-        sort_order: Number.isFinite(Number(task.sort_order)) ? Number(task.sort_order) : (index + 1) * 10,
+        sort_order: normalizeSortOrder(task.sort_order, (index + 1) * 10),
         status: normalizeStatus(task.status, VALID_TASK_STATUSES, TASK_STATUSES.TODO, 'Task status'),
-        title: normalizeText(task.title),
+        title,
         visibility,
         ...(task.id ? timestamped({}, timestamp) : createTimestamped({}, timestamp)),
       })
@@ -206,18 +298,29 @@ function upsertTasks({ clientId, idGenerator, repositories, tasks = [], timestam
 
 function upsertUpdates({ clientId, idGenerator, repositories, timestamp, updates = [], viewer }) {
   updates
-    .filter((update) => normalizeText(update.title) || normalizeText(update.body))
     .forEach((update) => {
+      const title = normalizeText(update.title)
+      const body = normalizeOptionalText(update.body)
+      const visibility = normalizeStatus(update.visibility, VALID_VISIBILITY, VISIBILITY.CLIENT_VISIBLE, 'Update visibility')
+
+      if (!title && !body) {
+        return
+      }
+
+      if (visibility === VISIBILITY.CLIENT_VISIBLE && !body) {
+        throw new Error('Client-visible updates must include update body text.')
+      }
+
       const id = update.id || idGenerator()
 
       repositories.updates.upsert({
-        body: normalizeOptionalText(update.body),
+        body,
         client_id: clientId,
         created_by: update.created_by || viewer.userId,
         id,
         project_id: normalizeOptionalText(update.project_id),
-        title: normalizeText(update.title) || 'Client update',
-        visibility: normalizeStatus(update.visibility, VALID_VISIBILITY, VISIBILITY.CLIENT_VISIBLE, 'Update visibility'),
+        title: title || 'Client update',
+        visibility,
         ...(update.id ? timestamped({}, timestamp) : createTimestamped({}, timestamp)),
       })
     })
@@ -228,19 +331,59 @@ function upsertNeededActions({ clientId, idGenerator, neededActions = [], reposi
     .filter((action) => normalizeText(action.title))
     .forEach((action) => {
       const id = action.id || idGenerator()
+      const status = normalizeStatus(
+        action.status,
+        VALID_NEEDED_ACTION_STATUSES,
+        NEEDED_ACTION_STATUSES.PENDING,
+        'Needed action status',
+      )
+      const existingAction = action.id ? repositories.neededFromClient.findById(action.id) : null
+      const responseHistory = Array.isArray(action.response_history)
+        ? [...action.response_history]
+        : (Array.isArray(existingAction?.response_history) ? [...existingAction.response_history] : [])
+
+      const wasResolved = existingAction?.status === NEEDED_ACTION_STATUSES.RESOLVED || Boolean(action.resolved_at)
+      const wasCancelled = existingAction?.status === NEEDED_ACTION_STATUSES.CANCELLED || Boolean(action.cancelled_at)
+
+      if (status === NEEDED_ACTION_STATUSES.RESOLVED && !wasResolved) {
+        responseHistory.push({
+          created_at: timestamp,
+          created_by: null,
+          metadata: {},
+          type: 'admin_resolved',
+        })
+      }
+
+      if (status === NEEDED_ACTION_STATUSES.CANCELLED && !wasCancelled) {
+        responseHistory.push({
+          created_at: timestamp,
+          created_by: null,
+          metadata: {},
+          type: 'admin_cancelled',
+        })
+      }
 
       repositories.neededFromClient.upsert({
         client_id: clientId,
+        cancellation_note: normalizeOptionalText(action.cancellation_note),
+        cancelled_at: status === NEEDED_ACTION_STATUSES.CANCELLED
+          ? (action.cancelled_at || existingAction?.cancelled_at || timestamp)
+          : (action.cancelled_at || existingAction?.cancelled_at || null),
+        cancelled_by: action.cancelled_by || existingAction?.cancelled_by || null,
+        client_response: normalizeOptionalText(action.client_response),
         description: normalizeOptionalText(action.description),
-        due_date: normalizeOptionalText(action.due_date),
+        due_date: normalizeOptionalDate(action.due_date, 'Needed action due date'),
         id,
-        related_link: normalizeOptionalText(action.related_link),
-        status: normalizeStatus(
-          action.status,
-          VALID_NEEDED_ACTION_STATUSES,
-          NEEDED_ACTION_STATUSES.PENDING,
-          'Needed action status',
-        ),
+        related_link: normalizeOptionalUrl(action.related_link, 'Needed action related link'),
+        responded_at: action.responded_at || existingAction?.responded_at || null,
+        responded_by: action.responded_by || existingAction?.responded_by || null,
+        resolved_at: status === NEEDED_ACTION_STATUSES.RESOLVED
+          ? (action.resolved_at || existingAction?.resolved_at || timestamp)
+          : (action.resolved_at || existingAction?.resolved_at || null),
+        resolved_by: action.resolved_by || existingAction?.resolved_by || null,
+        resolution_note: normalizeOptionalText(action.resolution_note),
+        response_history: responseHistory,
+        status,
         title: normalizeText(action.title),
         ...(action.id ? timestamped({}, timestamp) : createTimestamped({}, timestamp)),
       })
@@ -249,13 +392,33 @@ function upsertNeededActions({ clientId, idGenerator, neededActions = [], reposi
 
 function upsertDashboardLinks({ clientId, dashboardLinks = [], idGenerator, repositories, timestamp }) {
   dashboardLinks
-    .filter((dashboardLink) => normalizeText(dashboardLink.name) || normalizeText(dashboardLink.public_url))
+    .filter((dashboardLink) => (
+      normalizeText(dashboardLink.name)
+      || normalizeText(dashboardLink.public_url)
+      || normalizeText(dashboardLink.embed_url)
+    ))
     .forEach((dashboardLink) => {
       const id = dashboardLink.id || idGenerator()
+      const embedUrl = normalizeOptionalUrl(dashboardLink.embed_url, 'Dashboard embed URL')
+      const publicUrl = normalizeOptionalUrl(dashboardLink.public_url, 'Dashboard public URL')
+      const status = normalizeStatus(
+        dashboardLink.status,
+        VALID_DASHBOARD_STATUSES,
+        DASHBOARD_LINK_STATUSES.DRAFT,
+        'Dashboard status',
+      )
+
+      if (
+        [DASHBOARD_LINK_STATUSES.ACTIVE, DASHBOARD_LINK_STATUSES.UNAVAILABLE].includes(status)
+        && !embedUrl
+        && !publicUrl
+      ) {
+        throw new Error('Active or unavailable dashboards must include a public or embed URL.')
+      }
 
       repositories.dashboardLinks.upsert({
         client_id: clientId,
-        embed_url: normalizeOptionalText(dashboardLink.embed_url),
+        embed_url: embedUrl,
         fallback_message: normalizeOptionalText(dashboardLink.fallback_message) || 'Dashboard is being prepared.',
         id,
         name: normalizeText(dashboardLink.name) || 'Marketing Dashboard',
@@ -265,14 +428,9 @@ function upsertDashboardLinks({ clientId, dashboardLinks = [], idGenerator, repo
           DASHBOARD_PROVIDERS.LOOKER_STUDIO,
           'Dashboard provider',
         ),
-        public_url: normalizeOptionalText(dashboardLink.public_url),
+        public_url: publicUrl,
         show_on_overview: Boolean(dashboardLink.show_on_overview),
-        status: normalizeStatus(
-          dashboardLink.status,
-          VALID_DASHBOARD_STATUSES,
-          DASHBOARD_LINK_STATUSES.DRAFT,
-          'Dashboard status',
-        ),
+        status,
         visibility: normalizeStatus(dashboardLink.visibility, VALID_VISIBILITY, VISIBILITY.CLIENT_VISIBLE, 'Dashboard visibility'),
         ...(dashboardLink.id ? timestamped({}, timestamp) : createTimestamped({}, timestamp)),
       })
@@ -289,12 +447,12 @@ function upsertReports({ clientId, idGenerator, reports = [], repositories, time
       repositories.reports.upsert({
         client_decisions_needed: normalizeOptionalText(report.client_decisions_needed),
         client_id: clientId,
-        dashboard_url: normalizeOptionalText(report.dashboard_url),
+        dashboard_url: normalizeOptionalUrl(report.dashboard_url, 'Report dashboard URL'),
         id,
         next_actions: normalizeOptionalText(report.next_actions),
-        pdf_url: normalizeOptionalText(report.pdf_url),
-        period_end: normalizeOptionalText(report.period_end),
-        period_start: normalizeOptionalText(report.period_start),
+        pdf_url: normalizeOptionalUrl(report.pdf_url, 'Report PDF URL'),
+        period_end: normalizeOptionalDate(report.period_end, 'Report period end'),
+        period_start: normalizeOptionalDate(report.period_start, 'Report period start'),
         problems: normalizeOptionalText(report.problems),
         published_at: status === REPORT_STATUSES.PUBLISHED ? (report.published_at || timestamp) : (report.published_at || null),
         status,
@@ -316,8 +474,42 @@ export function saveAdminClientOverview({
 }) {
   assertUuidGenerator(idGenerator)
 
-  const client = getEditableClient({ clientId, repositories, viewer })
+  const validationRepositories = createMemoryRepositoriesFrom(repositories)
   const timestamp = now()
+  const draftEditor = materializeAdminClientOverview({
+    clientId,
+    idGenerator,
+    input,
+    repositories: validationRepositories,
+    timestamp,
+    viewer,
+  })
+  const client = getEditableClient({ clientId, repositories, viewer })
+
+  repositories.clients.upsert({
+    ...client,
+    overview_draft: createOverviewDraftSnapshot({
+      editor: draftEditor,
+      savedAt: timestamp,
+      savedBy: viewer.userId,
+    }),
+    overview_draft_saved_at: timestamp,
+    overview_draft_saved_by: viewer.userId,
+    updated_at: timestamp,
+  })
+
+  return getAdminClientOverviewEditor({ clientId, repositories, viewer })
+}
+
+function materializeAdminClientOverview({
+  clientId,
+  idGenerator,
+  input,
+  repositories,
+  timestamp,
+  viewer,
+}) {
+  const client = getEditableClient({ clientId, repositories, viewer })
   const status = normalizeStatus(
     input.client?.status,
     VALID_CLIENT_STATUSES,
@@ -346,10 +538,128 @@ export function saveAdminClientOverview({
   upsertDashboardLinks({ clientId, dashboardLinks: input.dashboardLinks, idGenerator, repositories, timestamp })
   upsertReports({ clientId, idGenerator, reports: input.reports, repositories, timestamp })
 
-  return getAdminClientOverviewEditor({ clientId, repositories, viewer })
+  return readPublishedAdminClientOverviewEditor({
+    client: repositories.clients.findById(clientId),
+    clientId,
+    repositories,
+  })
+}
+
+function createOverviewDraftSnapshot({ editor, savedAt, savedBy }) {
+  return {
+    client: {
+      status: editor.client.status,
+    },
+    currentFocus: clone(editor.currentFocus),
+    dashboardLinks: clone(editor.dashboardLinks),
+    neededActions: clone(editor.neededActions),
+    projects: clone(editor.projects),
+    reports: clone(editor.reports),
+    saved_at: savedAt,
+    saved_by: savedBy,
+    tasks: clone(editor.tasks),
+    updates: clone(editor.updates),
+  }
+}
+
+function createMemoryEntityRepository(initialRecords = []) {
+  const records = clone(initialRecords)
+
+  return {
+    findById(id) {
+      return records.find((record) => record.id === id) ?? null
+    },
+    list() {
+      return records
+    },
+    listByClientId(clientId) {
+      return records.filter((record) => record.client_id === clientId)
+    },
+    upsert(record) {
+      const index = records.findIndex((item) => item.id === record.id)
+
+      if (index >= 0) {
+        records[index] = { ...records[index], ...record }
+      } else {
+        records.push(record)
+      }
+
+      return record
+    },
+    deleteById(id) {
+      const index = records.findIndex((record) => record.id === id)
+
+      if (index < 0) {
+        return false
+      }
+
+      records.splice(index, 1)
+      return true
+    },
+  }
+}
+
+function createMemoryRepositoriesFrom(repositories) {
+  return {
+    clients: createMemoryEntityRepository(repositories.clients.list()),
+    dashboardLinks: createMemoryEntityRepository(repositories.dashboardLinks.list()),
+    neededFromClient: createMemoryEntityRepository(repositories.neededFromClient.list()),
+    projects: createMemoryEntityRepository(repositories.projects.list()),
+    reports: createMemoryEntityRepository(repositories.reports.list()),
+    tasks: createMemoryEntityRepository(repositories.tasks.list()),
+    updates: createMemoryEntityRepository(repositories.updates.list()),
+  }
 }
 
 export function publishAdminClientOverview({
+  clientId,
+  idGenerator = () => {
+    throw new Error('idGenerator is required.')
+  },
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertUuidGenerator(idGenerator)
+
+  const client = getEditableClient({ clientId, repositories, viewer })
+  const timestamp = now()
+  const draft = client.overview_draft ?? createOverviewDraftSnapshot({
+    editor: readPublishedAdminClientOverviewEditor({ client, clientId, repositories }),
+    savedAt: timestamp,
+    savedBy: viewer.userId,
+  })
+
+  materializeAdminClientOverview({
+    clientId,
+    idGenerator,
+    input: draft,
+    repositories,
+    timestamp,
+    viewer,
+  })
+
+  const publishedClient = repositories.clients.findById(clientId)
+
+  repositories.clients.upsert({
+    ...publishedClient,
+    overview_draft: null,
+    overview_draft_saved_at: null,
+    overview_draft_saved_by: null,
+    overview_published_at: timestamp,
+    overview_published_by: viewer.userId,
+    overview_published_snapshot: {
+      ...draft,
+      published_at: timestamp,
+      published_by: viewer.userId,
+    },
+    updated_at: timestamp,
+  })
+
+  return getAdminClientOverviewEditor({ clientId, repositories, viewer })
+}
+
+export function discardAdminClientOverviewDraft({
   clientId,
   now = () => new Date().toISOString(),
   repositories,
@@ -360,9 +670,13 @@ export function publishAdminClientOverview({
 
   repositories.clients.upsert({
     ...client,
-    overview_published_at: timestamp,
+    overview_draft: null,
+    overview_draft_saved_at: null,
+    overview_draft_saved_by: null,
     updated_at: timestamp,
   })
 
   return getAdminClientOverviewEditor({ clientId, repositories, viewer })
 }
+
+export const restoreAdminClientOverviewFromPublished = discardAdminClientOverviewDraft

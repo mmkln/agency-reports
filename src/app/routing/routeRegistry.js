@@ -12,6 +12,7 @@ import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReport
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 
@@ -48,6 +49,14 @@ export const routes = [
     href: '#login',
     id: 'login',
     label: 'Login',
+    layout: 'auth',
+    showInNav: false,
+  },
+  {
+    component: AccessDeniedPage,
+    href: '#access-denied',
+    id: 'access-denied',
+    label: 'Access Denied',
     layout: 'auth',
     showInNav: false,
   },

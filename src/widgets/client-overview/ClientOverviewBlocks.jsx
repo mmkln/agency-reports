@@ -1,60 +1,42 @@
 import { useState } from 'react'
 
-import { Badge as ShadcnBadge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
-  Card,
+  Button,
   CardAction,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
-import {
+  PrimitiveCard as Card,
+  PrimitiveCardHeader as CardHeader,
+  Progress,
+  Separator,
+  Skeleton,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+  Textarea,
+} from '@/shared/ui'
 
 import { cn } from '@/lib/utils'
 
 import { Icon } from '../../shared/icons'
 
-const toneClasses = {
-  amber: 'border-amber-200 bg-amber-50 text-amber-700',
-  blue: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-  green: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  neutral: 'border-slate-200 bg-slate-100 text-slate-600',
-  rose: 'border-rose-200 bg-rose-50 text-rose-700',
-}
-
-function StatusBadge({ children, tone = 'neutral' }) {
-  return (
-    <ShadcnBadge className={toneClasses[tone]} variant="outline">
-      {children}
-    </ShadcnBadge>
-  )
-}
-
 function SectionCard({ action, children, className, contentClassName, description, iconName, title }) {
   return (
-    <Card className={cn('border-slate-200 bg-white py-0 shadow-xs', className)}>
-      <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-slate-100 bg-slate-50/50 py-4">
+    <Card className={cn('border-control-border bg-block py-0 shadow-none', className)}>
+      <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-separator bg-surface-subtle py-4">
         <div className="flex min-w-0 items-center gap-2.5">
           {iconName ? (
-            <span className="flex shrink-0 text-slate-400">
+            <span className="flex shrink-0 text-text-quaternary">
               <Icon name={iconName} size={17} />
             </span>
           ) : null}
           <div className="min-w-0">
-            <CardTitle className="truncate text-base font-semibold leading-6 text-slate-900">{title}</CardTitle>
+            <CardTitle className="truncate text-base font-semibold leading-6 text-text-primary">{title}</CardTitle>
             {description ? <CardDescription className="mt-1">{description}</CardDescription> : null}
           </div>
         </div>
@@ -67,8 +49,8 @@ function SectionCard({ action, children, className, contentClassName, descriptio
 
 function EmptyState({ children, iconName = 'helpCircle' }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 ring-1 ring-slate-200">
+    <div className="flex items-start gap-3 rounded-control border border-dashed border-control-border bg-surface-subtle px-4 py-4 text-sm text-text-muted">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-block text-text-quaternary ring-1 ring-control-border">
         <Icon name={iconName} size={15} />
       </span>
       <p className="leading-6">{children}</p>
@@ -92,11 +74,11 @@ export function AccessDeniedState() {
   return (
     <div className="flex min-h-[520px] items-center justify-center px-4 py-14">
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 text-destructive">
           <Icon name="shieldCheck" size={34} />
         </div>
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-heading">Access denied</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-500">
+        <p className="mt-3 text-sm leading-6 text-text-muted">
           You do not have permission to view this client portal. Check the link or contact your agency manager.
         </p>
         <Button asChild className="mt-6" size="lg" variant="secondary">
@@ -109,14 +91,14 @@ export function AccessDeniedState() {
 
 export function EmptyOverviewState({ client }) {
   return (
-    <Card className="border-dashed border-slate-300 bg-white shadow-xs">
+    <Card className="border-dashed border-border-strong bg-block shadow-none">
       <CardContent className="py-12 sm:py-16">
         <div className="mx-auto max-w-xl text-center">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-block border border-control-border bg-surface-subtle text-text-muted">
             <Icon name="database" size={28} />
           </div>
           <h2 className="mt-6 text-2xl font-bold tracking-tight text-heading">Welcome, {client.name}</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-500">
+          <p className="mt-3 text-sm leading-6 text-text-muted">
             Your client portal has been created. The agency team is still adding the first projects,
             tasks, dashboard, and report. This page will fill in as soon as the first client-facing
             information is published.
@@ -131,8 +113,8 @@ export function LoadingOverviewState() {
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_350px]">
       <div className="grid gap-6">
-        <Card className="border-slate-200 bg-white py-0 shadow-xs">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/50 py-4">
+        <Card className="border-control-border bg-block py-0 shadow-none">
+          <CardHeader className="border-b border-separator bg-surface-subtle py-4">
             <Skeleton className="h-5 w-48" />
             <Skeleton className="h-4 w-72" />
           </CardHeader>
@@ -141,8 +123,8 @@ export function LoadingOverviewState() {
             <Skeleton className="h-20 w-full" />
           </CardContent>
         </Card>
-        <Card className="border-slate-200 bg-white py-0 shadow-xs">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/50 py-4">
+        <Card className="border-control-border bg-block py-0 shadow-none">
+          <CardHeader className="border-b border-separator bg-surface-subtle py-4">
             <Skeleton className="h-5 w-40" />
           </CardHeader>
           <CardContent className="grid gap-3 py-4">
@@ -153,8 +135,8 @@ export function LoadingOverviewState() {
         </Card>
       </div>
       <aside className="grid gap-6">
-        <Card className="border-slate-200 bg-white py-0 shadow-xs">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/50 py-4">
+        <Card className="border-control-border bg-block py-0 shadow-none">
+          <CardHeader className="border-b border-separator bg-surface-subtle py-4">
             <Skeleton className="h-5 w-36" />
           </CardHeader>
           <CardContent className="grid gap-4 py-4">
@@ -163,8 +145,8 @@ export function LoadingOverviewState() {
             <Skeleton className="h-4 w-2/3" />
           </CardContent>
         </Card>
-        <Card className="border-slate-200 bg-white py-0 shadow-xs">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/50 py-4">
+        <Card className="border-control-border bg-block py-0 shadow-none">
+          <CardHeader className="border-b border-separator bg-surface-subtle py-4">
             <Skeleton className="h-5 w-44" />
           </CardHeader>
           <CardContent className="py-4">
@@ -183,11 +165,30 @@ function NeededActionResponse({ action, onAnswerAction }) {
   const canRespond = Boolean(onAnswerAction) && action.status === 'pending'
 
   if (!canRespond) {
-    return action.status === 'answered' ? (
-      <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm text-indigo-700">
-        <span className="font-semibold">Your response:</span> {action.clientResponse || 'Answered'}
-      </div>
-    ) : null
+    return (
+      <>
+        {action.relatedLink ? (
+          <div className="mt-4">
+            <Button asChild size="sm" variant="outline">
+              <a href={action.relatedLink} rel="noreferrer" target="_blank">Open related link</a>
+            </Button>
+          </div>
+        ) : null}
+        {action.clientResponse ? (
+          <div className="mt-3 rounded-control border border-action/20 bg-action-muted px-3 py-2 text-sm text-action">
+            <span className="font-semibold">Your response:</span> {action.clientResponse}
+            {action.respondedAt ? (
+              <span className="mt-1 block text-xs text-action">Sent {formatDate(action.respondedAt)}</span>
+            ) : null}
+          </div>
+        ) : null}
+        {action.status === 'resolved' ? (
+          <div className="mt-3 rounded-control border border-success/20 bg-success-muted px-3 py-2 text-sm text-success-foreground">
+            This request has been resolved by the agency.
+          </div>
+        ) : null}
+      </>
+    )
   }
 
   if (!isResponding) {
@@ -195,7 +196,7 @@ function NeededActionResponse({ action, onAnswerAction }) {
       <div className="mt-4 flex flex-wrap gap-2">
         {action.relatedLink ? (
           <Button asChild size="sm" variant="outline">
-            <a href={action.relatedLink} rel="noreferrer" target="_blank">Open link</a>
+            <a href={action.relatedLink} rel="noreferrer" target="_blank">Open related link</a>
           </Button>
         ) : null}
         <Button onClick={() => setIsResponding(true)} size="sm" type="button">
@@ -237,8 +238,32 @@ function NeededActionResponse({ action, onAnswerAction }) {
           Send response
         </Button>
       </div>
-      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </form>
+  )
+}
+
+function NeededActionTimeline({ action }) {
+  if (!action.responseHistory?.length) {
+    return null
+  }
+
+  return (
+    <div className="mt-4 border-t border-separator pt-3">
+      <p className="text-xs font-semibold tracking-wide text-text-quaternary uppercase">Activity</p>
+      <ol className="mt-2 grid gap-2 text-xs text-text-muted">
+        {action.responseHistory.map((event, index) => (
+          <li className="flex items-start gap-2" key={`${event.type}-${event.created_at}-${index}`}>
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-text-quaternary" />
+            <span>
+              <span className="font-medium text-text-secondary">{event.type.replaceAll('_', ' ')}</span>
+              {event.created_at ? ` · ${formatDate(event.created_at)}` : ''}
+              {event.metadata?.note ? <span className="block">{event.metadata.note}</span> : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 
@@ -255,16 +280,19 @@ export function NeededFromClientBlock({ actions, onAnswerAction }) {
       title="Action needed from you"
     >
       {actions.map((action) => (
-        <article className="rounded-lg border border-slate-200 bg-slate-50/70 p-4" key={action.id}>
+        <article className="rounded-control border border-control-border bg-block-subtle p-4" key={action.id}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <h3 className="font-semibold text-slate-900">{action.title}</h3>
-              <p className="mt-1 text-sm text-slate-500">Due: {formatDate(action.dueDate)}</p>
+              <h3 className="font-semibold text-text-primary">{action.title}</h3>
+              <p className={`mt-1 text-sm ${action.isOverdue ? 'font-medium text-destructive' : 'text-text-muted'}`}>
+                Due: {formatDate(action.dueDate) || 'No due date'}{action.isOverdue ? ' · Overdue' : ''}
+              </p>
             </div>
-            <StatusBadge tone={action.statusMeta.tone}>{action.statusMeta.label}</StatusBadge>
+            <StatusBadge meta={action.statusMeta} />
           </div>
-          {action.description ? <p className="mt-3 text-sm leading-6 text-slate-600">{action.description}</p> : null}
+          {action.description ? <p className="mt-3 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
           <NeededActionResponse action={action} onAnswerAction={onAnswerAction} />
+          <NeededActionTimeline action={action} />
         </article>
       ))}
     </SectionCard>
@@ -275,22 +303,22 @@ export function LatestUpdateBlock({ focusItems, update }) {
   return (
     <SectionCard iconName="target" title="Latest updates and focus">
       {update ? (
-        <article className="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
-          <p className="text-sm font-semibold text-slate-700">{update.title}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{update.body}</p>
-          <p className="mt-3 text-xs font-medium text-slate-400">Updated {formatDate(update.updatedAt)}</p>
+        <article className="rounded-control border border-control-border bg-block-subtle p-4">
+          <p className="text-sm font-semibold text-text-secondary">{update.title}</p>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">{update.body}</p>
+          <p className="mt-3 text-xs font-medium text-text-quaternary">Updated {formatDate(update.updatedAt)}</p>
         </article>
       ) : (
         <EmptyState>No client-facing update has been published yet.</EmptyState>
       )}
 
       <div className="mt-5">
-        <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Current team focus</p>
+        <p className="text-xs font-semibold tracking-wide text-text-muted uppercase">Current team focus</p>
         {focusItems.length > 0 ? (
           <ul className="mt-3 grid gap-3">
             {focusItems.map((item) => (
-              <li className="flex gap-3 text-sm text-slate-700" key={item}>
-                <Icon className="mt-0.5 text-indigo-600" name="arrowRight" size={16} />
+              <li className="flex gap-3 text-sm text-text-secondary" key={item}>
+                <Icon className="mt-0.5 text-action" name="arrowRight" size={16} />
                 <span className="leading-6">{item}</span>
               </li>
             ))}
@@ -314,10 +342,10 @@ export function ProgressSummaryBlock({ projects }) {
             <article className="grid gap-2" key={project.id}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-medium text-slate-900">{project.name}</h3>
-                  <p className="mt-1 text-xs text-slate-500">Current stage: {project.description}</p>
+                  <h3 className="text-sm font-medium text-text-primary">{project.name}</h3>
+                  <p className="mt-1 text-xs text-text-muted">Current stage: {project.description}</p>
                 </div>
-                <span className="shrink-0 text-sm font-bold text-indigo-600">{project.progressPercent}%</span>
+                <span className="shrink-0 text-sm font-bold text-action">{project.progressPercent}%</span>
               </div>
               <Progress aria-label={`${project.name} progress`} value={project.progressPercent} />
             </article>
@@ -346,14 +374,14 @@ export function ActiveTasksBlock({ tasks }) {
             <TableBody>
               {tasks.map((task) => (
                 <TableRow key={task.id}>
-                  <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
+                  <TableCell className="font-medium text-text-primary">{task.title}</TableCell>
                   <TableCell>
-                    <StatusBadge tone={task.statusMeta.tone}>{task.statusMeta.label}</StatusBadge>
+                    <StatusBadge meta={task.statusMeta} />
                   </TableCell>
-                  <TableCell className="text-slate-500">{formatDate(task.dueDate)}</TableCell>
-                  <TableCell className="text-slate-500">
+                  <TableCell className="text-text-muted">{formatDate(task.dueDate)}</TableCell>
+                  <TableCell className="text-text-muted">
                     <span className="inline-flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-control-selected text-xs font-semibold text-text-secondary">
                         {task.assigneeName.slice(0, 1)}
                       </span>
                       {task.assigneeName}
@@ -379,22 +407,20 @@ export function DashboardOverviewBlock({ clientId, dashboard }) {
     >
       {dashboard ? (
         <div className="grid gap-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
+          <div className="rounded-control border border-control-border bg-block-subtle p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-semibold text-slate-900">{dashboard.name}</h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <h3 className="font-semibold text-text-primary">{dashboard.name}</h3>
+                <p className="mt-1 text-xs text-text-muted">
                   {dashboard.isAvailable ? 'Ready to view' : 'Temporarily unavailable'}
                 </p>
               </div>
-              <StatusBadge tone={dashboard.isAvailable ? 'green' : 'amber'}>
-                {dashboard.status}
-              </StatusBadge>
+              <StatusBadge meta={dashboard.statusMeta} />
             </div>
           </div>
 
           {!dashboard.isAvailable ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-700">
+            <p className="rounded-control border border-warning/20 bg-warning-muted px-3 py-2 text-sm leading-6 text-warning-foreground">
               {dashboard.fallbackMessage || 'Dashboard is temporarily unavailable.'}
             </p>
           ) : null}
@@ -427,17 +453,17 @@ export function LatestMonthlySummaryBlock({ clientId, report }) {
   return (
     <SectionCard iconName="fileText" title="Latest report">
       {report ? (
-        <article className="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
+        <article className="rounded-control border border-control-border bg-block-subtle p-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-slate-900">{report.title}</h3>
-              <p className="mt-2 text-xs text-slate-500">
+              <h3 className="font-semibold text-text-primary">{report.title}</h3>
+              <p className="mt-2 text-xs text-text-muted">
                 {formatDate(report.periodStart)} - {formatDate(report.periodEnd)}
               </p>
             </div>
-            <Icon className="text-rose-500" name="fileText" size={22} />
+            <Icon className="text-destructive" name="fileText" size={22} />
           </div>
-          <p className="mt-4 text-sm leading-6 text-slate-600">{report.summary}</p>
+          <p className="mt-4 text-sm leading-6 text-text-secondary">{report.summary}</p>
           <Separator className="my-4" />
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm">

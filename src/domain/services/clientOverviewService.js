@@ -1,6 +1,7 @@
 import { CLIENT_STATUS_META } from '../../entities/client'
-import { DASHBOARD_LINK_STATUSES } from '../../entities/dashboard-link'
+import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUS_META } from '../../entities/needed-from-client'
+import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META } from '../../entities/task'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
@@ -35,13 +36,20 @@ function mapTask(task, project) {
 }
 
 function mapNeededAction(action) {
+  const dueTime = action.due_date ? new Date(action.due_date).getTime() : null
+  const now = new Date().getTime()
+
   return {
     clientResponse: action.client_response,
     description: action.description,
     dueDate: action.due_date,
     id: action.id,
+    isOverdue: action.status === 'pending' && Boolean(dueTime) && dueTime < now,
     relatedLink: action.related_link,
+    responseHistory: Array.isArray(action.response_history) ? action.response_history : [],
     respondedAt: action.responded_at,
+    respondedBy: action.responded_by,
+    resolvedAt: action.resolved_at,
     status: action.status,
     statusMeta: getStatusMeta(action.status, NEEDED_ACTION_STATUS_META),
     title: action.title,
@@ -58,7 +66,39 @@ function mapProject(project) {
   }
 }
 
-export function getClientOverview({ clientId, repositories, viewer }) {
+function getOverviewCollections({ client, clientId, repositories, source, viewer }) {
+  if (source === 'draft') {
+    if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+      return null
+    }
+
+    if (client.overview_draft) {
+      return {
+        clientStatus: client.overview_draft.client?.status ?? client.status,
+        currentFocus: client.overview_draft.currentFocus ?? [],
+        dashboardLinks: client.overview_draft.dashboardLinks ?? [],
+        neededActions: client.overview_draft.neededActions ?? [],
+        projects: client.overview_draft.projects ?? [],
+        reports: client.overview_draft.reports ?? [],
+        tasks: client.overview_draft.tasks ?? [],
+        updates: client.overview_draft.updates ?? [],
+      }
+    }
+  }
+
+  return {
+    clientStatus: client.status,
+    currentFocus: client.current_focus ?? [],
+    dashboardLinks: repositories.dashboardLinks.listByClientId(clientId),
+    neededActions: repositories.neededFromClient.listByClientId(clientId),
+    projects: repositories.projects.listByClientId(clientId),
+    reports: repositories.reports.listByClientId(clientId),
+    tasks: repositories.tasks.listByClientId(clientId),
+    updates: repositories.updates.listByClientId(clientId),
+  }
+}
+
+export function getClientOverview({ clientId, repositories, source = 'published', viewer }) {
   const client = repositories.clients.findById(clientId)
 
   if (!client || !canAccessClient(viewer, clientId)) {
@@ -68,40 +108,58 @@ export function getClientOverview({ clientId, repositories, viewer }) {
     }
   }
 
-  const projects = repositories.projects
-    .listByClientId(clientId)
+  const collections = getOverviewCollections({
+    client,
+    clientId,
+    repositories,
+    source,
+    viewer,
+  })
+
+  if (!collections) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  const projects = collections.projects
     .map(mapProject)
     .sort((a, b) => b.progressPercent - a.progressPercent)
 
   const projectsById = new Map(projects.map((project) => [project.id, project]))
 
-  const activeTasks = repositories.tasks
-    .listByClientId(clientId)
+  const activeTasks = collections.tasks
     .filter(isActiveClientTask)
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((task) => mapTask(task, projectsById.get(task.project_id)))
 
-  const latestUpdate = repositories.updates
-    .listByClientId(clientId)
+  const latestUpdate = collections.updates
     .filter(isUpdateVisibleToClient)
     .sort((a, b) => sortByDateDesc(a, b, 'created_at'))[0] ?? null
 
-  const neededActions = repositories.neededFromClient
-    .listByClientId(clientId)
+  const neededActions = collections.neededActions
     .filter(isNeededActionVisibleToClient)
-    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+    .sort((a, b) => {
+      const priority = {
+        pending: 0,
+        answered: 1,
+        resolved: 2,
+      }
+
+      return (priority[a.status] ?? 3) - (priority[b.status] ?? 3)
+        || new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime()
+    })
     .map(mapNeededAction)
 
-  const dashboard = repositories.dashboardLinks
-    .listByClientId(clientId)
+  const dashboard = collections.dashboardLinks
     .filter(isDashboardVisibleToClient)
     .sort((a, b) => Number(b.show_on_overview) - Number(a.show_on_overview))[0] ?? null
 
-  const latestReport = repositories.reports
-    .listByClientId(clientId)
+  const latestReport = collections.reports
     .filter(isReportVisibleToClient)
     .sort((a, b) => sortByDateDesc(a, b, 'period_end'))[0] ?? null
-  const currentFocus = client.current_focus ?? []
+  const currentFocus = collections.currentFocus
   const isEmpty = currentFocus.length === 0
     && projects.length === 0
     && activeTasks.length === 0
@@ -118,8 +176,8 @@ export function getClientOverview({ clientId, repositories, viewer }) {
       portalSlug: client.portal_slug,
       primaryContactEmail: client.primary_contact_email,
       primaryContactName: client.primary_contact_name,
-      status: client.status,
-      statusMeta: getStatusMeta(client.status, CLIENT_STATUS_META),
+      status: collections.clientStatus,
+      statusMeta: getStatusMeta(collections.clientStatus, CLIENT_STATUS_META),
     },
     currentFocus,
     dashboard: dashboard
@@ -132,6 +190,7 @@ export function getClientOverview({ clientId, repositories, viewer }) {
           provider: dashboard.provider,
           publicUrl: dashboard.public_url,
           status: dashboard.status,
+          statusMeta: getStatusMeta(dashboard.status, DASHBOARD_LINK_STATUS_META),
         }
       : null,
     isEmpty,

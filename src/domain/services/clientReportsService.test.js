@@ -101,6 +101,7 @@ function createRepositories(overrides = {}) {
 function createClientViewer(clientId = IDS.CLIENT_A) {
   return {
     clientId,
+    clientIds: [clientId],
     role: USER_ROLES.CLIENT_USER,
   }
 }

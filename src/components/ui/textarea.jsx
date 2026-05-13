@@ -8,7 +8,7 @@ function Textarea({
     <textarea
       data-slot="textarea"
       className={cn(
-        "min-h-24 w-full resize-y rounded-lg border border-input bg-card px-3 py-2 text-base leading-6 text-foreground shadow-xs transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-60 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "min-h-24 w-full resize-y rounded-control border border-control-border bg-control px-component py-control text-ui leading-6 text-text-primary shadow-none transition-colors duration-motion-fast ease-motion-standard outline-none placeholder:text-text-placeholder hover:bg-control-hover focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-control-selected disabled:text-text-muted disabled:opacity-70 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/25",
         className
       )}
       {...props} />

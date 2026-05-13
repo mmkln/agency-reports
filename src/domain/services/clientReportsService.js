@@ -1,3 +1,4 @@
+import { REPORT_STATUS_META } from '../../entities/report'
 import { canAccessClient } from '../policies/accessPolicy'
 import { isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -17,6 +18,10 @@ function mapReport(report) {
     problems: report.problems,
     publishedAt: report.published_at,
     status: report.status,
+    statusMeta: REPORT_STATUS_META[report.status] ?? {
+      label: report.status,
+      tone: 'neutral',
+    },
     summary: report.summary,
     title: report.title,
     wins: report.wins,

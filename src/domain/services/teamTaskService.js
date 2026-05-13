@@ -1,7 +1,7 @@
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
-import { canTransitionTaskStatus } from '../policies/taskPolicy'
+import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../policies/taskPolicy'
 
 const VALID_TASK_STATUSES = new Set(Object.values(TASK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
@@ -31,10 +31,6 @@ function getStatusMeta(status) {
   }
 }
 
-function getAvailableTransitions(status) {
-  return Object.values(TASK_STATUSES).filter((nextStatus) => canTransitionTaskStatus(status, nextStatus))
-}
-
 function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
 }
@@ -44,7 +40,7 @@ function mapTask({ clientsById, projectsById, task, viewer }) {
 
   return {
     assigneeName: task.assignee_name,
-    availableTransitions: getAvailableTransitions(task.status),
+    availableTransitions: getTaskStatusTransitionTargets(task.status),
     blockerNote: task.blocker_note ?? '',
     clientId: task.client_id,
     clientName: clientsById.get(task.client_id)?.name ?? 'Unknown client',
