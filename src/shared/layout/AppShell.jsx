@@ -1,10 +1,9 @@
 import { PageHeader } from '@/shared/ui'
-import { TopNav } from './TopNav'
+import { AppSidebar } from './AppSidebar'
 
 export function AppShell({
   activeRoute,
   children,
-  defaultRoute,
   hasUnsavedChanges = false,
   onAuthChange,
   routeParams = {},
@@ -18,31 +17,32 @@ export function AppShell({
 
   return (
     <main className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
-      <TopNav
+      <AppSidebar
         activeRoute={activeRoute}
-        defaultRoute={defaultRoute}
         hasUnsavedChanges={hasUnsavedChanges}
         onAuthChange={onAuthChange}
         runtime={runtime}
         routes={navRoutes}
       />
-      {!showRouteHeader || activeRoute.hidePageHeader ? null : (
-        RouteHeader ? (
-          <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />
+      <div className="min-h-screen pl-sidebar-collapsed">
+        {!showRouteHeader || activeRoute.hidePageHeader ? null : (
+          RouteHeader ? (
+            <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />
+          ) : (
+            <PageHeader
+              subtitle={activeRoute.subtitle}
+              title={activeRoute.pageTitle ?? activeRoute.label}
+            />
+          )
+        )}
+        {activeRoute.fullBleedContent ? (
+          <div key={routeKey}>{children}</div>
         ) : (
-          <PageHeader
-            subtitle={activeRoute.subtitle}
-            title={activeRoute.pageTitle ?? activeRoute.label}
-          />
-        )
-      )}
-      {activeRoute.fullBleedContent ? (
-        <div key={routeKey}>{children}</div>
-      ) : (
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8" key={routeKey}>
-          {children}
-        </div>
-      )}
+          <div className="mx-auto grid w-full max-w-content gap-card px-app-gutter py-content-gutter" key={routeKey}>
+            {children}
+          </div>
+        )}
+      </div>
     </main>
   )
 }

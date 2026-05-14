@@ -354,7 +354,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
 
   if (requestsResource.status === 'loading') {
     return (
-      <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <Card className="bg-block shadow-none">
           <CardContent className="min-h-[260px] animate-pulse" />
         </Card>
@@ -364,7 +364,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
 
   if (requestsResource.status === 'error' || !client) {
     return (
-      <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <Card className="bg-block shadow-none">
           <CardContent className="flex min-h-[260px] items-center justify-center text-sm text-destructive">
             {requestsResource.error || 'Client was not found.'}
@@ -388,7 +388,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
         eyebrow="Client requests"
       />
 
-      <PageShell className="px-4 py-6 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <div className="grid gap-card">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="inline-flex w-fit rounded-full bg-control p-micro">

@@ -30,12 +30,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
   StatusBadge as SharedStatusBadge,
   Textarea,
 } from '@/shared/ui'
@@ -158,19 +152,14 @@ function isAttentionTask(task) {
     || task.status === TASK_STATUSES.WAITING_CLIENT
 }
 
-function VisibilityBadge({ visibility }) {
+function VisibilityInline({ visibility }) {
   const isClientVisible = visibility === VISIBILITY.CLIENT_VISIBLE
 
   return (
-    <Badge
-      className={isClientVisible
-        ? 'border-action/20 bg-action-muted text-action'
-        : 'border-control-border bg-control text-text-secondary'}
-      icon={<Icon name={isClientVisible ? 'user' : 'lock'} size={14} />}
-      variant="outline"
-    >
+    <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
+      <Icon name={isClientVisible ? 'user' : 'lock'} size={13} />
       {isClientVisible ? 'Client visible' : 'Internal'}
-    </Badge>
+    </span>
   )
 }
 
@@ -196,14 +185,11 @@ function EmptyTasksState({ hasFilters }) {
   )
 }
 
-function TaskCard({ compact = false, onOpenTask, task }) {
+function TaskRow({ onOpenTask, task }) {
   return (
-    <Card
-      as="article"
-      className="py-0 transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
-    >
+    <article className="border-t border-separator first:border-t-0">
       <button
-        className="w-full px-card py-component text-left"
+        className="w-full px-card py-component text-left transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
         onClick={() => onOpenTask(task.id)}
         type="button"
       >
@@ -217,12 +203,12 @@ function TaskCard({ compact = false, onOpenTask, task }) {
               />
               <h2 className="text-base font-semibold text-text-primary">{task.title}</h2>
             </div>
-            {task.description && !compact ? (
+            {task.description ? (
               <p className="mt-2 line-clamp-2 max-w-readable text-sm leading-6 text-text-secondary">
                 {task.description}
               </p>
             ) : null}
-            {task.blockerNote && !compact ? (
+            {task.blockerNote ? (
               <p className="mt-2 line-clamp-1 text-sm leading-6 text-destructive">
                 {task.blockerNote}
               </p>
@@ -238,15 +224,44 @@ function TaskCard({ compact = false, onOpenTask, task }) {
                 <Icon name="user" size={14} />
                 {task.assigneeName || 'Unassigned'}
               </span>
+              <VisibilityInline visibility={task.visibility} />
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+          <div className="flex shrink-0 items-center gap-3 lg:justify-end">
             <StatusBadge status={task.status} />
-            <VisibilityBadge visibility={task.visibility} />
           </div>
         </div>
       </button>
-    </Card>
+    </article>
+  )
+}
+
+function BoardTaskTile({ onOpenTask, task }) {
+  return (
+    <button
+      className="rounded-control bg-block px-control py-control text-left shadow-none transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
+      onClick={() => onOpenTask(task.id)}
+      type="button"
+    >
+      <div className="flex items-start gap-2">
+        <Icon
+          className={isAttentionTask(task) ? 'mt-0.5 text-destructive' : 'mt-0.5 text-text-quaternary'}
+          name={isAttentionTask(task) ? 'triangleAlert' : 'circle'}
+          size={14}
+        />
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-text-primary">{task.title}</h3>
+          <p className="mt-1 truncate text-xs text-text-muted">{task.clientName}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+            <span className="inline-flex items-center gap-1">
+              <Icon name="calendar" size={12} />
+              {formatTaskDueDate(task.dueDate)}
+            </span>
+            <VisibilityInline visibility={task.visibility} />
+          </div>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -256,14 +271,14 @@ function TaskSection({ emptyText, onOpenTask, tasks, title }) {
   }
 
   return (
-    <section className="grid gap-component">
-      <div className="flex items-center justify-between gap-component">
-        <h2 className="text-heading text-text-primary">{title}</h2>
+    <section className="overflow-hidden rounded-block bg-block">
+      <div className="flex items-center justify-between gap-component px-card py-component">
+        <h2 className="text-base font-semibold text-text-primary">{title}</h2>
         <span className="text-label text-text-muted">{tasks.length}</span>
       </div>
-      <div className="grid gap-component">
+      <div>
         {tasks.map((task) => (
-          <TaskCard key={task.id} onOpenTask={onOpenTask} task={task} />
+          <TaskRow key={task.id} onOpenTask={onOpenTask} task={task} />
         ))}
       </div>
       {emptyText ? <p className="text-sm text-text-muted">{emptyText}</p> : null}
@@ -304,7 +319,7 @@ function AdminTaskBoard({ onOpenTask, tasks }) {
         const meta = TASK_STATUS_META[status]
 
         return (
-          <section className="grid min-w-[260px] content-start gap-component rounded-block bg-block-subtle p-component" key={status}>
+          <section className="grid min-w-[260px] content-start gap-control rounded-block bg-block-subtle p-component" key={status}>
             <div className="flex items-center justify-between gap-component">
               <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
                 <Icon className="text-text-quaternary" name={meta.icon} size={15} />
@@ -314,7 +329,7 @@ function AdminTaskBoard({ onOpenTask, tasks }) {
             </div>
             <div className="grid gap-control">
               {columnTasks.map((task) => (
-                <TaskCard compact key={task.id} onOpenTask={onOpenTask} task={task} />
+                <BoardTaskTile key={task.id} onOpenTask={onOpenTask} task={task} />
               ))}
               {columnTasks.length === 0 ? (
                 <div className="rounded-control px-control py-component text-sm text-text-muted">

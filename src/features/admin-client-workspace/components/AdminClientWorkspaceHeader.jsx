@@ -105,20 +105,8 @@ export function AdminClientWorkspaceHeader({
   const status = client?.status
 
   return (
-    <header className="border-b border-separator bg-surface">
-      <PageShell className="gap-component px-4 py-5 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-text-muted">
-          <Link className="text-link no-underline hover:text-link-hover" to="/admin/clients">
-            Clients
-          </Link>
-          <Icon className="text-text-quaternary" name="arrowRight" size={12} />
-          <span className="truncate text-text-secondary">{client?.name ?? 'Client workspace'}</span>
-          <Icon className="text-text-quaternary" name="arrowRight" size={12} />
-          <span className="font-medium text-text-primary">
-            {tabs.find((tab) => tab.id === currentPage)?.label ?? 'Overview'}
-          </span>
-        </nav>
-
+    <header className="sticky top-0 z-20 border-b border-separator bg-surface">
+      <PageShell className="gap-control px-app-gutter py-control">
         <PageHeader
           actions={(
             <>
@@ -134,7 +122,7 @@ export function AdminClientWorkspaceHeader({
           variant="inline"
         />
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-label text-text-muted">
           {portalSlug ? (
             <Link
               className="inline-flex items-center gap-1 text-link no-underline hover:text-link-hover"

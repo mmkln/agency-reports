@@ -34,21 +34,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
     .filter((project) => filters.clientId === 'all' || project.client_id === filters.clientId)
 
   return (
-    <div className="grid gap-component">
-      <label className="grid gap-2 text-sm font-medium text-text-secondary" htmlFor="task-search">
-        <span className="sr-only">Search tasks</span>
-        <span className="relative">
-          <Icon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" name="search" size={16} />
-          <Input
-            className="bg-control pl-10"
-            id="task-search"
-            onChange={(event) => onChange({ ...filters, search: event.target.value })}
-            placeholder="Search tasks, clients..."
-            type="text"
-            value={filters.search}
-          />
-        </span>
-      </label>
+    <div className="flex flex-col gap-component xl:flex-row xl:items-end xl:justify-between">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
         <div className="grid gap-4 sm:grid-cols-[220px_200px_170px_170px]">
           <label className="grid gap-2 text-sm font-medium text-text-secondary">
@@ -125,6 +111,20 @@ export function TaskFilters({ filters, onChange, taskData }) {
           </div>
         ) : null}
       </div>
+      <label className="grid gap-2 text-sm font-medium text-text-secondary xl:w-search-compact" htmlFor="task-search">
+        <span className="sr-only">Search tasks</span>
+        <span className="relative">
+          <Icon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" name="search" size={16} />
+          <Input
+            className="bg-control pl-10"
+            id="task-search"
+            onChange={(event) => onChange({ ...filters, search: event.target.value })}
+            placeholder="Search"
+            type="text"
+            value={filters.search}
+          />
+        </span>
+      </label>
     </div>
   )
 }

@@ -65,7 +65,6 @@ export function RootLayout() {
     <>
       <AppShell
         activeRoute={activeRoute}
-        defaultRoute={routeMetadata[0]}
         onAuthChange={onAuthChange}
         routeParams={routeParams}
         runtime={runtime}

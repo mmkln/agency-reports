@@ -8,7 +8,6 @@ function HeaderContent({
   eyebrow,
   primaryAction,
   primaryActionContext,
-  subtitle,
   title,
   titleScale,
 }) {
@@ -17,15 +16,14 @@ function HeaderContent({
     : null
   const titleClassName = titleScale === 'display'
     ? 'text-display text-text-primary'
-    : 'm-0 text-2xl leading-7 font-bold text-text-primary transition-all sm:truncate sm:text-3xl'
+    : 'm-0 text-heading text-text-primary transition-all sm:truncate'
 
   return (
     <>
       <div className="min-w-0 flex-1">
-        <div className="max-w-readable space-y-item">
+        <div className="max-w-readable space-y-micro">
           {eyebrow ? <div className="text-label text-text-muted">{eyebrow}</div> : null}
           <h1 className={titleClassName}>{title}</h1>
-          {subtitle ? <p className="m-0 text-ui text-text-secondary">{subtitle}</p> : null}
         </div>
       </div>
       {actions || resolvedPrimaryAction ? (
@@ -46,15 +44,17 @@ export function PageHeader({
   id,
   primaryAction,
   primaryActionContext = 'page',
-  subtitle,
+  subtitle: _subtitle,
   title,
   titleScale,
   variant = 'shell',
   ...props
 }) {
+  void _subtitle
+
   const inspectorId = useInspectorId('PageHeader', id)
   const isInline = variant === 'inline'
-  const resolvedTitleScale = titleScale ?? (isInline ? 'display' : 'title')
+  const resolvedTitleScale = titleScale ?? 'title'
 
   const content = (
     <HeaderContent
@@ -62,7 +62,6 @@ export function PageHeader({
       eyebrow={eyebrow}
       primaryAction={primaryAction}
       primaryActionContext={primaryActionContext}
-      subtitle={subtitle}
       title={title}
       titleScale={resolvedTitleScale}
     />
@@ -72,7 +71,7 @@ export function PageHeader({
     return (
       <header
         className={cn(
-          'flex flex-col gap-component lg:flex-row lg:items-start lg:justify-between',
+          'flex flex-col gap-control lg:flex-row lg:items-center lg:justify-between',
           className,
         )}
         id={inspectorId}
@@ -84,10 +83,10 @@ export function PageHeader({
   }
 
   return (
-    <header className={cn('border-b border-separator bg-surface', className)} id={inspectorId} {...props}>
+    <header className={cn('sticky top-0 z-20 border-b border-separator bg-surface', className)} id={inspectorId} {...props}>
       <div
         className={cn(
-          'mx-auto flex max-w-7xl flex-col gap-component px-4 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8',
+          'mx-auto flex w-full max-w-content flex-col gap-control px-app-gutter py-component lg:flex-row lg:items-center lg:justify-between',
           contentClassName,
         )}
       >

@@ -1046,7 +1046,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
 
   if (pageState.status === 'error' && error && !editor) {
     return (
-      <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <AdminErrorState message={error} />
       </PageShell>
     )
@@ -1054,7 +1054,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
 
   if (pageState.status === 'loading' || !editor || !draft) {
     return (
-      <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <Card className="bg-block shadow-none">
           <CardContent className="min-h-[260px] animate-pulse" />
         </Card>
@@ -1118,7 +1118,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
         tone="destructive"
       />
 
-      <PageShell className="px-4 py-6 sm:px-6 lg:px-8">
+      <PageShell className="px-app-gutter py-content-gutter">
         <div className="grid gap-card">
           <div className="grid gap-card lg:grid-cols-2">
             <LatestUpdateEditor

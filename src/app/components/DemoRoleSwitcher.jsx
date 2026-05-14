@@ -12,7 +12,7 @@ export function DemoRoleSwitcher({ activeRoleKey, onRoleChange }) {
   return (
     <aside
       aria-label="Demo role switcher"
-      className="fixed bottom-4 left-4 z-[80] w-[220px] rounded-lg border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur"
+      className="fixed right-4 bottom-4 z-[80] w-[220px] rounded-lg border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur"
     >
       <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
         Demo role
