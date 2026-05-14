@@ -58,6 +58,7 @@
 - Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
 - Use the canonical `PageHeader` from `src/shared/ui` for page and workspace headers. Feature-specific headers may wrap it, but must not recreate title/action/tabs/header spacing locally.
 - Keep page headers thin: title, essential metadata, and primary controls only. Do not render descriptive subtitles under page titles.
+- Make headers thinner by reducing chrome, padding, redundant rows, and subtitle copy; do not weaken the page title hierarchy unless explicitly requested.
 - Define page-level create actions through `PageHeader.primaryAction`, `AdminClientWorkspaceHeader.primaryAction`, or `PagePrimaryAction`; do not hand-style buttons such as New Client, New Task, New Dashboard, or New Report in page code.
 - Treat primary create action styling as a design-system responsibility. Pages may provide label, destination, disabled state, and product behavior, but not local color, radius, shadow, size, or icon sizing.
 - In editors with auto-save, keep the action bar compact and trust-based: visible save status, preview menu, one primary publish/submit action, and secondary/destructive actions in overflow.

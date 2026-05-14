@@ -8,7 +8,7 @@ export function PageShell({ children, className, id, ...props }) {
   return (
     <div
       id={inspectorId}
-      className={cn('mx-auto flex w-full max-w-content flex-col gap-card', className)}
+      className={cn('flex w-full flex-col gap-card', className)}
       {...props}
     >
       {children}

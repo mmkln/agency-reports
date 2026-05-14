@@ -16,7 +16,7 @@ function HeaderContent({
     : null
   const titleClassName = titleScale === 'display'
     ? 'text-display text-text-primary'
-    : 'm-0 text-heading text-text-primary transition-all sm:truncate'
+    : 'm-0 text-2xl leading-7 font-bold text-text-primary transition-all sm:truncate sm:text-3xl'
 
   return (
     <>
@@ -54,7 +54,7 @@ export function PageHeader({
 
   const inspectorId = useInspectorId('PageHeader', id)
   const isInline = variant === 'inline'
-  const resolvedTitleScale = titleScale ?? 'title'
+  const resolvedTitleScale = titleScale ?? (isInline ? 'display' : 'title')
 
   const content = (
     <HeaderContent
@@ -86,7 +86,7 @@ export function PageHeader({
     <header className={cn('sticky top-0 z-20 border-b border-separator bg-surface', className)} id={inspectorId} {...props}>
       <div
         className={cn(
-          'mx-auto flex w-full max-w-content flex-col gap-control px-app-gutter py-component lg:flex-row lg:items-center lg:justify-between',
+          'flex w-full flex-col gap-control px-app-gutter py-control lg:flex-row lg:items-center lg:justify-between',
           contentClassName,
         )}
       >

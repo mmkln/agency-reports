@@ -37,7 +37,7 @@ export function AppShell({
         {activeRoute.fullBleedContent ? (
           <div key={routeKey}>{children}</div>
         ) : (
-          <div className="mx-auto grid w-full max-w-content gap-card px-app-gutter py-content-gutter" key={routeKey}>
+          <div className="grid w-full gap-card px-app-gutter py-content-gutter" key={routeKey}>
             {children}
           </div>
         )}
