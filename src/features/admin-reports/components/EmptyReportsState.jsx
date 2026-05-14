@@ -34,3 +34,20 @@ export function EmptyReportsState({ hasClients = true }) {
     </Card>
   )
 }
+
+export function EmptyFilteredReportsState({ onReset }) {
+  return (
+    <Card className="border-control-border bg-block shadow-none">
+      <EmptyState
+        action={(
+          <Button onClick={onReset} type="button" variant="outline">
+            Clear filters
+          </Button>
+        )}
+        description="Try a different search term, client, status, or reporting period."
+        iconName="search"
+        title="No reports match these filters"
+      />
+    </Card>
+  )
+}

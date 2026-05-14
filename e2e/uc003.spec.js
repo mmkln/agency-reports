@@ -151,3 +151,26 @@ test('agency admin can duplicate a published report into a hidden draft', async 
   await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByText('Copy of April 2026 Monthly Summary')).toHaveCount(0)
 })
+
+test('agency admin can filter monthly reports', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto('/admin/reports')
+
+  const sourceReport = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
+  await expect(sourceReport).toBeVisible()
+
+  await page.getByLabel('Search').fill('missing report title')
+  await expect(page.getByText('No reports match these filters')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Reset' }).click()
+  await expect(sourceReport).toBeVisible()
+
+  await page.getByLabel('Status').click()
+  await page.getByRole('option', { name: 'Draft' }).click()
+  await expect(page.getByText('No reports match these filters')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Reset' }).click()
+  await page.getByLabel('Status').click()
+  await page.getByRole('option', { name: 'Published' }).click()
+  await expect(sourceReport).toBeVisible()
+})
