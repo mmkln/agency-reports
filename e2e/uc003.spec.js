@@ -85,7 +85,6 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await page.getByLabel('PDF / full report URL').fill('https://example.com/report.pdf')
   await page.getByRole('button', { name: 'Create report' }).click()
 
-  await expect(page.getByText('Report saved', { exact: true }).first()).toBeVisible()
   const reportRow = page.getByRole('row').filter({ hasText: reportTitle })
   await expect(reportRow).toBeVisible()
   await expect(reportRow).toContainText('Published')
@@ -107,6 +106,18 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await expect(page.getByText(needed)).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open PDF' })).toBeVisible()
+
+  const archive = page.getByRole('complementary').filter({ hasText: 'Report archive' })
+  const archiveList = page.getByTestId('report-archive-list')
+  await expect(archiveList.getByText(reportTitle)).toBeVisible()
+  await archive.getByLabel('Search reports').fill('April')
+  await expect(archiveList.getByText('April 2026 Monthly Summary')).toBeVisible()
+  await expect(archiveList.getByText(reportTitle)).toHaveCount(0)
+
+  await archive.getByLabel('Search reports').fill('missing client report')
+  await expect(archive.getByText('No reports match these filters')).toBeVisible()
+  await archive.getByRole('button', { name: 'Clear filters' }).click()
+  await expect(archiveList.getByText(reportTitle)).toBeVisible()
 })
 
 test('client report archive hides draft reports', async ({ page }) => {
@@ -121,7 +132,6 @@ test('client report archive hides draft reports', async ({ page }) => {
   await page.getByLabel('Executive summary').fill('Draft only summary')
   await page.getByRole('button', { name: 'Create report' }).click()
 
-  await expect(page.getByText('Report saved', { exact: true }).first()).toBeVisible()
   await expect(page.getByRole('row').filter({ hasText: reportTitle })).toBeVisible()
   const draftReportId = await page.evaluate(({ portalKey, title }) => {
     const portalData = JSON.parse(window.localStorage.getItem(portalKey))

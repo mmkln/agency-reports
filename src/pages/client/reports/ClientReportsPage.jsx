@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -8,8 +8,14 @@ import {
   CardDescription,
   CardTitle,
   EmptyState,
+  Input,
   PrimitiveCard as Card,
   PrimitiveCardHeader as CardHeader,
+  RadixSelect as Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Separator,
   StatusBadge,
 } from '@/shared/ui'
@@ -22,6 +28,8 @@ import { getClientReportsPage } from '../../../domain/services/clientReportsServ
 import { USER_ROLES } from '../../../entities/profile'
 import { Icon } from '../../../shared/icons'
 import { AccessDeniedState } from '../../../widgets/client-overview'
+
+const REPORT_ARCHIVE_FILTER_ALL = 'all'
 
 function formatDate(date) {
   if (!date) {
@@ -43,6 +51,49 @@ function formatDate(date) {
 
 function formatPeriod(report) {
   return `${formatDate(report.periodStart)} - ${formatDate(report.periodEnd)}`
+}
+
+function getReportYear(report) {
+  const parsedDate = new Date(report.periodEnd || report.periodStart)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return ''
+  }
+
+  return String(parsedDate.getFullYear())
+}
+
+function normalizeSearchValue(value) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function filterReports(reports, filters) {
+  const search = normalizeSearchValue(filters.search)
+
+  return reports.filter((report) => {
+    if (filters.status !== REPORT_ARCHIVE_FILTER_ALL && report.status !== filters.status) {
+      return false
+    }
+
+    if (filters.year !== REPORT_ARCHIVE_FILTER_ALL && getReportYear(report) !== filters.year) {
+      return false
+    }
+
+    if (!search) {
+      return true
+    }
+
+    return [
+      report.clientDecisionsNeeded,
+      report.nextActions,
+      report.problems,
+      report.results,
+      report.summary,
+      report.title,
+      report.whatWeDid,
+      report.wins,
+    ].some((value) => normalizeSearchValue(value).includes(search))
+  })
 }
 
 function EmptyReportsState() {
@@ -236,11 +287,99 @@ function LatestReportSummary({ clientId, report, selectedReport }) {
   )
 }
 
-function ReportArchiveList({ clientId, reports, selectedReport }) {
-  if (reports.length === 0) {
-    return null
-  }
+function EmptyFilteredArchiveState({ onReset }) {
+  return (
+    <div className="rounded-block border border-dashed border-control-border bg-block-subtle p-4">
+      <EmptyState
+        action={(
+          <Button onClick={onReset} size="sm" type="button" variant="outline">
+            Clear filters
+          </Button>
+        )}
+        className="bg-transparent p-0"
+        description="Try a different search term, year, or report status."
+        iconName="search"
+        title="No reports match these filters"
+      />
+    </div>
+  )
+}
 
+function ReportArchiveFilters({
+  filters,
+  onReset,
+  onUpdateFilter,
+  reportYears,
+  resultCount,
+  statuses,
+  totalCount,
+}) {
+  const hasActiveFilters = Boolean(
+    filters.search
+    || filters.status !== REPORT_ARCHIVE_FILTER_ALL
+    || filters.year !== REPORT_ARCHIVE_FILTER_ALL,
+  )
+
+  return (
+    <div className="grid gap-3">
+      <div className="relative">
+        <Icon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-quaternary" name="search" size={15} />
+        <Input
+          aria-label="Search reports"
+          className="pl-9"
+          onChange={(event) => onUpdateFilter('search', event.target.value)}
+          placeholder="Search reports..."
+          value={filters.search}
+        />
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <Select onValueChange={(value) => onUpdateFilter('year', value)} value={filters.year}>
+          <SelectTrigger aria-label="Report year">
+            <SelectValue placeholder="All years" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={REPORT_ARCHIVE_FILTER_ALL}>All years</SelectItem>
+            {reportYears.map((year) => (
+              <SelectItem key={year} value={year}>{year}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={(value) => onUpdateFilter('status', value)} value={filters.status}>
+          <SelectTrigger aria-label="Report status">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={REPORT_ARCHIVE_FILTER_ALL}>All statuses</SelectItem>
+            {statuses.map((status) => (
+              <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
+        <span>{resultCount} of {totalCount}</span>
+        <Button disabled={!hasActiveFilters} onClick={onReset} size="sm" type="button" variant="ghost">
+          Reset
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ReportArchiveList({
+  clientId,
+  filters,
+  onReset,
+  onUpdateFilter,
+  reportYears,
+  reports,
+  selectedReport,
+  statuses,
+  totalCount,
+}) {
   return (
     <Card className="border-control-border bg-block shadow-none">
       <CardHeader className="border-b border-separator bg-surface-subtle">
@@ -250,32 +389,48 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
             <CardDescription className="mt-1">Newest reporting periods first.</CardDescription>
           </div>
           <Badge className="border-control-border bg-block text-text-secondary" variant="outline">
-            {reports.length}
+            {reports.length}/{totalCount}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-2 py-4">
-        {reports.map((report) => {
-          const isSelected = selectedReport?.id === report.id
+      <CardContent className="grid gap-4 py-4">
+        <ReportArchiveFilters
+          filters={filters}
+          onReset={onReset}
+          onUpdateFilter={onUpdateFilter}
+          reportYears={reportYears}
+          resultCount={reports.length}
+          statuses={statuses}
+          totalCount={totalCount}
+        />
 
-          return (
-            <Link
-              className={isSelected
-                ? 'rounded-block border border-brand bg-action-muted px-4 py-3 text-sm shadow-none'
-                : 'rounded-block border border-control-border bg-block px-4 py-3 text-sm transition-colors hover:bg-surface-subtle'}
-              key={report.id}
-              to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
-            >
-              <span className="flex items-start justify-between gap-3">
-                <span className="min-w-0">
-                  <span className="block truncate font-semibold text-text-primary">{report.title}</span>
-                  <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
-                </span>
-                <StatusBadge meta={report.statusMeta} />
-              </span>
-            </Link>
-          )
-        })}
+        {reports.length > 0 ? (
+          <div className="grid gap-2" data-testid="report-archive-list">
+            {reports.map((report) => {
+              const isSelected = selectedReport?.id === report.id
+
+              return (
+                <Link
+                  className={isSelected
+                    ? 'rounded-block border border-brand bg-action-muted px-4 py-3 text-sm shadow-none'
+                    : 'rounded-block border border-control-border bg-block px-4 py-3 text-sm transition-colors hover:bg-surface-subtle'}
+                  key={report.id}
+                  to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold text-text-primary">{report.title}</span>
+                      <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
+                    </span>
+                    <StatusBadge meta={report.statusMeta} />
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <EmptyFilteredArchiveState onReset={onReset} />
+        )}
       </CardContent>
     </Card>
   )
@@ -304,6 +459,11 @@ function recordClientReportOpened({ clientId, reportId, runtime }) {
 
 export function ClientReportsPage({ routeParams = {}, runtime }) {
   const recordedReportOpenRef = useRef('')
+  const [archiveFilters, setArchiveFilters] = useState({
+    search: '',
+    status: REPORT_ARCHIVE_FILTER_ALL,
+    year: REPORT_ARCHIVE_FILTER_ALL,
+  })
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const page = getClientReportsPage({
     clientId,
@@ -312,6 +472,51 @@ export function ClientReportsPage({ routeParams = {}, runtime }) {
     viewer: runtime.viewer,
   })
   const selectedReportId = page.selectedReport?.id ?? ''
+  const reportYears = useMemo(() => {
+    if (page.status !== 'ready') {
+      return []
+    }
+
+    return [...new Set(page.reports.map(getReportYear).filter(Boolean))]
+  }, [page.reports, page.status])
+  const archiveStatuses = useMemo(() => {
+    if (page.status !== 'ready') {
+      return []
+    }
+
+    const statusByValue = new Map()
+
+    page.reports.forEach((report) => {
+      statusByValue.set(report.status, {
+        label: report.statusMeta?.label ?? report.status,
+        value: report.status,
+      })
+    })
+
+    return [...statusByValue.values()]
+  }, [page.reports, page.status])
+  const filteredReports = useMemo(() => {
+    if (page.status !== 'ready') {
+      return []
+    }
+
+    return filterReports(page.reports, archiveFilters)
+  }, [archiveFilters, page.reports, page.status])
+
+  function updateArchiveFilter(filterName, value) {
+    setArchiveFilters((currentFilters) => ({
+      ...currentFilters,
+      [filterName]: value,
+    }))
+  }
+
+  function resetArchiveFilters() {
+    setArchiveFilters({
+      search: '',
+      status: REPORT_ARCHIVE_FILTER_ALL,
+      year: REPORT_ARCHIVE_FILTER_ALL,
+    })
+  }
 
   useEffect(() => {
     if (page.status !== 'ready' || !selectedReportId || recordedReportOpenRef.current === selectedReportId) {
@@ -343,7 +548,17 @@ export function ClientReportsPage({ routeParams = {}, runtime }) {
       )}
       <aside className="grid content-start gap-4">
         <LatestReportSummary clientId={clientId} report={page.latestReport} selectedReport={page.selectedReport} />
-        <ReportArchiveList clientId={clientId} reports={page.reports} selectedReport={page.selectedReport} />
+        <ReportArchiveList
+          clientId={clientId}
+          filters={archiveFilters}
+          onReset={resetArchiveFilters}
+          onUpdateFilter={updateArchiveFilter}
+          reportYears={reportYears}
+          reports={filteredReports}
+          selectedReport={page.selectedReport}
+          statuses={archiveStatuses}
+          totalCount={page.reports.length}
+        />
       </aside>
     </div>
   )
