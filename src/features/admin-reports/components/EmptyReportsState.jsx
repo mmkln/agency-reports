@@ -44,7 +44,7 @@ export function EmptyFilteredReportsState({ onReset }) {
             Clear filters
           </Button>
         )}
-        description="Try a different search term, client, status, or reporting period."
+        description="Try a different search term, client, status, or reporting month."
         iconName="search"
         title="No reports match these filters"
       />

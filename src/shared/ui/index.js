@@ -99,6 +99,7 @@ export {
 } from '@/components/ui/select'
 export { ReadOnlyField } from './ReadOnlyField'
 export { ScrollArea, ScrollBar } from './ScrollArea'
+export { SearchField } from './SearchField'
 export { Separator } from '@/components/ui/separator'
 export {
   Sheet,

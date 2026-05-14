@@ -1,10 +1,10 @@
 import {
   Button,
-  Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
   RadixSelect as Select,
+  SearchField,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -70,18 +70,13 @@ export function TaskFilters({ filters, onChange, taskData }) {
         {taskData.canUseMineFilter ? (
           <ScopeToggle filters={filters} onChange={onChange} />
         ) : null}
-        <label className="relative min-w-0 flex-1 sm:max-w-search-compact" htmlFor="task-search">
-          <span className="sr-only">Search tasks</span>
-          <Icon className="pointer-events-none absolute top-1/2 left-control -translate-y-1/2 text-text-secondary" name="search" size={15} />
-          <Input
-            className="h-control-small border-transparent bg-control pl-card text-sm"
-            id="task-search"
-            onChange={(event) => onChange({ ...filters, search: event.target.value })}
-            placeholder="Search"
-            type="text"
-            value={filters.search}
-          />
-        </label>
+        <SearchField
+          className="sm:max-w-search-compact"
+          inputId="task-search"
+          label="Search tasks"
+          onValueChange={(value) => onChange({ ...filters, search: value })}
+          value={filters.search}
+        />
       </div>
 
       <Popover>

@@ -1,8 +1,10 @@
 import {
   Button,
-  Input,
-  PrimitiveCard as Card,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   RadixSelect as Select,
+  SearchField,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -14,11 +16,23 @@ import { Icon } from '../../../shared/icons'
 
 export const REPORT_FILTER_ALL = 'all'
 
+function FilterField({ children, label }) {
+  return (
+    <label className="grid grid-cols-[minmax(4.5rem,0.75fr)_minmax(0,1fr)] items-center gap-control">
+      <span className="text-label text-text-muted">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-sm'
+
 export function ReportsFilters({
   clients,
   filters,
   onReset,
   onUpdateFilter,
+  reportingMonthOptions = [],
   resultCount,
   totalCount,
 }) {
@@ -28,86 +42,111 @@ export function ReportsFilters({
     || filters.status !== REPORT_FILTER_ALL
     || filters.period,
   )
+  const activeFilterCount = [
+    filters.clientId !== REPORT_FILTER_ALL,
+    filters.status !== REPORT_FILTER_ALL,
+    Boolean(filters.period),
+  ].filter(Boolean).length
 
   return (
-    <Card className="border-control-border bg-block p-4 shadow-none">
-      <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_220px_180px_170px_auto] lg:items-end">
-        <div className="grid gap-2">
-          <label className="text-xs font-semibold tracking-wide text-text-muted uppercase" htmlFor="report-search">
-            Search
-          </label>
-          <div className="relative">
-            <Icon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-quaternary" name="search" size={16} />
-            <Input
-              className="pl-9"
-              id="report-search"
-              onChange={(event) => onUpdateFilter('search', event.target.value)}
-              placeholder="Search title, summary, results..."
-              value={filters.search}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          <label className="text-xs font-semibold tracking-wide text-text-muted uppercase" htmlFor="report-client-filter">
-            Client
-          </label>
-          <Select onValueChange={(value) => onUpdateFilter('clientId', value)} value={filters.clientId}>
-            <SelectTrigger id="report-client-filter">
-              <SelectValue placeholder="All clients" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={REPORT_FILTER_ALL}>All clients</SelectItem>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2">
-          <label className="text-xs font-semibold tracking-wide text-text-muted uppercase" htmlFor="report-status-filter">
-            Status
-          </label>
-          <Select onValueChange={(value) => onUpdateFilter('status', value)} value={filters.status}>
-            <SelectTrigger id="report-status-filter">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={REPORT_FILTER_ALL}>All statuses</SelectItem>
-              {Object.values(REPORT_STATUSES).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {REPORT_STATUS_META[status]?.label ?? status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2">
-          <label className="text-xs font-semibold tracking-wide text-text-muted uppercase" htmlFor="report-period-filter">
-            Period
-          </label>
-          <Input
-            id="report-period-filter"
-            onChange={(event) => onUpdateFilter('period', event.target.value)}
-            type="month"
-            value={filters.period}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
-          <Button disabled={!hasActiveFilters} onClick={onReset} type="button" variant="outline">
-            Reset
-          </Button>
-        </div>
+    <div className="flex w-full flex-col gap-control sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-1 flex-col gap-control sm:flex-row sm:items-center">
+        <SearchField
+          className="sm:max-w-search-compact"
+          inputId="report-search"
+          label="Search reports"
+          onValueChange={(value) => onUpdateFilter('search', value)}
+          value={filters.search}
+        />
+        <span className="text-label text-text-muted">
+          Showing {resultCount} of {totalCount}
+        </span>
       </div>
 
-      <p className="mt-3 text-xs text-text-muted">
-        Showing {resultCount} of {totalCount} reports.
-      </p>
-    </Card>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            aria-label={activeFilterCount > 0 ? `${activeFilterCount} filters active` : 'Open report filters'}
+            className={`w-full justify-between sm:w-32 ${
+              activeFilterCount > 0 ? 'bg-control-selected text-text-primary' : ''
+            }`}
+            size="sm"
+            type="button"
+            variant="secondary"
+          >
+            <span>Filters</span>
+            {activeFilterCount > 0 ? (
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            ) : (
+              <Icon className="text-text-muted" name="chevronDown" size={14} />
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-popover p-card">
+          <div className="grid gap-component">
+            <div className="flex items-center justify-between gap-component">
+              <p className="text-sm font-semibold text-text-primary">Filters</p>
+              {hasActiveFilters ? (
+                <Button onClick={onReset} size="xs" type="button" variant="ghost">
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+            <div className="grid gap-control">
+              <FilterField label="Client">
+                <Select onValueChange={(value) => onUpdateFilter('clientId', value)} value={filters.clientId}>
+                  <SelectTrigger className={filterSelectTriggerClass} id="report-client-filter" size="sm">
+                    <SelectValue placeholder="All clients" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={REPORT_FILTER_ALL}>All clients</SelectItem>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              <FilterField label="Status">
+                <Select onValueChange={(value) => onUpdateFilter('status', value)} value={filters.status}>
+                  <SelectTrigger className={filterSelectTriggerClass} id="report-status-filter" size="sm">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={REPORT_FILTER_ALL}>All statuses</SelectItem>
+                    {Object.values(REPORT_STATUSES).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {REPORT_STATUS_META[status]?.label ?? status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              <FilterField label="Reporting month">
+                <Select
+                  onValueChange={(value) => onUpdateFilter('period', value === REPORT_FILTER_ALL ? '' : value)}
+                  value={filters.period || REPORT_FILTER_ALL}
+                >
+                  <SelectTrigger className={filterSelectTriggerClass} id="report-period-filter" size="sm">
+                    <SelectValue placeholder="All reporting months" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={REPORT_FILTER_ALL}>All reporting months</SelectItem>
+                    {reportingMonthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   )
 }
