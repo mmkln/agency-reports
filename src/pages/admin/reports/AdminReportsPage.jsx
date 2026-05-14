@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { listAdminClients } from '../../../domain/services/adminClientService'
 import {
   deleteAdminReport,
+  duplicateAdminReport,
   listAdminReports,
   saveAdminReport,
   updateAdminReportStatus,
@@ -125,6 +126,20 @@ export function AdminReportsPage({ routeParams = {}, runtime }) {
               toast.success('Report deleted', `${deletedReport?.title ?? 'Report'} was removed.`)
             }).catch((caughtError) => {
               toast.error('Report was not deleted', caughtError.message)
+            })
+          }}
+          onDuplicateReport={(reportId) => {
+            void runtime.dataClient.write((repositories) => duplicateAdminReport({
+              idGenerator: createUuid,
+              reportId,
+              repositories,
+              viewer: runtime.viewer,
+            })).then((report) => {
+              reloadReports()
+              setReportPendingEdit(report)
+              toast.success('Report duplicated', `${report.title} was created as a draft.`)
+            }).catch((caughtError) => {
+              toast.error('Report was not duplicated', caughtError.message)
             })
           }}
           onEditReport={setReportPendingEdit}

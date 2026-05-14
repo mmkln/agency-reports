@@ -128,3 +128,26 @@ test('client report archive hides draft reports', async ({ page }) => {
   await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByText(reportTitle)).toHaveCount(0)
 })
+
+test('agency admin can duplicate a published report into a hidden draft', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto('/admin/reports')
+
+  const sourceRow = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
+  await sourceRow.getByLabel('Report actions').click()
+  await page.getByRole('menuitem', { name: 'Duplicate report' }).click()
+
+  await expect(page.getByText('Report duplicated', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Edit monthly report' })).toBeVisible()
+  await expect(page.getByLabel('Report title *')).toHaveValue('Copy of April 2026 Monthly Summary')
+  await expect(page.getByLabel('Status *')).toContainText('Draft')
+  await page.getByRole('button', { name: 'Cancel' }).click()
+
+  const duplicatedRow = page.getByRole('row').filter({ hasText: 'Copy of April 2026 Monthly Summary' })
+  await expect(duplicatedRow).toBeVisible()
+  await expect(duplicatedRow).toContainText('Draft')
+
+  await signInAsClient(page)
+  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await expect(page.getByText('Copy of April 2026 Monthly Summary')).toHaveCount(0)
+})

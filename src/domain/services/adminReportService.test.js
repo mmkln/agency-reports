@@ -5,6 +5,7 @@ import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import {
   deleteAdminReport,
+  duplicateAdminReport,
   listAdminReports,
   saveAdminReport,
   updateAdminReportStatus,
@@ -194,6 +195,32 @@ describe('adminReportService', () => {
     expect(clientPage.selectedReport.title).toBe('May Draft')
   })
 
+  it('duplicates an existing report as a new draft hidden from clients', () => {
+    const repositories = createRepositories()
+
+    const duplicatedReport = duplicateAdminReport({
+      idGenerator: () => '88888888-8888-4888-8888-888888888888',
+      now: () => '2026-05-10T09:00:00.000Z',
+      reportId: IDS.REPORT_PUBLISHED,
+      repositories,
+      viewer: createAdminViewer(),
+    })
+    const clientPage = getClientReportsPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(duplicatedReport).toMatchObject({
+      id: '88888888-8888-4888-8888-888888888888',
+      publishedAt: null,
+      status: REPORT_STATUSES.DRAFT,
+      summary: 'Published summary',
+      title: 'Copy of April Summary',
+    })
+    expect(JSON.stringify(clientPage)).not.toContain('Copy of April Summary')
+  })
+
   it('validates report period and external links', () => {
     expect(() => saveAdminReport({
       idGenerator: () => '88888888-8888-4888-8888-888888888888',
@@ -233,4 +260,3 @@ describe('adminReportService', () => {
     expect(repositories.reports.findById(IDS.REPORT_DRAFT)).toBeNull()
   })
 })
-

@@ -250,9 +250,44 @@ export function updateAdminReportStatus({
   })
 }
 
+export function duplicateAdminReport({
+  idGenerator,
+  now = () => new Date().toISOString(),
+  reportId,
+  repositories,
+  viewer,
+}) {
+  assertUuidGenerator(idGenerator)
+
+  const sourceReport = getEditableReport({ reportId, repositories, viewer })
+
+  return saveAdminReport({
+    idGenerator,
+    input: {
+      client_id: sourceReport.client_id,
+      client_decisions_needed: sourceReport.client_decisions_needed,
+      dashboard_url: sourceReport.dashboard_url,
+      internal_notes: sourceReport.internal_notes,
+      next_actions: sourceReport.next_actions,
+      pdf_url: sourceReport.pdf_url,
+      period_end: sourceReport.period_end,
+      period_start: sourceReport.period_start,
+      problems: sourceReport.problems,
+      results: sourceReport.results,
+      status: REPORT_STATUSES.DRAFT,
+      summary: sourceReport.summary,
+      title: `Copy of ${sourceReport.title}`,
+      what_we_did: sourceReport.what_we_did,
+      wins: sourceReport.wins,
+    },
+    now,
+    repositories,
+    viewer,
+  })
+}
+
 export function deleteAdminReport({ reportId, repositories, viewer }) {
   getEditableReport({ reportId, repositories, viewer })
 
   return repositories.reports.deleteById(reportId)
 }
-

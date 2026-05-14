@@ -42,6 +42,7 @@ function formatPeriod(report) {
 
 export function ReportsTable({
   onDeleteReport,
+  onDuplicateReport,
   onEditReport,
   onUpdateStatus,
   reports,
@@ -126,6 +127,11 @@ export function ReportsTable({
                               Preview unavailable
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onDuplicateReport(report.id)}>
+                            <Icon name="fileText" size={15} />
+                            Duplicate report
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {[
                             REPORT_STATUSES.DRAFT,
