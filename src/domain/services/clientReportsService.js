@@ -24,6 +24,8 @@ function mapReport(report) {
     },
     summary: report.summary,
     title: report.title,
+    whatWeDid: report.what_we_did,
+    results: report.results,
     wins: report.wins,
   }
 }

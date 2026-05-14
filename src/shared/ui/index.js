@@ -118,6 +118,8 @@ export { Switch } from '@/components/ui/switch'
 export { TableBadge, TablePanel } from './TablePanel'
 export {
   Table,
+  TableActionCell,
+  TableActionHead,
   TableBody,
   TableCaption,
   TableCell,

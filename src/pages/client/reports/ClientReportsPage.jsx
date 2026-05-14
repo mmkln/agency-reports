@@ -92,6 +92,8 @@ function ReportReader({ report }) {
       <CardContent className="grid gap-4 py-5">
         <ReportSection title="Executive summary">{report.summary}</ReportSection>
         <div className="grid gap-4 lg:grid-cols-2">
+          <ReportSection title="What we did">{report.whatWeDid}</ReportSection>
+          <ReportSection title="Results">{report.results}</ReportSection>
           <ReportSection title="Wins">{report.wins}</ReportSection>
           <ReportSection title="Problems / blockers">{report.problems}</ReportSection>
           <ReportSection title="Next actions">{report.nextActions}</ReportSection>

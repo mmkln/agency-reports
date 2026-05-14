@@ -2,10 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
-import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
-import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
 import {
   discardAdminClientOverviewDraft,
@@ -170,7 +168,22 @@ describe('adminOverviewService', () => {
 
   it('saves client status, focus, and new overview records into a draft only', () => {
     const repositories = createRepositories()
-    const generatedIds = [IDS.NEW_PROJECT, IDS.NEW_TASK, IDS.NEW_NEEDED_ACTION]
+    repositories.tasks.upsert({
+      assignee_name: 'Existing owner',
+      client_id: IDS.CLIENT_A,
+      id: IDS.NEW_TASK,
+      status: 'in_progress',
+      title: 'Existing workflow task',
+      visibility: VISIBILITY.CLIENT_VISIBLE,
+    })
+    repositories.neededFromClient.upsert({
+      client_id: IDS.CLIENT_A,
+      due_date: '2026-05-12',
+      id: IDS.NEW_NEEDED_ACTION,
+      status: 'pending',
+      title: 'Existing client request',
+    })
+    const generatedIds = [IDS.NEW_PROJECT]
 
     const editor = saveAdminClientOverview({
       clientId: IDS.CLIENT_A,
@@ -181,13 +194,7 @@ describe('adminOverviewService', () => {
         },
         currentFocus: ['Approve creative batch', '  ', 'Budget review', 'Ignored fourth item'],
         dashboardLinks: [],
-        neededActions: [
-          {
-            due_date: '2026-05-12',
-            status: NEEDED_ACTION_STATUSES.PENDING,
-            title: 'Approve creative batch',
-          },
-        ],
+        neededActions: [],
         projects: [
           {
             name: 'New Project',
@@ -196,14 +203,7 @@ describe('adminOverviewService', () => {
           },
         ],
         reports: [],
-        tasks: [
-          {
-            assignee_name: 'Team',
-            status: TASK_STATUSES.IN_PROGRESS,
-            title: 'Visible task',
-            visibility: VISIBILITY.CLIENT_VISIBLE,
-          },
-        ],
+        tasks: [],
         updates: [],
       },
       now: () => '2026-05-09T10:00:00.000Z',
@@ -228,42 +228,18 @@ describe('adminOverviewService', () => {
       progress_percent: 100,
       name: 'New Project',
     })
-    expect(editor.tasks.find((task) => task.id === IDS.NEW_TASK)).toMatchObject({
-      assignee_name: 'Team',
-      client_visible: true,
-      visibility: VISIBILITY.CLIENT_VISIBLE,
-    })
+    expect(editor.tasks.map((task) => task.title)).toEqual(['Existing workflow task'])
+    expect(editor.neededActions.map((action) => action.title)).toEqual(['Existing client request'])
+    expect(client.overview_draft).not.toHaveProperty('tasks')
+    expect(client.overview_draft).not.toHaveProperty('neededActions')
     expect(repositories.projects.findById(IDS.NEW_PROJECT)).toBeNull()
-    expect(repositories.tasks.findById(IDS.NEW_TASK)).toBeNull()
+    expect(repositories.tasks.findById(IDS.NEW_TASK)).toMatchObject({
+      title: 'Existing workflow task',
+    })
   })
 
   it('rejects unsafe client-visible records and invalid URLs', () => {
     const repositories = createRepositories()
-
-    expect(() => saveAdminClientOverview({
-      clientId: IDS.CLIENT_A,
-      idGenerator: () => IDS.NEW_TASK,
-      input: {
-        client: {
-          status: CLIENT_STATUSES.ON_TRACK,
-        },
-        currentFocus: [],
-        dashboardLinks: [],
-        neededActions: [],
-        projects: [],
-        reports: [],
-        tasks: [
-          {
-            status: TASK_STATUSES.IN_PROGRESS,
-            title: 'Visible task without assignee',
-            visibility: VISIBILITY.CLIENT_VISIBLE,
-          },
-        ],
-        updates: [],
-      },
-      repositories,
-      viewer: createAdminViewer(),
-    })).toThrow('must have an assignee')
 
     expect(() => saveAdminClientOverview({
       clientId: IDS.CLIENT_A,
@@ -315,12 +291,10 @@ describe('adminOverviewService', () => {
     })).toThrow('Client-visible updates must include update body text.')
   })
 
-  it('preserves project and task ordering through sort_order', () => {
+  it('preserves project ordering through sort_order', () => {
     const repositories = createRepositories()
     const generatedIds = [
       IDS.NEW_PROJECT,
-      IDS.NEW_TASK,
-      '77777777-7777-4777-8777-777777777778',
     ]
 
     const editor = saveAdminClientOverview({
@@ -347,22 +321,7 @@ describe('adminOverviewService', () => {
           },
         ],
         reports: [],
-        tasks: [
-          {
-            assignee_name: 'Owner',
-            sort_order: 20,
-            status: TASK_STATUSES.TODO,
-            title: 'Second',
-            visibility: VISIBILITY.CLIENT_VISIBLE,
-          },
-          {
-            assignee_name: 'Owner',
-            sort_order: 10,
-            status: TASK_STATUSES.TODO,
-            title: 'First',
-            visibility: VISIBILITY.CLIENT_VISIBLE,
-          },
-        ],
+        tasks: [],
         updates: [],
       },
       repositories,
@@ -370,7 +329,6 @@ describe('adminOverviewService', () => {
     })
 
     expect(editor.projects.map((project) => project.name)).toEqual(['New first', 'Existing second'])
-    expect(editor.tasks.map((task) => task.title)).toEqual(['First', 'Second'])
   })
 
   it('marks the overview as published on the client record', () => {
@@ -390,7 +348,7 @@ describe('adminOverviewService', () => {
 
   it('publishes the saved draft into the client-facing records', () => {
     const repositories = createRepositories()
-    const generatedIds = [IDS.NEW_PROJECT, IDS.NEW_TASK]
+    const generatedIds = [IDS.NEW_PROJECT]
 
     saveAdminClientOverview({
       clientId: IDS.CLIENT_A,
@@ -409,14 +367,7 @@ describe('adminOverviewService', () => {
           },
         ],
         reports: [],
-        tasks: [
-          {
-            assignee_name: 'Analytics',
-            status: TASK_STATUSES.BLOCKED,
-            title: 'Reconnect GA4 event',
-            visibility: VISIBILITY.CLIENT_VISIBLE,
-          },
-        ],
+        tasks: [],
         updates: [],
       },
       repositories,
@@ -443,10 +394,8 @@ describe('adminOverviewService', () => {
       name: 'Attribution repair',
       progress_percent: 45,
     })
-    expect(repositories.tasks.findById(IDS.NEW_TASK)).toMatchObject({
-      title: 'Reconnect GA4 event',
-      visibility: VISIBILITY.CLIENT_VISIBLE,
-    })
+    expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('tasks')
+    expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('neededActions')
   })
 
   it('discards draft changes and restores the published editor state', () => {

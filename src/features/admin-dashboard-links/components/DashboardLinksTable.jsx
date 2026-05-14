@@ -12,6 +12,8 @@ import {
   PrimitiveCard as Card,
   StatusBadge,
   Table,
+  TableActionCell,
+  TableActionHead,
   TableBody,
   TableCell,
   TableHead,
@@ -64,7 +66,7 @@ export function DashboardLinksTable({
               <TableHead className="px-6 py-3">Status</TableHead>
               <TableHead className="px-6 py-3">Visibility</TableHead>
               <TableHead className="px-6 py-3">Last Checked</TableHead>
-              <TableHead className="px-6 py-3 text-right">Actions</TableHead>
+              <TableActionHead className="px-6 py-3">Actions</TableActionHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-separator">
@@ -108,21 +110,9 @@ export function DashboardLinksTable({
                   <TableCell className="px-6 py-4 text-text-muted">
                     {formatDate(dashboardLink.lastCheckedAt)}
                   </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex justify-end gap-2">
-                      {dashboardLink.publicUrl ? (
-                        <Button asChild size="icon-sm" title="Open full dashboard" variant="ghost">
-                          <a href={dashboardLink.publicUrl} rel="noreferrer" target="_blank">
-                            <Icon name="arrowUpRight" size={15} />
-                          </a>
-                        </Button>
-                      ) : null}
-                      <Button asChild size="sm" variant="outline">
-                        <Link to={`/admin/client-dashboard-preview?clientId=${dashboardLink.clientId}&dashboardId=${dashboardLink.id}`}>
-                          Preview
-                        </Link>
-                      </Button>
-                      <Button onClick={() => onEditDashboardLink(dashboardLink)} size="sm" type="button" variant="ghost">
+                  <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">
+                    <div className="flex justify-end gap-1.5">
+                      <Button onClick={() => onEditDashboardLink(dashboardLink)} size="sm" type="button" variant="outline">
                         Edit
                       </Button>
                       <DropdownMenu>
@@ -132,6 +122,21 @@ export function DashboardLinksTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-56">
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/client-dashboard-preview?clientId=${dashboardLink.clientId}&dashboardId=${dashboardLink.id}`}>
+                              <Icon name="layoutDashboard" size={15} />
+                              Preview dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          {dashboardLink.publicUrl ? (
+                            <DropdownMenuItem asChild>
+                              <a href={dashboardLink.publicUrl} rel="noreferrer" target="_blank">
+                                <Icon name="arrowUpRight" size={15} />
+                                Open full dashboard
+                              </a>
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuSeparator />
                           {[
                             DASHBOARD_LINK_STATUSES.ACTIVE,
                             DASHBOARD_LINK_STATUSES.UNAVAILABLE,
@@ -158,7 +163,7 @@ export function DashboardLinksTable({
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </TableCell>
+                  </TableActionCell>
                 </TableRow>
               )
             })}

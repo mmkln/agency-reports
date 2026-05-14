@@ -9,6 +9,8 @@ const routeMap = {
   'admin-client-preview': '/admin/client-preview',
   'admin-clients': '/admin/clients',
   'admin-dashboard-links': '/admin/dashboard-links',
+  'admin-reports': '/admin/reports',
+  'admin-client-report-preview': '/admin/client-report-preview',
   'client-dashboard': '/client/dashboard',
   'client-reports': '/client/reports',
   'legacy-build-board': '/legacy/build-board',

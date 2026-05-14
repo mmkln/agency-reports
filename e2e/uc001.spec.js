@@ -77,7 +77,8 @@ test('agency admin can create a client and the generated invite grants client ov
   const clientRow = page.getByRole('row').filter({ hasText: clientName })
   await expect(clientRow).toBeVisible()
   await expect(clientRow).toContainText(contactEmail)
-  await clientRow.locator('a[href^="/accept-invite?token="]').first().click()
+  await clientRow.getByRole('button', { name: `${clientName} actions` }).click()
+  await page.getByRole('menuitem', { name: 'Open pending invitation' }).click()
 
   await expect(page.getByRole('heading', { name: 'Accept your invitation' })).toBeVisible()
   await expect(page.getByText(`You were invited to ${clientName}.`)).toBeVisible()

@@ -10,6 +10,7 @@ import { RootLayout } from '../layout/RootLayout'
 import { AuthLayout } from '../layout/AuthLayout'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
@@ -20,6 +21,7 @@ import {
   ClientReportsPageRoute,
   AdminClientsPageRoute,
   AdminDashboardLinksPageRoute,
+  AdminReportsPageRoute,
   AdminClientAccessPageRoute,
   AdminClientActivityPageRoute,
   AdminClientPreviewPageRoute,
@@ -146,6 +148,16 @@ export const routeMetadata = [
     iconName: 'layoutDashboard',
   },
   {
+    path: '/admin/reports',
+    id: 'admin-reports',
+    label: 'Reports',
+    pageTitle: 'Reports',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: AdminReportsPageHeader,
+    subtitle: 'Create, publish, archive, and manage client-facing monthly summaries.',
+    iconName: 'fileText',
+  },
+  {
     path: '/admin/client-preview',
     id: 'admin-client-preview',
     label: 'Client Preview',
@@ -166,6 +178,17 @@ export const routeMetadata = [
     showInNav: false,
     subtitle: 'Admin preview of the client-facing dashboard surface.',
     iconName: 'layoutDashboard',
+  },
+  {
+    path: '/admin/client-report-preview',
+    id: 'admin-client-report-preview',
+    label: 'Report Preview',
+    pageTitle: 'Report Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: ClientReportsPageHeader,
+    showInNav: false,
+    subtitle: 'Admin preview of the client-facing monthly report surface.',
+    iconName: 'fileText',
   },
   {
     path: '/admin/client-access',
@@ -358,6 +381,16 @@ export const router = createBrowserRouter(
             ),
           },
           {
+            path: 'reports',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminReportsPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'client-preview',
             element: (
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
@@ -373,6 +406,16 @@ export const router = createBrowserRouter(
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
                 <Suspense fallback={<LoadingFallback />}>
                   <ClientDashboardPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'client-report-preview',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ClientReportsPageRoute />
                 </Suspense>
               </ProtectedRoute>
             ),

@@ -66,15 +66,15 @@ function mapProject(project) {
   }
 }
 
-function getSnapshotOverviewCollections({ client, snapshot }) {
+function getSnapshotOverviewCollections({ client, clientId, repositories, snapshot }) {
   return {
     clientStatus: snapshot.client?.status ?? client.status,
     currentFocus: snapshot.currentFocus ?? [],
     dashboardLinks: snapshot.dashboardLinks ?? [],
-    neededActions: snapshot.neededActions ?? [],
+    neededActions: repositories.neededFromClient.listByClientId(clientId),
     projects: snapshot.projects ?? [],
     reports: snapshot.reports ?? [],
-    tasks: snapshot.tasks ?? [],
+    tasks: repositories.tasks.listByClientId(clientId),
     updates: snapshot.updates ?? [],
   }
 }
@@ -90,10 +90,10 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
         clientStatus: client.overview_draft.client?.status ?? client.status,
         currentFocus: client.overview_draft.currentFocus ?? [],
         dashboardLinks: client.overview_draft.dashboardLinks ?? [],
-        neededActions: client.overview_draft.neededActions ?? [],
+        neededActions: repositories.neededFromClient.listByClientId(clientId),
         projects: client.overview_draft.projects ?? [],
         reports: client.overview_draft.reports ?? [],
-        tasks: client.overview_draft.tasks ?? [],
+        tasks: repositories.tasks.listByClientId(clientId),
         updates: client.overview_draft.updates ?? [],
       }
     }
@@ -102,6 +102,8 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
   if (client.overview_published_snapshot) {
     return getSnapshotOverviewCollections({
       client,
+      clientId,
+      repositories,
       snapshot: client.overview_published_snapshot,
     })
   }

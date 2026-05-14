@@ -133,6 +133,27 @@ function ThemeModeControl() {
   )
 }
 
+function PrimaryNavItem({ isActive, route }) {
+  return (
+    <Link
+      aria-current={isActive ? 'page' : undefined}
+      className={`group/nav-item inline-flex h-control-small shrink-0 items-center gap-2 rounded-control px-control text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
+        isActive
+          ? 'bg-control-selected text-text-primary'
+          : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
+      }`}
+      to={route.path}
+    >
+      <Icon
+        className="text-current transition-colors duration-motion-fast ease-motion-standard"
+        name={route.iconName}
+        size={15}
+      />
+      <span className="max-w-36 truncate">{route.navLabel ?? route.label}</span>
+    </Link>
+  )
+}
+
 export function TopNav({
   activeRoute,
   hasUnsavedChanges = false,
@@ -149,34 +170,20 @@ export function TopNav({
   }
 
   return (
-    <nav className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar">
+    <nav className="sticky top-0 z-20 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex items-center overflow-x-auto">
-            <BrandLogo className="mr-8 shrink-0" href={import.meta.env.BASE_URL} variant="static" />
+        <div className="flex h-14 justify-between">
+          <div className="flex min-w-0 flex-1 items-center">
+            <BrandLogo className="mr-6 shrink-0" href={import.meta.env.BASE_URL} size="sm" variant="static" />
 
-            <div className="flex gap-1">
+            <div
+              aria-label="Primary navigation"
+              className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {routes.map((route) => {
                 const isActive = route.id === activeRoute.id
 
-                return (
-                  <Link
-                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
-                      isActive
-                        ? 'bg-control-selected text-text-primary'
-                        : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
-                    }`}
-                    key={route.id}
-                    to={route.path}
-                  >
-                    <Icon
-                      className={isActive ? 'text-primary' : 'text-text-secondary'}
-                      name={route.iconName}
-                      size={16}
-                    />
-                    <span>{route.navLabel ?? route.label}</span>
-                  </Link>
-                )
+                return <PrimaryNavItem isActive={isActive} key={route.id} route={route} />
               })}
             </div>
           </div>
@@ -197,12 +204,12 @@ export function TopNav({
               <DropdownMenuTrigger asChild>
                 <Button
                   aria-label="Open account menu"
-                  className="rounded-full border-control-border bg-control hover:bg-control-hover"
+                  className="rounded-full border-control-border bg-control text-text-secondary hover:bg-control-hover hover:text-text-primary"
                   size="icon"
                   type="button"
                   variant="outline"
                 >
-                  <Icon className="text-primary" name="user" size={18} />
+                  <Icon className="text-current" name="user" size={18} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

@@ -14,6 +14,8 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminReportsPage } from '../../pages/admin/reports/AdminReportsPage'
+import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
@@ -44,6 +46,7 @@ export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, Clien
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)
+export const AdminReportsPageRoute = withPageProps(AdminReportsPage, AdminReportsPageHeader)
 export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, undefined)
 export const AdminClientActivityPageRoute = withPageProps(AdminClientActivityPage, undefined)
 export const AdminClientPreviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)

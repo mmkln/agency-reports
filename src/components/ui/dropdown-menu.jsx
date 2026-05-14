@@ -24,6 +24,7 @@ function DropdownMenuTrigger({
 function DropdownMenuContent({
   className,
   align = "start",
+  matchTriggerWidth = false,
   sideOffset = 8,
   ...props
 }) {
@@ -34,7 +35,8 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-menu origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border border-island-border bg-material-liquid p-item text-text-primary shadow-premium backdrop-blur-2xl duration-motion-fast ease-motion-emphasized data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:ease-motion-exit data-closed:fade-out-0 data-closed:zoom-out-95",
+          "z-50 max-h-(--radix-dropdown-menu-content-available-height) max-w-[calc(100vw-2rem)] min-w-menu origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-control border border-island-border bg-material-liquid p-item text-text-primary shadow-premium backdrop-blur-2xl duration-motion-fast ease-motion-emphasized data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:ease-motion-exit data-closed:fade-out-0 data-closed:zoom-out-95",
+          matchTriggerWidth ? "w-(--radix-dropdown-menu-trigger-width)" : "w-max",
           className
         )}
         {...props} />

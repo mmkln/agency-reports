@@ -37,21 +37,19 @@ import {
   restoreAdminClientOverviewFromPublished,
   saveAdminClientOverview,
 } from '../../../domain/services/adminOverviewService'
+import { resolveNeededAction } from '../../../domain/services/neededFromClientService'
 import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
-import { NEEDED_ACTION_STATUSES, NEEDED_ACTION_STATUS_META } from '../../../entities/needed-from-client'
+import { NEEDED_ACTION_STATUSES } from '../../../entities/needed-from-client'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../../entities/report'
-import { TASK_STATUS_META } from '../../../entities/task'
+import { TASK_STATUSES } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
-import { taskStatusSelectionOrder } from '../../../domain/policies/taskPolicy'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import {
   createBlankDashboardLink,
-  createBlankNeededAction,
   createBlankProject,
   createBlankReport,
-  createBlankTask,
   createBlankUpdate,
   createDraft,
   moveListItem,
@@ -147,33 +145,6 @@ function EditorCard({ action, children, description, iconName, title }) {
   )
 }
 
-function EditorZone({ children, title, tone = 'client' }) {
-  return (
-    <section
-      className={`grid gap-card rounded-block p-card ${
-        tone === 'client'
-          ? 'bg-block'
-          : 'bg-block-subtle'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-label text-text-secondary">{title}</h2>
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function InternalDivider() {
-  return (
-    <div className="flex items-center gap-3 text-label text-text-quaternary">
-      <span className="h-px flex-1 border-t border-dashed border-separator" />
-      <span>Internal</span>
-      <span className="h-px flex-1 border-t border-dashed border-separator" />
-    </div>
-  )
-}
-
 function SaveStatusIndicator({ editor, isDirty, saveState }) {
   const isSaving = saveState.startsWith('Saving') || saveState.startsWith('Publishing')
   const hasPublished = Boolean(editor.client.overviewPublishedAt)
@@ -195,9 +166,13 @@ function SaveStatusIndicator({ editor, isDirty, saveState }) {
     icon = <Icon aria-hidden="true" className="text-warning" name="circle" size={10} />
     label = 'Unsaved changes'
     tone = 'text-text-secondary'
+  } else if (saveState) {
+    icon = <Icon aria-hidden="true" className="text-success" name="checkCircle2" size={13} />
+    label = saveState
+    tone = 'text-text-secondary'
   } else {
     icon = <Icon aria-hidden="true" className="text-success" name="checkCircle2" size={13} />
-    label = `Saved · ${formatRelativeTime(savedAt)}`
+    label = `Saved - ${formatRelativeTime(savedAt)}`
     tone = 'text-text-secondary'
   }
 
@@ -468,332 +443,102 @@ function CurrentFocusEditor({ draft, onChange }) {
   )
 }
 
-function TasksManager({ draft, onAddTask, onMoveTask, onRemoveTask, onUpdateTasks }) {
-  const [visibilityFilter, setVisibilityFilter] = useState('all')
-  const taskStatusOptions = taskStatusSelectionOrder.filter((status) => TASK_STATUS_META[status])
-  const filteredTasks = draft.tasks
-    .map((task, index) => ({ index, task }))
-    .filter(({ task }) => (
-      visibilityFilter === 'all'
-      || task.visibility === visibilityFilter
-    ))
-  const filterOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Client-visible', value: VISIBILITY.CLIENT_VISIBLE },
-    { label: 'Internal', value: VISIBILITY.INTERNAL },
+function ConnectedWorkflowSummary({ editor, onResolveNeededAction }) {
+  const tasks = editor.tasks ?? []
+  const neededActions = editor.neededActions ?? []
+  const clientId = editor.client.id
+  const clientVisibleTasks = tasks.filter((task) => (
+    task.visibility === VISIBILITY.CLIENT_VISIBLE
+    && task.status !== TASK_STATUSES.DONE
+  ))
+  const internalTasks = tasks.filter((task) => task.visibility === VISIBILITY.INTERNAL)
+  const openRequests = neededActions.filter((action) => [
+    NEEDED_ACTION_STATUSES.PENDING,
+    NEEDED_ACTION_STATUSES.ANSWERED,
+  ].includes(action.status))
+  const answeredRequests = neededActions.filter((action) => action.status === NEEDED_ACTION_STATUSES.ANSWERED)
+  const taskHref = `/admin/tasks?clientId=${clientId}`
+
+  const rows = [
+    {
+      action: 'Manage tasks',
+      href: taskHref,
+      iconName: 'checkCircle2',
+      meta: `${clientVisibleTasks.length} client-visible - ${internalTasks.length} internal`,
+      title: 'Tasks',
+    },
+    {
+      action: 'Review activity',
+      href: `/admin/client-activity?clientId=${clientId}`,
+      iconName: 'messageSquare',
+      meta: `${openRequests.length} open - ${answeredRequests.length} answered`,
+      title: 'Client requests',
+    },
   ]
 
-  function updateTask(index, fieldName, value) {
-    onUpdateTasks(updateListItem(draft.tasks, index, fieldName, value))
-  }
-
   return (
-    <EditorCard
-      action={(
-        <Button onClick={onAddTask} size="sm" type="button" variant="ghost">
-          <Icon name="plus" size={14} />
-          New Task
-        </Button>
-      )}
-      iconName="checkCircle2"
-      title="Tasks Manager"
-    >
+    <EditorCard iconName="link" title="Connected Workflow">
       <div className="grid gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-full bg-control p-micro">
-            {filterOptions.map((option) => (
-              <button
-                className={`h-control-small rounded-full px-control text-label transition-colors ${
-                  visibilityFilter === option.value
-                    ? 'bg-control-selected text-text-primary'
-                    : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
-                }`}
-                key={option.value}
-                onClick={() => setVisibilityFilter(option.value)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          {filteredTasks.length > 0 ? filteredTasks.map(({ task, index }) => {
-            const isClientVisible = task.visibility === VISIBILITY.CLIENT_VISIBLE
-            const project = draft.projects.find((item) => item.id === task.project_id)
-
-            return (
-              <article
-                className={`group/task grid gap-3 rounded-control p-3 transition-colors ${
-                  isClientVisible ? 'bg-block-subtle' : 'bg-control/60'
-                }`}
-                key={task.id || `task-${index}`}
-              >
-                <div className="flex items-start gap-3">
-                  <Icon className="mt-2 text-text-quaternary" name={TASK_STATUS_META[task.status]?.icon ?? 'circle'} size={17} />
-                  <div className="min-w-0 flex-1">
-                    <Input
-                      className="h-8 border-transparent bg-transparent px-0 font-semibold shadow-none focus-visible:border-control-border focus-visible:bg-block focus-visible:px-2 focus-visible:ring-0"
-                      onChange={(event) => updateTask(index, 'title', event.target.value)}
-                      placeholder="Review new ad creatives"
-                      value={task.title}
-                    />
-                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
-                      <span>{TASK_STATUS_META[task.status]?.label ?? task.status}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{project?.name || 'No project'}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{task.assignee_name || 'Unassigned'}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{task.due_date || 'No due date'}</span>
-                    </div>
-                  </div>
-                  <button
-                    aria-label={isClientVisible ? 'Visible to client' : 'Internal task'}
-                    className={`inline-flex h-control-small shrink-0 items-center rounded-full px-control transition ${
-                      isClientVisible
-                        ? 'bg-action-muted text-action hover:bg-action-muted'
-                        : 'bg-control text-text-muted hover:bg-control-selected'
-                    }`}
-                    onClick={() => updateTask(
-                      index,
-                      'visibility',
-                      isClientVisible ? VISIBILITY.INTERNAL : VISIBILITY.CLIENT_VISIBLE,
-                    )}
-                    title={isClientVisible ? 'Client visible' : 'Internal'}
-                    type="button"
-                  >
-                    <Icon name={isClientVisible ? 'user' : 'lock'} size={14} />
-                  </button>
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-4">
-                  <Select
-                    onValueChange={(value) => updateTask(index, 'status', value)}
-                    value={task.status}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {taskStatusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    onValueChange={(value) => updateTask(index, 'project_id', value === 'none' ? '' : value)}
-                    value={task.project_id || 'none'}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No project</SelectItem>
-                      {draft.projects.filter((item) => item.id).map((item, projectIndex) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name || `Project ${projectIndex + 1}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    className="h-8 px-2 text-xs"
-                    onChange={(event) => updateTask(index, 'assignee_name', event.target.value)}
-                    placeholder="Owner"
-                    value={task.assignee_name}
-                  />
-                  <Input
-                    className="h-8 px-2 text-xs"
-                    onChange={(event) => updateTask(index, 'due_date', event.target.value)}
-                    type="date"
-                    value={task.due_date}
-                  />
-                </div>
-
-                <details className="group/details">
-                  <summary className="cursor-pointer select-none text-xs font-medium text-text-muted marker:text-text-quaternary">
-                    Description
-                  </summary>
-                  <Textarea
-                    className="mt-2 min-h-16 resize-none border-transparent bg-control text-sm shadow-none focus-visible:border-control-border focus-visible:bg-block"
-                    onChange={(event) => updateTask(index, 'description', event.target.value)}
-                    placeholder="Context for the team or a client-safe task note."
-                    value={task.description}
-                  />
-                </details>
-
-                <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover/task:opacity-100 group-focus-within/task:opacity-100">
-                  <Button
-                    className="text-text-quaternary"
-                    disabled={index === 0}
-                    onClick={() => onMoveTask(index, -1)}
-                    size="icon-sm"
-                    title="Move task up"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Icon name="arrowRight" size={14} className="-rotate-90" />
-                  </Button>
-                  <Button
-                    className="text-text-quaternary"
-                    disabled={index === draft.tasks.length - 1}
-                    onClick={() => onMoveTask(index, 1)}
-                    size="icon-sm"
-                    title="Move task down"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Icon name="arrowRight" size={14} className="rotate-90" />
-                  </Button>
-                  <Button
-                    className="text-text-quaternary hover:text-destructive"
-                    onClick={() => onRemoveTask(index)}
-                    size="icon-sm"
-                    title="Delete task"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Icon name="close" size={16} />
-                  </Button>
-                </div>
-              </article>
-            )
-          }) : (
-            <div className="rounded-control bg-block-subtle px-3 py-4 text-sm text-text-muted">
-              No tasks in this view.
+        {rows.map((row) => (
+          <div className="group flex items-center gap-3 rounded-control px-2 py-2 transition-colors hover:bg-control" key={row.title}>
+            <Icon className="text-text-quaternary" name={row.iconName} size={16} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-text-primary">{row.title}</p>
+              <p className="text-xs text-text-muted">{row.meta}</p>
             </div>
-          )}
-        </div>
-      </div>
-    </EditorCard>
-  )
-}
-
-function NeededFromClientEditor({ draft, onAddAction, onRemoveAction, onUpdateNeededActions }) {
-  function updateAction(index, fieldName, value) {
-    onUpdateNeededActions(updateListItem(draft.neededActions, index, fieldName, value))
-  }
-
-  return (
-    <EditorCard
-      action={(
-        <Button className="border-warning/20 bg-warning-muted text-warning-foreground hover:bg-warning-muted/80" onClick={onAddAction} size="sm" type="button" variant="outline">
-          <Icon name="plus" size={14} />
-          Add Request
-        </Button>
-      )}
-      iconName="triangleAlert"
-      title="Needed From Client"
-    >
-      <div className="grid gap-3">
-        {draft.neededActions.map((action, index) => (
-          <div className="grid gap-2 rounded-control border border-warning/20 bg-warning-muted/40 p-3" key={action.id || `needed-${index}`}>
-            <div className="flex flex-wrap items-center gap-2">
-              <Select
-                onValueChange={(value) => updateAction(index, 'status', value)}
-                value={action.status}
-              >
-                <SelectTrigger className="h-7 w-[145px] border-warning/20 bg-warning-muted text-xs font-semibold text-warning-foreground">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                {Object.values(NEEDED_ACTION_STATUSES).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {NEEDED_ACTION_STATUS_META[status]?.label ?? status}
-                  </SelectItem>
-                ))}
-                </SelectContent>
-              </Select>
-              <Input
-                className="h-8 w-auto border-transparent bg-transparent px-1 text-xs text-text-muted shadow-none focus-visible:border-warning/20 focus-visible:bg-block focus-visible:ring-0"
-                onChange={(event) => updateAction(index, 'due_date', event.target.value)}
-                type="date"
-                value={action.due_date}
-              />
-              <Button
-                className="ml-auto text-text-quaternary hover:text-destructive"
-                onClick={() => onRemoveAction(index)}
-                size="icon-sm"
-                title="Delete request"
-                type="button"
-                variant="ghost"
-              >
-                <Icon name="close" size={14} />
-              </Button>
-            </div>
-            <Input
-              className="h-8 border-transparent bg-transparent px-1 font-medium shadow-none focus-visible:border-warning/20 focus-visible:bg-block focus-visible:ring-0"
-              onChange={(event) => updateAction(index, 'title', event.target.value)}
-              placeholder="Approve creative batch #2"
-              value={action.title}
-            />
-            <Textarea
-              className="min-h-16 border-warning/20 bg-surface/70 py-1 text-text-secondary focus-visible:border-warning/20"
-              onChange={(event) => updateAction(index, 'description', event.target.value)}
-              placeholder="Request details"
-              value={action.description}
-            />
-            <Input
-              className="h-8 border-warning/20 bg-surface/70 px-2 text-xs"
-              onChange={(event) => updateAction(index, 'related_link', event.target.value)}
-              placeholder="https://example.com/approval-link"
-              value={action.related_link}
-            />
-            {action.client_response ? (
-              <div className="rounded-control border border-action/20 bg-action-muted px-3 py-2 text-sm text-action">
-                <p className="font-semibold">Client response</p>
-                <p className="mt-1 leading-5">{action.client_response}</p>
-                {action.responded_at ? (
-                  <p className="mt-1 text-xs text-action">Responded {formatDate(action.responded_at)}</p>
-                ) : null}
-              </div>
-            ) : null}
-            {action.response_history?.length ? (
-              <div className="rounded-control border border-separator bg-block px-3 py-2">
-                <p className="text-xs font-bold tracking-wide text-text-muted uppercase">Response history</p>
-                <div className="mt-2 grid gap-1 text-xs text-text-muted">
-                  {action.response_history.map((event, eventIndex) => (
-                    <p key={`${event.type}-${event.created_at}-${eventIndex}`}>
-                      <span className="font-medium text-text-secondary">{event.type.replaceAll('_', ' ')}</span>
-                      {event.created_at ? ` · ${formatDate(event.created_at)}` : ''}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              {action.status === NEEDED_ACTION_STATUSES.ANSWERED ? (
-                <Button
-                  className="border-success/20 bg-success-muted text-success-foreground hover:bg-success-muted"
-                  onClick={() => updateAction(index, 'status', NEEDED_ACTION_STATUSES.RESOLVED)}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  Mark resolved
-                </Button>
-              ) : null}
-              {[NEEDED_ACTION_STATUSES.PENDING, NEEDED_ACTION_STATUSES.ANSWERED].includes(action.status) ? (
-                <Button
-                  className="border-control-border text-text-secondary hover:text-destructive"
-                  onClick={() => updateAction(index, 'status', NEEDED_ACTION_STATUSES.CANCELLED)}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  Cancel request
-                </Button>
-              ) : null}
-            </div>
+            <Button asChild size="sm" type="button" variant="ghost">
+              <Link to={row.href}>
+                {row.action}
+                <Icon className="text-text-quaternary" name="arrowUpRight" size={13} />
+              </Link>
+            </Button>
           </div>
         ))}
+
+        {neededActions.length > 0 ? (
+          <div className="border-t border-separator pt-3">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-text-muted uppercase">Client requests</p>
+            <div className="grid gap-2">
+              {neededActions.map((action) => {
+                const canResolve = action.status === NEEDED_ACTION_STATUSES.ANSWERED
+
+                return (
+                  <article className="rounded-control border border-control-border bg-block-subtle p-3" key={action.id}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-text-primary">{action.title}</p>
+                          <Badge className="capitalize" variant="outline">{action.status}</Badge>
+                        </div>
+                        {action.client_response ? (
+                          <p className="mt-2 text-xs leading-5 text-text-muted">
+                            Client response: {action.client_response}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-xs leading-5 text-text-muted">No client response yet.</p>
+                        )}
+                      </div>
+                      {canResolve ? (
+                        <Button
+                          onClick={() => onResolveNeededAction(action.id)}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          Mark resolved
+                        </Button>
+                      ) : null}
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </EditorCard>
   )
 }
-
 function ProgressSummaryPanel({ draft, onAddProject, onMoveProject, onRemoveProject, onUpdateProjects }) {
   return (
     <EditorCard
@@ -1192,28 +937,6 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
         }
       }
 
-      if (pendingDeletion.type === 'task') {
-        return {
-          ...currentDraft,
-          tasks: removeListItem(
-            currentDraft.tasks,
-            pendingDeletion.index,
-            () => createBlankTask(currentDraft.projects[0]?.id),
-          ),
-        }
-      }
-
-      if (pendingDeletion.type === 'needed_action') {
-        return {
-          ...currentDraft,
-          neededActions: removeListItem(
-            currentDraft.neededActions,
-            pendingDeletion.index,
-            createBlankNeededAction,
-          ),
-        }
-      }
-
       if (pendingDeletion.type === 'project') {
         return {
           ...currentDraft,
@@ -1227,7 +950,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
   }
 
   function saveDraft({ silent = false } = {}) {
-    setSaveState('Saving…')
+    setSaveState('Saving...')
     return runtime.dataClient.write((repositories) => saveAdminClientOverview({
       clientId,
       idGenerator: createUuid,
@@ -1363,6 +1086,40 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
       })
   }
 
+  function handleResolveNeededAction(actionId) {
+    return runtime.dataClient.write((repositories) => {
+      resolveNeededAction({
+        actionId,
+        repositories,
+        viewer: runtime.viewer,
+      })
+
+      return loadEditor(clientId, {
+        ...runtime,
+        repositories,
+      })
+    })
+      .then((nextEditor) => {
+        setPageState({
+          draft: createDraft(nextEditor),
+          editor: nextEditor,
+          error: '',
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Saved - just now')
+        toast.success('Client request resolved', 'The request is now marked resolved.')
+      })
+      .catch((caughtError) => {
+        setPageState((currentPageState) => ({
+          ...currentPageState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        toast.error('Request was not resolved', caughtError.message)
+      })
+  }
+
   if (pageState.status === 'error' && error && !editor) {
     return (
       <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
@@ -1439,96 +1196,54 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
 
       <PageShell className="px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-card">
-          <EditorZone title="WHAT YOUR CLIENT SEES">
-            <div className="grid gap-card lg:grid-cols-2">
-              <LatestUpdateEditor
-                draft={draft}
-                onDeleteUpdate={() => requestDeletion('latest_update', null, 'Latest update')}
-                onUpdateUpdates={(updates) => updateDraft((currentDraft) => ({ ...currentDraft, updates }))}
-              />
-              <CurrentFocusEditor
-                draft={draft}
-                onChange={(currentFocus) => updateDraft((currentDraft) => ({
-                  ...currentDraft,
-                  currentFocus,
-                }))}
-              />
-            </div>
-            <TasksManager
+          <div className="grid gap-card lg:grid-cols-2">
+            <LatestUpdateEditor
               draft={draft}
-              onAddTask={() => updateDraft((currentDraft) => ({
+              onDeleteUpdate={() => requestDeletion('latest_update', null, 'Latest update')}
+              onUpdateUpdates={(updates) => updateDraft((currentDraft) => ({ ...currentDraft, updates }))}
+            />
+            <CurrentFocusEditor
+              draft={draft}
+              onChange={(currentFocus) => updateDraft((currentDraft) => ({
                 ...currentDraft,
-                tasks: [
-                  ...currentDraft.tasks,
+                currentFocus,
+              }))}
+            />
+          </div>
+          <div className="grid gap-card lg:grid-cols-2">
+            <ProgressSummaryPanel
+              draft={draft}
+              onAddProject={() => updateDraft((currentDraft) => ({
+                ...currentDraft,
+                projects: [
+                  ...currentDraft.projects,
                   {
-                    ...createBlankTask(currentDraft.projects[0]?.id),
-                    sort_order: (currentDraft.tasks.length + 1) * 10,
+                    ...createBlankProject(),
+                    sort_order: (currentDraft.projects.length + 1) * 10,
                   },
                 ],
               }))}
-              onMoveTask={(index, direction) => updateDraft((currentDraft) => ({
+              onMoveProject={(index, direction) => updateDraft((currentDraft) => ({
                 ...currentDraft,
-                tasks: moveListItem(currentDraft.tasks, index, direction),
+                projects: moveListItem(currentDraft.projects, index, direction),
               }))}
-              onRemoveTask={(index) => requestDeletion(
-                'task',
+              onRemoveProject={(index) => requestDeletion(
+                'project',
                 index,
-                draft.tasks[index]?.title || `Task ${index + 1}`,
+                draft.projects[index]?.name || `Project ${index + 1}`,
               )}
-              onUpdateTasks={(tasks) => updateDraft((currentDraft) => ({ ...currentDraft, tasks }))}
+              onUpdateProjects={(projects) => updateDraft((currentDraft) => ({ ...currentDraft, projects }))}
             />
-            <div className="grid gap-card lg:grid-cols-2">
-              <ProgressSummaryPanel
-                draft={draft}
-                onAddProject={() => updateDraft((currentDraft) => ({
-                  ...currentDraft,
-                  projects: [
-                    ...currentDraft.projects,
-                    {
-                      ...createBlankProject(),
-                      sort_order: (currentDraft.projects.length + 1) * 10,
-                    },
-                  ],
-                }))}
-                onMoveProject={(index, direction) => updateDraft((currentDraft) => ({
-                  ...currentDraft,
-                  projects: moveListItem(currentDraft.projects, index, direction),
-                }))}
-                onRemoveProject={(index) => requestDeletion(
-                  'project',
-                  index,
-                  draft.projects[index]?.name || `Project ${index + 1}`,
-                )}
-                onUpdateProjects={(projects) => updateDraft((currentDraft) => ({ ...currentDraft, projects }))}
-              />
-              <ClientLinksAssetsPanel
-                draft={draft}
-                onUpdateDashboardLinks={(dashboardLinks) => updateDraft((currentDraft) => ({
-                  ...currentDraft,
-                  dashboardLinks,
-                }))}
-                onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
-              />
-            </div>
-          </EditorZone>
-
-          <InternalDivider />
-
-          <EditorZone title="AGENCY WORKSPACE" tone="agency">
-            <NeededFromClientEditor
+            <ClientLinksAssetsPanel
               draft={draft}
-              onAddAction={() => updateDraft((currentDraft) => ({
+              onUpdateDashboardLinks={(dashboardLinks) => updateDraft((currentDraft) => ({
                 ...currentDraft,
-                neededActions: [...currentDraft.neededActions, createBlankNeededAction()],
+                dashboardLinks,
               }))}
-              onRemoveAction={(index) => requestDeletion(
-                'needed_action',
-                index,
-                draft.neededActions[index]?.title || `Client request ${index + 1}`,
-              )}
-              onUpdateNeededActions={(neededActions) => updateDraft((currentDraft) => ({ ...currentDraft, neededActions }))}
+              onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
             />
-          </EditorZone>
+          </div>
+          <ConnectedWorkflowSummary editor={editor} onResolveNeededAction={handleResolveNeededAction} />
         </div>
       </PageShell>
     </>

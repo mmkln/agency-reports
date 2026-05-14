@@ -4,8 +4,15 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   ConfirmationDialog,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   PrimitiveCard as Card,
   Table,
+  TableActionCell,
+  TableActionHead,
   TableBody,
   TableCell,
   TableHead,
@@ -57,7 +64,7 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
               <TableHead className="px-6 py-3">Project Status</TableHead>
               <TableHead className="px-6 py-3">Primary Contact</TableHead>
               <TableHead className="px-6 py-3">Created</TableHead>
-              <TableHead className="px-6 py-3 text-right">Actions</TableHead>
+              <TableActionHead className="px-6 py-3">Actions</TableActionHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-separator">
@@ -83,41 +90,50 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
                   <p className="mt-0.5 text-xs text-text-muted">{client.primary_contact_email}</p>
                 </TableCell>
                 <TableCell className="px-6 py-4 text-text-muted">{formatDate(client.created_at)}</TableCell>
-                <TableCell className="px-6 py-4">
-                  <div className="flex justify-end gap-2">
-                    {getPendingInvite(client, repositories) ? (
-                      <Button asChild size="icon-sm" title="Open pending invitation" variant="ghost">
-                        <Link to={`/accept-invite?token=${getPendingInvite(client, repositories).token}`}>
-                          <Icon name="mail" size={16} />
-                        </Link>
-                      </Button>
-                    ) : null}
-                    <Button onClick={() => onEditClient(client)} size="sm" type="button" variant="ghost">
-                      Edit Client
-                    </Button>
+                <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">
+                  <div className="flex justify-end gap-1.5">
                     <Button asChild size="sm" variant="outline">
                       <Link to={`/admin/client-overview?clientId=${client.id}`}>
-                        Edit Overview
+                        Open
                       </Link>
                     </Button>
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/admin/client-preview?clientId=${client.id}`}>
-                        Preview
-                        <Icon name="arrowUpRight" size={14} />
-                      </Link>
-                    </Button>
-                    <Button
-                      className="text-text-quaternary hover:text-destructive"
-                      onClick={() => setClientPendingDelete(client)}
-                      size="icon-sm"
-                      title="Delete client"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Icon name="close" size={15} />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-label={`${client.name} actions`} size="icon-sm" type="button" variant="ghost">
+                          <Icon name="ellipsis" size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-56">
+                        <DropdownMenuItem onClick={() => onEditClient(client)}>
+                          <Icon name="wrench" size={15} />
+                          Edit client
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to={`/admin/client-preview?clientId=${client.id}`}>
+                            <Icon name="arrowUpRight" size={15} />
+                            Preview portal
+                          </Link>
+                        </DropdownMenuItem>
+                        {getPendingInvite(client, repositories) ? (
+                          <DropdownMenuItem asChild>
+                            <Link to={`/accept-invite?token=${getPendingInvite(client, repositories).token}`}>
+                              <Icon name="mail" size={15} />
+                              Open pending invitation
+                            </Link>
+                          </DropdownMenuItem>
+                        ) : null}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setClientPendingDelete(client)}
+                          variant="destructive"
+                        >
+                          <Icon name="close" size={15} />
+                          Delete client
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </TableCell>
+                </TableActionCell>
               </TableRow>
             ))}
           </TableBody>

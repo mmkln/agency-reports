@@ -93,10 +93,8 @@ export function createDraft(editor) {
     },
     currentFocus: editor.currentFocus.length > 0 ? [...editor.currentFocus] : [''],
     dashboardLinks: editor.dashboardLinks.length > 0 ? editor.dashboardLinks.map((item) => ({ ...item })) : [createBlankDashboardLink()],
-    neededActions: editor.neededActions.length > 0 ? editor.neededActions.map((item) => ({ ...item })) : [createBlankNeededAction()],
     projects: editor.projects.length > 0 ? editor.projects.map((item) => ({ ...item })) : [createBlankProject()],
     reports: editor.reports.length > 0 ? editor.reports.map((item) => ({ ...item })) : [createBlankReport()],
-    tasks: editor.tasks.length > 0 ? editor.tasks.map((item) => ({ ...item })) : [createBlankTask(editor.projects[0]?.id)],
     updates: editor.updates.length > 0 ? editor.updates.map((item) => ({ ...item })) : [createBlankUpdate(editor.projects[0]?.id)],
   }
 }

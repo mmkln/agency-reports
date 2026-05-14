@@ -68,6 +68,8 @@ function createRepositories(overrides = {}) {
         status: REPORT_STATUSES.PUBLISHED,
         summary: 'Published summary',
         title: 'April Summary',
+        what_we_did: 'Optimized campaigns.',
+        results: 'Generated 119 leads.',
         wins: 'Campaign launched.',
       },
       {
@@ -117,6 +119,8 @@ describe('getClientReportsPage', () => {
     expect(page.status).toBe('ready')
     expect(page.reports.map((report) => report.title)).toEqual(['April Summary', 'March Summary'])
     expect(page.selectedReport.title).toBe('April Summary')
+    expect(page.selectedReport.whatWeDid).toBe('Optimized campaigns.')
+    expect(page.selectedReport.results).toBe('Generated 119 leads.')
     expect(JSON.stringify(page)).not.toContain('May Draft')
     expect(JSON.stringify(page)).not.toContain('June Ready')
   })

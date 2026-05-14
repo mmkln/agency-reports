@@ -382,7 +382,6 @@ describe('getClientOverview', () => {
             },
             currentFocus: ['Draft focus'],
             dashboardLinks: [],
-            neededActions: [],
             projects: [
               {
                 client_id: IDS.CLIENT_A,
@@ -392,7 +391,6 @@ describe('getClientOverview', () => {
               },
             ],
             reports: [],
-            tasks: [],
             updates: [],
           },
           portal_slug: 'client-a',
@@ -446,10 +444,8 @@ describe('getClientOverview', () => {
             },
             currentFocus: ['Draft focus'],
             dashboardLinks: [],
-            neededActions: [],
             projects: [],
             reports: [],
-            tasks: [],
             updates: [],
           },
           overview_published_snapshot: {
@@ -458,7 +454,6 @@ describe('getClientOverview', () => {
             },
             currentFocus: ['Published snapshot focus'],
             dashboardLinks: [],
-            neededActions: [],
             projects: [
               {
                 client_id: IDS.CLIENT_A,
@@ -468,7 +463,6 @@ describe('getClientOverview', () => {
               },
             ],
             reports: [],
-            tasks: [],
             updates: [],
           },
           portal_slug: 'client-a',
@@ -495,7 +489,11 @@ describe('getClientOverview', () => {
     expect(publishedPreview.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
     expect(publishedPreview.currentFocus).toEqual(['Published snapshot focus'])
     expect(publishedPreview.progressSummary.map((project) => project.name)).toEqual(['Published Snapshot Project'])
+    expect(publishedPreview.activeTasks.map((task) => task.title)).toEqual(['Visible task'])
+    expect(publishedPreview.neededActions.map((action) => action.title)).toEqual(['Approve creative batch'])
     expect(draftPreview.client.status).toBe(CLIENT_STATUSES.WAITING_CLIENT)
     expect(draftPreview.currentFocus).toEqual(['Draft focus'])
+    expect(draftPreview.activeTasks.map((task) => task.title)).toEqual(['Visible task'])
+    expect(draftPreview.neededActions.map((action) => action.title)).toEqual(['Approve creative batch'])
   })
 })

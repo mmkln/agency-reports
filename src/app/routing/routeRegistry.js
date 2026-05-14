@@ -16,6 +16,8 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminReportsPage } from '../../pages/admin/reports/AdminReportsPage'
+import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
@@ -133,6 +135,17 @@ export const routes = [
     subtitle: 'Manage external dashboard embeds and links for clients.',
   },
   {
+    component: AdminReportsPage,
+    header: AdminReportsPageHeader,
+    href: '/admin/reports',
+    iconName: 'fileText',
+    id: 'admin-reports',
+    label: 'Reports',
+    pageTitle: 'Reports',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    subtitle: 'Create, publish, archive, and manage client-facing monthly summaries.',
+  },
+  {
     component: ClientOverviewPage,
     header: ClientOverviewPageHeader,
     href: '/admin/client-preview',
@@ -155,6 +168,18 @@ export const routes = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
     subtitle: 'Admin preview of the client-facing dashboard surface.',
+  },
+  {
+    component: ClientReportsPage,
+    header: ClientReportsPageHeader,
+    href: '/admin/client-report-preview',
+    iconName: 'fileText',
+    id: 'admin-client-report-preview',
+    label: 'Report Preview',
+    pageTitle: 'Report Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    subtitle: 'Admin preview of the client-facing monthly report surface.',
   },
   {
     component: AdminClientAccessPage,

@@ -75,7 +75,8 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   await expect(dashboardRow).toContainText('Active')
   await expect(dashboardRow).toContainText('Client visible')
 
-  await dashboardRow.getByRole('link', { name: 'Preview' }).click()
+  await dashboardRow.getByLabel('Dashboard actions').click()
+  await page.getByRole('menuitem', { name: 'Preview dashboard' }).click()
   await expect(page).toHaveURL(/\/admin\/client-dashboard-preview/)
   await expect(page.getByRole('heading', { exact: true, name: 'Marketing Dashboard' })).toBeVisible()
   await expect(page.getByRole('heading', { name: dashboardName })).toBeVisible()

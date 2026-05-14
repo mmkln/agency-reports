@@ -60,7 +60,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-separator transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover has-aria-expanded:bg-control-hover data-[state=selected]:bg-control-selected",
+        "group/table-row border-b border-separator transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover has-aria-expanded:bg-control-hover data-[state=selected]:bg-control-selected",
         className
       )}
       {...props} />
@@ -97,6 +97,34 @@ function TableCell({
   );
 }
 
+function TableActionHead({
+  className,
+  ...props
+}) {
+  return (
+    <TableHead
+      className={cn(
+        "sticky right-0 z-30 bg-surface-subtle text-right shadow-[-16px_0_18px_-20px_rgb(29_29_31/0.45)]",
+        className
+      )}
+      {...props} />
+  );
+}
+
+function TableActionCell({
+  className,
+  ...props
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "sticky right-0 z-20 bg-block text-right shadow-[-16px_0_18px_-20px_rgb(29_29_31/0.35)] group-hover/table-row:bg-control-hover",
+        className
+      )}
+      {...props} />
+  );
+}
+
 function TableCaption({
   className,
   ...props
@@ -117,5 +145,7 @@ export {
   TableHead,
   TableRow,
   TableCell,
+  TableActionHead,
+  TableActionCell,
   TableCaption,
 }
