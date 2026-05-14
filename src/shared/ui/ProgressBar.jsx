@@ -1,6 +1,9 @@
 import { Progress } from '@/components/ui/progress'
 
-export function ProgressBar({ label, showLabel = true, value, tone = 'blue' }) {
+import { useInspectorId } from './inspectorId'
+
+export function ProgressBar({ id, label, showLabel = true, value, tone = 'blue' }) {
+  const inspectorId = useInspectorId('ProgressBar', id)
   const normalizedValue = Math.max(0, Math.min(100, value))
   const toneClass = {
     blue: '[&_[data-slot=progress-indicator]]:bg-action',
@@ -11,7 +14,7 @@ export function ProgressBar({ label, showLabel = true, value, tone = 'blue' }) {
   }[tone]
 
   return (
-    <div className="grid gap-2" aria-label={label}>
+    <div className="grid gap-2" aria-label={label} id={inspectorId}>
       {showLabel ? (
         <div className="flex items-center justify-between gap-3 text-sm font-medium text-text-secondary">
           <span>{label}</span>

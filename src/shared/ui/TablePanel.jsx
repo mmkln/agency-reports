@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge'
+import { Badge } from './Badge'
 import {
   Table,
   TableBody,
@@ -9,16 +9,19 @@ import {
 } from '@/components/ui/table'
 
 import { Panel, PanelBody, PanelHeader } from './Panel'
+import { useInspectorId } from './inspectorId'
 
 const toneClass = {
-  blue: 'bg-action-muted text-action',
-  green: 'bg-success-muted text-success-foreground',
-  yellow: 'bg-warning-muted text-warning-foreground',
+  blue: 'border-action/20 bg-action-muted text-action',
+  green: 'border-success/20 bg-success-muted text-success-foreground',
+  yellow: 'border-warning/20 bg-warning-muted text-warning-foreground',
 }
 
-export function TablePanel({ columns, rows, title }) {
+export function TablePanel({ columns, id, rows, title }) {
+  const inspectorId = useInspectorId('TablePanel', id)
+
   return (
-    <Panel>
+    <Panel id={inspectorId}>
       <PanelHeader title={title} />
       <PanelBody>
         <Table className="min-w-[760px]">
@@ -48,6 +51,8 @@ export function TablePanel({ columns, rows, title }) {
   )
 }
 
-export function TableBadge({ children, tone = 'blue' }) {
-  return <Badge className={toneClass[tone]} variant="outline">{children}</Badge>
+export function TableBadge({ children, id, tone = 'blue' }) {
+  const inspectorId = useInspectorId('TableBadge', id)
+
+  return <Badge id={inspectorId} className={toneClass[tone]} variant="outline">{children}</Badge>
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -8,7 +8,11 @@ import {
   CardTitle,
   Checkbox,
   ConfirmationDialog,
-  ContentToolbar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Input,
   PageShell,
   PrimitiveCard as Card,
@@ -20,13 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
   StatusBadge as SharedStatusBadge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '@/shared/ui'
 
 import {
@@ -37,12 +38,12 @@ import {
   saveAdminClientOverview,
 } from '../../../domain/services/adminOverviewService'
 import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
-import { CLIENT_STATUSES, CLIENT_STATUS_META } from '../../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES, NEEDED_ACTION_STATUS_META } from '../../../entities/needed-from-client'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../../entities/report'
-import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
+import { TASK_STATUS_META } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
+import { taskStatusSelectionOrder } from '../../../domain/policies/taskPolicy'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import {
@@ -57,57 +58,6 @@ import {
   removeListItem,
   updateListItem,
 } from '../model'
-
-const statusOptions = [
-  CLIENT_STATUSES.SETUP,
-  CLIENT_STATUSES.ON_TRACK,
-  CLIENT_STATUSES.NEEDS_ATTENTION,
-  CLIENT_STATUSES.WAITING_CLIENT,
-  CLIENT_STATUSES.BLOCKED,
-  CLIENT_STATUSES.PAUSED,
-]
-
-const statusDescriptions = {
-  [CLIENT_STATUSES.SETUP]: 'Workspace is being configured.',
-  [CLIENT_STATUSES.ON_TRACK]: 'Work is progressing normally.',
-  [CLIENT_STATUSES.NEEDS_ATTENTION]: 'Something needs review.',
-  [CLIENT_STATUSES.WAITING_CLIENT]: 'Waiting for client action/approval.',
-  [CLIENT_STATUSES.BLOCKED]: 'Work cannot move forward.',
-  [CLIENT_STATUSES.PAUSED]: 'Work is intentionally paused.',
-}
-
-const statusOptionStyles = {
-  [CLIENT_STATUSES.SETUP]: {
-    active: 'bg-control-selected text-text-primary',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.SETUP].icon,
-    iconClassName: 'text-text-secondary',
-  },
-  [CLIENT_STATUSES.ON_TRACK]: {
-    active: 'bg-success-muted/80 text-success-foreground',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.ON_TRACK].icon,
-    iconClassName: 'text-success-foreground',
-  },
-  [CLIENT_STATUSES.NEEDS_ATTENTION]: {
-    active: 'bg-warning-muted/80 text-warning-foreground',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.NEEDS_ATTENTION].icon,
-    iconClassName: 'text-warning-foreground',
-  },
-  [CLIENT_STATUSES.WAITING_CLIENT]: {
-    active: 'bg-premium-purple/10 text-premium-purple',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.WAITING_CLIENT].icon,
-    iconClassName: 'text-premium-purple',
-  },
-  [CLIENT_STATUSES.BLOCKED]: {
-    active: 'bg-destructive/10 text-destructive',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.BLOCKED].icon,
-    iconClassName: 'text-destructive',
-  },
-  [CLIENT_STATUSES.PAUSED]: {
-    active: 'bg-control-selected text-text-primary',
-    icon: CLIENT_STATUS_META[CLIENT_STATUSES.PAUSED].icon,
-    iconClassName: 'text-text-secondary',
-  },
-}
 
 function createUuid() {
   return crypto.randomUUID()
@@ -145,6 +95,36 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
+function formatRelativeTime(date) {
+  if (!date) {
+    return 'not published'
+  }
+
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 1000))
+
+  if (seconds < 5) {
+    return 'just now'
+  }
+
+  if (seconds < 60) {
+    return `${seconds}s ago`
+  }
+
+  const minutes = Math.round(seconds / 60)
+
+  if (minutes < 60) {
+    return `${minutes}m ago`
+  }
+
+  const hours = Math.round(minutes / 60)
+
+  if (hours < 24) {
+    return `${hours}h ago`
+  }
+
+  return formatDate(date)
+}
+
 function EditorCard({ action, children, description, iconName, title }) {
   return (
     <Card className="gap-0 bg-block py-0 shadow-none">
@@ -167,77 +147,177 @@ function EditorCard({ action, children, description, iconName, title }) {
   )
 }
 
+function EditorZone({ children, title, tone = 'client' }) {
+  return (
+    <section
+      className={`grid gap-card rounded-block p-card ${
+        tone === 'client'
+          ? 'bg-block'
+          : 'bg-block-subtle'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-label text-text-secondary">{title}</h2>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function InternalDivider() {
+  return (
+    <div className="flex items-center gap-3 text-label text-text-quaternary">
+      <span className="h-px flex-1 border-t border-dashed border-separator" />
+      <span>Internal</span>
+      <span className="h-px flex-1 border-t border-dashed border-separator" />
+    </div>
+  )
+}
+
+function SaveStatusIndicator({ editor, isDirty, saveState }) {
+  const isSaving = saveState.startsWith('Saving') || saveState.startsWith('Publishing')
+  const hasPublished = Boolean(editor.client.overviewPublishedAt)
+  const savedAt = editor.client.overviewDraftSavedAt || editor.client.overviewPublishedAt || editor.client.updatedAt
+
+  let icon
+  let label
+  let tone = 'text-text-muted'
+
+  if (isSaving) {
+    icon = (
+      <span
+        aria-hidden="true"
+        className="inline-block size-3 shrink-0 animate-spin rounded-full border-2 border-text-quaternary border-t-transparent"
+      />
+    )
+    label = saveState
+  } else if (isDirty) {
+    icon = <Icon aria-hidden="true" className="text-warning" name="circle" size={10} />
+    label = 'Unsaved changes'
+    tone = 'text-text-secondary'
+  } else {
+    icon = <Icon aria-hidden="true" className="text-success" name="checkCircle2" size={13} />
+    label = `Saved · ${formatRelativeTime(savedAt)}`
+    tone = 'text-text-secondary'
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className={`inline-flex cursor-default items-center gap-tag text-label ${tone}`}>
+          {icon}
+          <span>{label}</span>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="grid gap-1">
+        <span>Draft saved: {formatDate(editor.client.overviewDraftSavedAt)}</span>
+        <span>Last published: {hasPublished ? formatDate(editor.client.overviewPublishedAt) : 'Not published yet'}</span>
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 function EditorActionToolbar({
   editor,
   isDirty,
   onDiscardDraft,
   onPublish,
   onRestorePublished,
-  onSave,
   saveState,
 }) {
-  const currentState = saveState || (isDirty ? 'Unsaved changes' : 'All changes saved')
+  const previewPublishedHref = `/admin/client-preview?clientId=${editor.client.id}&preview=published`
+  const previewDraftHref = `/admin/client-preview?clientId=${editor.client.id}&preview=draft`
+  const hasDraft = editor.client.hasDraft
+  const hasPublished = Boolean(editor.client.overviewPublishedAt)
+  const hasMultiplePreviewSources = hasPublished && hasDraft
+  const singlePreviewHref = hasDraft ? previewDraftHref : previewPublishedHref
+  const singlePreviewLabel = hasDraft ? 'Preview saved draft' : 'View client version'
+  const isSinglePreviewDisabled = !hasDraft && !hasPublished
 
   return (
-    <ContentToolbar className="bg-block">
-      <div className="flex flex-col gap-component xl:flex-row xl:items-center xl:justify-between">
-        <dl className="grid gap-control text-xs sm:grid-cols-3">
-          <div>
-            <dt className="font-medium text-text-muted">Draft state</dt>
-            <dd className={isDirty ? 'mt-1 font-semibold text-warning-foreground' : 'mt-1 font-semibold text-success-foreground'}>
-              {currentState}
-            </dd>
-          </div>
-          <div>
-            <dt className="font-medium text-text-muted">Draft saved</dt>
-            <dd className="mt-1 font-semibold text-text-secondary">
-              {editor.client.hasDraft ? formatDate(editor.client.overviewDraftSavedAt) : 'No draft'}
-            </dd>
-          </div>
-          <div>
-            <dt className="font-medium text-text-muted">Last published</dt>
-            <dd className="mt-1 font-semibold text-text-secondary">
-              {formatDate(editor.client.overviewPublishedAt)}
-            </dd>
-          </div>
-        </dl>
+    <div className="flex flex-wrap items-center justify-end gap-control">
+      <SaveStatusIndicator editor={editor} isDirty={isDirty} saveState={saveState} />
 
-        <div className="flex flex-col gap-control lg:flex-row lg:items-center lg:justify-end">
-          <div className="flex flex-wrap gap-control">
-            <Button asChild size="sm" variant="outline">
-              <Link to={`/admin/client-preview?clientId=${editor.client.id}`}>
-                <Icon name="user" size={15} />
-                Preview Published
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to={`/admin/client-preview?clientId=${editor.client.id}&preview=draft`}>
-                <Icon name="fileText" size={15} />
-                Preview Draft
-              </Link>
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap gap-control">
-            <Button onClick={onSave} size="sm" type="button" variant="outline">
-              Save Draft
-            </Button>
-            <Button onClick={onRestorePublished} size="sm" type="button" variant="outline">
-              Restore Published
-            </Button>
-            {editor.client.hasDraft ? (
-              <Button onClick={onDiscardDraft} size="sm" type="button" variant="destructive">
-                Discard Draft
+      <div className="flex items-center gap-tag">
+        {hasMultiplePreviewSources ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" type="button" variant="ghost">
+                <Icon name="user" size={14} />
+                Preview
+                <Icon className="text-text-quaternary" name="chevronDown" size={12} />
               </Button>
-            ) : null}
-            <Button onClick={onPublish} size="sm" type="button">
-              <Icon name="zap" size={15} />
-              Publish
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-64">
+              <DropdownMenuItem asChild>
+                <Link to={previewPublishedHref}>
+                  <Icon name="user" size={15} />
+                  <span className="grid gap-0.5">
+                    <span>View client version</span>
+                    <span className="text-xs font-normal text-text-muted">The currently published page clients can see.</span>
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={previewDraftHref}>
+                  <Icon name="fileText" size={15} />
+                  <span className="grid gap-0.5">
+                    <span>Preview saved draft</span>
+                    <span className="text-xs font-normal text-text-muted">Unpublished changes for admin review.</span>
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          isSinglePreviewDisabled ? (
+            <Button disabled size="sm" type="button" variant="ghost">
+                <Icon name="user" size={14} />
+                Preview unavailable
             </Button>
-          </div>
-        </div>
+          ) : (
+            <Button asChild size="sm" type="button" variant="ghost">
+              <Link to={singlePreviewHref}>
+                <Icon name={hasDraft ? 'fileText' : 'user'} size={14} />
+                {singlePreviewLabel}
+              </Link>
+            </Button>
+          )
+        )}
+
+        <Button onClick={onPublish} size="sm" type="button">
+          <Icon name="zap" size={14} />
+          Publish
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button aria-label="More actions" size="icon-sm" type="button" variant="ghost">
+              <Icon name="ellipsis" size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-max min-w-56 max-w-[calc(100vw-2rem)]">
+            <DropdownMenuItem
+              className="whitespace-nowrap"
+              disabled={!hasPublished}
+              onClick={onRestorePublished}
+            >
+              <Icon name="arrowRight" className="-rotate-180" size={15} />
+              <span>Restore from published</span>
+            </DropdownMenuItem>
+            {hasDraft ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDiscardDraft} variant="destructive">
+                  <Icon name="close" size={15} />
+                  <span>Discard draft</span>
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </ContentToolbar>
+    </div>
   )
 }
 
@@ -304,9 +384,6 @@ function LatestUpdateEditor({ draft, onDeleteUpdate, onUpdateUpdates }) {
       iconName="messageSquare"
       title="Latest Update"
     >
-      <p className="mb-3 text-xs leading-5 text-text-muted">
-        Write a short, human-readable update about what happened recently. This is the first thing the client reads.
-      </p>
       <Input
         className="mb-3"
         onChange={(event) => updateField('title', event.target.value)}
@@ -315,11 +392,11 @@ function LatestUpdateEditor({ draft, onDeleteUpdate, onUpdateUpdates }) {
       />
       <Textarea
         onChange={(event) => updateField('body', event.target.value)}
-        placeholder="This week we launched..."
+        placeholder="This week we launched the first campaign structure, connected tracking, and started testing new ad angles."
         value={update.body}
       />
       <p className="mt-2 text-xs text-text-quaternary">
-        {charCount} characters. Client-visible updates require body text.
+        {charCount} characters
       </p>
       {update.visibility === VISIBILITY.INTERNAL ? (
         <p className="mt-2 rounded-control bg-warning-muted px-3 py-2 text-xs text-warning-foreground">
@@ -350,7 +427,6 @@ function CurrentFocusEditor({ draft, onChange }) {
       iconName="target"
       title="Current Focus"
     >
-      <p className="mb-3 text-xs leading-5 text-text-muted">What are the 1-3 main directions the team is working on right now?</p>
       <div className="grid gap-2">
         {draft.currentFocus.map((focusItem, index) => (
           <div className="group flex items-center gap-2 rounded-control bg-surface-subtle px-3 py-2" key={index}>
@@ -393,6 +469,24 @@ function CurrentFocusEditor({ draft, onChange }) {
 }
 
 function TasksManager({ draft, onAddTask, onMoveTask, onRemoveTask, onUpdateTasks }) {
+  const [visibilityFilter, setVisibilityFilter] = useState('all')
+  const taskStatusOptions = taskStatusSelectionOrder.filter((status) => TASK_STATUS_META[status])
+  const filteredTasks = draft.tasks
+    .map((task, index) => ({ index, task }))
+    .filter(({ task }) => (
+      visibilityFilter === 'all'
+      || task.visibility === visibilityFilter
+    ))
+  const filterOptions = [
+    { label: 'All', value: 'all' },
+    { label: 'Client-visible', value: VISIBILITY.CLIENT_VISIBLE },
+    { label: 'Internal', value: VISIBILITY.INTERNAL },
+  ]
+
+  function updateTask(index, fieldName, value) {
+    onUpdateTasks(updateListItem(draft.tasks, index, fieldName, value))
+  }
+
   return (
     <EditorCard
       action={(
@@ -401,150 +495,176 @@ function TasksManager({ draft, onAddTask, onMoveTask, onRemoveTask, onUpdateTask
           New Task
         </Button>
       )}
-      description="Control which tasks the client can see."
       iconName="checkCircle2"
       title="Tasks Manager"
     >
-      <div className="-mx-4 -mb-4 overflow-x-auto">
-        <Table className="min-w-[720px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Task / Status</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {draft.tasks.map((task, index) => {
-              const isClientVisible = task.visibility === VISIBILITY.CLIENT_VISIBLE
+      <div className="grid gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex rounded-full bg-control p-micro">
+            {filterOptions.map((option) => (
+              <button
+                className={`h-control-small rounded-full px-control text-label transition-colors ${
+                  visibilityFilter === option.value
+                    ? 'bg-control-selected text-text-primary'
+                    : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
+                }`}
+                key={option.value}
+                onClick={() => setVisibilityFilter(option.value)}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-              return (
-              <TableRow
-                className={`align-top ${isClientVisible ? 'bg-block' : 'bg-block-subtle text-text-muted'}`}
+        <div className="grid gap-2">
+          {filteredTasks.length > 0 ? filteredTasks.map(({ task, index }) => {
+            const isClientVisible = task.visibility === VISIBILITY.CLIENT_VISIBLE
+            const project = draft.projects.find((item) => item.id === task.project_id)
+
+            return (
+              <article
+                className={`group/task grid gap-3 rounded-control p-3 transition-colors ${
+                  isClientVisible ? 'bg-block-subtle' : 'bg-control/60'
+                }`}
                 key={task.id || `task-${index}`}
               >
-                <TableCell>
-                  <Input
-                    className="h-8 border-transparent bg-transparent px-0 font-medium shadow-none focus-visible:px-2 focus-visible:ring-0"
-                    onChange={(event) => onUpdateTasks(updateListItem(draft.tasks, index, 'title', event.target.value))}
-                    placeholder="Task title"
-                    value={task.title}
-                  />
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Select
-                      onValueChange={(value) => onUpdateTasks(updateListItem(draft.tasks, index, 'status', value))}
-                      value={task.status}
-                    >
-                      <SelectTrigger className="h-7 w-[150px] text-xs">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(TASK_STATUSES).map((status) => (
-                          <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      onValueChange={(value) => onUpdateTasks(updateListItem(draft.tasks, index, 'project_id', value === 'none' ? '' : value))}
-                      value={task.project_id || 'none'}
-                    >
-                      <SelectTrigger className="h-7 w-[150px] text-xs">
-                        <SelectValue placeholder="Project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No project</SelectItem>
-                        {draft.projects.filter((project) => project.id).map((project, projectIndex) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name || `Project ${projectIndex + 1}`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="flex items-start gap-3">
+                  <Icon className="mt-2 text-text-quaternary" name={TASK_STATUS_META[task.status]?.icon ?? 'circle'} size={17} />
+                  <div className="min-w-0 flex-1">
                     <Input
-                      className="h-7 w-28 px-2 text-xs"
-                      onChange={(event) => onUpdateTasks(updateListItem(draft.tasks, index, 'assignee_name', event.target.value))}
-                      placeholder="Owner"
-                      value={task.assignee_name}
+                      className="h-8 border-transparent bg-transparent px-0 font-semibold shadow-none focus-visible:border-control-border focus-visible:bg-block focus-visible:px-2 focus-visible:ring-0"
+                      onChange={(event) => updateTask(index, 'title', event.target.value)}
+                      placeholder="Review new ad creatives"
+                      value={task.title}
                     />
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
+                      <span>{TASK_STATUS_META[task.status]?.label ?? task.status}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{project?.name || 'No project'}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{task.assignee_name || 'Unassigned'}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{task.due_date || 'No due date'}</span>
+                    </div>
                   </div>
-                  <Input
-                    className="mt-2 h-7 border-transparent bg-transparent px-0 text-xs text-text-muted shadow-none focus-visible:border-control-border focus-visible:bg-block focus-visible:px-2 focus-visible:ring-0"
-                    onChange={(event) => onUpdateTasks(updateListItem(draft.tasks, index, 'description', event.target.value))}
-                    placeholder="Internal detail or client-safe task context"
-                    value={task.description}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    className="h-8 w-auto px-2 text-xs"
-                    onChange={(event) => onUpdateTasks(updateListItem(draft.tasks, index, 'due_date', event.target.value))}
-                    type="date"
-                    value={task.due_date}
-                  />
-                </TableCell>
-                <TableCell>
                   <button
-                    className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    aria-label={isClientVisible ? 'Visible to client' : 'Internal task'}
+                    className={`inline-flex h-control-small shrink-0 items-center rounded-full px-control transition ${
                       isClientVisible
                         ? 'bg-action-muted text-action hover:bg-action-muted'
                         : 'bg-control text-text-muted hover:bg-control-selected'
                     }`}
-                    onClick={() => onUpdateTasks(updateListItem(
-                      draft.tasks,
+                    onClick={() => updateTask(
                       index,
                       'visibility',
                       isClientVisible ? VISIBILITY.INTERNAL : VISIBILITY.CLIENT_VISIBLE,
-                    ))}
+                    )}
+                    title={isClientVisible ? 'Client visible' : 'Internal'}
                     type="button"
                   >
-                    <Icon name={isClientVisible ? 'user' : 'lock'} size={13} />
-                    {isClientVisible ? 'Client' : 'Internal'}
+                    <Icon name={isClientVisible ? 'user' : 'lock'} size={14} />
                   </button>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      className="text-text-quaternary"
-                      disabled={index === 0}
-                      onClick={() => onMoveTask(index, -1)}
-                      size="icon-sm"
-                      title="Move task up"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Icon name="arrowRight" size={14} className="-rotate-90" />
-                    </Button>
-                    <Button
-                      className="text-text-quaternary"
-                      disabled={index === draft.tasks.length - 1}
-                      onClick={() => onMoveTask(index, 1)}
-                      size="icon-sm"
-                      title="Move task down"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Icon name="arrowRight" size={14} className="rotate-90" />
-                    </Button>
-                    <Button
-                      className="text-text-quaternary hover:text-destructive"
-                      onClick={() => onRemoveTask(index)}
-                      size="icon-sm"
-                      title="Delete task"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Icon name="close" size={16} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-        <div className="border-t border-action/20 bg-action-muted px-4 py-2 text-xs text-action">
-          Client-visible tasks appear on the client overview. Internal tasks and their notes remain admin/team-only.
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <Select
+                    onValueChange={(value) => updateTask(index, 'status', value)}
+                    value={task.status}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taskStatusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    onValueChange={(value) => updateTask(index, 'project_id', value === 'none' ? '' : value)}
+                    value={task.project_id || 'none'}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No project</SelectItem>
+                      {draft.projects.filter((item) => item.id).map((item, projectIndex) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name || `Project ${projectIndex + 1}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="h-8 px-2 text-xs"
+                    onChange={(event) => updateTask(index, 'assignee_name', event.target.value)}
+                    placeholder="Owner"
+                    value={task.assignee_name}
+                  />
+                  <Input
+                    className="h-8 px-2 text-xs"
+                    onChange={(event) => updateTask(index, 'due_date', event.target.value)}
+                    type="date"
+                    value={task.due_date}
+                  />
+                </div>
+
+                <details className="group/details">
+                  <summary className="cursor-pointer select-none text-xs font-medium text-text-muted marker:text-text-quaternary">
+                    Description
+                  </summary>
+                  <Textarea
+                    className="mt-2 min-h-16 resize-none border-transparent bg-control text-sm shadow-none focus-visible:border-control-border focus-visible:bg-block"
+                    onChange={(event) => updateTask(index, 'description', event.target.value)}
+                    placeholder="Context for the team or a client-safe task note."
+                    value={task.description}
+                  />
+                </details>
+
+                <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover/task:opacity-100 group-focus-within/task:opacity-100">
+                  <Button
+                    className="text-text-quaternary"
+                    disabled={index === 0}
+                    onClick={() => onMoveTask(index, -1)}
+                    size="icon-sm"
+                    title="Move task up"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Icon name="arrowRight" size={14} className="-rotate-90" />
+                  </Button>
+                  <Button
+                    className="text-text-quaternary"
+                    disabled={index === draft.tasks.length - 1}
+                    onClick={() => onMoveTask(index, 1)}
+                    size="icon-sm"
+                    title="Move task down"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Icon name="arrowRight" size={14} className="rotate-90" />
+                  </Button>
+                  <Button
+                    className="text-text-quaternary hover:text-destructive"
+                    onClick={() => onRemoveTask(index)}
+                    size="icon-sm"
+                    title="Delete task"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Icon name="close" size={16} />
+                  </Button>
+                </div>
+              </article>
+            )
+          }) : (
+            <div className="rounded-control bg-block-subtle px-3 py-4 text-sm text-text-muted">
+              No tasks in this view.
+            </div>
+          )}
         </div>
       </div>
     </EditorCard>
@@ -669,44 +789,6 @@ function NeededFromClientEditor({ draft, onAddAction, onRemoveAction, onUpdateNe
             </div>
           </div>
         ))}
-      </div>
-    </EditorCard>
-  )
-}
-
-function ProjectStatusPanel({ draft, onSetStatus }) {
-  return (
-    <EditorCard iconName="barChart" title="Project Status">
-      <div className="grid grid-cols-2 gap-2">
-        {statusOptions.map((status) => {
-          const meta = CLIENT_STATUS_META[status]
-          const isActive = draft.client.status === status
-          const styles = statusOptionStyles[status]
-
-          return (
-            <button
-              aria-label={`${meta.label}: ${statusDescriptions[status]}`}
-              aria-pressed={isActive}
-              className={`group flex h-target w-full items-center gap-2 rounded-control px-control text-left transition-colors duration-motion-fast ease-motion-standard ${
-                isActive
-                  ? styles.active
-                  : 'bg-transparent text-text-secondary hover:bg-surface-subtle'
-              }`}
-              key={status}
-              onClick={() => onSetStatus(status)}
-              type="button"
-            >
-              <Icon
-                className={isActive ? styles.iconClassName : 'text-text-quaternary group-hover:text-text-muted'}
-                name={styles.icon}
-                size={18}
-              />
-              <span className="min-w-0 truncate text-sm font-semibold">
-                {meta.label}
-              </span>
-            </button>
-          )
-        })}
       </div>
     </EditorCard>
   )
@@ -980,7 +1062,6 @@ function ClientLinksAssetsPanel({ draft, onUpdateDashboardLinks, onUpdateReports
               value={report.pdf_url}
             />
           </div>
-          <p className="mt-2 text-xs text-text-quaternary">Only published or archived reports can be selected.</p>
         </div>
       </div>
     </EditorCard>
@@ -1062,6 +1143,29 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
     }
   }, [isDirty])
 
+  const autosaveTimeoutRef = useRef(null)
+  const saveDraftRef = useRef(null)
+
+  useEffect(() => {
+    if (!isDirty || !draft || !editor) {
+      return undefined
+    }
+
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current)
+    }
+
+    autosaveTimeoutRef.current = setTimeout(() => {
+      saveDraftRef.current?.({ silent: true })
+    }, 1500)
+
+    return () => {
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current)
+      }
+    }
+  }, [draft, isDirty, editor])
+
   function updateDraft(updater) {
     setPageState((currentPageState) => ({
       ...currentPageState,
@@ -1122,9 +1226,9 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
     setPendingDeletion(null)
   }
 
-  function saveDraft() {
-    setSaveState('Saving draft...')
-    runtime.dataClient.write((repositories) => saveAdminClientOverview({
+  function saveDraft({ silent = false } = {}) {
+    setSaveState('Saving…')
+    return runtime.dataClient.write((repositories) => saveAdminClientOverview({
       clientId,
       idGenerator: createUuid,
       input: draft,
@@ -1139,8 +1243,10 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
           status: 'ready',
         })
         setIsDirty(false)
-        setSaveState('Saved successfully')
-        toast.success('Draft saved', `${nextEditor.client.name}'s overview draft was updated.`)
+        setSaveState('')
+        if (!silent) {
+          toast.success('Draft saved', `${nextEditor.client.name}'s overview draft was updated.`)
+        }
       })
       .catch((caughtError) => {
         setPageState((currentPageState) => ({
@@ -1152,6 +1258,10 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
         toast.error('Draft was not saved', caughtError.message)
       })
   }
+
+  useEffect(() => {
+    saveDraftRef.current = saveDraft
+  })
 
   function publishDraft() {
     setSaveState('Publishing...')
@@ -1280,6 +1390,23 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
         }}
         currentPage="overview"
         eyebrow="Client overview editor"
+        actions={(
+          <EditorActionToolbar
+            editor={editor}
+            isDirty={isDirty}
+            onDiscardDraft={discardDraft}
+            onPublish={() => setIsPublishConfirmationOpen(true)}
+            onRestorePublished={restorePublished}
+            saveState={saveState}
+          />
+        )}
+        onStatusChange={(status) => updateDraft((currentDraft) => ({
+          ...currentDraft,
+          client: {
+            ...currentDraft.client,
+            status,
+          },
+        }))}
       />
 
       <ConfirmationDialog
@@ -1311,30 +1438,22 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
       />
 
       <PageShell className="px-4 py-6 sm:px-6 lg:px-8">
-        <EditorActionToolbar
-          editor={editor}
-          isDirty={isDirty}
-          onDiscardDraft={discardDraft}
-          onPublish={() => setIsPublishConfirmationOpen(true)}
-          onRestorePublished={restorePublished}
-          onSave={saveDraft}
-          saveState={saveState}
-        />
-
-        <div className="grid w-full gap-card lg:grid-cols-inspector">
-          <div className="grid content-start gap-card">
-            <LatestUpdateEditor
-              draft={draft}
-              onDeleteUpdate={() => requestDeletion('latest_update', null, 'Latest update')}
-              onUpdateUpdates={(updates) => updateDraft((currentDraft) => ({ ...currentDraft, updates }))}
-            />
-            <CurrentFocusEditor
-              draft={draft}
-              onChange={(currentFocus) => updateDraft((currentDraft) => ({
-                ...currentDraft,
-                currentFocus,
-              }))}
-            />
+        <div className="grid gap-card">
+          <EditorZone title="WHAT YOUR CLIENT SEES">
+            <div className="grid gap-card lg:grid-cols-2">
+              <LatestUpdateEditor
+                draft={draft}
+                onDeleteUpdate={() => requestDeletion('latest_update', null, 'Latest update')}
+                onUpdateUpdates={(updates) => updateDraft((currentDraft) => ({ ...currentDraft, updates }))}
+              />
+              <CurrentFocusEditor
+                draft={draft}
+                onChange={(currentFocus) => updateDraft((currentDraft) => ({
+                  ...currentDraft,
+                  currentFocus,
+                }))}
+              />
+            </div>
             <TasksManager
               draft={draft}
               onAddTask={() => updateDraft((currentDraft) => ({
@@ -1358,6 +1477,44 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
               )}
               onUpdateTasks={(tasks) => updateDraft((currentDraft) => ({ ...currentDraft, tasks }))}
             />
+            <div className="grid gap-card lg:grid-cols-2">
+              <ProgressSummaryPanel
+                draft={draft}
+                onAddProject={() => updateDraft((currentDraft) => ({
+                  ...currentDraft,
+                  projects: [
+                    ...currentDraft.projects,
+                    {
+                      ...createBlankProject(),
+                      sort_order: (currentDraft.projects.length + 1) * 10,
+                    },
+                  ],
+                }))}
+                onMoveProject={(index, direction) => updateDraft((currentDraft) => ({
+                  ...currentDraft,
+                  projects: moveListItem(currentDraft.projects, index, direction),
+                }))}
+                onRemoveProject={(index) => requestDeletion(
+                  'project',
+                  index,
+                  draft.projects[index]?.name || `Project ${index + 1}`,
+                )}
+                onUpdateProjects={(projects) => updateDraft((currentDraft) => ({ ...currentDraft, projects }))}
+              />
+              <ClientLinksAssetsPanel
+                draft={draft}
+                onUpdateDashboardLinks={(dashboardLinks) => updateDraft((currentDraft) => ({
+                  ...currentDraft,
+                  dashboardLinks,
+                }))}
+                onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
+              />
+            </div>
+          </EditorZone>
+
+          <InternalDivider />
+
+          <EditorZone title="AGENCY WORKSPACE" tone="agency">
             <NeededFromClientEditor
               draft={draft}
               onAddAction={() => updateDraft((currentDraft) => ({
@@ -1371,51 +1528,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
               )}
               onUpdateNeededActions={(neededActions) => updateDraft((currentDraft) => ({ ...currentDraft, neededActions }))}
             />
-          </div>
-
-          <aside className="grid content-start gap-card">
-            <ProjectStatusPanel
-              draft={draft}
-              onSetStatus={(status) => updateDraft((currentDraft) => ({
-                ...currentDraft,
-                client: {
-                  ...currentDraft.client,
-                  status,
-                },
-              }))}
-            />
-            <ProgressSummaryPanel
-              draft={draft}
-              onAddProject={() => updateDraft((currentDraft) => ({
-                ...currentDraft,
-                projects: [
-                  ...currentDraft.projects,
-                  {
-                    ...createBlankProject(),
-                    sort_order: (currentDraft.projects.length + 1) * 10,
-                  },
-                ],
-              }))}
-              onMoveProject={(index, direction) => updateDraft((currentDraft) => ({
-                ...currentDraft,
-                projects: moveListItem(currentDraft.projects, index, direction),
-              }))}
-              onRemoveProject={(index) => requestDeletion(
-                'project',
-                index,
-                draft.projects[index]?.name || `Project ${index + 1}`,
-              )}
-              onUpdateProjects={(projects) => updateDraft((currentDraft) => ({ ...currentDraft, projects }))}
-            />
-            <ClientLinksAssetsPanel
-              draft={draft}
-              onUpdateDashboardLinks={(dashboardLinks) => updateDraft((currentDraft) => ({
-                ...currentDraft,
-                dashboardLinks,
-              }))}
-              onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
-            />
-          </aside>
+          </EditorZone>
         </div>
       </PageShell>
     </>

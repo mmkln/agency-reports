@@ -39,3 +39,33 @@ export const DASHBOARD_PROVIDERS = Object.freeze({
   SWYDO: 'swydo',
   WHATAGRAPH: 'whatagraph',
 })
+
+export const DASHBOARD_PROVIDER_META = Object.freeze({
+  [DASHBOARD_PROVIDERS.LOOKER_STUDIO]: {
+    label: 'Looker Studio',
+  },
+  [DASHBOARD_PROVIDERS.AGENCY_ANALYTICS]: {
+    label: 'AgencyAnalytics',
+  },
+  [DASHBOARD_PROVIDERS.DATABOX]: {
+    label: 'Databox',
+  },
+  [DASHBOARD_PROVIDERS.WHATAGRAPH]: {
+    label: 'Whatagraph',
+  },
+  [DASHBOARD_PROVIDERS.DASH_THIS]: {
+    label: 'DashThis',
+  },
+  [DASHBOARD_PROVIDERS.SWYDO]: {
+    label: 'Swydo',
+  },
+  [DASHBOARD_PROVIDERS.REPORT_GARDEN]: {
+    label: 'ReportGarden',
+  },
+  [DASHBOARD_PROVIDERS.OVIOND]: {
+    label: 'Oviond',
+  },
+  [DASHBOARD_PROVIDERS.CUSTOM]: {
+    label: 'Custom',
+  },
+})

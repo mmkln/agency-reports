@@ -66,6 +66,19 @@ function mapProject(project) {
   }
 }
 
+function getSnapshotOverviewCollections({ client, snapshot }) {
+  return {
+    clientStatus: snapshot.client?.status ?? client.status,
+    currentFocus: snapshot.currentFocus ?? [],
+    dashboardLinks: snapshot.dashboardLinks ?? [],
+    neededActions: snapshot.neededActions ?? [],
+    projects: snapshot.projects ?? [],
+    reports: snapshot.reports ?? [],
+    tasks: snapshot.tasks ?? [],
+    updates: snapshot.updates ?? [],
+  }
+}
+
 function getOverviewCollections({ client, clientId, repositories, source, viewer }) {
   if (source === 'draft') {
     if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
@@ -84,6 +97,13 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
         updates: client.overview_draft.updates ?? [],
       }
     }
+  }
+
+  if (client.overview_published_snapshot) {
+    return getSnapshotOverviewCollections({
+      client,
+      snapshot: client.overview_published_snapshot,
+    })
   }
 
   return {
@@ -182,6 +202,7 @@ export function getClientOverview({ clientId, repositories, source = 'published'
     currentFocus,
     dashboard: dashboard
       ? {
+          description: dashboard.description ?? '',
           embedUrl: dashboard.embed_url,
           fallbackMessage: dashboard.fallback_message,
           id: dashboard.id,

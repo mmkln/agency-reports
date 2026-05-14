@@ -1,10 +1,16 @@
 import { Input } from '@/components/ui/input'
 
-export function FormField({ label, onValueChange, value, ...props }) {
+import { useInspectorId } from './inspectorId'
+
+export function FormField({ id, inputId, label, onValueChange, value, ...props }) {
+  const inspectorId = useInspectorId('FormField', id)
+  const controlId = inputId ?? `${inspectorId}-input`
+
   return (
-    <label className="flex flex-col gap-item">
+    <label className="flex flex-col gap-item" id={inspectorId}>
       <span className="text-label text-text-muted">{label}</span>
       <Input
+        id={controlId}
         onChange={(event) => onValueChange(event.target.value)}
         value={value}
         {...props}

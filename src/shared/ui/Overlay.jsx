@@ -1,13 +1,17 @@
 import { forwardRef } from 'react'
 
 import { cn } from '@/lib/utils'
+import { useInspectorId } from './inspectorId'
 
 export const OverlayHeader = forwardRef(function OverlayHeader(
-  { className, ...props },
+  { className, id, ...props },
   ref,
 ) {
+  const inspectorId = useInspectorId('OverlayHeader', id)
+
   return (
     <div
+      id={inspectorId}
       className={cn(
         'border-b border-island-border bg-material-chrome px-panel py-card backdrop-blur-2xl',
         className,
@@ -19,18 +23,23 @@ export const OverlayHeader = forwardRef(function OverlayHeader(
 })
 
 export const OverlayBody = forwardRef(function OverlayBody(
-  { className, ...props },
+  { className, id, ...props },
   ref,
 ) {
-  return <div className={cn('px-panel py-card', className)} ref={ref} {...props} />
+  const inspectorId = useInspectorId('OverlayBody', id)
+
+  return <div id={inspectorId} className={cn('px-panel py-card', className)} ref={ref} {...props} />
 })
 
 export const OverlayFooter = forwardRef(function OverlayFooter(
-  { className, ...props },
+  { className, id, ...props },
   ref,
 ) {
+  const inspectorId = useInspectorId('OverlayFooter', id)
+
   return (
     <div
+      id={inspectorId}
       className={cn(
         'border-t border-island-border bg-material-chrome px-panel py-card backdrop-blur-2xl',
         className,

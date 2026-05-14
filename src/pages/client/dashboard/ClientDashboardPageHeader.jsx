@@ -1,6 +1,7 @@
 import { StatusBadge } from '@/shared/ui'
 
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
+import { USER_ROLES } from '../../../entities/profile'
 import { PageHeader } from '../../../shared/layout/PageHeader'
 
 function HeaderAction({ dashboard }) {
@@ -16,6 +17,7 @@ export function ClientDashboardPageHeader({ routeParams = {}, runtime }) {
   const page = getClientDashboardPage({
     clientId,
     dashboardId: routeParams.dashboardId,
+    mode: runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client',
     repositories: runtime.repositories,
     viewer: runtime.viewer,
   })

@@ -1040,10 +1040,12 @@ export const iconRegistry = {
     viewBox: '0 0 24 24',
     paths: (
       <path
-        clipRule="evenodd"
-        d="M9.146 11.146a.5.5 0 0 1 .708 0l1.646 1.647 1.646-1.647a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 0-.708"
-        fill="currentColor"
-        fillRule="evenodd"
+        d="m6 9 6 6 6-6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
       />
     ),
   },
@@ -1082,6 +1084,17 @@ export const iconRegistry = {
           fill="#ea4335"
           fillRule="evenodd"
         />
+      </>
+    ),
+  },
+  ellipsis: {
+    defaultSize: 16,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <circle cx="12" cy="12" r="1.25" fill="currentColor" />
+        <circle cx="5" cy="12" r="1.25" fill="currentColor" />
+        <circle cx="19" cy="12" r="1.25" fill="currentColor" />
       </>
     ),
   },

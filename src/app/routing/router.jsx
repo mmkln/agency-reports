@@ -9,6 +9,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { RootLayout } from '../layout/RootLayout'
 import { AuthLayout } from '../layout/AuthLayout'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
@@ -18,10 +19,12 @@ import {
   ClientDashboardPageRoute,
   ClientReportsPageRoute,
   AdminClientsPageRoute,
+  AdminDashboardLinksPageRoute,
   AdminClientAccessPageRoute,
   AdminClientActivityPageRoute,
   AdminClientPreviewPageRoute,
   AdminClientOverviewPageRoute,
+  AdminTasksPageRoute,
   TeamTasksPageRoute,
 } from './RoutePages'
 
@@ -123,6 +126,26 @@ export const routeMetadata = [
     iconName: 'users',
   },
   {
+    path: '/admin/tasks',
+    id: 'admin-tasks',
+    label: 'Tasks',
+    pageTitle: 'Tasks',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: TeamTasksPageHeader,
+    subtitle: 'Create and manage work across client projects.',
+    iconName: 'checkCircle2',
+  },
+  {
+    path: '/admin/dashboard-links',
+    id: 'admin-dashboard-links',
+    label: 'Dashboards',
+    pageTitle: 'Dashboard Links',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: AdminDashboardLinksPageHeader,
+    subtitle: 'Manage external dashboard embeds and links for clients.',
+    iconName: 'layoutDashboard',
+  },
+  {
     path: '/admin/client-preview',
     id: 'admin-client-preview',
     label: 'Client Preview',
@@ -131,6 +154,17 @@ export const routeMetadata = [
     header: ClientOverviewPageHeader,
     showInNav: false,
     subtitle: 'Admin preview of the client-facing portal.',
+    iconName: 'layoutDashboard',
+  },
+  {
+    path: '/admin/client-dashboard-preview',
+    id: 'admin-client-dashboard-preview',
+    label: 'Dashboard Preview',
+    pageTitle: 'Dashboard Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: ClientDashboardPageHeader,
+    showInNav: false,
+    subtitle: 'Admin preview of the client-facing dashboard surface.',
     iconName: 'layoutDashboard',
   },
   {
@@ -304,11 +338,41 @@ export const router = createBrowserRouter(
             ),
           },
           {
+            path: 'tasks',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminTasksPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'dashboard-links',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminDashboardLinksPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'client-preview',
             element: (
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
                 <Suspense fallback={<LoadingFallback />}>
                   <AdminClientPreviewPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'client-dashboard-preview',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ClientDashboardPageRoute />
                 </Suspense>
               </ProtectedRoute>
             ),

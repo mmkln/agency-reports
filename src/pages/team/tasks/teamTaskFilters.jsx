@@ -28,13 +28,16 @@ function ScopeToggle({ filters, onChange }) {
 }
 
 export function TaskFilters({ filters, onChange, taskData }) {
+  const projectOptions = taskData.projects
+    .filter((project) => filters.clientId === 'all' || project.client_id === filters.clientId)
+
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="grid gap-4 sm:grid-cols-[220px_170px_170px]">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+      <div className="grid gap-4 sm:grid-cols-[220px_200px_170px_170px]">
         <label className="grid gap-2 text-sm font-medium text-text-secondary">
           <span>Client</span>
           <Select
-            onValueChange={(value) => onChange({ ...filters, clientId: value })}
+            onValueChange={(value) => onChange({ ...filters, clientId: value, projectId: 'all' })}
             value={filters.clientId}
           >
             <SelectTrigger>
@@ -44,6 +47,23 @@ export function TaskFilters({ filters, onChange, taskData }) {
               <SelectItem value="all">All clients</SelectItem>
               {taskData.clients.map((client) => (
                 <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+        <label className="grid gap-2 text-sm font-medium text-text-secondary">
+          <span>Project</span>
+          <Select
+            onValueChange={(value) => onChange({ ...filters, projectId: value })}
+            value={filters.projectId}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All projects" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All projects</SelectItem>
+              {projectOptions.map((project) => (
+                <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -82,9 +102,11 @@ export function TaskFilters({ filters, onChange, taskData }) {
           </Select>
         </label>
       </div>
-      <div className="lg:min-w-[160px]">
-        <ScopeToggle filters={filters} onChange={onChange} />
-      </div>
+      {taskData.canUseMineFilter ? (
+        <div className="lg:min-w-[160px]">
+          <ScopeToggle filters={filters} onChange={onChange} />
+        </div>
+      ) : null}
     </div>
   )
 }

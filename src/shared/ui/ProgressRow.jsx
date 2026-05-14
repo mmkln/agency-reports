@@ -1,13 +1,18 @@
+import { useInspectorId } from './inspectorId'
+
 export function ProgressRow({
   color = 'bg-action',
   count,
+  id,
   label,
   progress,
   rightLabel,
   value,
 }) {
+  const inspectorId = useInspectorId('ProgressRow', id)
+
   return (
-    <div className="flex flex-col border-b border-separator py-4 first:pt-0 last:border-0 last:pb-0">
+    <div id={inspectorId} className="flex flex-col border-b border-separator py-4 first:pt-0 last:border-0 last:pb-0">
       <div className="mb-2 flex items-end justify-between">
         <span className="block text-sm font-medium text-text-secondary">{label}</span>
         <div className="text-right">

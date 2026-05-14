@@ -1,13 +1,16 @@
 import agencyLogoUrl from '../../assets/agency-logo.png'
+import { useInspectorId } from './inspectorId'
 
 export function BrandLogo({
   className = '',
   href = '/',
+  id,
   iconShadow,
   light = false,
   size = 'md',
   variant = 'interactive',
 }) {
+  const inspectorId = useInspectorId('BrandLogo', id)
   const isStatic = variant === 'static'
   const shouldShowShadow = iconShadow ?? (!light && !isStatic)
   const iconSizeClass = size === 'sm' ? 'h-8 w-8' : 'h-9 w-9'
@@ -18,7 +21,7 @@ export function BrandLogo({
   const motionClass = isStatic ? '' : 'transition-transform duration-300 group-hover:scale-105'
 
   return (
-    <a className={`${rootClass} ${className}`.trim()} href={href}>
+    <a className={`${rootClass} ${className}`.trim()} href={href} id={inspectorId}>
       <span
         aria-hidden="true"
         className={`flex ${iconSizeClass} shrink-0 items-center justify-center ${shadowClass} ${motionClass}`.trim()}

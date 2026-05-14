@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { useInspectorId } from './inspectorId'
+
 function getScrollParent(element) {
   if (!element) {
     return window
@@ -49,10 +51,12 @@ export function VirtualGrid({
   estimateItemHeight,
   gap = 16,
   getKey,
+  id,
   items,
   overscanRows = 2,
   renderItem,
 }) {
+  const inspectorId = useInspectorId('VirtualGrid', id)
   const containerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [visibleRange, setVisibleRange] = useState({
@@ -148,7 +152,7 @@ export function VirtualGrid({
   ])
 
   return (
-    <div className={className} ref={containerRef}>
+    <div id={inspectorId} className={className} ref={containerRef}>
       <div className="relative w-full" style={{ height: totalHeight }}>
         {visibleItems.map(({ item, key, left, top }) => (
           <div

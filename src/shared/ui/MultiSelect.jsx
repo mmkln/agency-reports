@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 import { Popover, PopoverContent, PopoverTrigger } from './Popover'
+import { useInspectorId } from './inspectorId'
 
 export function MultiSelect({
   className,
   disabled = false,
   emptyText = 'No options found.',
+  id,
   onChange,
   onContentClick,
   onTriggerClick,
@@ -19,6 +21,7 @@ export function MultiSelect({
   size = 'default',
   value,
 }) {
+  const inspectorId = useInspectorId('MultiSelect', id)
   const [open, setOpen] = useState(false)
   const selectedLabels = useMemo(
     () => options
@@ -40,6 +43,7 @@ export function MultiSelect({
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <Button
+          id={inspectorId}
           className={cn(
             'w-full justify-between rounded-control border border-control-border bg-control text-left text-ui text-text-primary shadow-none hover:bg-control-hover',
             size === 'compact'

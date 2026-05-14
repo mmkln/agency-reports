@@ -1,14 +1,20 @@
 import { cn } from '@/lib/utils'
 
+import { useInspectorId } from './inspectorId'
+
 export function FoundationPageHeader({
   actions,
   className,
   eyebrow,
+  id,
   title,
   ...props
 }) {
+  const inspectorId = useInspectorId('FoundationPageHeader', id)
+
   return (
     <header
+      id={inspectorId}
       className={cn(
         'flex flex-col gap-component lg:flex-row lg:items-start lg:justify-between',
         className,

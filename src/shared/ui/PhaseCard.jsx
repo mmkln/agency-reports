@@ -1,8 +1,10 @@
 import { Icon } from '../icons'
 import { ChecklistItem } from './ChecklistItem'
+import { useInspectorId } from './inspectorId'
 import { ProgressBar } from './ProgressBar'
 
-export function PhaseCard({ accent = 'blue', duration, iconName, items, phase, progress, status, title }) {
+export function PhaseCard({ accent = 'blue', duration, iconName, id, items, phase, progress, status, title }) {
+  const inspectorId = useInspectorId('PhaseCard', id)
   const accentClass = {
     blue: {
       background: 'bg-action-muted',
@@ -32,7 +34,7 @@ export function PhaseCard({ accent = 'blue', duration, iconName, items, phase, p
   }[accent]
 
   return (
-    <article className={`rounded-block border-l-4 p-card ${accentClass.background} ${accentClass.border}`}>
+    <article id={inspectorId} className={`rounded-block border-l-4 p-card ${accentClass.background} ${accentClass.border}`}>
       <div className="mb-5 flex items-start justify-between gap-4 max-[640px]:flex-col">
         <div className="flex items-start gap-3">
           {iconName ? <Icon className={`mt-1 ${accentClass.text}`} name={iconName} size={30} /> : null}

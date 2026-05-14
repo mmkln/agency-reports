@@ -1,19 +1,23 @@
 import { Card, CardContent } from '@/components/ui/card'
 
 import { Icon } from '../icons'
+import { useInspectorId } from './inspectorId'
 
 export function KpiCard({
   bgColor,
   color,
   helperText,
+  id,
   iconName,
   label,
   trend,
   trendLabel = 'vs last month',
   value,
 }) {
+  const inspectorId = useInspectorId('KpiCard', id)
+
   return (
-    <Card className="transition-shadow hover:shadow-block">
+    <Card id={inspectorId} className="transition-shadow hover:shadow-block">
       <CardContent className="flex flex-col justify-between">
         <div className="mb-4 flex items-start justify-between">
           <div>

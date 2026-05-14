@@ -30,7 +30,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/#login')
+  await page.goto('/login')
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -39,13 +39,13 @@ async function signIn(page, email) {
 
 async function signInAsAdmin(page) {
   await signIn(page, ADMIN_EMAIL)
-  await expect(page).toHaveURL(/#admin-clients/)
+  await expect(page).toHaveURL(/\/admin\/clients/)
   await expect(page.getByRole('heading', { name: 'Clients' })).toBeVisible()
 }
 
 async function signInAsClient(page) {
   await signIn(page, CLIENT_EMAIL)
-  await expect(page).toHaveURL(/#client-overview/)
+  await expect(page).toHaveURL(/\/client\/overview/)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -77,21 +77,21 @@ test('agency admin can create a client and the generated invite grants client ov
   const clientRow = page.getByRole('row').filter({ hasText: clientName })
   await expect(clientRow).toBeVisible()
   await expect(clientRow).toContainText(contactEmail)
-  await clientRow.locator('a[href^="#accept-invite?token="]').first().click()
+  await clientRow.locator('a[href^="/accept-invite?token="]').first().click()
 
   await expect(page.getByRole('heading', { name: 'Accept your invitation' })).toBeVisible()
   await expect(page.getByText(`You were invited to ${clientName}.`)).toBeVisible()
   await expect(page.locator('input[name="email"]')).toHaveValue(contactEmail)
   await page.getByRole('button', { name: 'Accept invite' }).click()
 
-  await expect(page).toHaveURL(/#client-overview/)
+  await expect(page).toHaveURL(/\/client\/overview/)
   await expect(page.getByText(`Welcome, ${clientName}`)).toBeVisible()
 })
 
 test('client users cannot access another client overview', async ({ page }) => {
   await signInAsClient(page)
 
-  await page.goto(`/#client-overview?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}`)
 
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
@@ -101,26 +101,27 @@ test('admin draft changes stay private until publish, then appear on the client 
   const updateText = `E2E published client update ${Date.now()}`
 
   await signInAsAdmin(page)
-  await page.goto(`/#admin-client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByRole('heading', { name: 'Green Dental Clinic' })).toBeVisible()
 
-  await page.getByPlaceholder('This week we launched...').fill(updateText)
-  await page.getByRole('button', { name: 'Save Draft' }).click()
-  await expect(page.getByText('Saved successfully')).toBeVisible()
+  await page
+    .getByPlaceholder('This week we launched the first campaign structure, connected tracking, and started testing new ad angles.')
+    .fill(updateText)
+  await expect(page.getByText(/Saved.*just now/).first()).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/#client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByText(updateText)).toHaveCount(0)
 
   await signInAsAdmin(page)
-  await page.goto(`/#admin-client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await page.getByRole('button', { name: /^Publish$/ }).click()
   await expect(page.getByRole('dialog', { name: 'Publish client overview?' })).toBeVisible()
   await page.getByRole('button', { name: 'Publish overview' }).click()
-  await expect(page.getByText('Published successfully')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View client version' })).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/#client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByText(updateText)).toBeVisible()
 })
 
@@ -128,7 +129,7 @@ test('client can answer a needed action and admin can mark it resolved', async (
   const responseText = `Approved in e2e ${Date.now()}`
 
   await signInAsClient(page)
-  await page.goto(`/#client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
 
   const neededAction = page.locator('article').filter({ hasText: 'Confirm final offer details' }).first()
   await expect(neededAction).toBeVisible()
@@ -140,18 +141,17 @@ test('client can answer a needed action and admin can mark it resolved', async (
   await expect(neededAction.getByText(responseText)).toBeVisible()
 
   await signInAsAdmin(page)
-  await page.goto(`/#admin-client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
 
   await expect(page.getByText(responseText)).toBeVisible()
   await page.getByRole('button', { name: 'Mark resolved' }).click()
   await expect(page.getByText('resolved').first()).toBeVisible()
-  await page.getByRole('button', { name: 'Save Draft' }).click()
-  await expect(page.getByText('Saved successfully')).toBeVisible()
+  await expect(page.getByText(/Saved.*just now/).first()).toBeVisible()
 })
 
 test('client overview hides internal tasks and internal notes', async ({ page }) => {
   await signInAsClient(page)
-  await page.goto(`/#client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
 
   await expect(page.getByText('Review new ad creatives')).toBeVisible()
   await expect(page.getByText('Debug internal tracking mismatch')).toHaveCount(0)

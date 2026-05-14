@@ -1,13 +1,17 @@
 import { Button as ShadcnButton } from '@/components/ui/button'
 
+import { useInspectorId } from './inspectorId'
+
 export function Button({
   asChild = false,
   children,
   icon,
+  id,
   size = 'md',
   variant = 'primary',
   ...props
 }) {
+  const inspectorId = useInspectorId('Button', id)
   const shadcnSize = {
     md: 'default',
   }[size] ?? size
@@ -18,14 +22,14 @@ export function Button({
 
   if (asChild) {
     return (
-      <ShadcnButton asChild size={shadcnSize} variant={shadcnVariant} {...props}>
+      <ShadcnButton asChild id={inspectorId} size={shadcnSize} variant={shadcnVariant} {...props}>
         {children}
       </ShadcnButton>
     )
   }
 
   return (
-    <ShadcnButton size={shadcnSize} variant={shadcnVariant} {...props}>
+    <ShadcnButton id={inspectorId} size={shadcnSize} variant={shadcnVariant} {...props}>
       {icon ? <span className="inline-flex text-[0.95em]" aria-hidden="true">{icon}</span> : null}
       {children}
     </ShadcnButton>

@@ -418,9 +418,12 @@ function upsertDashboardLinks({ clientId, dashboardLinks = [], idGenerator, repo
 
       repositories.dashboardLinks.upsert({
         client_id: clientId,
+        description: normalizeOptionalText(dashboardLink.description),
+        display_order: normalizeSortOrder(dashboardLink.display_order, 0),
         embed_url: embedUrl,
         fallback_message: normalizeOptionalText(dashboardLink.fallback_message) || 'Dashboard is being prepared.',
         id,
+        last_checked_at: dashboardLink.last_checked_at || null,
         name: normalizeText(dashboardLink.name) || 'Marketing Dashboard',
         provider: normalizeStatus(
           dashboardLink.provider,

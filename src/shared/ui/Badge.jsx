@@ -1,7 +1,10 @@
 import { Badge as ShadcnBadge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-export function Badge({ children, className = '', icon, tone, variant = 'outline', ...props }) {
+import { useInspectorId } from './inspectorId'
+
+export function Badge({ children, className = '', icon, id, tone, variant = 'outline', ...props }) {
+  const inspectorId = useInspectorId('Badge', id)
   const resolvedTone = tone ?? (!className && variant === 'outline' ? 'neutral' : null)
   const toneClass = {
     blue: 'border-action/20 bg-action-muted text-action',
@@ -13,9 +16,14 @@ export function Badge({ children, className = '', icon, tone, variant = 'outline
   }[resolvedTone]
 
   return (
-    <ShadcnBadge className={cn('min-h-6 gap-tag px-control font-bold', toneClass, className)} variant={variant} {...props}>
-      {icon ? <span className="inline-flex" aria-hidden="true">{icon}</span> : null}
-      <span>{children}</span>
+    <ShadcnBadge
+      id={inspectorId}
+      className={cn('h-6 gap-1.5 px-2.5 py-0 text-xs font-medium leading-none', toneClass, className)}
+      variant={variant}
+      {...props}
+    >
+      {icon ? <span className="flex size-3.5 shrink-0 items-center justify-center leading-none [&>svg]:size-3.5" aria-hidden="true">{icon}</span> : null}
+      <span className="flex h-4 items-center leading-none">{children}</span>
     </ShadcnBadge>
   )
 }

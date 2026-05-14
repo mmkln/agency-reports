@@ -1,15 +1,16 @@
-import { listTeamTasks } from '../../../domain/services/teamTaskService'
+import { listTaskWorkspace } from '../../../domain/services/taskWorkspaceService'
 
 export function normalizeTeamTaskFilters(routeParams = {}) {
   return {
     clientId: routeParams.clientId || 'all',
+    projectId: routeParams.projectId || 'all',
     scope: routeParams.scope || 'all',
     status: routeParams.status || 'all',
     visibility: routeParams.visibility || 'all',
   }
 }
 
-export function getTeamTaskFilterPath(nextFilters) {
+export function getTeamTaskFilterPath(nextFilters, basePath = '/team/tasks') {
   const params = new URLSearchParams()
 
   Object.entries(nextFilters).forEach(([key, value]) => {
@@ -19,11 +20,24 @@ export function getTeamTaskFilterPath(nextFilters) {
   })
 
   const queryString = params.toString()
-  return queryString ? `/team/tasks?${queryString}` : '/team/tasks'
+  return queryString ? `${basePath}?${queryString}` : basePath
+}
+
+export function getTaskCreatePath(filters, basePath = '/team/tasks') {
+  const params = new URLSearchParams()
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value !== 'all') {
+      params.set(key, value)
+    }
+  })
+  params.set('create', '1')
+
+  return `${basePath}?${params.toString()}`
 }
 
 export function loadTeamTasks(filters, runtime) {
-  return listTeamTasks({
+  return listTaskWorkspace({
     filters,
     repositories: runtime.repositories,
     viewer: runtime.viewer,

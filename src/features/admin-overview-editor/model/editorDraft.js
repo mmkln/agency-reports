@@ -54,9 +54,12 @@ export function createBlankNeededAction() {
 
 export function createBlankDashboardLink() {
   return {
+    description: '',
+    display_order: 0,
     embed_url: '',
     fallback_message: 'Dashboard is being prepared.',
     id: '',
+    last_checked_at: null,
     name: '',
     provider: DASHBOARD_PROVIDERS.LOOKER_STUDIO,
     public_url: '',

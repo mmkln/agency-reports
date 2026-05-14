@@ -4,11 +4,10 @@ import {
   Button,
   FoundationPageHeader,
   PageShell,
-  StatusBadge,
 } from '@/shared/ui'
 
-import { CLIENT_STATUS_META } from '../../../entities/client'
 import { Icon } from '../../../shared/icons'
+import { ClientStatusSelector } from './ClientStatusSelector'
 
 const tabs = [
   {
@@ -40,16 +39,13 @@ export function AdminClientWorkspaceHeader({
   client,
   currentPage = 'overview',
   eyebrow = 'Client workspace',
+  onStatusChange,
 }) {
   const clientId = client?.id
   const portalSlug = getClientField(client, 'portalSlug', 'portal_slug')
   const primaryContactName = getClientField(client, 'primaryContactName', 'primary_contact_name')
   const primaryContactEmail = getClientField(client, 'primaryContactEmail', 'primary_contact_email')
   const status = client?.status
-  const statusMeta = CLIENT_STATUS_META[status] ?? {
-    label: status || 'Unknown',
-    tone: 'neutral',
-  }
 
   return (
     <header className="border-b border-separator bg-surface">
@@ -69,7 +65,7 @@ export function AdminClientWorkspaceHeader({
         <FoundationPageHeader
           actions={(
             <div className="flex flex-wrap items-center justify-end gap-control">
-              <StatusBadge meta={statusMeta} />
+              <ClientStatusSelector onSelect={onStatusChange} status={status} />
               {actions}
             </div>
           )}

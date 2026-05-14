@@ -110,9 +110,12 @@ export const portalSeedData = Object.freeze({
     {
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
+      description: 'Executive marketing performance dashboard covering spend, lead flow, CPL, and conversion trends.',
+      display_order: 10,
       embed_url: 'https://lookerstudio.google.com/embed/reporting/demo-green-dental',
       fallback_message: 'Marketing dashboard is being prepared.',
       id: SEED_IDS.DASHBOARD_GREEN_APRIL,
+      last_checked_at: '2026-05-08T09:00:00.000Z',
       name: 'Marketing Performance Dashboard',
       provider: DASHBOARD_PROVIDERS.LOOKER_STUDIO,
       public_url: 'https://lookerstudio.google.com/reporting/demo-green-dental',

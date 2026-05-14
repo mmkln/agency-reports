@@ -1,6 +1,7 @@
 import { useId } from 'react'
 
 import { cn } from '@/lib/utils'
+import { useInspectorId } from './inspectorId'
 
 const sizeClassName = {
   md: 'h-target px-component text-ui',
@@ -10,18 +11,21 @@ const sizeClassName = {
 
 export function ToggleGroup({
   className = '',
+  id,
   items,
   name,
   onChange,
   size = 'sm',
   value,
 }) {
+  const inspectorId = useInspectorId('ToggleGroup', id)
   const generatedId = useId()
   const groupName = name ?? `toggle-${generatedId}`
 
   return (
     <div
       aria-label={groupName}
+      id={inspectorId}
       className={cn('inline-flex items-center gap-0 rounded-full bg-control p-micro', className)}
       role="radiogroup"
     >

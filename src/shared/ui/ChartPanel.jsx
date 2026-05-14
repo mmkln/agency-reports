@@ -1,8 +1,11 @@
 import { Panel, PanelBody, PanelHeader } from './Panel'
+import { useInspectorId } from './inspectorId'
 
-export function ChartPanel({ children, footer, title }) {
+export function ChartPanel({ children, footer, id, title }) {
+  const inspectorId = useInspectorId('ChartPanel', id)
+
   return (
-    <Panel>
+    <Panel id={inspectorId}>
       <PanelHeader title={title} />
       <PanelBody>
         {children}

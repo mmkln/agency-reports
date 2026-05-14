@@ -1,6 +1,10 @@
-export function ChartLegend({ items, valueKey = 'value' }) {
+import { useInspectorId } from './inspectorId'
+
+export function ChartLegend({ id, items, valueKey = 'value' }) {
+  const inspectorId = useInspectorId('ChartLegend', id)
+
   return (
-    <div className="grid w-full grid-cols-2 gap-x-4 gap-y-3 px-4 max-[520px]:grid-cols-1">
+    <div id={inspectorId} className="grid w-full grid-cols-2 gap-x-4 gap-y-3 px-4 max-[520px]:grid-cols-1">
       {items.map((item) => (
         <div className="flex items-center justify-between text-sm" key={item.name ?? item.label}>
           <div className="flex items-center">

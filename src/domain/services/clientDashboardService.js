@@ -1,4 +1,5 @@
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
+import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -8,6 +9,7 @@ function sortByDateDesc(a, b, fieldName) {
 
 function mapDashboard(dashboardLink) {
   return {
+    description: dashboardLink.description ?? '',
     embedUrl: dashboardLink.embed_url,
     fallbackMessage: dashboardLink.fallback_message,
     id: dashboardLink.id,
@@ -34,10 +36,32 @@ function mapReport(report) {
   }
 }
 
-export function getClientDashboardPage({ clientId, dashboardId, repositories, viewer }) {
+function canAccessDashboardClient({ client, clientId, viewer }) {
+  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
+    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
+  }
+
+  return canAccessClient(viewer, clientId)
+}
+
+function isDashboardVisibleForMode(dashboardLink, mode) {
+  if (mode === 'admin_preview') {
+    return dashboardLink.status !== DASHBOARD_LINK_STATUSES.ARCHIVED
+  }
+
+  return isDashboardVisibleToClient(dashboardLink)
+}
+
+export function getClientDashboardPage({
+  clientId,
+  dashboardId,
+  mode = 'client',
+  repositories,
+  viewer,
+}) {
   const client = repositories.clients.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessDashboardClient({ client, clientId, viewer })) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -46,8 +70,12 @@ export function getClientDashboardPage({ clientId, dashboardId, repositories, vi
 
   const visibleDashboards = repositories.dashboardLinks
     .listByClientId(clientId)
-    .filter(isDashboardVisibleToClient)
-    .sort((a, b) => Number(b.show_on_overview) - Number(a.show_on_overview))
+    .filter((dashboardLink) => isDashboardVisibleForMode(dashboardLink, mode))
+    .sort((a, b) => (
+      Number(b.show_on_overview) - Number(a.show_on_overview)
+      || (a.display_order ?? 0) - (b.display_order ?? 0)
+      || new Date(b.updated_at ?? b.created_at ?? 0).getTime() - new Date(a.updated_at ?? a.created_at ?? 0).getTime()
+    ))
 
   const dashboard = dashboardId
     ? visibleDashboards.find((item) => item.id === dashboardId) ?? null

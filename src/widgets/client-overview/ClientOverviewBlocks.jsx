@@ -399,7 +399,7 @@ export function ActiveTasksBlock({ tasks }) {
   )
 }
 
-export function DashboardOverviewBlock({ clientId, dashboard }) {
+export function DashboardOverviewBlock({ clientId, dashboard, hrefBase = '/client/dashboard' }) {
   return (
     <SectionCard
       description="Live performance data from the agency dashboard."
@@ -428,7 +428,7 @@ export function DashboardOverviewBlock({ clientId, dashboard }) {
 
           <div className="grid gap-2">
             <Button asChild className="w-full" size="lg">
-              <Link to={`/client/dashboard?clientId=${clientId}&dashboardId=${dashboard.id}`}>
+              <Link to={`${hrefBase}?clientId=${clientId}&dashboardId=${dashboard.id}`}>
                 View Dashboard
               </Link>
             </Button>

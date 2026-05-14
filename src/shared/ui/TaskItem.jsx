@@ -2,8 +2,10 @@ import { Card, CardContent } from '@/components/ui/card'
 
 import { Icon } from '../icons'
 import { Badge } from './Badge'
+import { useInspectorId } from './inspectorId'
 
-export function TaskItem({ completed = false, meta, priority, title }) {
+export function TaskItem({ completed = false, id, meta, priority, title }) {
+  const inspectorId = useInspectorId('TaskItem', id)
   const priorityTone = {
     HIGH: 'rose',
     LOW: 'neutral',
@@ -15,7 +17,7 @@ export function TaskItem({ completed = false, meta, priority, title }) {
     : 'border-control-border bg-control'
 
   return (
-    <Card as="article" className={`transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover ${stateClass}`}>
+    <Card as="article" id={inspectorId} className={`transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover ${stateClass}`}>
       <CardContent className="flex items-center justify-between gap-4 py-4">
         <div className="flex min-w-0 items-start gap-3">
           <span

@@ -1,14 +1,20 @@
 import { cn } from '@/lib/utils'
 
+import { useInspectorId } from './inspectorId'
+
 export function DetailRow({
   className,
   emptyValue = 'Not provided',
+  id,
   label,
   value,
   ...props
 }) {
+  const inspectorId = useInspectorId('DetailRow', id)
+
   return (
     <div
+      id={inspectorId}
       className={cn('flex items-start justify-between gap-control py-item', className)}
       {...props}
     >

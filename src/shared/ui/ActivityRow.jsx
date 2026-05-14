@@ -1,8 +1,11 @@
 import { Icon } from '../icons'
+import { useInspectorId } from './inspectorId'
 
-export function ActivityRow({ color, detail, iconName, time, title }) {
+export function ActivityRow({ color, detail, iconName, id, time, title }) {
+  const inspectorId = useInspectorId('ActivityRow', id)
+
   return (
-    <article className="flex items-center justify-between gap-5 rounded-control bg-block px-control py-component max-[640px]:items-start">
+    <article id={inspectorId} className="flex items-center justify-between gap-5 rounded-control bg-block px-control py-component max-[640px]:items-start">
       <div className="flex min-w-0 items-center gap-3">
         <Icon className={color} name={iconName} size={20} />
         <div className="min-w-0">

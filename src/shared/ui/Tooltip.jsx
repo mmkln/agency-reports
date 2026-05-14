@@ -1,6 +1,7 @@
 import { Tooltip as TooltipPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
+import { useInspectorId } from './inspectorId'
 
 function TooltipProvider(props) {
   return <TooltipPrimitive.Provider data-slot="tooltip-provider" {...props} />
@@ -14,11 +15,15 @@ function Tooltip(props) {
   )
 }
 
-function TooltipTrigger(props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+function TooltipTrigger({ id, ...props }) {
+  const inspectorId = useInspectorId('TooltipTrigger', id)
+
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" id={inspectorId} {...props} />
 }
 
-function TooltipContent({ className, sideOffset = 8, ...props }) {
+function TooltipContent({ className, id, sideOffset = 8, ...props }) {
+  const inspectorId = useInspectorId('TooltipContent', id)
+
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
@@ -27,6 +32,7 @@ function TooltipContent({ className, sideOffset = 8, ...props }) {
           className,
         )}
         data-slot="tooltip-content"
+        id={inspectorId}
         sideOffset={sideOffset}
         {...props}
       />

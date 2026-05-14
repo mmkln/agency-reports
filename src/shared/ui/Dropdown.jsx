@@ -6,16 +6,21 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+import { useInspectorId } from './inspectorId'
+
 export function Dropdown({
   align = 'right',
   buttonClassName = '',
   children,
   className = '',
+  id,
   label,
   menuClassName = '',
 }) {
+  const inspectorId = useInspectorId('Dropdown', id)
+
   return (
-    <div className={cn('inline-flex', className)}>
+    <div id={inspectorId} className={cn('inline-flex', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

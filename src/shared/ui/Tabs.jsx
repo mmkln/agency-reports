@@ -1,6 +1,10 @@
-export function Tabs({ items }) {
+import { useInspectorId } from './inspectorId'
+
+export function Tabs({ id, items }) {
+  const inspectorId = useInspectorId('Tabs', id)
+
   return (
-    <nav className="flex items-center overflow-x-auto" aria-label="Dashboard pages">
+    <nav id={inspectorId} className="flex items-center overflow-x-auto" aria-label="Dashboard pages">
       {items.map((item) => (
         <a
           className={`inline-flex min-h-11 items-center gap-2 rounded-full px-component text-sm font-medium whitespace-nowrap no-underline transition-colors duration-motion-fast ease-motion-standard first:ml-4 ${

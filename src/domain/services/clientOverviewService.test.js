@@ -431,4 +431,71 @@ describe('getClientOverview', () => {
       status: 'error',
     })
   })
+
+  it('reads published preview from the published snapshot instead of current draft or live edits', () => {
+    const repositories = createRepositories({
+      clients: [
+        {
+          agency_id: IDS.AGENCY,
+          current_focus: ['Live mutable focus'],
+          id: IDS.CLIENT_A,
+          name: 'Client A',
+          overview_draft: {
+            client: {
+              status: CLIENT_STATUSES.WAITING_CLIENT,
+            },
+            currentFocus: ['Draft focus'],
+            dashboardLinks: [],
+            neededActions: [],
+            projects: [],
+            reports: [],
+            tasks: [],
+            updates: [],
+          },
+          overview_published_snapshot: {
+            client: {
+              status: CLIENT_STATUSES.ON_TRACK,
+            },
+            currentFocus: ['Published snapshot focus'],
+            dashboardLinks: [],
+            neededActions: [],
+            projects: [
+              {
+                client_id: IDS.CLIENT_A,
+                id: IDS.PROJECT_A,
+                name: 'Published Snapshot Project',
+                progress_percent: 70,
+              },
+            ],
+            reports: [],
+            tasks: [],
+            updates: [],
+          },
+          portal_slug: 'client-a',
+          primary_contact_email: 'client-a@example.com',
+          primary_contact_name: 'Client A Contact',
+          status: CLIENT_STATUSES.NEEDS_ATTENTION,
+        },
+      ],
+    })
+
+    const publishedPreview = getClientOverview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'published',
+      viewer: createAdminViewer(),
+    })
+    const draftPreview = getClientOverview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+
+    expect(publishedPreview.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
+    expect(publishedPreview.currentFocus).toEqual(['Published snapshot focus'])
+    expect(publishedPreview.progressSummary.map((project) => project.name)).toEqual(['Published Snapshot Project'])
+    expect(draftPreview.client.status).toBe(CLIENT_STATUSES.WAITING_CLIENT)
+    expect(draftPreview.currentFocus).toEqual(['Draft focus'])
+  })
 })

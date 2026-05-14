@@ -1,8 +1,11 @@
 import { CloseIcon } from '../icons'
+import { useInspectorId } from './inspectorId'
 
-export function ChecklistItem({ children, checked = false, pendingIcon = true, strikethrough = false }) {
+export function ChecklistItem({ children, checked = false, id, pendingIcon = true, strikethrough = false }) {
+  const inspectorId = useInspectorId('ChecklistItem', id)
+
   return (
-    <li className="flex items-start gap-2.5 text-sm text-text-secondary">
+    <li id={inspectorId} className="flex items-start gap-2.5 text-sm text-text-secondary">
       <span
         className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[0.68rem] font-black ${
           checked

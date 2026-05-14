@@ -14,6 +14,7 @@ const IDS = Object.freeze({
   DASHBOARD_ACTIVE: '44444444-4444-4444-8444-444444444444',
   DASHBOARD_DRAFT: '55555555-5555-4555-8555-555555555555',
   DASHBOARD_UNAVAILABLE: '66666666-6666-4666-8666-666666666666',
+  OTHER_AGENCY: '99999999-9999-4999-8999-999999999999',
   REPORT_DRAFT: '77777777-7777-4777-8777-777777777777',
   REPORT_PUBLISHED: '88888888-8888-4888-8888-888888888888',
 })
@@ -113,6 +114,13 @@ function createClientViewer(clientId = IDS.CLIENT_A) {
   }
 }
 
+function createAdminViewer(agencyId = IDS.AGENCY) {
+  return {
+    agencyId,
+    role: USER_ROLES.AGENCY_ADMIN,
+  }
+}
+
 describe('getClientDashboardPage', () => {
   it('returns the primary visible dashboard and latest visible report', () => {
     const page = getClientDashboardPage({
@@ -163,6 +171,44 @@ describe('getClientDashboardPage', () => {
       clientId: IDS.CLIENT_B,
       repositories: createRepositories(),
       viewer: createClientViewer(IDS.CLIENT_A),
+    })
+
+    expect(page).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
+  })
+
+  it('allows agency admins to preview draft dashboards without exposing them to clients', () => {
+    const clientPage = getClientDashboardPage({
+      clientId: IDS.CLIENT_A,
+      dashboardId: IDS.DASHBOARD_DRAFT,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+    const adminPreview = getClientDashboardPage({
+      clientId: IDS.CLIENT_A,
+      dashboardId: IDS.DASHBOARD_DRAFT,
+      mode: 'admin_preview',
+      repositories: createRepositories(),
+      viewer: createAdminViewer(),
+    })
+
+    expect(clientPage.dashboard).toBeNull()
+    expect(clientPage.reason).toBe('dashboard_not_found')
+    expect(adminPreview.dashboard).toMatchObject({
+      id: IDS.DASHBOARD_DRAFT,
+      name: 'Draft Dashboard',
+      status: DASHBOARD_LINK_STATUSES.DRAFT,
+    })
+  })
+
+  it('denies admin preview access to clients from another agency', () => {
+    const page = getClientDashboardPage({
+      clientId: IDS.CLIENT_A,
+      mode: 'admin_preview',
+      repositories: createRepositories(),
+      viewer: createAdminViewer(IDS.OTHER_AGENCY),
     })
 
     expect(page).toEqual({

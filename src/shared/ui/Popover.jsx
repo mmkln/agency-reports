@@ -1,21 +1,27 @@
 import { Popover as PopoverPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
+import { useInspectorId } from './inspectorId'
 
 function Popover(props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />
 }
 
-function PopoverTrigger(props) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+function PopoverTrigger({ id, ...props }) {
+  const inspectorId = useInspectorId('PopoverTrigger', id)
+
+  return <PopoverPrimitive.Trigger data-slot="popover-trigger" id={inspectorId} {...props} />
 }
 
 function PopoverContent({
   align = 'center',
   className,
+  id,
   sideOffset = 8,
   ...props
 }) {
+  const inspectorId = useInspectorId('PopoverContent', id)
+
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -25,6 +31,7 @@ function PopoverContent({
           className,
         )}
         data-slot="popover-content"
+        id={inspectorId}
         sideOffset={sideOffset}
         {...props}
       />
@@ -32,8 +39,10 @@ function PopoverContent({
   )
 }
 
-function PopoverAnchor(props) {
-  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+function PopoverAnchor({ id, ...props }) {
+  const inspectorId = useInspectorId('PopoverAnchor', id)
+
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" id={inspectorId} {...props} />
 }
 
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger }

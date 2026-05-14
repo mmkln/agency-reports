@@ -46,6 +46,9 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
   const [, setRevision] = useState(0)
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = routeParams.preview === 'draft' ? 'draft' : 'published'
+  const dashboardHrefBase = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN
+    ? '/admin/client-dashboard-preview'
+    : '/client/dashboard'
   const overviewResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientOverview({
@@ -125,7 +128,11 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
           </div>
           <aside className="grid gap-6">
             <ProgressSummaryBlock projects={overview.progressSummary} />
-            <DashboardOverviewBlock clientId={overview.client.id} dashboard={overview.dashboard} />
+            <DashboardOverviewBlock
+              clientId={overview.client.id}
+              dashboard={overview.dashboard}
+              hrefBase={dashboardHrefBase}
+            />
             <LatestMonthlySummaryBlock clientId={overview.client.id} report={overview.latestReport} />
           </aside>
         </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   Badge,
@@ -15,11 +16,18 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  Input,
+  Label,
   OverlayBody,
   OverlayFooter,
   OverlayHeader,
   PrimitiveCard as Card,
+  RadixSelect as Select,
   Separator,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   StatusBadge as SharedStatusBadge,
   Table,
   TableBody,
@@ -30,13 +38,14 @@ import {
   Textarea,
 } from '@/shared/ui'
 
-import { updateAssignedTask } from '../../../domain/services/teamTaskService'
+import { createTask, updateWorkspaceTask } from '../../../domain/services/taskWorkspaceService'
 import { getTaskStatusSelectionOptions } from '../../../domain/policies/taskPolicy'
+import { USER_ROLES } from '../../../entities/profile'
 import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
-import { loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
+import { getTeamTaskFilterPath, loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
 
 const statusIconClasses = {
   amber: 'text-text-quaternary',
@@ -85,6 +94,14 @@ function StatusInlineValue({ status }) {
 
 const taskFieldTextareaClass = 'resize-none border-transparent bg-control px-component py-control text-sm leading-6 shadow-none hover:bg-control-hover focus-visible:border-ring focus-visible:bg-block focus-visible:ring-2 focus-visible:ring-ring/25'
 
+function createUuid() {
+  return crypto.randomUUID()
+}
+
+function getTaskWorkspacePath(viewer) {
+  return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
+}
+
 function formatTaskDueDate(date) {
   if (!date) {
     return 'No due date'
@@ -122,9 +139,9 @@ function VisibilityBadge({ visibility }) {
       className={isClientVisible
         ? 'border-action/20 bg-action-muted text-action'
         : 'border-control-border bg-control text-text-secondary'}
+      icon={<Icon name={isClientVisible ? 'user' : 'lock'} size={14} />}
       variant="outline"
     >
-      <Icon name={isClientVisible ? 'user' : 'lock'} size={12} />
       {isClientVisible ? 'Client visible' : 'Internal'}
     </Badge>
   )
@@ -485,10 +502,244 @@ function isTaskDraftChanged(task, draft) {
   return Object.keys(persistedDraft).some((key) => persistedDraft[key] !== draft[key])
 }
 
+function createBlankTaskDraft({ clients, routeClientId, viewer }) {
+  const clientId = clients.some((client) => client.id === routeClientId)
+    ? routeClientId
+    : clients[0]?.id ?? ''
+
+  return {
+    assigneeName: viewer.role === USER_ROLES.AGENCY_TEAM ? viewer.name : '',
+    clientId,
+    clientSafeSummary: '',
+    description: '',
+    dueDate: '',
+    internalNote: '',
+    projectId: '',
+    status: TASK_STATUSES.TODO,
+    title: '',
+    visibility: VISIBILITY.INTERNAL,
+  }
+}
+
+function FieldError({ children }) {
+  if (!children) {
+    return null
+  }
+
+  return <p className="text-xs font-medium text-destructive">{children}</p>
+}
+
+function CreateTaskDialog({
+  error,
+  filters,
+  isOpen,
+  onChange,
+  onClose,
+  onSubmit,
+  saveState,
+  taskData,
+  taskDraft,
+  viewer,
+}) {
+  const selectedClientProjects = taskData.projects
+    .filter((project) => project.client_id === taskDraft.clientId)
+  const canCreateClientVisibleTasks = taskData.canCreateClientVisibleTasks
+
+  return (
+    <Dialog onOpenChange={(open) => {
+      if (!open) {
+        onClose()
+      }
+    }} open={isOpen}>
+      <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
+        <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={onSubmit}>
+          <OverlayHeader className="pr-control-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-text-primary">New Task</DialogTitle>
+              <DialogDescription className="sr-only">
+                Create a new task.
+              </DialogDescription>
+            </DialogHeader>
+          </OverlayHeader>
+          <OverlayBody className="min-h-0 overflow-y-auto p-panel">
+            <div className="mx-auto grid max-w-form gap-panel">
+              <label className="grid gap-2">
+                <Label htmlFor="task-title">Task title</Label>
+                <Input
+                  autoFocus
+                  id="task-title"
+                  onChange={(event) => onChange({ ...taskDraft, title: event.target.value })}
+                  placeholder="e.g. QA new landing page tracking"
+                  required
+                  value={taskDraft.title}
+                />
+              </label>
+
+              <div className="grid gap-component sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <Label>Client</Label>
+                  <Select
+                    onValueChange={(clientId) => onChange({
+                      ...taskDraft,
+                      clientId,
+                      projectId: '',
+                    })}
+                    value={taskDraft.clientId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taskData.clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+
+                <label className="grid gap-2">
+                  <Label>Project</Label>
+                  <Select
+                    onValueChange={(projectId) => onChange({
+                      ...taskDraft,
+                      projectId: projectId === 'none' ? '' : projectId,
+                    })}
+                    value={taskDraft.projectId || 'none'}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No project</SelectItem>
+                      {selectedClientProjects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+              </div>
+
+              <div className="grid gap-component sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <Label>Assignee</Label>
+                  <Input
+                    disabled={viewer.role === USER_ROLES.AGENCY_TEAM}
+                    onChange={(event) => onChange({ ...taskDraft, assigneeName: event.target.value })}
+                    placeholder="Unassigned"
+                    value={taskDraft.assigneeName}
+                  />
+                </label>
+
+                <label className="grid gap-2">
+                  <Label htmlFor="task-due-date">Due date</Label>
+                  <Input
+                    id="task-due-date"
+                    onChange={(event) => onChange({ ...taskDraft, dueDate: event.target.value })}
+                    type="date"
+                    value={taskDraft.dueDate}
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-component sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <Label>Status</Label>
+                  <Select
+                    onValueChange={(status) => onChange({ ...taskDraft, status })}
+                    value={taskDraft.status}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(TASK_STATUSES).map((status) => (
+                        <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+
+                <label className="grid gap-2">
+                  <Label>Visibility</Label>
+                  {canCreateClientVisibleTasks ? (
+                    <Select
+                      onValueChange={(visibility) => onChange({ ...taskDraft, visibility })}
+                      value={taskDraft.visibility}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
+                        <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex h-target items-center gap-2 rounded-control bg-control px-component text-sm text-text-secondary">
+                      <Icon name="lock" size={15} />
+                      Internal
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              <label className="grid gap-2">
+                <Label htmlFor="task-description">Description</Label>
+                <Textarea
+                  className={`${taskFieldTextareaClass} min-h-24`}
+                  id="task-description"
+                  onChange={(event) => onChange({ ...taskDraft, description: event.target.value })}
+                  placeholder="Context for the person doing the work."
+                  value={taskDraft.description}
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <Label htmlFor="task-internal-note">Internal note</Label>
+                <Textarea
+                  className={`${taskFieldTextareaClass} min-h-24`}
+                  id="task-internal-note"
+                  onChange={(event) => onChange({ ...taskDraft, internalNote: event.target.value })}
+                  placeholder="Private agency context."
+                  value={taskDraft.internalNote}
+                />
+              </label>
+
+              {filters.visibility === VISIBILITY.CLIENT_VISIBLE && !canCreateClientVisibleTasks ? (
+                <p className="rounded-control bg-control px-component py-control text-sm text-text-secondary">
+                  Team-created tasks are saved as internal and can be made client-visible by an admin.
+                </p>
+              ) : null}
+            </div>
+          </OverlayBody>
+          <OverlayFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-h-5 text-sm">
+              <FieldError>{error}</FieldError>
+              {!error && saveState ? <span className="text-text-muted">{saveState}</span> : null}
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button onClick={onClose} size="lg" type="button" variant="outline">
+                Cancel
+              </Button>
+              <Button className="bg-action text-action-foreground hover:bg-action-hover" size="lg" type="submit">
+                <Icon name="plus" size={15} />
+                Create Task
+              </Button>
+            </div>
+          </OverlayFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function TeamTasksPage({ routeParams = {}, runtime }) {
   const toast = useToast()
+  const navigate = useNavigate()
   const [reloadTick, setReloadTick] = useState(0)
   const filters = useMemo(() => normalizeTeamTaskFilters(routeParams), [routeParams])
+  const basePath = getTaskWorkspacePath(runtime.viewer)
+  const isCreateTaskOpen = routeParams.create === '1'
   const taskData = useMemo(() => {
     void reloadTick
     return loadTeamTasks(filters, runtime)
@@ -499,9 +750,16 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
     [selectedTaskId, taskData.tasks],
   )
   const [taskDraft, setTaskDraft] = useState(() => createTaskDraft(selectedTask))
+  const [taskCreationDraft, setTaskCreationDraft] = useState(() => createBlankTaskDraft({
+    clients: taskData.clients,
+    routeClientId: filters.clientId,
+    viewer: runtime.viewer,
+  }))
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false)
   const [error, setError] = useState('')
   const [saveState, setSaveState] = useState('')
+  const [createTaskError, setCreateTaskError] = useState('')
+  const [createTaskSaveState, setCreateTaskSaveState] = useState('')
   const isTaskDetailsDirty = isTaskDraftChanged(selectedTask, taskDraft)
 
   function selectTask(taskId) {
@@ -522,7 +780,7 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         return
       }
 
-      updateAssignedTask({
+      updateWorkspaceTask({
         input: taskDraft,
         repositories: runtime.repositories,
         taskId: selectedTask.id,
@@ -537,6 +795,45 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
       setSaveState('')
       toast.error('Task update failed', caughtError.message)
     }
+  }
+
+  function closeCreateTask() {
+    setCreateTaskError('')
+    setCreateTaskSaveState('')
+    navigate(getTeamTaskFilterPath(filters, basePath), { replace: true })
+  }
+
+  function saveNewTask(event) {
+    event.preventDefault()
+    setCreateTaskError('')
+    setCreateTaskSaveState('Creating task...')
+
+    runtime.dataClient.write((repositories) => createTask({
+      idGenerator: createUuid,
+      input: taskCreationDraft,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((createdTask) => {
+        setCreateTaskSaveState('')
+        setReloadTick((currentTick) => currentTick + 1)
+        setSelectedTaskId(createdTask.id)
+        setTaskDraft(createTaskDraft({
+          assigneeName: createdTask.assignee_name,
+          blockerNote: createdTask.blocker_note ?? '',
+          clientSafeSummary: createdTask.client_safe_summary ?? '',
+          internalNote: createdTask.internal_note ?? '',
+          status: createdTask.status,
+          visibility: createdTask.visibility,
+        }))
+        toast.success('Task created', `${createdTask.title} was added to Tasks.`)
+        closeCreateTask()
+      })
+      .catch((caughtError) => {
+        setCreateTaskError(caughtError.message)
+        setCreateTaskSaveState('')
+        toast.error('Task was not created', caughtError.message)
+      })
   }
 
   const hasFilters = Object.entries(filters).some(([key, value]) => key !== 'scope' && value !== 'all')
@@ -570,6 +867,22 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         onSave={saveTaskUpdate}
         saveState={saveState}
         task={selectedTask}
+      />
+      <CreateTaskDialog
+        error={createTaskError}
+        filters={filters}
+        isOpen={isCreateTaskOpen}
+        onChange={(nextDraft) => {
+          setTaskCreationDraft(nextDraft)
+          setCreateTaskError('')
+          setCreateTaskSaveState('')
+        }}
+        onClose={closeCreateTask}
+        onSubmit={saveNewTask}
+        saveState={createTaskSaveState}
+        taskData={taskData}
+        taskDraft={taskCreationDraft}
+        viewer={runtime.viewer}
       />
     </div>
   )

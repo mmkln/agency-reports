@@ -14,6 +14,8 @@ import { AdminClientActivityPage } from '../../pages/admin/client-activity/Admin
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
+import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
@@ -109,6 +111,28 @@ export const routes = [
     subtitle: 'Create clients and open their client-facing status hub.',
   },
   {
+    component: TeamTasksPage,
+    header: TeamTasksPageHeader,
+    href: '/admin/tasks',
+    iconName: 'checkCircle2',
+    id: 'admin-tasks',
+    label: 'Tasks',
+    pageTitle: 'Tasks',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    subtitle: 'Create and manage work across client projects.',
+  },
+  {
+    component: AdminDashboardLinksPage,
+    header: AdminDashboardLinksPageHeader,
+    href: '/admin/dashboard-links',
+    iconName: 'layoutDashboard',
+    id: 'admin-dashboard-links',
+    label: 'Dashboards',
+    pageTitle: 'Dashboard Links',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    subtitle: 'Manage external dashboard embeds and links for clients.',
+  },
+  {
     component: ClientOverviewPage,
     header: ClientOverviewPageHeader,
     href: '/admin/client-preview',
@@ -119,6 +143,18 @@ export const routes = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
     subtitle: 'Admin preview of the client-facing portal.',
+  },
+  {
+    component: ClientDashboardPage,
+    header: ClientDashboardPageHeader,
+    href: '/admin/client-dashboard-preview',
+    iconName: 'layoutDashboard',
+    id: 'admin-client-dashboard-preview',
+    label: 'Dashboard Preview',
+    pageTitle: 'Dashboard Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    subtitle: 'Admin preview of the client-facing dashboard surface.',
   },
   {
     component: AdminClientAccessPage,

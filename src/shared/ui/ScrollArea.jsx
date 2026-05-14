@@ -1,10 +1,14 @@
 import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
+import { useInspectorId } from './inspectorId'
 
-function ScrollArea({ children, className, ...props }) {
+function ScrollArea({ children, className, id, ...props }) {
+  const inspectorId = useInspectorId('ScrollArea', id)
+
   return (
     <ScrollAreaPrimitive.Root
+      id={inspectorId}
       className={cn('relative overflow-hidden', className)}
       data-slot="scroll-area"
       {...props}
@@ -18,12 +22,15 @@ function ScrollArea({ children, className, ...props }) {
       <ScrollBar />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
-  )
+)
 }
 
-function ScrollBar({ className, orientation = 'vertical', ...props }) {
+function ScrollBar({ className, id, orientation = 'vertical', ...props }) {
+  const inspectorId = useInspectorId('ScrollBar', id)
+
   return (
     <ScrollAreaPrimitive.ScrollAreaScrollbar
+      id={inspectorId}
       className={cn(
         'flex touch-none select-none transition-colors duration-motion-fast ease-motion-standard',
         orientation === 'vertical'

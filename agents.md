@@ -36,10 +36,12 @@
 - Do not build parallel base components when an existing primitive can express the same interaction.
 - Avoid borders when spacing, background, typography, or state color can communicate structure clearly; too many borders make dense admin UI feel overloaded.
 - Keep primitive defaults aligned through shared tokens and component defaults instead of repeated page-level corrective classes.
+- Let shared primitives own icon/text alignment, size, and line-height; pass icons through the primitive API instead of mixing SVG nodes into text children.
 - Keep dropdown list spacing in the primitive itself: select/dropdown content should use consistent popper placement, viewport padding, and item padding.
 - Use the project icon registry for navigation and common actions instead of inline SVG or text stand-ins.
 - Define reusable entity/status labels, tones, and icons in entity metadata and render them through the project icon registry, so status visuals stay consistent across tables, headers, badges, and editors.
 - Use established branding, shell, header, and layout components instead of recreating them inside pages.
+- Give every shared UI component root a dev-inspector `id` that starts with the component name, using `useInspectorId('ComponentName', id)` so repeated instances stay unique while caller-provided ids remain respected.
 - Keep section header icons unframed by default and align header title, icon, and actions on the same centerline.
 - Render status option groups as compact controls with clean, unframed icons, restrained active states, and clear selected markers; omit repeated per-option descriptions when height is constrained.
 - Hide creation controls when a hard item limit is already reached; do not leave disabled input rows visible unless they explain an actionable state.
@@ -48,6 +50,8 @@
 ## Page Layout
 
 - Put page-level entity context, primary status, filters, and main actions in the route header when they control the whole screen.
+- In editors with auto-save, keep the action bar compact and trust-based: visible save status, preview menu, one primary publish/submit action, and secondary/destructive actions in overflow.
+- Separate client-visible/front-stage content from internal/back-stage agency workflow instead of mixing both audiences in one undifferentiated card stack.
 - Avoid redundant local headers or top cards that repeat information already owned by the page header.
 - Keep filters close to the page-level controls they affect, with accessible hidden headings when the visual title is intentionally omitted.
 - Keep page-header status metadata inline and unboxed; do not put status labels inside bordered containers.
@@ -59,9 +63,11 @@
 ## Forms And Inputs
 
 - Keep field rendering, upload behavior, overlay content, table rows, and native input details in feature/shared components or hooks rather than large page components.
+- Use editable card lists instead of dense tables when each row contains nested controls, visibility toggles, long descriptions, and per-item actions.
 - Use native HTML constraints for immediate field feedback, while keeping business validation and normalization in domain services.
 - Show field-level validation next to the affected input for admin CRUD forms; keep page-level errors for save/load failures, not routine input mistakes.
 - Gate destructive admin actions behind the shared confirmation dialog and phrase the consequence in terms of draft/published/client access impact.
+- Keep confirmation dialogs text-first and consistent: no icons in dialog action buttons, no decorative decision icons, shared primary/destructive tone mapping only.
 - Keep create/edit modals focused on fields and decisions required before submission; move explanatory future-state guidance into post-success states or follow-up actions.
 - Auto-derived editable values may auto-fill until the user edits them; after that, preserve user control while continuing validation.
 - Put file parsing, preview, size/type checks, and `FileReader` behavior in dedicated inputs or feature hooks.
