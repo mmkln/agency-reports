@@ -110,6 +110,8 @@ test('agency admin can publish a monthly report and client can read it in the ar
   const archive = page.getByRole('complementary').filter({ hasText: 'Report archive' })
   const archiveList = page.getByTestId('report-archive-list')
   await expect(archiveList.getByText(reportTitle)).toBeVisible()
+  await expect(archiveList.getByText(summary)).toBeVisible()
+  await expect(archiveList.getByRole('link', { name: 'Read' }).first()).toBeVisible()
   await archive.getByLabel('Search reports').fill('April')
   await expect(archiveList.getByText('April 2026 Monthly Summary')).toBeVisible()
   await expect(archiveList.getByText(reportTitle)).toHaveCount(0)
@@ -148,6 +150,7 @@ test('client report archive hides draft reports', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText('Preview only. This report is not visible to the client.')).toBeVisible()
+  await expect(page.getByText('Hidden from client')).toBeVisible()
 
   await signInAsClient(page)
   await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)

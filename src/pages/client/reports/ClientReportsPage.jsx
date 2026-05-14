@@ -123,7 +123,9 @@ function ReportUnavailableState({ clientId, latestReport }) {
               </Link>
             </Button>
           ) : null}
-          description="This report is unavailable, unpublished, or no longer part of your client archive."
+          description={latestReport
+            ? 'This report is unavailable, unpublished, or no longer part of your client archive. The latest published report is still available.'
+            : 'This report is unavailable, unpublished, or no longer part of your client archive.'}
           iconName="fileText"
           title="Report unavailable"
         />
@@ -373,6 +375,74 @@ function LatestReportSummary({ clientId, report, selectedReport }) {
   )
 }
 
+function ReportLinkBadge({ href, iconName, label }) {
+  if (!href) {
+    return null
+  }
+
+  return (
+    <a
+      className="inline-flex h-7 items-center gap-1 rounded-control border border-control-border bg-block px-2 text-label font-medium text-text-secondary no-underline transition-colors hover:bg-control-hover hover:text-text-primary"
+      href={href}
+      onClick={(event) => event.stopPropagation()}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <Icon name={iconName} size={13} />
+      {label}
+    </a>
+  )
+}
+
+function ReportArchiveItem({ clientId, isSelected, report }) {
+  return (
+    <article
+      className={isSelected
+        ? 'rounded-block border border-brand bg-action-muted p-4 text-sm shadow-none'
+        : 'rounded-block border border-control-border bg-block p-4 text-sm transition-colors hover:bg-surface-subtle'}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link
+            aria-current={isSelected ? 'page' : undefined}
+            className="line-clamp-2 font-semibold text-text-primary no-underline hover:text-action"
+            to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
+          >
+            {report.title}
+          </Link>
+          <p className="mt-1 text-xs text-text-muted">{formatPeriod(report)}</p>
+        </div>
+        <StatusBadge meta={report.statusMeta} />
+      </div>
+
+      {report.summary ? (
+        <p className="mt-3 line-clamp-3 text-xs leading-5 text-text-secondary">{report.summary}</p>
+      ) : (
+        <p className="mt-3 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+          No summary preview available.
+        </p>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {!report.isClientVisible ? (
+          <Badge className="border-warning/20 bg-warning/10 text-warning-foreground" variant="outline">
+            Hidden from client
+          </Badge>
+        ) : null}
+        <Link
+          className="inline-flex h-7 items-center gap-1 rounded-control bg-action px-2 text-label font-medium text-action-foreground no-underline transition-colors hover:bg-action-hover"
+          to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
+        >
+          Read
+          <Icon name="arrowUpRight" size={12} />
+        </Link>
+        <ReportLinkBadge href={report.dashboardUrl} iconName="layoutDashboard" label="Dashboard" />
+        <ReportLinkBadge href={report.pdfUrl} iconName="fileText" label="PDF" />
+      </div>
+    </article>
+  )
+}
+
 function EmptyFilteredArchiveState({ onReset }) {
   return (
     <div className="rounded-block border border-dashed border-control-border bg-block-subtle p-4">
@@ -491,26 +561,17 @@ function ReportArchiveList({
         />
 
         {reports.length > 0 ? (
-          <div className="grid gap-2" data-testid="report-archive-list">
+          <div className="grid gap-3" data-testid="report-archive-list">
             {reports.map((report) => {
               const isSelected = selectedReport?.id === report.id
 
               return (
-                <Link
-                  className={isSelected
-                    ? 'rounded-block border border-brand bg-action-muted px-4 py-3 text-sm shadow-none'
-                    : 'rounded-block border border-control-border bg-block px-4 py-3 text-sm transition-colors hover:bg-surface-subtle'}
+                <ReportArchiveItem
+                  clientId={clientId}
+                  isSelected={isSelected}
                   key={report.id}
-                  to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
-                >
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold text-text-primary">{report.title}</span>
-                      <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
-                    </span>
-                    <StatusBadge meta={report.statusMeta} />
-                  </span>
-                </Link>
+                  report={report}
+                />
               )
             })}
           </div>
