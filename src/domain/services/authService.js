@@ -159,16 +159,16 @@ export function authenticateWithEmail({
 
 export function getHomeHrefForViewer(viewer) {
   if (!viewer) {
-    return '#login'
+    return '/login'
   }
 
   if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
-    return '#admin-clients'
+    return '/admin/clients'
   }
 
   if (viewer.role === USER_ROLES.AGENCY_TEAM) {
-    return '#team-tasks'
+    return '/team/tasks'
   }
 
-  return `#client-overview${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`
+  return `/client/overview${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`
 }

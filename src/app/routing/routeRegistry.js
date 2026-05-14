@@ -9,6 +9,8 @@ import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPa
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
+import { AdminClientActivityPage } from '../../pages/admin/client-activity/AdminClientActivityPage'
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
@@ -30,7 +32,7 @@ const MarketingReportsPage = lazyNamed(() => import('../../pages/legacy/marketin
 export const routes = [
   {
     component: LandingPage,
-    href: '#landing',
+    href: '/',
     id: 'landing',
     label: 'Landing',
     layout: 'public',
@@ -38,7 +40,7 @@ export const routes = [
   },
   {
     component: AcceptInvitePage,
-    href: '#accept-invite',
+    href: '/accept-invite',
     id: 'accept-invite',
     label: 'Accept Invite',
     layout: 'auth',
@@ -46,7 +48,7 @@ export const routes = [
   },
   {
     component: LoginPage,
-    href: '#login',
+    href: '/login',
     id: 'login',
     label: 'Login',
     layout: 'auth',
@@ -54,7 +56,7 @@ export const routes = [
   },
   {
     component: AccessDeniedPage,
-    href: '#access-denied',
+    href: '/access-denied',
     id: 'access-denied',
     label: 'Access Denied',
     layout: 'auth',
@@ -63,7 +65,7 @@ export const routes = [
   {
     component: ClientOverviewPage,
     header: ClientOverviewPageHeader,
-    href: '#client-overview',
+    href: '/client/overview',
     iconName: 'layoutDashboard',
     id: 'client-overview',
     label: 'Overview',
@@ -74,7 +76,7 @@ export const routes = [
   {
     component: ClientDashboardPage,
     header: ClientDashboardPageHeader,
-    href: '#client-dashboard',
+    href: '/client/dashboard',
     iconName: 'layoutDashboard',
     id: 'client-dashboard',
     label: 'Dashboard',
@@ -86,7 +88,7 @@ export const routes = [
   {
     component: ClientReportsPage,
     header: ClientReportsPageHeader,
-    href: '#client-reports',
+    href: '/client/reports',
     iconName: 'fileText',
     id: 'client-reports',
     label: 'Reports',
@@ -98,7 +100,7 @@ export const routes = [
   {
     component: AdminClientsPage,
     header: AdminClientsPageHeader,
-    href: '#admin-clients',
+    href: '/admin/clients',
     iconName: 'users',
     id: 'admin-clients',
     label: 'Clients',
@@ -109,7 +111,7 @@ export const routes = [
   {
     component: ClientOverviewPage,
     header: ClientOverviewPageHeader,
-    href: '#admin-client-preview',
+    href: '/admin/client-preview',
     iconName: 'layoutDashboard',
     id: 'admin-client-preview',
     label: 'Client Preview',
@@ -119,9 +121,35 @@ export const routes = [
     subtitle: 'Admin preview of the client-facing portal.',
   },
   {
+    component: AdminClientAccessPage,
+    fullBleedContent: true,
+    href: '/admin/client-access',
+    hidePageHeader: true,
+    iconName: 'users',
+    id: 'admin-client-access',
+    label: 'Access',
+    pageTitle: 'Client Access',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    subtitle: 'Manage client portal members and invitations.',
+  },
+  {
+    component: AdminClientActivityPage,
+    fullBleedContent: true,
+    href: '/admin/client-activity',
+    hidePageHeader: true,
+    iconName: 'clock',
+    id: 'admin-client-activity',
+    label: 'Activity',
+    pageTitle: 'Client Activity',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    subtitle: 'Review recent client-facing portal activity.',
+  },
+  {
     component: AdminClientOverviewPage,
     fullBleedContent: true,
-    href: '#admin-client-overview',
+    href: '/admin/client-overview',
     hidePageHeader: true,
     iconName: 'fileText',
     id: 'admin-client-overview',
@@ -134,7 +162,7 @@ export const routes = [
   {
     component: TeamTasksPage,
     header: TeamTasksPageHeader,
-    href: '#team-tasks',
+    href: '/team/tasks',
     iconName: 'checkCircle2',
     id: 'team-tasks',
     label: 'Team Tasks',
@@ -144,7 +172,7 @@ export const routes = [
   },
   {
     component: BuildBoardPage,
-    href: '#legacy-build-board',
+    href: '/legacy/build-board',
     id: 'legacy-build-board',
     label: 'Legacy Buildout',
     pageTitle: 'Legacy Buildout',
@@ -152,7 +180,7 @@ export const routes = [
   },
   {
     component: CrmDashboardPage,
-    href: '#legacy-crm-dashboard',
+    href: '/legacy/crm-dashboard',
     id: 'legacy-crm-dashboard',
     label: 'Legacy CRM Dashboard',
     pageTitle: 'Legacy CRM Dashboard',
@@ -160,7 +188,7 @@ export const routes = [
   },
   {
     component: MarketingProcessPage,
-    href: '#legacy-marketing-process',
+    href: '/legacy/marketing-process',
     id: 'legacy-marketing-process',
     label: 'Legacy Marketing Processes',
     pageTitle: 'Legacy Marketing Processes',
@@ -168,7 +196,7 @@ export const routes = [
   },
   {
     component: DailyActivitiesPage,
-    href: '#legacy-daily-activities',
+    href: '/legacy/daily-activities',
     id: 'legacy-daily-activities',
     label: 'Legacy Daily Activities',
     pageTitle: 'Legacy Daily Activities',
@@ -176,7 +204,7 @@ export const routes = [
   },
   {
     component: MarketingReportsPage,
-    href: '#legacy-marketing-reports',
+    href: '/legacy/marketing-reports',
     id: 'legacy-marketing-reports',
     label: 'Legacy Marketing Reports',
     pageTitle: 'Legacy Marketing Reports',

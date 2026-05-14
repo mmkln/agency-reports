@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card, statusToneClasses } from '@/shared/ui'
 
@@ -11,6 +12,7 @@ import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../..
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
+import { useAuth } from '../../../app/providers/auth/useAuth'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -18,7 +20,7 @@ function createUuid() {
 
 function getInviteStateMessage(invitationContext, status) {
   if (!invitationContext) {
-    return 'Add a valid invite token to the URL. Example: #accept-invite?token=invite-token'
+    return 'Add a valid invite token to the URL. Example: /accept-invite?token=invite-token'
   }
 
   if (status === CLIENT_INVITATION_STATUSES.ACCEPTED) {
@@ -37,8 +39,14 @@ function getInviteStateMessage(invitationContext, status) {
 }
 
 export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
+  const auth = useAuth()
+  const resolvedRuntime = runtime ?? auth.runtime
+  const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const toast = useToast()
-  const token = routeParams.token ?? ''
+  const resolvedRouteParams = routeParams ?? Object.fromEntries(searchParams.entries())
+  const token = resolvedRouteParams.token ?? ''
   const invitationContext = useMemo(() => {
     if (!token) {
       return null
@@ -46,13 +54,13 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
 
     try {
       return getClientInvitationByToken({
-        repositories: runtime.repositories,
+        repositories: resolvedRuntime.repositories,
         token,
       })
     } catch {
       return null
     }
-  }, [runtime.repositories, token])
+  }, [resolvedRuntime.repositories, token])
   const [email, setEmail] = useState(invitationContext?.invitation.email ?? '')
   const [name, setName] = useState(invitationContext?.invitation.name ?? '')
   const [error, setError] = useState('')
@@ -78,13 +86,13 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
         email,
         idGenerator: createUuid,
         name,
-        repositories: runtime.repositories,
+        repositories: resolvedRuntime.repositories,
         token,
       })
 
-      onAuthChange?.()
+      resolvedOnAuthChange?.()
       toast.success('Invitation accepted', `You now have access to ${result.client.name}.`)
-      window.location.hash = `client-overview?clientId=${result.client.id}`
+      navigate(`/client/overview?clientId=${result.client.id}`, { replace: true })
     } catch (caughtError) {
       setError(caughtError.message)
       toast.error('Invite was not accepted', caughtError.message)
@@ -96,7 +104,7 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
         <Card className="w-full max-w-form bg-material-vibrant shadow-premium backdrop-blur-2xl">
           <CardContent className="p-8">
-            <BrandLogo href="#landing" variant="static" />
+            <BrandLogo href={import.meta.env.BASE_URL} variant="static" />
 
             <div className="mt-10">
               <p className="text-sm font-semibold text-brand">Client portal invite</p>
@@ -158,9 +166,9 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
 
             <p className="mt-6 text-center text-sm text-text-secondary">
               Already have access?{' '}
-              <a className="font-medium text-brand no-underline hover:text-brand/80" href="#login">
+              <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/login">
                 Sign in
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>

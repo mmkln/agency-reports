@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/agency-reports/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/agency-reports/' : '/',
   plugins: [tailwindcss(), react()],
   resolve: {
     alias: {
@@ -18,4 +18,4 @@ export default defineConfig({
   server: {
     historyApiFallback: true,
   },
-})
+}))

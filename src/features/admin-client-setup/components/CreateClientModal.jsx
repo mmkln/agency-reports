@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Button,
@@ -370,10 +371,10 @@ export function CreateClientModal({
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <a href={`#admin-client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</a>
+                    <Link to={`/admin/client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <a href={`#accept-invite?token=${lastCreatedClient.invitation.token}`}>Open invite</a>
+                    <Link to={`/accept-invite?token=${lastCreatedClient.invitation.token}`}>Open invite</Link>
                   </Button>
                 </div>
               </div>

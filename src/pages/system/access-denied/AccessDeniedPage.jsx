@@ -1,11 +1,15 @@
 import { Button, CardContent, PrimitiveCard as Card } from '@/shared/ui'
+import { Link } from 'react-router-dom'
 
 import { getHomeHrefForViewer } from '../../../domain/services/authService'
 import { Icon } from '../../../shared/icons'
 import { BrandLogo } from '../../../shared/ui'
+import { useAuth } from '../../../app/providers/auth/useAuth'
 
 export function AccessDeniedPage({ runtime }) {
-  const homeHref = getHomeHrefForViewer(runtime.viewer)
+  const auth = useAuth()
+  const resolvedRuntime = runtime ?? auth.runtime
+  const homeHref = getHomeHrefForViewer(resolvedRuntime.viewer)
 
   return (
     <main className="min-h-screen bg-surface-subtle px-4 py-10 text-text-primary sm:px-6 lg:px-8">
@@ -26,7 +30,7 @@ export function AccessDeniedPage({ runtime }) {
               Check the link or return to your portal home.
             </p>
             <Button asChild className="mt-7">
-              <a href={homeHref}>Return to home</a>
+              <Link to={homeHref}>Return to home</Link>
             </Button>
           </CardContent>
         </Card>

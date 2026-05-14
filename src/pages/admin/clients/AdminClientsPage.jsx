@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { deleteAdminClient, listAdminClients } from '../../../domain/services/adminClientService'
 import {
@@ -10,10 +11,6 @@ import {
 import { useCreateClientForm, useEditClientForm } from '../../../features/admin-client-setup/model'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
-
-function closeCreateClientModal() {
-  window.location.hash = 'admin-clients'
-}
 
 function createUuid() {
   return crypto.randomUUID()
@@ -50,6 +47,7 @@ function EditClientModalController({
 export function AdminClientsPage({ routeParams = {}, runtime }) {
   const isCreateModalOpen = routeParams.newClient === 'true'
   const [clientPendingEdit, setClientPendingEdit] = useState(null)
+  const navigate = useNavigate()
   const toast = useToast()
   const clientsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-clients`,
@@ -65,7 +63,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
     onCreated: (client) => {
       void clientsResource.reload()
       toast.success('Client created', `${client.name} is ready in the admin workspace.`)
-      closeCreateClientModal()
+      navigate('/admin/clients', { replace: true })
     },
     repositories: runtime.repositories,
     viewer: runtime.viewer,
@@ -107,7 +105,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
         form={createClientForm.form}
         isOpen={isCreateModalOpen}
         lastCreatedClient={createClientForm.lastCreatedClient}
-        onClose={closeCreateClientModal}
+        onClose={() => navigate('/admin/clients', { replace: true })}
         onSubmit={createClientForm.handleSubmit}
         onUpdateField={createClientForm.updateField}
         slugIssue={createClientForm.slugIssue}

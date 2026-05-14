@@ -1,9 +1,9 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { USER_ROLES } from '../../../entities/profile'
 import { getCurrentViewer, setAuthSession } from '../../../domain/services/authService'
 import { portalRepository } from '../repositories/portalRepository'
 import { createAsyncPortalDataClient } from '../repositories/createAsyncPortalDataClient'
-
-export const AuthContext = createContext(null)
+import { AuthContext } from './AuthContext'
 
 const portalDataClient = createAsyncPortalDataClient({
   repositories: portalRepository,
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
         .filter((client) => client.agency_id === viewer.agencyId)
         .map((client) => client.id)
       : []
-    const runtimeViewer = viewer?.role === 'AGENCY_TEAM'
+    const runtimeViewer = viewer?.role === USER_ROLES.AGENCY_TEAM
       ? {
           ...viewer,
           clientIds: [...new Set([...(viewer.clientIds ?? []), ...agencyClientIds])],
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
       : viewer
 
     return {
-      defaultClientId: runtimeViewer?.role === 'AGENCY_ADMIN'
+      defaultClientId: runtimeViewer?.role === USER_ROLES.AGENCY_ADMIN
         ? portalRepository.clients.list()[0]?.id ?? null
         : runtimeViewer?.clientId ?? runtimeViewer?.clientIds?.[0] ?? null,
       dataClient: portalDataClient,

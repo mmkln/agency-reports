@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Badge,
@@ -8,7 +9,6 @@ import {
   Checkbox,
   ConfirmationDialog,
   ContentToolbar,
-  FoundationPageHeader,
   Input,
   PageShell,
   PrimitiveCard as Card,
@@ -30,30 +30,14 @@ import {
 } from '@/shared/ui'
 
 import {
-  ACTIVITY_EVENT_TYPES,
-  listClientActivityEvents,
-} from '../../../domain/services/activityTrackingService'
-import {
   discardAdminClientOverviewDraft,
   getAdminClientOverviewEditor,
   publishAdminClientOverview,
   restoreAdminClientOverviewFromPublished,
   saveAdminClientOverview,
 } from '../../../domain/services/adminOverviewService'
-import {
-  cancelClientInvitation,
-  createClientInvitation,
-  listClientInvitations,
-} from '../../../domain/services/clientInviteService'
-import {
-  addClientMember,
-  listClientMembers,
-  removeClientMembership,
-  updateClientMembershipRole,
-} from '../../../domain/services/clientMembershipService'
+import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
 import { CLIENT_STATUSES, CLIENT_STATUS_META } from '../../../entities/client'
-import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../../entities/client-invitation'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES, NEEDED_ACTION_STATUS_META } from '../../../entities/needed-from-client'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../../entities/report'
@@ -125,8 +109,6 @@ const statusOptionStyles = {
   },
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 function createUuid() {
   return crypto.randomUUID()
 }
@@ -163,41 +145,6 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
-function StatusBadge({ status }) {
-  const meta = CLIENT_STATUS_META[status] ?? {
-    label: status,
-    tone: 'neutral',
-  }
-
-  return <SharedStatusBadge meta={meta} />
-}
-
-function FieldError({ children }) {
-  if (!children) {
-    return null
-  }
-
-  return (
-    <p className="text-xs font-medium text-destructive" role="alert">
-      {children}
-    </p>
-  )
-}
-
-function InlineEmptyState({ children, iconName = 'helpCircle', title }) {
-  return (
-    <div className="flex items-start gap-3 rounded-control border border-dashed border-control-border bg-surface-subtle px-3 py-4 text-sm text-text-muted">
-      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-block text-text-quaternary">
-        <Icon name={iconName} size={15} />
-      </span>
-      <div className="min-w-0">
-        <p className="font-semibold text-text-secondary">{title}</p>
-        <p className="mt-1 leading-5">{children}</p>
-      </div>
-    </div>
-  )
-}
-
 function EditorCard({ action, children, description, iconName, title }) {
   return (
     <Card className="gap-0 bg-block py-0 shadow-none">
@@ -217,32 +164,6 @@ function EditorCard({ action, children, description, iconName, title }) {
         {children}
       </CardContent>
     </Card>
-  )
-}
-
-function EditorPageHeader({
-  draft,
-  editor,
-}) {
-  return (
-    <header className="border-b border-separator bg-surface">
-      <PageShell className="gap-component px-4 py-6 sm:px-6 lg:px-8">
-        <FoundationPageHeader
-          actions={<StatusBadge status={draft.client.status} />}
-          className="lg:items-center"
-          eyebrow="Client overview editor"
-          title={editor.client.name}
-        />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
-          <a className="inline-flex items-center gap-1 text-link no-underline hover:text-link-hover" href={`#client-overview?clientId=${editor.client.id}`}>
-            agency.com/{editor.client.portalSlug}
-            <Icon name="arrowUpRight" size={12} />
-          </a>
-          <span>{editor.client.primaryContactName}</span>
-          <span>{editor.client.primaryContactEmail}</span>
-        </div>
-      </PageShell>
-    </header>
   )
 }
 
@@ -284,16 +205,16 @@ function EditorActionToolbar({
         <div className="flex flex-col gap-control lg:flex-row lg:items-center lg:justify-end">
           <div className="flex flex-wrap gap-control">
             <Button asChild size="sm" variant="outline">
-              <a href={`#admin-client-preview?clientId=${editor.client.id}`}>
+              <Link to={`/admin/client-preview?clientId=${editor.client.id}`}>
                 <Icon name="user" size={15} />
                 Preview Published
-              </a>
+              </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <a href={`#admin-client-preview?clientId=${editor.client.id}&preview=draft`}>
+              <Link to={`/admin/client-preview?clientId=${editor.client.id}&preview=draft`}>
                 <Icon name="fileText" size={15} />
                 Preview Draft
-              </a>
+              </Link>
             </Button>
           </div>
 
@@ -331,7 +252,7 @@ function AdminErrorState({ message }) {
           <h2 className="mt-5 text-xl font-bold text-text-primary">Client overview unavailable</h2>
           <p className="mt-2 text-sm leading-6 text-text-muted">{message}</p>
           <Button asChild className="mt-5" variant="outline">
-            <a href="#admin-clients">Back to clients</a>
+            <Link to="/admin/clients">Back to clients</Link>
           </Button>
         </div>
       </CardContent>
@@ -1066,595 +987,6 @@ function ClientLinksAssetsPanel({ draft, onUpdateDashboardLinks, onUpdateReports
   )
 }
 
-function AccessMembersPanel({ clientId, runtime }) {
-  const toast = useToast()
-  const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
-  const [members, setMembers] = useState(() => listClientMembers({
-    clientId,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }))
-  const [form, setForm] = useState({
-    email: '',
-    name: '',
-    role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-  })
-  const [error, setError] = useState('')
-  const trimmedMemberName = form.name.trim()
-  const trimmedMemberEmail = form.email.trim()
-  const memberNameIssue = form.name && trimmedMemberName.length < 2
-    ? 'Enter at least 2 characters.'
-    : ''
-  const memberEmailIssue = form.email && !EMAIL_PATTERN.test(trimmedMemberEmail)
-    ? 'Enter a valid email address.'
-    : ''
-
-  function refreshMembers() {
-    setMembers(listClientMembers({
-      clientId,
-      repositories: runtime.repositories,
-      viewer: runtime.viewer,
-    }))
-  }
-
-  function updateForm(fieldName, value) {
-    setError('')
-    setForm((currentForm) => ({
-      ...currentForm,
-      [fieldName]: value,
-    }))
-  }
-
-  function handleAddMember(event) {
-    event.preventDefault()
-
-    try {
-      const member = addClientMember({
-        clientId,
-        email: form.email,
-        idGenerator: createUuid,
-        name: form.name,
-        repositories: runtime.repositories,
-        role: form.role,
-        viewer: runtime.viewer,
-      })
-
-      setForm({
-        email: '',
-        name: '',
-        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-      })
-      refreshMembers()
-      toast.success('Member added', `${member.name} can now access this client portal.`)
-    } catch (caughtError) {
-      setError(caughtError.message)
-      toast.error('Member was not added', caughtError.message)
-    }
-  }
-
-  function handleRoleChange(member, role) {
-    try {
-      updateClientMembershipRole({
-        membershipId: member.id,
-        repositories: runtime.repositories,
-        role,
-        viewer: runtime.viewer,
-      })
-      refreshMembers()
-      toast.success('Role updated', `${member.name}'s access role was updated.`)
-    } catch (caughtError) {
-      toast.error('Role was not updated', caughtError.message)
-    }
-  }
-
-  function handleRemoveMember() {
-    if (!memberPendingRemoval) {
-      return
-    }
-
-    try {
-      removeClientMembership({
-        membershipId: memberPendingRemoval.id,
-        repositories: runtime.repositories,
-        viewer: runtime.viewer,
-      })
-      const removedMemberName = memberPendingRemoval.name
-      setMemberPendingRemoval(null)
-      refreshMembers()
-      toast.success('Member removed', `${removedMemberName} no longer has access to this client.`)
-    } catch (caughtError) {
-      toast.error('Member was not removed', caughtError.message)
-    }
-  }
-
-  return (
-    <EditorCard
-      description="Manage who can open this client portal."
-      iconName="users"
-      title="Access & Members"
-    >
-      <div className="grid gap-4">
-        {members.length > 0 ? (
-          <div className="grid gap-2">
-            {members.map((member) => (
-              <article className="rounded-control border border-control-border bg-block-subtle p-3" key={member.id}>
-                <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action-muted text-sm font-semibold text-action">
-                    {member.name.slice(0, 1).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-text-primary">{member.name}</p>
-                    <p className="truncate text-xs text-text-muted">{member.email}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Select
-                        onValueChange={(role) => handleRoleChange(member, role)}
-                        value={member.role}
-                      >
-                        <SelectTrigger className="h-8 w-[130px] bg-block text-xs">
-                          <SelectValue placeholder="Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        className="text-text-quaternary hover:text-destructive"
-                        onClick={() => setMemberPendingRemoval(member)}
-                        size="icon-sm"
-                        title="Remove member"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Icon name="close" size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <InlineEmptyState iconName="users" title="No client users yet">
-            Add a member or send an invitation before a client can open this portal.
-          </InlineEmptyState>
-        )}
-
-        <form className="grid gap-3 border-t border-separator pt-4" noValidate onSubmit={handleAddMember}>
-          <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Add client user</p>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Name</span>
-            <Input
-              aria-invalid={Boolean(memberNameIssue)}
-              minLength={2}
-              onChange={(event) => updateForm('name', event.target.value)}
-              placeholder="Sarah Johnson"
-              required
-              value={form.name}
-            />
-            <FieldError>{memberNameIssue}</FieldError>
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Email</span>
-            <Input
-              aria-invalid={Boolean(memberEmailIssue)}
-              inputMode="email"
-              onChange={(event) => updateForm('email', event.target.value)}
-              placeholder="sarah@client.com"
-              required
-              type="email"
-              value={form.email}
-            />
-            <FieldError>{memberEmailIssue}</FieldError>
-          </label>
-          <div className="flex gap-2">
-            <Select onValueChange={(role) => updateForm('role', role)} value={form.role}>
-              <SelectTrigger className="min-w-0 flex-1 bg-block">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button disabled={Boolean(memberNameIssue || memberEmailIssue)} type="submit">Add member</Button>
-          </div>
-          {error ? (
-            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </div>
-      <ConfirmationDialog
-        confirmLabel="Remove access"
-        description={
-          memberPendingRemoval
-            ? `${memberPendingRemoval.name} will lose access to this client portal immediately.`
-            : ''
-        }
-        onConfirm={handleRemoveMember}
-        onOpenChange={(open) => {
-          if (!open) {
-            setMemberPendingRemoval(null)
-          }
-        }}
-        open={Boolean(memberPendingRemoval)}
-        title="Remove member access?"
-        tone="destructive"
-      />
-    </EditorCard>
-  )
-}
-
-function buildInviteLink(token) {
-  if (typeof window === 'undefined') {
-    return `#accept-invite?token=${token}`
-  }
-
-  return `${window.location.origin}${window.location.pathname}#accept-invite?token=${token}`
-}
-
-function formatInvitationDate(date) {
-  if (!date) {
-    return 'No expiration'
-  }
-
-  return new Intl.DateTimeFormat('en', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date))
-}
-
-function InvitationsPanel({ clientId, runtime }) {
-  const toast = useToast()
-  const [invitationPendingCancel, setInvitationPendingCancel] = useState(null)
-  const [invitations, setInvitations] = useState(() => listClientInvitations({
-    clientId,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }))
-  const [form, setForm] = useState({
-    email: '',
-    expiresAt: '',
-    name: '',
-    role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-  })
-  const [error, setError] = useState('')
-  const trimmedInvitationEmail = form.email.trim()
-  const invitationEmailIssue = form.email && !EMAIL_PATTERN.test(trimmedInvitationEmail)
-    ? 'Enter a valid email address.'
-    : ''
-
-  function refreshInvitations() {
-    setInvitations(listClientInvitations({
-      clientId,
-      repositories: runtime.repositories,
-      viewer: runtime.viewer,
-    }))
-  }
-
-  function updateForm(fieldName, value) {
-    setError('')
-    setForm((currentForm) => ({
-      ...currentForm,
-      [fieldName]: value,
-    }))
-  }
-
-  async function copyInviteLink(invitation) {
-    const inviteLink = buildInviteLink(invitation.token)
-
-    try {
-      await navigator.clipboard.writeText(inviteLink)
-      toast.success('Invite link copied', invitation.email)
-    } catch {
-      toast.error('Invite link was not copied', inviteLink)
-    }
-  }
-
-  function handleCreateInvitation(event) {
-    event.preventDefault()
-
-    try {
-      const invitation = createClientInvitation({
-        clientId,
-        email: form.email,
-        expiresAt: form.expiresAt ? `${form.expiresAt}T23:59:59.999Z` : null,
-        idGenerator: createUuid,
-        name: form.name,
-        repositories: runtime.repositories,
-        role: form.role,
-        viewer: runtime.viewer,
-      })
-
-      setForm({
-        email: '',
-        expiresAt: '',
-        name: '',
-        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-      })
-      refreshInvitations()
-      toast.success('Invitation created', `${invitation.email} can accept the portal invite.`)
-    } catch (caughtError) {
-      setError(caughtError.message)
-      toast.error('Invitation was not created', caughtError.message)
-    }
-  }
-
-  function handleCancelInvitation() {
-    if (!invitationPendingCancel) {
-      return
-    }
-
-    try {
-      cancelClientInvitation({
-        invitationId: invitationPendingCancel.id,
-        repositories: runtime.repositories,
-        viewer: runtime.viewer,
-      })
-      const cancelledEmail = invitationPendingCancel.email
-      setInvitationPendingCancel(null)
-      refreshInvitations()
-      toast.success('Invitation cancelled', cancelledEmail)
-    } catch (caughtError) {
-      toast.error('Invitation was not cancelled', caughtError.message)
-    }
-  }
-
-  function handleResendPlaceholder(invitation) {
-    toast.info('Email delivery is not connected yet', `Copy the invite link for ${invitation.email}.`)
-  }
-
-  return (
-    <EditorCard
-      description="Create and track local client portal invitations."
-      iconName="mail"
-      title="Invitations"
-    >
-      <div className="grid gap-4">
-        {invitations.length > 0 ? (
-          <div className="grid gap-2">
-            {invitations.map((invitation) => {
-              const inviteLink = buildInviteLink(invitation.token)
-              const isPending = invitation.status === CLIENT_INVITATION_STATUSES.PENDING
-
-              return (
-                <article className="rounded-control border border-control-border bg-block-subtle p-3" key={invitation.id}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-text-primary">{invitation.email}</p>
-                      <p className="mt-0.5 truncate text-xs text-text-muted">
-                        {invitation.name || 'Unnamed invite'} · {invitation.role} · expires {formatInvitationDate(invitation.expires_at)}
-                      </p>
-                    </div>
-                    <SharedStatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
-                  </div>
-
-                  <p className="mt-3 truncate rounded-item border border-control-border bg-block px-2 py-1.5 font-mono text-[11px] text-text-muted">
-                    {inviteLink}
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button onClick={() => copyInviteLink(invitation)} size="sm" type="button" variant="outline">
-                      Copy link
-                    </Button>
-                    <Button asChild size="sm" type="button" variant="outline">
-                      <a href={`#accept-invite?token=${invitation.token}`}>
-                        Open
-                        <Icon name="arrowUpRight" size={13} />
-                      </a>
-                    </Button>
-                    {isPending ? (
-                      <>
-                        <Button onClick={() => handleResendPlaceholder(invitation)} size="sm" type="button" variant="ghost">
-                          Resend
-                        </Button>
-                        <Button
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setInvitationPendingCancel(invitation)}
-                          size="sm"
-                          type="button"
-                          variant="ghost"
-                        >
-                          Revoke invite
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        ) : (
-          <InlineEmptyState iconName="mail" title="No invitations yet">
-            Create an invitation to generate a local acceptance link. Email delivery remains simulated.
-          </InlineEmptyState>
-        )}
-
-        <form className="grid gap-3 border-t border-separator pt-4" noValidate onSubmit={handleCreateInvitation}>
-          <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Create invitation</p>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Name</span>
-            <Input
-              onChange={(event) => updateForm('name', event.target.value)}
-              placeholder="Sarah Johnson"
-              value={form.name}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Email</span>
-            <Input
-              aria-invalid={Boolean(invitationEmailIssue)}
-              inputMode="email"
-              onChange={(event) => updateForm('email', event.target.value)}
-              placeholder="sarah@client.com"
-              required
-              type="email"
-              value={form.email}
-            />
-            <FieldError>{invitationEmailIssue}</FieldError>
-          </label>
-          <div className="grid gap-2 sm:grid-cols-[1fr_150px]">
-            <Select onValueChange={(role) => updateForm('role', role)} value={form.role}>
-              <SelectTrigger className="bg-block">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              onChange={(event) => updateForm('expiresAt', event.target.value)}
-              type="date"
-              value={form.expiresAt}
-            />
-          </div>
-          <Button disabled={Boolean(invitationEmailIssue)} type="submit">Create invitation</Button>
-          {error ? (
-            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </div>
-      <ConfirmationDialog
-        confirmLabel="Revoke invitation"
-        description={
-          invitationPendingCancel
-            ? `${invitationPendingCancel.email} will no longer be able to accept this invite link.`
-            : ''
-        }
-        onConfirm={handleCancelInvitation}
-        onOpenChange={(open) => {
-          if (!open) {
-            setInvitationPendingCancel(null)
-          }
-        }}
-        open={Boolean(invitationPendingCancel)}
-        title="Revoke invitation?"
-        tone="destructive"
-      />
-    </EditorCard>
-  )
-}
-
-const activityEventMeta = {
-  [ACTIVITY_EVENT_TYPES.DASHBOARD_OPENED]: {
-    icon: 'layoutDashboard',
-    label: 'Opened dashboard',
-  },
-  [ACTIVITY_EVENT_TYPES.NEEDED_ACTION_ANSWERED]: {
-    icon: 'checkCircle2',
-    label: 'Answered client request',
-  },
-  [ACTIVITY_EVENT_TYPES.OVERVIEW_OPENED]: {
-    icon: 'user',
-    label: 'Opened overview',
-  },
-  [ACTIVITY_EVENT_TYPES.REPORT_OPENED]: {
-    icon: 'fileText',
-    label: 'Opened report',
-  },
-}
-
-function formatActivityTime(date) {
-  if (!date) {
-    return ''
-  }
-
-  return new Intl.DateTimeFormat('en', {
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-  }).format(new Date(date))
-}
-
-function getActivityDetail(event) {
-  if (event.metadata?.reportId) {
-    return `Report: ${event.metadata.reportId}`
-  }
-
-  if (event.metadata?.dashboardId) {
-    return `Dashboard: ${event.metadata.dashboardId}`
-  }
-
-  if (event.metadata?.actionId) {
-    return `Request: ${event.metadata.actionId}`
-  }
-
-  return event.actorEmail || event.actorRole || 'Client portal'
-}
-
-function RecentClientActivityPanel({ clientId, runtime }) {
-  const [events, setEvents] = useState(() => listClientActivityEvents({
-    clientId,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }))
-
-  function refreshActivity() {
-    setEvents(listClientActivityEvents({
-      clientId,
-      repositories: runtime.repositories,
-      viewer: runtime.viewer,
-    }))
-  }
-
-  return (
-    <EditorCard
-      action={(
-        <Button onClick={refreshActivity} size="sm" type="button" variant="ghost">
-          Refresh
-        </Button>
-      )}
-      description="Local QA activity from client-facing pages."
-      iconName="clock"
-      title="Recent Client Activity"
-    >
-      {events.length > 0 ? (
-        <div className="grid gap-2">
-          {events.map((event) => {
-            const meta = activityEventMeta[event.eventType] ?? {
-              icon: 'clock',
-              label: event.eventType,
-            }
-
-            return (
-              <article className="rounded-control border border-control-border bg-block-subtle p-3" key={event.id}>
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-action-muted text-action">
-                    <Icon name={meta.icon} size={15} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold text-text-primary">{meta.label}</p>
-                      <span className="shrink-0 text-xs text-text-muted">{formatActivityTime(event.createdAt)}</span>
-                    </div>
-                    <p className="mt-1 truncate text-xs text-text-muted">
-                      {event.actorName} · {getActivityDetail(event)}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      ) : (
-        <div className="rounded-control border border-dashed border-control-border bg-surface-subtle px-3 py-4 text-sm text-text-muted">
-          No client activity has been recorded yet.
-        </div>
-      )}
-    </EditorCard>
-  )
-}
-
 export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const toast = useToast()
@@ -1941,9 +1273,13 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
 
   return (
     <>
-      <EditorPageHeader
-        draft={draft}
-        editor={editor}
+      <AdminClientWorkspaceHeader
+        client={{
+          ...editor.client,
+          status: draft.client.status,
+        }}
+        currentPage="overview"
+        eyebrow="Client overview editor"
       />
 
       <ConfirmationDialog
@@ -2079,9 +1415,6 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
               }))}
               onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
             />
-            <AccessMembersPanel clientId={clientId} runtime={runtime} />
-            <InvitationsPanel clientId={clientId} runtime={runtime} />
-            <RecentClientActivityPanel clientId={clientId} runtime={runtime} />
           </aside>
         </div>
       </PageShell>

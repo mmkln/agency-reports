@@ -9,7 +9,7 @@ export function normalizeTeamTaskFilters(routeParams = {}) {
   }
 }
 
-export function updateTeamTaskFilters(nextFilters) {
+export function getTeamTaskFilterPath(nextFilters) {
   const params = new URLSearchParams()
 
   Object.entries(nextFilters).forEach(([key, value]) => {
@@ -19,7 +19,7 @@ export function updateTeamTaskFilters(nextFilters) {
   })
 
   const queryString = params.toString()
-  window.location.hash = queryString ? `team-tasks?${queryString}` : 'team-tasks'
+  return queryString ? `/team/tasks?${queryString}` : '/team/tasks'
 }
 
 export function loadTeamTasks(filters, runtime) {

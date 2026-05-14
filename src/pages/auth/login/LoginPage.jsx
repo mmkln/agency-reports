@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
@@ -10,6 +11,7 @@ import {
 } from '../../../domain/services/authService'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
+import { useAuth } from '../../../app/providers/auth/useAuth'
 
 const DEFAULT_EMAIL = 'admin@growthlab.example'
 
@@ -34,13 +36,17 @@ function SignInButton({ onClick, profile }) {
 }
 
 export function LoginPage({ onAuthChange, runtime }) {
+  const auth = useAuth()
+  const resolvedRuntime = runtime ?? auth.runtime
+  const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
+  const navigate = useNavigate()
   const toast = useToast()
   const [email, setEmail] = useState(DEFAULT_EMAIL)
   const [password, setPassword] = useState(DEMO_AUTH_PASSWORD)
   const [error, setError] = useState('')
   const loginProfiles = useMemo(
-    () => listLoginProfiles({ repositories: runtime.repositories }),
-    [runtime.repositories],
+    () => listLoginProfiles({ repositories: resolvedRuntime.repositories }),
+    [resolvedRuntime.repositories],
   )
 
   function signIn(nextEmail, nextPassword) {
@@ -48,12 +54,12 @@ export function LoginPage({ onAuthChange, runtime }) {
       const viewer = authenticateWithEmail({
         email: nextEmail,
         password: nextPassword,
-        repositories: runtime.repositories,
+        repositories: resolvedRuntime.repositories,
       })
 
-      onAuthChange?.()
+      resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
-      window.location.hash = getHomeHrefForViewer(viewer).replace('#', '')
+      navigate(getHomeHrefForViewer(viewer), { replace: true })
     } catch (caughtError) {
       setError(caughtError.message)
       toast.error('Sign in failed', caughtError.message)
@@ -70,7 +76,7 @@ export function LoginPage({ onAuthChange, runtime }) {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
         <Card className="w-full max-w-form bg-material-vibrant shadow-premium backdrop-blur-2xl">
           <CardContent className="p-8">
-            <BrandLogo href="#landing" variant="static" />
+            <BrandLogo href={import.meta.env.BASE_URL} variant="static" />
 
             <div className="mt-10">
               <p className="text-sm font-semibold text-brand">Welcome back</p>
@@ -135,9 +141,9 @@ export function LoginPage({ onAuthChange, runtime }) {
 
             <p className="mt-6 text-center text-sm text-text-secondary">
               Have an invitation?{' '}
-              <a className="font-medium text-brand no-underline hover:text-brand/80" href="#accept-invite">
+              <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
                 Accept invite
-              </a>
+              </Link>
             </p>
           </CardContent>
         </Card>

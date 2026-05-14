@@ -2,7 +2,7 @@ import agencyLogoUrl from '../../assets/agency-logo.png'
 
 export function BrandLogo({
   className = '',
-  href = '#landing',
+  href = '/',
   iconShadow,
   light = false,
   size = 'md',

@@ -6,7 +6,7 @@ export const DEMO_ROLE_STORAGE_KEY = 'agency-reports.demo-role'
 export const DEMO_ROLE_OPTIONS = Object.freeze([
   {
     description: 'Manage clients and overview content',
-    homeHref: '#admin-clients',
+    homeHref: '/admin/clients',
     iconName: 'shieldCheck',
     key: 'admin',
     label: 'Admin',
@@ -15,7 +15,7 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
   },
   {
     description: 'Update assigned operational tasks',
-    homeHref: '#team-tasks',
+    homeHref: '/team/tasks',
     iconName: 'checkCircle2',
     key: 'team',
     label: 'Team',
@@ -24,7 +24,7 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
   },
   {
     description: 'View the client-facing portal',
-    homeHref: `#client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+    homeHref: `/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
     iconName: 'user',
     key: 'client',
     label: 'Client',

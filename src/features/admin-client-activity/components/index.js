@@ -1,0 +1,1 @@
+export { RecentClientActivityPanel } from './RecentClientActivityPanel'

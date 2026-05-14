@@ -1,4 +1,5 @@
 import { Button, CardContent, PrimitiveCard as Card } from '@/shared/ui'
+import { Link } from 'react-router-dom'
 
 import { Icon } from '../../../shared/icons'
 
@@ -15,10 +16,10 @@ export function EmptyClientsState() {
             Get started by creating your first client portal workspace.
           </p>
           <Button asChild className="mt-5" size="lg">
-            <a href="#admin-clients?newClient=true">
+            <Link to="/admin/clients?newClient=true">
               <Icon name="plus" size={16} />
               Create first client
-            </a>
+            </Link>
           </Button>
         </div>
       </CardContent>

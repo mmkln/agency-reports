@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Button,
@@ -86,24 +87,24 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
                   <div className="flex justify-end gap-2">
                     {getPendingInvite(client, repositories) ? (
                       <Button asChild size="icon-sm" title="Open pending invitation" variant="ghost">
-                        <a href={`#accept-invite?token=${getPendingInvite(client, repositories).token}`}>
+                        <Link to={`/accept-invite?token=${getPendingInvite(client, repositories).token}`}>
                           <Icon name="mail" size={16} />
-                        </a>
+                        </Link>
                       </Button>
                     ) : null}
                     <Button onClick={() => onEditClient(client)} size="sm" type="button" variant="ghost">
                       Edit Client
                     </Button>
                     <Button asChild size="sm" variant="outline">
-                      <a href={`#admin-client-overview?clientId=${client.id}`}>
+                      <Link to={`/admin/client-overview?clientId=${client.id}`}>
                         Edit Overview
-                      </a>
+                      </Link>
                     </Button>
                     <Button asChild size="sm" variant="ghost">
-                      <a href={`#client-overview?clientId=${client.id}`}>
+                      <Link to={`/admin/client-preview?clientId=${client.id}`}>
                         Preview
                         <Icon name="arrowUpRight" size={14} />
-                      </a>
+                      </Link>
                     </Button>
                     <Button
                       className="text-text-quaternary hover:text-destructive"

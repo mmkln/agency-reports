@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Button,
@@ -144,9 +145,9 @@ function LatestSummaryCallout({ clientId, report }) {
       <CardContent className="grid gap-4 py-5">
         <p className="text-sm leading-6 text-text-secondary">{report.summary}</p>
         <Button asChild variant="outline">
-          <a href={`#client-reports?clientId=${clientId}&reportId=${report.id}`}>
+          <Link to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}>
             Read report
-          </a>
+          </Link>
         </Button>
       </CardContent>
     </Card>
@@ -221,9 +222,9 @@ export function ClientDashboardPage({ routeParams = {}, runtime }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
-              <a href={`#client-reports?clientId=${clientId}`}>
+              <Link to={`/client/reports?clientId=${clientId}`}>
                 Latest summary
-              </a>
+              </Link>
             </Button>
             {page.dashboard.publicUrl ? (
               <Button asChild>

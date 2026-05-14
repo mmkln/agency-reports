@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Button,
@@ -137,16 +138,16 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
           const isSelected = selectedReport?.id === report.id
 
           return (
-            <a
+            <Link
               className={isSelected
                 ? 'rounded-block border border-brand bg-action-muted px-4 py-3 text-sm shadow-none'
                 : 'rounded-block border border-control-border bg-block px-4 py-3 text-sm transition-colors hover:bg-surface-subtle'}
-              href={`#client-reports?clientId=${clientId}&reportId=${report.id}`}
               key={report.id}
+              to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
             >
               <span className="block font-semibold text-text-primary">{report.title}</span>
               <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
-            </a>
+            </Link>
           )
         })}
       </CardContent>

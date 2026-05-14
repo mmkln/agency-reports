@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   Button,
@@ -82,7 +83,7 @@ export function AccessDeniedState() {
           You do not have permission to view this client portal. Check the link or contact your agency manager.
         </p>
         <Button asChild className="mt-6" size="lg" variant="secondary">
-          <a href="#landing">Return home</a>
+          <Link to="/">Return home</Link>
         </Button>
       </div>
     </div>
@@ -427,9 +428,9 @@ export function DashboardOverviewBlock({ clientId, dashboard }) {
 
           <div className="grid gap-2">
             <Button asChild className="w-full" size="lg">
-              <a href={`#client-dashboard?clientId=${clientId}&dashboardId=${dashboard.id}`}>
+              <Link to={`/client/dashboard?clientId=${clientId}&dashboardId=${dashboard.id}`}>
                 View Dashboard
-              </a>
+              </Link>
             </Button>
             {dashboard.publicUrl ? (
               <Button asChild className="w-full" size="lg" variant="outline">
@@ -467,9 +468,9 @@ export function LatestMonthlySummaryBlock({ clientId, report }) {
           <Separator className="my-4" />
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <a href={`#client-reports?clientId=${clientId}&reportId=${report.id}`}>
+              <Link to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}>
                 Read Report
-              </a>
+              </Link>
             </Button>
             {report.dashboardUrl ? (
               <Button asChild size="sm" variant="outline">

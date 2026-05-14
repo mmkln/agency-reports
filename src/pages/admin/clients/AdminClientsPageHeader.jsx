@@ -1,4 +1,5 @@
 import { Button } from '@/shared/ui'
+import { Link } from 'react-router-dom'
 
 import { PageHeader } from '../../../shared/layout/PageHeader'
 import { Icon } from '../../../shared/icons'
@@ -8,10 +9,10 @@ export function AdminClientsPageHeader() {
     <PageHeader
       actions={(
         <Button asChild size="lg">
-          <a href="#admin-clients?newClient=true">
+          <Link to="/admin/clients?newClient=true">
             <Icon name="plus" size={16} />
             New Client
-          </a>
+          </Link>
         </Button>
       )}
       subtitle="Manage client portal workspaces and open client-facing status hubs."

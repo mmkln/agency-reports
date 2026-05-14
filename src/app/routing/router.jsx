@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { USER_ROLES } from '../../entities/profile'
@@ -7,11 +8,18 @@ import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedP
 import { ProtectedRoute } from './ProtectedRoute'
 import { RootLayout } from '../layout/RootLayout'
 import { AuthLayout } from '../layout/AuthLayout'
+import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
+import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
+import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 import {
   ClientOverviewPageRoute,
   ClientDashboardPageRoute,
   ClientReportsPageRoute,
   AdminClientsPageRoute,
+  AdminClientAccessPageRoute,
+  AdminClientActivityPageRoute,
   AdminClientPreviewPageRoute,
   AdminClientOverviewPageRoute,
   TeamTasksPageRoute,
@@ -29,6 +37,19 @@ const MarketingProcessPage = lazyNamed(() => import('../../pages/legacy/marketin
 const MarketingReportsPage = lazyNamed(() => import('../../pages/legacy/marketing-reports/MarketingReportsPage'), 'MarketingReportsPage')
 
 const LoadingFallback = () => <div className="p-6 text-sm text-slate-500">Loading...</div>
+const githubPagesBaseName = '/agency-reports'
+
+function getRouterBasename() {
+  if (import.meta.env.BASE_URL !== '/') {
+    return import.meta.env.BASE_URL.replace(/\/$/, '')
+  }
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith(`${githubPagesBaseName}/`)) {
+    return githubPagesBaseName
+  }
+
+  return undefined
+}
 
 export const routeMetadata = [
   {
@@ -65,6 +86,7 @@ export const routeMetadata = [
     label: 'Overview',
     pageTitle: 'Client Overview',
     allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientOverviewPageHeader,
     subtitle: 'Status, progress, active work, needed actions, dashboard, and latest report.',
     iconName: 'layoutDashboard',
   },
@@ -74,6 +96,7 @@ export const routeMetadata = [
     label: 'Dashboard',
     pageTitle: 'Marketing Dashboard',
     allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientDashboardPageHeader,
     showInNav: false,
     subtitle: 'External marketing dashboard surface for the client portal.',
     iconName: 'layoutDashboard',
@@ -84,6 +107,7 @@ export const routeMetadata = [
     label: 'Reports',
     pageTitle: 'Monthly Reports',
     allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientReportsPageHeader,
     showInNav: false,
     subtitle: 'Published monthly summaries and archive.',
     iconName: 'fileText',
@@ -94,6 +118,7 @@ export const routeMetadata = [
     label: 'Clients',
     pageTitle: 'Clients',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: AdminClientsPageHeader,
     subtitle: 'Create clients and open their client-facing status hub.',
     iconName: 'users',
   },
@@ -103,9 +128,34 @@ export const routeMetadata = [
     label: 'Client Preview',
     pageTitle: 'Client Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: ClientOverviewPageHeader,
     showInNav: false,
     subtitle: 'Admin preview of the client-facing portal.',
     iconName: 'layoutDashboard',
+  },
+  {
+    path: '/admin/client-access',
+    id: 'admin-client-access',
+    label: 'Access',
+    pageTitle: 'Client Access',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    subtitle: 'Manage client portal members and invitations.',
+    iconName: 'users',
+  },
+  {
+    path: '/admin/client-activity',
+    id: 'admin-client-activity',
+    label: 'Activity',
+    pageTitle: 'Client Activity',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    subtitle: 'Review recent client-facing portal activity.',
+    iconName: 'clock',
   },
   {
     path: '/admin/client-overview',
@@ -125,6 +175,7 @@ export const routeMetadata = [
     label: 'Team Tasks',
     pageTitle: 'Team Tasks',
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
+    header: TeamTasksPageHeader,
     subtitle: 'Update assigned work without publishing the client overview.',
     iconName: 'checkCircle2',
   },
@@ -263,6 +314,26 @@ export const router = createBrowserRouter(
             ),
           },
           {
+            path: 'client-access',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminClientAccessPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'client-activity',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminClientActivityPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'client-overview',
             element: (
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
@@ -341,5 +412,5 @@ export const router = createBrowserRouter(
     element: <Navigate to="/" replace />,
   },
 ],
-  { basename: '/agency-reports' },
+  { basename: getRouterBasename() },
 )

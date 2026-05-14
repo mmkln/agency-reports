@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { clearAuthSession } from '../../domain/services/authService'
 import { USER_ROLES } from '../../entities/profile'
@@ -134,13 +135,13 @@ function ThemeModeControl() {
 
 export function TopNav({
   activeRoute,
-  defaultRoute,
   hasUnsavedChanges = false,
   onAuthChange,
   runtime,
   routes,
 }) {
   const viewer = runtime.viewer
+  const navigate = useNavigate()
   const toast = useToast()
   const activeRole = roleMeta[viewer.role] ?? {
     label: viewer.role,
@@ -152,21 +153,21 @@ export function TopNav({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex items-center overflow-x-auto">
-            <BrandLogo className="mr-8 shrink-0" href={defaultRoute.href} variant="static" />
+            <BrandLogo className="mr-8 shrink-0" href={import.meta.env.BASE_URL} variant="static" />
 
             <div className="flex gap-1">
               {routes.map((route) => {
                 const isActive = route.id === activeRoute.id
 
                 return (
-                  <a
+                  <Link
                     className={`flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
                       isActive
                         ? 'bg-control-selected text-text-primary'
                         : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
                     }`}
-                    href={route.href}
                     key={route.id}
+                    to={route.path}
                   >
                     <Icon
                       className={isActive ? 'text-primary' : 'text-text-secondary'}
@@ -174,7 +175,7 @@ export function TopNav({
                       size={16}
                     />
                     <span>{route.navLabel ?? route.label}</span>
-                  </a>
+                  </Link>
                 )
               })}
             </div>
@@ -228,7 +229,7 @@ export function TopNav({
                     toast.info('Signed out', 'You have returned to the login screen.')
                     clearAuthSession()
                     onAuthChange?.()
-                    window.location.hash = 'login'
+                    navigate('/login', { replace: true })
                   }}
                 >
                   Logout
