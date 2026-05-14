@@ -30,6 +30,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
   StatusBadge as SharedStatusBadge,
   Textarea,
 } from '@/shared/ui'
@@ -128,6 +134,30 @@ function formatTaskDueDate(date) {
   }).format(dueDate)
 }
 
+function getTaskDayDifference(date) {
+  if (!date) {
+    return Number.POSITIVE_INFINITY
+  }
+
+  const dueDate = new Date(date)
+
+  if (Number.isNaN(dueDate.getTime())) {
+    return Number.POSITIVE_INFINITY
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  dueDate.setHours(0, 0, 0, 0)
+
+  return Math.round((dueDate.getTime() - today.getTime()) / 86_400_000)
+}
+
+function isAttentionTask(task) {
+  return Boolean(task.blockerNote)
+    || task.status === TASK_STATUSES.BLOCKED
+    || task.status === TASK_STATUSES.WAITING_CLIENT
+}
+
 function VisibilityBadge({ visibility }) {
   const isClientVisible = visibility === VISIBILITY.CLIENT_VISIBLE
 
@@ -166,111 +196,133 @@ function EmptyTasksState({ hasFilters }) {
   )
 }
 
-function TaskList({
-  draft,
-  error,
-  isDirty,
-  onChange,
-  onSave,
-  onSelectTask,
-  saveState,
-  selectedTaskId,
-  tasks,
-}) {
+function TaskCard({ compact = false, onOpenTask, task }) {
+  return (
+    <Card
+      as="article"
+      className="py-0 transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
+    >
+      <button
+        className="w-full px-card py-component text-left"
+        onClick={() => onOpenTask(task.id)}
+        type="button"
+      >
+        <div className="flex flex-col gap-component lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Icon
+                className={isAttentionTask(task) ? 'text-destructive' : 'text-text-quaternary'}
+                name={isAttentionTask(task) ? 'triangleAlert' : TASK_STATUS_META[task.status]?.icon ?? 'circle'}
+                size={16}
+              />
+              <h2 className="text-base font-semibold text-text-primary">{task.title}</h2>
+            </div>
+            {task.description && !compact ? (
+              <p className="mt-2 line-clamp-2 max-w-readable text-sm leading-6 text-text-secondary">
+                {task.description}
+              </p>
+            ) : null}
+            {task.blockerNote && !compact ? (
+              <p className="mt-2 line-clamp-1 text-sm leading-6 text-destructive">
+                {task.blockerNote}
+              </p>
+            ) : null}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
+              <span>{task.clientName}</span>
+              <span>{task.projectName}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Icon name="calendar" size={14} />
+                {formatTaskDueDate(task.dueDate)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Icon name="user" size={14} />
+                {task.assigneeName || 'Unassigned'}
+              </span>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+            <StatusBadge status={task.status} />
+            <VisibilityBadge visibility={task.visibility} />
+          </div>
+        </div>
+      </button>
+    </Card>
+  )
+}
+
+function TaskSection({ emptyText, onOpenTask, tasks, title }) {
   if (tasks.length === 0) {
     return null
   }
 
   return (
-    <div className="grid gap-component">
-      {tasks.map((task) => {
-        const isSelected = selectedTaskId === task.id
+    <section className="grid gap-component">
+      <div className="flex items-center justify-between gap-component">
+        <h2 className="text-heading text-text-primary">{title}</h2>
+        <span className="text-label text-text-muted">{tasks.length}</span>
+      </div>
+      <div className="grid gap-component">
+        {tasks.map((task) => (
+          <TaskCard key={task.id} onOpenTask={onOpenTask} task={task} />
+        ))}
+      </div>
+      {emptyText ? <p className="text-sm text-text-muted">{emptyText}</p> : null}
+    </section>
+  )
+}
+
+function TeamTaskInbox({ onOpenTask, tasks }) {
+  const openTasks = tasks.filter((task) => task.status !== TASK_STATUSES.DONE)
+  const doneTasks = tasks.filter((task) => task.status === TASK_STATUSES.DONE)
+  const attentionTasks = openTasks.filter(isAttentionTask)
+  const todayTasks = openTasks.filter((task) => !isAttentionTask(task) && getTaskDayDifference(task.dueDate) <= 0)
+  const upcomingTasks = openTasks.filter((task) => !isAttentionTask(task) && getTaskDayDifference(task.dueDate) > 0)
+
+  return (
+    <div className="grid gap-section">
+      <TaskSection onOpenTask={onOpenTask} tasks={attentionTasks} title="Needs attention" />
+      <TaskSection onOpenTask={onOpenTask} tasks={todayTasks} title="Today" />
+      <TaskSection onOpenTask={onOpenTask} tasks={upcomingTasks} title="Upcoming" />
+      <TaskSection onOpenTask={onOpenTask} tasks={doneTasks} title="Done" />
+    </div>
+  )
+}
+
+function AdminTaskBoard({ onOpenTask, tasks }) {
+  const columns = [
+    TASK_STATUSES.TODO,
+    TASK_STATUSES.IN_PROGRESS,
+    TASK_STATUSES.WAITING_CLIENT,
+    TASK_STATUSES.BLOCKED,
+    TASK_STATUSES.DONE,
+  ]
+
+  return (
+    <div className="grid auto-cols-[minmax(260px,1fr)] grid-flow-col gap-component overflow-x-auto pb-2">
+      {columns.map((status) => {
+        const columnTasks = tasks.filter((task) => task.status === status)
+        const meta = TASK_STATUS_META[status]
 
         return (
-          <Card
-            as="article"
-            className={`py-0 transition-colors duration-motion-fast ease-motion-standard ${
-              isSelected ? 'bg-surface-elevated shadow-block' : 'bg-block hover:bg-control-hover'
-            }`}
-            key={task.id}
-          >
-            <div
-              className="cursor-pointer px-card py-component"
-              onClick={() => onSelectTask(task.id)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  onSelectTask(task.id)
-                }
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="flex flex-col gap-component lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold text-text-primary">{task.title}</h2>
-                    {task.blockerNote ? (
-                      <span className="inline-flex min-h-control-mini items-center gap-1 rounded-full bg-destructive/10 px-control text-label leading-none text-destructive">
-                        <Icon name="triangleAlert" size={13} />
-                        Blocked
-                      </span>
-                    ) : null}
-                  </div>
-                  {task.description ? (
-                    <p className="mt-2 line-clamp-2 max-w-readable text-sm leading-6 text-text-secondary">
-                      {task.description}
-                    </p>
-                  ) : null}
-                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
-                    <span>{task.clientName}</span>
-                    <span>{task.projectName}</span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Icon name="calendar" size={14} />
-                      {formatTaskDueDate(task.dueDate)}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Icon name="user" size={14} />
-                      {task.assigneeName || 'Unassigned'}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
-                  <StatusBadge status={task.status} />
-                  <VisibilityBadge visibility={task.visibility} />
-                </div>
-              </div>
+          <section className="grid min-w-[260px] content-start gap-component rounded-block bg-block-subtle p-component" key={status}>
+            <div className="flex items-center justify-between gap-component">
+              <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <Icon className="text-text-quaternary" name={meta.icon} size={15} />
+                {meta.label}
+              </h2>
+              <span className="text-label text-text-muted">{columnTasks.length}</span>
             </div>
-            {isSelected ? (
-              <div className="border-t border-separator">
-                <TaskDetailsContent
-                  draft={draft}
-                  error={error}
-                  onChange={onChange}
-                  task={task}
-                />
-                <div className="flex flex-col gap-3 border-t border-separator px-card py-component sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-h-5 text-sm">
-                    {error && error !== 'Blocker reason is required.' ? (
-                      <span className="text-destructive">{error}</span>
-                    ) : saveState ? (
-                      <span className="text-text-muted">{saveState}</span>
-                    ) : isDirty ? (
-                      <span className="text-text-muted">Unsaved changes</span>
-                    ) : null}
-                  </div>
-          <Button
-            disabled={!isDirty}
-            icon={<Icon name="fileText" size={15} />}
-            onClick={onSave}
-            type="button"
-          >
-            Save Updates
-          </Button>
+            <div className="grid gap-control">
+              {columnTasks.map((task) => (
+                <TaskCard compact key={task.id} onOpenTask={onOpenTask} task={task} />
+              ))}
+              {columnTasks.length === 0 ? (
+                <div className="rounded-control px-control py-component text-sm text-text-muted">
+                  No tasks
                 </div>
-              </div>
-            ) : null}
-          </Card>
+              ) : null}
+            </div>
+          </section>
         )
       })}
     </div>
@@ -430,6 +482,71 @@ function TaskDetailsContent({
         </label>
       </div>
     </div>
+  )
+}
+
+function TaskUpdateSheet({
+  draft,
+  error,
+  isDirty,
+  isOpen,
+  onChange,
+  onClose,
+  onSave,
+  saveState,
+  task,
+}) {
+  return (
+    <Sheet onOpenChange={(open) => {
+      if (!open) {
+        onClose()
+      }
+    }} open={isOpen}>
+      <SheetContent className="data-[side=right]:w-[calc(100vw-1rem)] data-[side=right]:sm:max-w-sheet-md" side="right">
+        {task && draft ? (
+          <>
+            <SheetHeader>
+              <SheetTitle>{task.title}</SheetTitle>
+              <SheetDescription>
+                {task.clientName} - {task.projectName} - {formatTaskDueDate(task.dueDate)}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <TaskDetailsContent
+                draft={draft}
+                error={error}
+                onChange={onChange}
+                task={task}
+              />
+            </div>
+            <SheetFooter className="sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-h-5 text-sm">
+                {error && error !== 'Blocker reason is required.' ? (
+                  <span className="text-destructive">{error}</span>
+                ) : saveState ? (
+                  <span className="text-text-muted">{saveState}</span>
+                ) : isDirty ? (
+                  <span className="text-text-muted">Unsaved changes</span>
+                ) : null}
+              </div>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button onClick={onClose} type="button" variant="outline">
+                  Cancel
+                </Button>
+                <Button
+                  disabled={!isDirty}
+                  icon={<Icon name="fileText" size={15} />}
+                  onClick={onSave}
+                  type="button"
+                >
+                  Save Updates
+                </Button>
+              </div>
+            </SheetFooter>
+          </>
+        ) : null}
+      </SheetContent>
+    </Sheet>
   )
 }
 
@@ -713,18 +830,30 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const [saveState, setSaveState] = useState('')
   const [createTaskError, setCreateTaskError] = useState('')
   const [createTaskSaveState, setCreateTaskSaveState] = useState('')
+  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false)
   const isTaskDetailsDirty = isTaskDraftChanged(selectedTask, taskDraft)
 
-  function selectTask(taskId) {
+  function openTask(taskId) {
     const task = taskData.tasks.find((item) => item.id === taskId) ?? null
     setSelectedTaskId(taskId)
     setTaskDraft(createTaskDraft(task))
+    setIsTaskDetailsOpen(Boolean(task))
+    setError('')
+    setSaveState('')
+  }
+
+  function closeTaskDetails() {
+    setIsTaskDetailsOpen(false)
     setError('')
     setSaveState('')
   }
 
   function saveTaskUpdate() {
     try {
+      if (!selectedTask || !taskDraft) {
+        return
+      }
+
       if (taskDraft?.status === TASK_STATUSES.BLOCKED && !taskDraft.blockerNote.trim()) {
         setError('Blocker reason is required.')
         setSaveState('')
@@ -770,6 +899,7 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         setCreateTaskSaveState('')
         setReloadTick((currentTick) => currentTick + 1)
         setSelectedTaskId(createdTask.id)
+        setIsTaskDetailsOpen(false)
         setTaskDraft(createTaskDraft({
           assigneeName: createdTask.assignee_name,
           blockerNote: createdTask.blocker_note ?? '',
@@ -788,7 +918,10 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
       })
   }
 
-  const hasFilters = Object.entries(filters).some(([key, value]) => key !== 'scope' && value !== 'all')
+  const hasFilters = Object.entries(filters).some(([key, value]) => (
+    key === 'search' ? Boolean(value) : key !== 'scope' && value !== 'all'
+  ))
+  const isAdminWorkspace = runtime.viewer?.role === USER_ROLES.AGENCY_ADMIN
 
   function updateTaskDraft(nextDraft) {
     setTaskDraft(nextDraft)
@@ -807,21 +940,26 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
       </ContentToolbar>
       <div className="min-w-0">
         {taskData.tasks.length > 0 ? (
-          <TaskList
-            draft={taskDraft}
-            error={error}
-            isDirty={isTaskDetailsDirty}
-            onChange={updateTaskDraft}
-            onSave={saveTaskUpdate}
-            onSelectTask={selectTask}
-            saveState={saveState}
-            selectedTaskId={selectedTask?.id}
-            tasks={taskData.tasks}
-          />
+          isAdminWorkspace ? (
+            <AdminTaskBoard onOpenTask={openTask} tasks={taskData.tasks} />
+          ) : (
+            <TeamTaskInbox onOpenTask={openTask} tasks={taskData.tasks} />
+          )
         ) : (
           <EmptyTasksState hasFilters={hasFilters} />
         )}
       </div>
+      <TaskUpdateSheet
+        draft={taskDraft}
+        error={error}
+        isDirty={isTaskDetailsDirty}
+        isOpen={isTaskDetailsOpen}
+        onChange={updateTaskDraft}
+        onClose={closeTaskDetails}
+        onSave={saveTaskUpdate}
+        saveState={saveState}
+        task={selectedTask}
+      />
       <CreateTaskDialog
         error={createTaskError}
         filters={filters}

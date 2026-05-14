@@ -137,17 +137,17 @@ function PrimaryNavItem({ isActive, route }) {
   return (
     <Link
       aria-current={isActive ? 'page' : undefined}
-      className={`group/nav-item inline-flex h-control-small shrink-0 items-center gap-2 rounded-control px-control text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
+      className={`group/nav-item inline-flex h-control-small shrink-0 items-center gap-tag rounded-control px-control text-label font-medium no-underline outline-none transition-colors duration-motion-fast ease-motion-standard focus-visible:ring-2 focus-visible:ring-ring/35 ${
         isActive
-          ? 'bg-control-selected text-text-primary'
-          : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
+          ? 'bg-fill-secondary text-text-primary'
+          : 'text-text-secondary hover:bg-fill-tertiary hover:text-text-primary'
       }`}
       to={route.path}
     >
       <Icon
-        className="text-current transition-colors duration-motion-fast ease-motion-standard"
+        className="text-current opacity-80 transition-colors duration-motion-fast ease-motion-standard group-hover/nav-item:opacity-100"
         name={route.iconName}
-        size={15}
+        size={14}
       />
       <span className="max-w-36 truncate">{route.navLabel ?? route.label}</span>
     </Link>
@@ -178,7 +178,7 @@ export function TopNav({
 
             <div
               aria-label="Primary navigation"
-              className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex min-w-0 items-center gap-tag overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {routes.map((route) => {
                 const isActive = route.id === activeRoute.id
