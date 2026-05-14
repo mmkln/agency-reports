@@ -55,7 +55,7 @@ Project implementation:
 
 - `PageContainer` owns the outer app gutter and should not contain feature-specific layout decisions.
 - `PageShell` constrains and spaces a page's main content.
-- `PageHeader` orients the user with a title, compact metadata, and page-level actions.
+- `PageHeader` from `src/shared/ui` orients the user with a title, compact metadata, and page-level actions. Use its shell variant for route headers and inline variant inside workspace wrappers.
 - `ContentToolbar` groups controls that affect the content region.
 - Detail panels, inspectors, sheets, dialogs, and popovers handle focused secondary work.
 

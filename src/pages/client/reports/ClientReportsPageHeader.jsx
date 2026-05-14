@@ -1,7 +1,6 @@
-import { Badge } from '@/shared/ui'
+import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientReportsPage } from '../../../domain/services/clientReportsService'
-import { PageHeader } from '../../../shared/layout/PageHeader'
 
 function HeaderAction({ reportCount }) {
   return (

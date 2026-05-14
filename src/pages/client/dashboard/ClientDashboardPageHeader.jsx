@@ -1,8 +1,7 @@
-import { StatusBadge } from '@/shared/ui'
+import { PageHeader, StatusBadge } from '@/shared/ui'
 
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
 import { USER_ROLES } from '../../../entities/profile'
-import { PageHeader } from '../../../shared/layout/PageHeader'
 
 function HeaderAction({ dashboard }) {
   if (!dashboard) {

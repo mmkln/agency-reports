@@ -1,4 +1,4 @@
-import { PageHeader } from './PageHeader'
+import { PageHeader } from '@/shared/ui'
 import { TopNav } from './TopNav'
 
 export function AppShell({

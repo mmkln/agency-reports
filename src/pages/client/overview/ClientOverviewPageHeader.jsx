@@ -1,6 +1,6 @@
 import { getClientOverview } from '../../../domain/services/clientOverviewService'
 import { USER_ROLES } from '../../../entities/profile'
-import { PageHeader } from '../../../shared/layout/PageHeader'
+import { PageHeader } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
 
 const statusToneClasses = {

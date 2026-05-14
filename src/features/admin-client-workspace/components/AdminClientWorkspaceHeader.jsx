@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import {
-  Button,
-  FoundationPageHeader,
-  PagePrimaryAction,
+  PageHeader,
   PageShell,
 } from '@/shared/ui'
 
@@ -59,6 +57,39 @@ function getClientField(client, camelName, snakeName) {
   return client?.[camelName] ?? client?.[snakeName] ?? ''
 }
 
+function ClientWorkspaceTabs({ clientId, currentPage }) {
+  return (
+    <nav aria-label="Client workspace sections" className="-mx-1 overflow-x-auto">
+      <div className="flex min-w-max items-center gap-tag px-1">
+        {tabs.map((tab) => {
+          const isActive = currentPage === tab.id
+
+          return (
+            <Link
+              aria-current={isActive ? 'page' : undefined}
+              className={`inline-flex h-control-small items-center gap-tag rounded-control px-control text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
+                isActive
+                  ? 'bg-control-selected text-text-primary'
+                  : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
+              }`}
+              key={tab.id}
+              to={`${tab.route}?clientId=${clientId}`}
+            >
+              <Icon
+                aria-hidden="true"
+                className={isActive ? 'text-text-primary' : 'text-text-quaternary'}
+                name={tab.iconName}
+                size={14}
+              />
+              <span>{tab.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
+
 export function AdminClientWorkspaceHeader({
   actions,
   client,
@@ -88,56 +119,36 @@ export function AdminClientWorkspaceHeader({
           </span>
         </nav>
 
-        <FoundationPageHeader
+        <PageHeader
           actions={(
-            <div className="flex flex-wrap items-center justify-end gap-control">
+            <>
               <ClientStatusSelector onSelect={onStatusChange} status={status} />
               {actions}
-              {primaryAction ? (
-                <PagePrimaryAction context="workspace" {...primaryAction} />
-              ) : null}
-            </div>
+            </>
           )}
           className="lg:items-center"
           eyebrow={eyebrow}
+          primaryAction={primaryAction}
+          primaryActionContext="workspace"
           title={client?.name ?? 'Client workspace'}
+          variant="inline"
         />
 
-        <div className="flex flex-col gap-component lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
-            {portalSlug ? (
-              <Link
-                className="inline-flex items-center gap-1 text-link no-underline hover:text-link-hover"
-                to={`/admin/client-preview?clientId=${clientId}`}
-              >
-                agency.com/{portalSlug}
-                <Icon name="arrowUpRight" size={12} />
-              </Link>
-            ) : null}
-            {primaryContactName ? <span>{primaryContactName}</span> : null}
-            {primaryContactEmail ? <span>{primaryContactEmail}</span> : null}
-          </div>
-
-          <div className="flex flex-wrap gap-control">
-            {tabs.map((tab) => {
-              const isActive = currentPage === tab.id
-
-              return (
-                <Button
-                  asChild
-                  key={tab.id}
-                  size="sm"
-                  variant={isActive ? 'secondary' : 'ghost'}
-                >
-                  <Link to={`${tab.route}?clientId=${clientId}`}>
-                    <Icon name={tab.iconName} size={15} />
-                    {tab.label}
-                  </Link>
-                </Button>
-              )
-            })}
-          </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-text-muted">
+          {portalSlug ? (
+            <Link
+              className="inline-flex items-center gap-1 text-link no-underline hover:text-link-hover"
+              to={`/admin/client-preview?clientId=${clientId}`}
+            >
+              agency.com/{portalSlug}
+              <Icon name="arrowUpRight" size={12} />
+            </Link>
+          ) : null}
+          {primaryContactName ? <span>{primaryContactName}</span> : null}
+          {primaryContactEmail ? <span>{primaryContactEmail}</span> : null}
         </div>
+
+        <ClientWorkspaceTabs clientId={clientId} currentPage={currentPage} />
       </PageShell>
     </header>
   )

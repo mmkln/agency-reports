@@ -1,6 +1,4 @@
-import { cn } from '@/lib/utils'
-
-import { useInspectorId } from './inspectorId'
+import { PageHeader } from './PageHeader'
 
 export function FoundationPageHeader({
   actions,
@@ -10,26 +8,15 @@ export function FoundationPageHeader({
   title,
   ...props
 }) {
-  const inspectorId = useInspectorId('FoundationPageHeader', id)
-
   return (
-    <header
-      id={inspectorId}
-      className={cn(
-        'flex flex-col gap-component lg:flex-row lg:items-start lg:justify-between',
-        className,
-      )}
+    <PageHeader
+      actions={actions}
+      className={className}
+      eyebrow={eyebrow}
+      id={id}
+      title={title}
+      variant="inline"
       {...props}
-    >
-      <div className="max-w-readable space-y-item">
-        {eyebrow ? <div className="text-label text-text-muted">{eyebrow}</div> : null}
-        <h1 className="text-display text-text-primary">{title}</h1>
-      </div>
-      {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-control">
-          {actions}
-        </div>
-      ) : null}
-    </header>
+    />
   )
 }

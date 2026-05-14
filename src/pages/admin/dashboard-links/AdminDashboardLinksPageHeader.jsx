@@ -1,6 +1,6 @@
 import { listAdminClients } from '../../../domain/services/adminClientService'
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
-import { PageHeader } from '../../../shared/layout/PageHeader'
+import { PageHeader } from '@/shared/ui'
 
 function getRouteClient(clientId, runtime) {
   if (!clientId) {

@@ -5,7 +5,7 @@ import {
 import { USER_ROLES } from '../../../entities/profile'
 import { listAdminClients } from '../../../domain/services/adminClientService'
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
-import { PageHeader } from '../../../shared/layout/PageHeader'
+import { PageHeader } from '@/shared/ui'
 
 function getTaskWorkspacePath(viewer) {
   return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'

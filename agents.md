@@ -56,6 +56,7 @@
 - Keep global navigation quiet and structural. It should orient and switch major destinations, not compete with page content, search, or primary workflow actions.
 - Choose top navigation, sidebar, or split navigation from the actual information architecture: use a top nav for a small flat set of destinations, a sidebar for many stable destinations or nested workspaces, and avoid role-specific shells until the role workflows truly diverge.
 - Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
+- Use the canonical `PageHeader` from `src/shared/ui` for page and workspace headers. Feature-specific headers may wrap it, but must not recreate title/action/tabs/header spacing locally.
 - Define page-level create actions through `PageHeader.primaryAction`, `AdminClientWorkspaceHeader.primaryAction`, or `PagePrimaryAction`; do not hand-style buttons such as New Client, New Task, New Dashboard, or New Report in page code.
 - Treat primary create action styling as a design-system responsibility. Pages may provide label, destination, disabled state, and product behavior, but not local color, radius, shadow, size, or icon sizing.
 - In editors with auto-save, keep the action bar compact and trust-based: visible save status, preview menu, one primary publish/submit action, and secondary/destructive actions in overflow.

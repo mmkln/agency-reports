@@ -109,7 +109,7 @@ AppShell
 
 ## Implementation Rules
 
-- Use `PageShell`, `PageHeader`, and `ContentToolbar` from `src/shared/ui` for page-level structure.
+- Use `PageShell`, `PageHeader`, and `ContentToolbar` from `src/shared/ui` for page-level structure. Do not create feature-local page headers except as thin wrappers around the shared `PageHeader`.
 - Use `PageContainer` only as the app-level page gutter, not as a feature-specific layout component.
 - Use semantic layout tokens: `p-app-gutter`, `pt-content-gutter`, `ml-app-rail`, `max-w-content`, `max-w-readable`, `max-w-form`, `max-w-inspector`, `max-w-sheet-sm`, `max-w-sheet-md`, `max-w-modal-lg`, `max-w-modal-xl`, `max-w-viewport-safe`, `max-h-overlay`, `max-h-overlay-body`, `max-h-overlay-detail-body`, `max-w-detail-value`, `max-w-title`, `max-w-chip`, `min-w-table-sm`, `min-w-table-lg`, `min-w-status-trigger`, `min-w-status-menu`, `grid-cols-overview`, `grid-cols-inspector`, `grid-cols-job-detail`, `grid-cols-settings`, `grid-cols-signal-filters`, `w-sidebar-collapsed`, `hover:w-sidebar-expanded`, `min-w-search`, `max-w-search-compact`, `w-number-field`, and `w-popover`.
 - Do not introduce hardcoded widths for repeated layout roles when a semantic token exists.
