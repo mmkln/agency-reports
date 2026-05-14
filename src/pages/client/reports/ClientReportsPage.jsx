@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Children, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -145,6 +145,54 @@ function ReportSection({ children, title }) {
   )
 }
 
+function ReportExecutiveSummary({ report }) {
+  return (
+    <section className="rounded-block border border-brand/20 bg-action-muted p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-label text-action">Executive summary</p>
+          <h3 className="mt-1 text-lg font-semibold text-text-primary">{report.title}</h3>
+          <p className="mt-1 text-sm text-text-muted">{formatPeriod(report)}</p>
+        </div>
+        {report.publishedAt ? (
+          <Badge className="w-fit border-control-border bg-block text-text-secondary" variant="outline">
+            Published {formatDate(report.publishedAt)}
+          </Badge>
+        ) : null}
+      </div>
+      {report.summary ? (
+        <p className="mt-4 max-w-readable whitespace-pre-line text-sm leading-6 text-text-secondary">
+          {report.summary}
+        </p>
+      ) : (
+        <p className="mt-4 rounded-control bg-block px-3 py-2 text-sm text-text-muted">
+          No executive summary was added for this report.
+        </p>
+      )}
+    </section>
+  )
+}
+
+function ReportContentGroup({ children, description, title }) {
+  const renderedChildren = Children.toArray(children).filter(Boolean)
+
+  if (renderedChildren.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="rounded-block border border-control-border bg-block p-4">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-text-primary">{title}</h3>
+        <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p>
+      </div>
+      <div className="grid gap-3">
+        {renderedChildren}
+      </div>
+    </section>
+  )
+}
+
 function ReportLinkActions({ report }) {
   return (
     <div className="grid gap-3 pt-2 sm:grid-cols-2">
@@ -214,14 +262,29 @@ function ReportReader({ report }) {
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 py-5">
-        <ReportSection title="Executive summary">{report.summary}</ReportSection>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ReportSection title="What we did">{report.whatWeDid}</ReportSection>
-          <ReportSection title="Results">{report.results}</ReportSection>
-          <ReportSection title="Wins">{report.wins}</ReportSection>
-          <ReportSection title="Problems / blockers">{report.problems}</ReportSection>
-          <ReportSection title="Next actions">{report.nextActions}</ReportSection>
-          <ReportSection title="Needed from client">{report.clientDecisionsNeeded}</ReportSection>
+        <ReportExecutiveSummary report={report} />
+        <div className="grid gap-4 xl:grid-cols-3">
+          <ReportContentGroup
+            description="What the agency worked on and where the month gained traction."
+            title="What happened"
+          >
+            <ReportSection title="What we did">{report.whatWeDid}</ReportSection>
+            <ReportSection title="Wins">{report.wins}</ReportSection>
+          </ReportContentGroup>
+          <ReportContentGroup
+            description="Performance context and risks the client should understand."
+            title="Performance context"
+          >
+            <ReportSection title="Results">{report.results}</ReportSection>
+            <ReportSection title="Problems / blockers">{report.problems}</ReportSection>
+          </ReportContentGroup>
+          <ReportContentGroup
+            description="What happens next and what the agency needs from the client."
+            title="Next steps"
+          >
+            <ReportSection title="Next actions">{report.nextActions}</ReportSection>
+            <ReportSection title="Needed from client">{report.clientDecisionsNeeded}</ReportSection>
+          </ReportContentGroup>
         </div>
         <ReportLinkActions report={report} />
       </CardContent>

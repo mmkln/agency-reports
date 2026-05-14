@@ -152,6 +152,19 @@ test('client report archive hides draft reports', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Go to latest report' })).toBeVisible()
 })
 
+test('client report reader shows narrative hierarchy and link fallbacks', async ({ page }) => {
+  await signInAsClient(page)
+  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`)
+
+  await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
+  await expect(page.getByText('Executive summary')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What happened' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Performance context' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Next steps' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible()
+  await expect(page.getByText('PDF version is not available yet. Read the summary inside the portal.')).toBeVisible()
+})
+
 test('agency admin can duplicate a published report into a hidden draft', async ({ page }) => {
   await signInAsAdmin(page)
   await page.goto('/admin/reports')
