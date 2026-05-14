@@ -20,13 +20,12 @@ export function ClientReportsPageHeader({ routeParams = {}, runtime }) {
   })
 
   if (page.status === 'error') {
-    return <PageHeader subtitle="Check the client link or contact your agency manager." title="Access denied" />
+    return <PageHeader title="Access denied" />
   }
 
   return (
     <PageHeader
       actions={<HeaderAction reportCount={page.reports.length} />}
-      subtitle={`Published summaries for ${page.client.name}`}
       title="Monthly Reports"
     />
   )

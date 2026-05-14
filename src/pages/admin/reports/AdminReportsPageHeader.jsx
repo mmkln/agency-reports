@@ -33,7 +33,6 @@ export function AdminReportsPageHeader({ routeParams = {}, runtime }) {
   return (
     <PageHeader
       primaryAction={{ children: 'New Report', to: createHref }}
-      subtitle="Create, publish, archive, and manage client-facing monthly summaries."
       title="Reports"
     />
   )

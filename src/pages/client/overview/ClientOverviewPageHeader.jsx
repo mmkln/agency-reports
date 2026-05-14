@@ -1,5 +1,4 @@
 import { getClientOverview } from '../../../domain/services/clientOverviewService'
-import { USER_ROLES } from '../../../entities/profile'
 import { PageHeader } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
 
@@ -34,7 +33,6 @@ function ProjectStatusAction({ client }) {
 export function ClientOverviewPageHeader({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = routeParams.preview === 'draft' ? 'draft' : 'published'
-  const isAdminPreview = runtime.viewer?.role === USER_ROLES.AGENCY_ADMIN
   const overview = getClientOverview({
     clientId,
     repositories: runtime.repositories,
@@ -43,17 +41,12 @@ export function ClientOverviewPageHeader({ routeParams = {}, runtime }) {
   })
 
   if (overview.status === 'error') {
-    return <PageHeader subtitle="Check the client link or contact your agency manager." title="Access denied" />
+    return <PageHeader title="Access denied" />
   }
 
   return (
     <PageHeader
       actions={<ProjectStatusAction client={overview.client} />}
-      subtitle={isAdminPreview
-        ? previewSource === 'draft'
-          ? 'Saved draft preview - not visible to the client until published.'
-          : 'Published client version - this is what the client can see.'
-        : ''}
       title={overview.client.name}
     />
   )

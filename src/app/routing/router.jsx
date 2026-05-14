@@ -93,7 +93,6 @@ export const routeMetadata = [
     pageTitle: 'Client Overview',
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientOverviewPageHeader,
-    subtitle: 'Status, progress, active work, needed actions, dashboard, and latest report.',
     iconName: 'layoutDashboard',
   },
   {
@@ -104,7 +103,6 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientDashboardPageHeader,
     showInNav: false,
-    subtitle: 'External marketing dashboard surface for the client portal.',
     iconName: 'layoutDashboard',
   },
   {
@@ -115,7 +113,6 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientReportsPageHeader,
     showInNav: false,
-    subtitle: 'Published monthly summaries and archive.',
     iconName: 'fileText',
   },
   {
@@ -125,7 +122,6 @@ export const routeMetadata = [
     pageTitle: 'Clients',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminClientsPageHeader,
-    subtitle: 'Create clients and open their client-facing status hub.',
     iconName: 'users',
   },
   {
@@ -135,7 +131,6 @@ export const routeMetadata = [
     pageTitle: 'Tasks',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: TeamTasksPageHeader,
-    subtitle: 'Create and manage work across client projects.',
     iconName: 'checkCircle2',
   },
   {
@@ -145,7 +140,6 @@ export const routeMetadata = [
     pageTitle: 'Dashboard Links',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminDashboardLinksPageHeader,
-    subtitle: 'Manage external dashboard embeds and links for clients.',
     iconName: 'layoutDashboard',
   },
   {
@@ -155,7 +149,6 @@ export const routeMetadata = [
     pageTitle: 'Reports',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminReportsPageHeader,
-    subtitle: 'Create, publish, archive, and manage client-facing monthly summaries.',
     iconName: 'fileText',
   },
   {
@@ -166,7 +159,6 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: ClientOverviewPageHeader,
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing portal.',
     iconName: 'layoutDashboard',
   },
   {
@@ -177,7 +169,6 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: ClientDashboardPageHeader,
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing dashboard surface.',
     iconName: 'layoutDashboard',
   },
   {
@@ -188,7 +179,6 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: ClientReportsPageHeader,
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing monthly report surface.',
     iconName: 'fileText',
   },
   {
@@ -200,7 +190,6 @@ export const routeMetadata = [
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
-    subtitle: 'Manage client portal members and invitations.',
     iconName: 'users',
   },
   {
@@ -212,7 +201,6 @@ export const routeMetadata = [
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
-    subtitle: 'Review recent client-facing portal activity.',
     iconName: 'clock',
   },
   {
@@ -224,7 +212,6 @@ export const routeMetadata = [
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
-    subtitle: 'Manage client dependencies and responses.',
     iconName: 'messageSquare',
   },
   {
@@ -236,7 +223,6 @@ export const routeMetadata = [
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
-    subtitle: 'Manage the client-facing overview content and publish state.',
     iconName: 'fileText',
   },
   {
@@ -246,7 +232,6 @@ export const routeMetadata = [
     pageTitle: 'Team Tasks',
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
     header: TeamTasksPageHeader,
-    subtitle: 'Update assigned work without publishing the client overview.',
     iconName: 'checkCircle2',
   },
   {

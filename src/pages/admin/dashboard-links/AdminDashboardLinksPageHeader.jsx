@@ -33,7 +33,6 @@ export function AdminDashboardLinksPageHeader({ routeParams = {}, runtime }) {
   return (
     <PageHeader
       primaryAction={{ children: 'New Dashboard', to: createHref }}
-      subtitle="Manage external dashboard embeds and links across client portal workspaces."
       title="Dashboard Links"
     />
   )

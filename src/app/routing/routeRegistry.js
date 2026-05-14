@@ -76,7 +76,6 @@ export const routes = [
     label: 'Overview',
     pageTitle: 'Client Overview',
     allowedRoles: [USER_ROLES.CLIENT_USER],
-    subtitle: 'Status, progress, active work, needed actions, dashboard, and latest report.',
   },
   {
     component: ClientDashboardPage,
@@ -88,7 +87,6 @@ export const routes = [
     pageTitle: 'Marketing Dashboard',
     allowedRoles: [USER_ROLES.CLIENT_USER],
     showInNav: false,
-    subtitle: 'External marketing dashboard surface for the client portal.',
   },
   {
     component: ClientReportsPage,
@@ -100,7 +98,6 @@ export const routes = [
     pageTitle: 'Monthly Reports',
     allowedRoles: [USER_ROLES.CLIENT_USER],
     showInNav: false,
-    subtitle: 'Published monthly summaries and archive.',
   },
   {
     component: AdminClientsPage,
@@ -111,7 +108,6 @@ export const routes = [
     label: 'Clients',
     pageTitle: 'Clients',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
-    subtitle: 'Create clients and open their client-facing status hub.',
   },
   {
     component: TeamTasksPage,
@@ -122,7 +118,6 @@ export const routes = [
     label: 'Tasks',
     pageTitle: 'Tasks',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
-    subtitle: 'Create and manage work across client projects.',
   },
   {
     component: AdminDashboardLinksPage,
@@ -133,7 +128,6 @@ export const routes = [
     label: 'Dashboards',
     pageTitle: 'Dashboard Links',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
-    subtitle: 'Manage external dashboard embeds and links for clients.',
   },
   {
     component: AdminReportsPage,
@@ -144,7 +138,6 @@ export const routes = [
     label: 'Reports',
     pageTitle: 'Reports',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
-    subtitle: 'Create, publish, archive, and manage client-facing monthly summaries.',
   },
   {
     component: ClientOverviewPage,
@@ -156,7 +149,6 @@ export const routes = [
     pageTitle: 'Client Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing portal.',
   },
   {
     component: ClientDashboardPage,
@@ -168,7 +160,6 @@ export const routes = [
     pageTitle: 'Dashboard Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing dashboard surface.',
   },
   {
     component: ClientReportsPage,
@@ -180,7 +171,6 @@ export const routes = [
     pageTitle: 'Report Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Admin preview of the client-facing monthly report surface.',
   },
   {
     component: AdminClientAccessPage,
@@ -193,7 +183,6 @@ export const routes = [
     pageTitle: 'Client Access',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Manage client portal members and invitations.',
   },
   {
     component: AdminClientActivityPage,
@@ -206,7 +195,6 @@ export const routes = [
     pageTitle: 'Client Activity',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Review recent client-facing portal activity.',
   },
   {
     component: AdminClientRequestsPage,
@@ -219,7 +207,6 @@ export const routes = [
     pageTitle: 'Client Requests',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Manage client dependencies and responses.',
   },
   {
     component: AdminClientOverviewPage,
@@ -232,7 +219,6 @@ export const routes = [
     pageTitle: 'Client Overview Editor',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
-    subtitle: 'Manage the client-facing overview content and publish state.',
   },
   {
     component: TeamTasksPage,
@@ -243,7 +229,6 @@ export const routes = [
     label: 'Team Tasks',
     pageTitle: 'Team Tasks',
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
-    subtitle: 'Update assigned work without publishing the client overview.',
   },
   {
     component: BuildBoardPage,

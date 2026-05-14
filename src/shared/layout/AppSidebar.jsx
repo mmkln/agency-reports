@@ -57,19 +57,20 @@ const demoNotifications = [
   },
 ]
 
-const sidebarRailItemWidth = 'w-[calc(var(--spacing-sidebar-collapsed)-var(--spacing-component))]'
-const sidebarExpandedItemWidth = 'sm:group-hover/app-sidebar:w-[calc(var(--spacing-sidebar-expanded)-var(--spacing-component))] sm:group-focus-within/app-sidebar:w-[calc(var(--spacing-sidebar-expanded)-var(--spacing-component))]'
-const sidebarLabelClass = 'ml-[calc(var(--spacing-sidebar-collapsed)-var(--spacing-component))] min-w-0 truncate pr-control opacity-0 transition-opacity duration-motion-fast delay-motion-label ease-motion-standard sm:group-hover/app-sidebar:opacity-100 sm:group-focus-within/app-sidebar:opacity-100'
+const sidebarRailInset = 'mx-[calc((var(--spacing-sidebar-collapsed)-var(--spacing-target))/2)]'
+const sidebarRailItemWidth = 'w-target'
+const sidebarExpandedItemWidth = 'sm:group-hover/app-sidebar:w-[calc(var(--spacing-sidebar-expanded)-var(--spacing-sidebar-collapsed)+var(--spacing-target))] sm:group-focus-within/app-sidebar:w-[calc(var(--spacing-sidebar-expanded)-var(--spacing-sidebar-collapsed)+var(--spacing-target))]'
+const sidebarLabelClass = 'ml-target min-w-0 truncate pr-control opacity-0 transition-opacity duration-motion-fast delay-motion-label ease-motion-standard sm:group-hover/app-sidebar:opacity-100 sm:group-focus-within/app-sidebar:opacity-100'
 const sidebarIconSlotClass = `absolute left-0 top-1/2 flex ${sidebarRailItemWidth} -translate-y-1/2 items-center justify-center`
 
 const sidebarRowTone = {
   nav: {
-    active: 'bg-fill-secondary text-text-primary',
-    idle: 'text-text-secondary hover:bg-fill-tertiary hover:text-text-primary',
+    active: 'bg-fill text-text-primary',
+    idle: 'text-text-secondary hover:bg-fill-secondary hover:text-text-primary',
   },
   utility: {
     active: '',
-    idle: 'text-text-muted hover:bg-fill-tertiary hover:text-text-primary',
+    idle: 'text-text-muted hover:bg-fill-secondary hover:text-text-primary',
   },
   search: {
     active: '',
@@ -81,7 +82,8 @@ function sidebarRowClass({ isActive = false, tone = 'nav' } = {}) {
   const toneClass = sidebarRowTone[tone] ?? sidebarRowTone.nav
 
   return cn(
-    'relative mx-item flex h-target items-center overflow-hidden rounded-control text-ui font-medium no-underline outline-none transition-[width,background-color,color] duration-motion-fast ease-motion-standard focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35',
+    'relative flex h-target items-center overflow-hidden rounded-control text-ui font-medium no-underline outline-none transition-[width,background-color,color] duration-motion-fast ease-motion-standard focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35',
+    sidebarRailInset,
     sidebarRailItemWidth,
     sidebarExpandedItemWidth,
     isActive ? toneClass.active : toneClass.idle,

@@ -30,7 +30,6 @@ export function AppShell({
             <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />
           ) : (
             <PageHeader
-              subtitle={activeRoute.subtitle}
               title={activeRoute.pageTitle ?? activeRoute.label}
             />
           )

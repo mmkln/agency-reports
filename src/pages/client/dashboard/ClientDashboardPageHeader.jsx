@@ -22,13 +22,12 @@ export function ClientDashboardPageHeader({ routeParams = {}, runtime }) {
   })
 
   if (page.status === 'error') {
-    return <PageHeader subtitle="Check the client link or contact your agency manager." title="Access denied" />
+    return <PageHeader title="Access denied" />
   }
 
   return (
     <PageHeader
       actions={<HeaderAction dashboard={page.dashboard} />}
-      subtitle={`Marketing dashboard for ${page.client.name}`}
       title="Marketing Dashboard"
     />
   )
