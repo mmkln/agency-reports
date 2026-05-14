@@ -374,7 +374,7 @@ export function CreateClientModal({
                     <Link to={`/admin/client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <Link to={`/accept-invite?token=${lastCreatedClient.invitation.token}`}>Open invite</Link>
+                    <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Manage access</Link>
                   </Button>
                 </div>
               </div>

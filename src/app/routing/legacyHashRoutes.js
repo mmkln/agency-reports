@@ -7,6 +7,7 @@ const routeMap = {
   'admin-client-dashboard-preview': '/admin/client-dashboard-preview',
   'admin-client-overview': '/admin/client-overview',
   'admin-client-preview': '/admin/client-preview',
+  'admin-client-requests': '/admin/client-requests',
   'admin-clients': '/admin/clients',
   'admin-dashboard-links': '/admin/dashboard-links',
   'admin-reports': '/admin/reports',

@@ -117,6 +117,9 @@ Do not solve top-of-page clutter by adding another compact row, card strip, bord
 ## Navigation
 
 - Use the sidebar for stable top-level destinations and high-frequency navigation.
+- Use top navigation only for a small flat set of destinations where labels remain readable and the page content still starts quickly.
+- Choose sidebar, top navigation, or split view from the product hierarchy before styling active states. Do not switch navigation patterns to solve a visual dissatisfaction with individual buttons.
+- Keep role changes and demo role switchers independent from shell decisions. Role can filter destinations and permissions without requiring a different navigation component.
 - Treat persistent sidebars and headers as anchored app shell, and reserve floating navigation treatment for temporary controls or explicitly requested floating chrome.
 - For selected sidebar items, use rounded neutral selection fills, label/icon contrast, and focus states before adding any color.
 - For collapsed/expanded sidebar items, keep the icon anchor stable and reveal labels independently. Do not animate icon alignment, padding, or justification.
@@ -131,6 +134,7 @@ Do not solve top-of-page clutter by adding another compact row, card strip, bord
 - Use consistent row height and aligned columns so repeated data is easy to scan.
 - Put the most identifying text first, then status, metadata, metrics, and actions.
 - Keep inline row actions secondary. Primary workflows should happen through selection, toolbar actions, or a detail panel.
+- Parent table actions should open the management surface for a related workflow, not jump directly into another actor's flow. Use explicit labels such as preview when a cross-role route is intentionally exposed for review.
 - Use separators and whitespace before adding filled row backgrounds.
 - Empty, loading, and error states belong inside the content region they replace.
 
@@ -142,12 +146,19 @@ Do not solve top-of-page clutter by adding another compact row, card strip, bord
 - Use the control that matches the decision: checkbox/toggle for binary values, segmented control for small exclusive choices, select/menu for larger option sets, slider/stepper/input for numeric values.
 - Use `bg-control`, `hover:bg-control-hover`, `bg-control-selected`, and `border-control-border` for standard interactive primitives. Do not reuse content block tokens such as `bg-block` for inputs or buttons.
 - Use shared primitives and semantic control sizes before local control styling. Avoid arbitrary heights and custom backgrounds when `h-target`, `h-control-small`, `h-control-large`, or an existing variant fits.
+- Use a compound input with an attached trailing action when one value can be typed, pasted, generated, uploaded, or selected by another short action. Keep the text field and action visually unified through shared height, border, radius, and background.
+- Hide native file inputs behind styled controls and render file state separately. Browser-provided file input chrome should not be treated as final product UI.
 - Do not use a generic button when a specific control communicates the state more clearly.
 - Destructive actions need a destructive role and should be visually separated from routine actions.
 
 ## Buttons And Actions
 
 - Use one primary action per meaningful region.
+- Page-level creation commands must use the semantic create-action API: `PageHeader.primaryAction`, `AdminClientWorkspaceHeader.primaryAction`, or `PagePrimaryAction`.
+- Feature pages must not locally choose color, radius, shadow, height, or icon size for create actions such as New Client, New Task, New Dashboard, or New Report.
+- If a create action needs a different appearance because it appears in a compact workspace header, encode that through the action component context instead of page-local classes.
+- Do not present multiple actions when they route to the same destination or produce the same state. Combine them into one clearly labeled action until the product has separate behavior to expose.
+- Preview actions must say what is being previewed and from which source. Avoid generic labels when draft, published, client-visible, and admin-only states matter.
 - Use system blue roles (`primary`/`action`) for actions, focus, selection, and links.
 - Use secondary or ghost actions for routine commands.
 - Use destructive styling only for destructive or irreversible operations.

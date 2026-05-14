@@ -142,12 +142,15 @@ test('client can answer a needed action and admin can mark it resolved', async (
   await expect(neededAction.getByText(responseText)).toBeVisible()
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
 
   await expect(page.getByText(responseText)).toBeVisible()
-  await page.getByRole('button', { name: 'Mark resolved' }).click()
-  await expect(page.getByText('resolved').first()).toBeVisible()
-  await expect(page.getByText(/Saved.*just now/).first()).toBeVisible()
+  await page
+    .getByTestId(`request-card-${SEED_IDS.NEEDED_OFFER_DETAILS}`)
+    .getByRole('button', { name: 'Resolve' })
+    .click()
+  await page.getByRole('button', { name: 'Resolved' }).click()
+  await expect(page.getByText(responseText)).toBeVisible()
 })
 
 test('client overview hides internal tasks and internal notes', async ({ page }) => {

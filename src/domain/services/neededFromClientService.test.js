@@ -5,6 +5,8 @@ import { USER_ROLES } from '../../entities/profile'
 import {
   answerNeededAction,
   cancelNeededAction,
+  createNeededAction,
+  listNeededActionsWorkspace,
   resolveNeededAction,
 } from './neededFromClientService'
 
@@ -29,7 +31,125 @@ function createRepository(record) {
   }
 }
 
+function createEntityRepository(initialRecords = []) {
+  const records = initialRecords.map((record) => ({ ...record }))
+
+  return {
+    findById(id) {
+      return records.find((record) => record.id === id) ?? null
+    },
+    list() {
+      return records
+    },
+    listByClientId(clientId) {
+      return records.filter((record) => record.client_id === clientId)
+    },
+    upsert(record) {
+      const index = records.findIndex((item) => item.id === record.id)
+
+      if (index >= 0) {
+        records[index] = { ...records[index], ...record }
+      } else {
+        records.push(record)
+      }
+
+      return record
+    },
+  }
+}
+
 describe('neededFromClientService', () => {
+  it('lists client requests for agency admins by client and status', () => {
+    const repositories = {
+      clients: createEntityRepository([
+        {
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+          name: 'Client A',
+        },
+        {
+          agency_id: 'other-agency',
+          id: '55555555-5555-4555-8555-555555555555',
+          name: 'Other Client',
+        },
+      ]),
+      neededFromClient: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          due_date: '2026-05-10',
+          id: IDS.ACTION,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Approve creatives',
+        },
+        {
+          client_id: IDS.CLIENT,
+          id: '66666666-6666-4666-8666-666666666666',
+          status: NEEDED_ACTION_STATUSES.RESOLVED,
+          title: 'Resolved item',
+        },
+      ]),
+    }
+
+    const result = listNeededActionsWorkspace({
+      filters: {
+        clientId: IDS.CLIENT,
+        status: NEEDED_ACTION_STATUSES.PENDING,
+      },
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+      },
+    })
+
+    expect(result.actions.map((action) => action.title)).toEqual(['Approve creatives'])
+    expect(result.actions[0]).toMatchObject({
+      clientName: 'Client A',
+      status: NEEDED_ACTION_STATUSES.PENDING,
+    })
+  })
+
+  it('creates pending client requests for agency admins', () => {
+    const repositories = {
+      clients: createEntityRepository([
+        {
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+          name: 'Client A',
+        },
+      ]),
+      neededFromClient: createEntityRepository([]),
+    }
+
+    const createdAction = createNeededAction({
+      idGenerator: () => IDS.ACTION,
+      input: {
+        clientId: IDS.CLIENT,
+        description: 'Please approve the next creative batch.',
+        dueDate: '2026-05-10',
+        relatedLink: 'https://example.com/creative',
+        title: 'Approve creatives',
+      },
+      now: () => '2026-05-09T10:00:00.000Z',
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })
+
+    expect(createdAction).toMatchObject({
+      due_date: '2026-05-10',
+      related_link: 'https://example.com/creative',
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Approve creatives',
+    })
+    expect(repositories.neededFromClient.findById(IDS.ACTION)).toMatchObject({
+      client_id: IDS.CLIENT,
+    })
+  })
+
   it('lets a client user answer a pending needed action', () => {
     const repositories = {
       neededFromClient: createRepository({

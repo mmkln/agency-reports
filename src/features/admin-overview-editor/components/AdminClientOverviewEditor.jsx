@@ -37,7 +37,6 @@ import {
   restoreAdminClientOverviewFromPublished,
   saveAdminClientOverview,
 } from '../../../domain/services/adminOverviewService'
-import { resolveNeededAction } from '../../../domain/services/neededFromClientService'
 import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../../entities/needed-from-client'
@@ -443,7 +442,7 @@ function CurrentFocusEditor({ draft, onChange }) {
   )
 }
 
-function ConnectedWorkflowSummary({ editor, onResolveNeededAction }) {
+function ConnectedWorkflowSummary({ editor }) {
   const tasks = editor.tasks ?? []
   const neededActions = editor.neededActions ?? []
   const clientId = editor.client.id
@@ -468,8 +467,8 @@ function ConnectedWorkflowSummary({ editor, onResolveNeededAction }) {
       title: 'Tasks',
     },
     {
-      action: 'Review activity',
-      href: `/admin/client-activity?clientId=${clientId}`,
+      action: 'Manage requests',
+      href: `/admin/client-requests?clientId=${clientId}`,
       iconName: 'messageSquare',
       meta: `${openRequests.length} open - ${answeredRequests.length} answered`,
       title: 'Client requests',
@@ -478,7 +477,7 @@ function ConnectedWorkflowSummary({ editor, onResolveNeededAction }) {
 
   return (
     <EditorCard iconName="link" title="Connected Workflow">
-      <div className="grid gap-3">
+      <div className="grid gap-1">
         {rows.map((row) => (
           <div className="group flex items-center gap-3 rounded-control px-2 py-2 transition-colors hover:bg-control" key={row.title}>
             <Icon className="text-text-quaternary" name={row.iconName} size={16} />
@@ -494,47 +493,6 @@ function ConnectedWorkflowSummary({ editor, onResolveNeededAction }) {
             </Button>
           </div>
         ))}
-
-        {neededActions.length > 0 ? (
-          <div className="border-t border-separator pt-3">
-            <p className="mb-2 text-xs font-semibold tracking-wide text-text-muted uppercase">Client requests</p>
-            <div className="grid gap-2">
-              {neededActions.map((action) => {
-                const canResolve = action.status === NEEDED_ACTION_STATUSES.ANSWERED
-
-                return (
-                  <article className="rounded-control border border-control-border bg-block-subtle p-3" key={action.id}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold text-text-primary">{action.title}</p>
-                          <Badge className="capitalize" variant="outline">{action.status}</Badge>
-                        </div>
-                        {action.client_response ? (
-                          <p className="mt-2 text-xs leading-5 text-text-muted">
-                            Client response: {action.client_response}
-                          </p>
-                        ) : (
-                          <p className="mt-2 text-xs leading-5 text-text-muted">No client response yet.</p>
-                        )}
-                      </div>
-                      {canResolve ? (
-                        <Button
-                          onClick={() => onResolveNeededAction(action.id)}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                        >
-                          Mark resolved
-                        </Button>
-                      ) : null}
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          </div>
-        ) : null}
       </div>
     </EditorCard>
   )
@@ -1086,40 +1044,6 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
       })
   }
 
-  function handleResolveNeededAction(actionId) {
-    return runtime.dataClient.write((repositories) => {
-      resolveNeededAction({
-        actionId,
-        repositories,
-        viewer: runtime.viewer,
-      })
-
-      return loadEditor(clientId, {
-        ...runtime,
-        repositories,
-      })
-    })
-      .then((nextEditor) => {
-        setPageState({
-          draft: createDraft(nextEditor),
-          editor: nextEditor,
-          error: '',
-          status: 'ready',
-        })
-        setIsDirty(false)
-        setSaveState('Saved - just now')
-        toast.success('Client request resolved', 'The request is now marked resolved.')
-      })
-      .catch((caughtError) => {
-        setPageState((currentPageState) => ({
-          ...currentPageState,
-          error: caughtError.message,
-          status: 'error',
-        }))
-        toast.error('Request was not resolved', caughtError.message)
-      })
-  }
-
   if (pageState.status === 'error' && error && !editor) {
     return (
       <PageShell className="px-4 py-8 sm:px-6 lg:px-8">
@@ -1243,7 +1167,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
               onUpdateReports={(reports) => updateDraft((currentDraft) => ({ ...currentDraft, reports }))}
             />
           </div>
-          <ConnectedWorkflowSummary editor={editor} onResolveNeededAction={handleResolveNeededAction} />
+          <ConnectedWorkflowSummary editor={editor} />
         </div>
       </PageShell>
     </>

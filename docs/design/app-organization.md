@@ -36,6 +36,9 @@ AppShell
 - Pages, tables, charts, forms, metrics, and cards are content. They should use block/surface/background tokens and stay visually calmer than navigation.
 - Keep the same page anatomy across dashboard, lists, boards, and workflow screens so users do not have to relearn structure.
 - Avoid page-specific shells when shared wrappers can express the same anatomy.
+- For client-scoped admin work, the client is the workspace container. Overview, Tasks, Requests, Dashboards, Reports, Access, and Activity should appear as sibling surfaces under the same client context, not as unrelated pages that happen to share a `clientId`.
+- Separate publishing surfaces from operational workflow surfaces. A client overview editor publishes authored communication and may show compact links to live workflows; it should not become the full task manager, request manager, report manager, dashboard manager, access panel, or activity feed.
+- Do not solve information-architecture problems with visual wrappers. If a screen needs labels like "what the client sees" or "agency workspace" to explain itself, reassess ownership and navigation before tuning cards, borders, spacing, or color.
 
 ## Space And Layout
 
@@ -50,9 +53,14 @@ AppShell
 ## Navigation
 
 - Sidebars expose stable top-level destinations and should remain shallow.
+- Top navigation is appropriate for a small, flat set of primary destinations. Move to a sidebar only when the app has enough stable destinations, nested workspace areas, or high-frequency switching to justify persistent vertical navigation.
+- Do not split the app shell by role just because roles exist. Split shell structure only when the roles have materially different navigation models; otherwise keep one stable shell and vary allowed destinations/actions.
+- Keep navigation visually quieter than page content. Selected states should be clear but restrained, using neutral fills, contrast, and spacing before saturated color or decorative markers.
+- Keep navigation, page commands, search, notifications, and account controls as separate groups. A destination is not a command, and a command should not look like a destination.
 - Sidebar selection uses neutral rounded fills, stronger text/icon contrast, and focus state. Do not add active bars, rails, colored strips, dots, or decorative markers.
 - If a content hierarchy becomes deeper than two levels, introduce a content list or detail panel instead of adding more sidebar depth.
 - Keep account/workspace/settings actions visually separated from primary destinations.
+- Use object names for navigation and section labels. Prefer Overview, Tasks, Requests, Dashboards, Reports, Access, and Activity over abstract audience labels such as client-facing, internal, connected workflow, or agency workspace.
 
 ## Toolbars And Search
 
@@ -89,10 +97,13 @@ AppShell
 - Make the current location obvious with page titles, selected navigation, and consistent content anatomy.
 - Use progressive disclosure for advanced filters and settings.
 - Use short, specific labels. Remove redundant words that repeat the page title or app name.
+- Do not create "choice theater". A menu, dropdown, segmented control, or mode switch must expose options that change data, permissions, destination, or rendering in a way the user can understand.
+- When previewing another audience's experience, label the preview by visibility and source of truth. For example, distinguish "published client version" from "saved draft preview" only when both versions actually exist.
 - Preserve content visibility when controls appear; floating controls should not dominate the page.
 - Default page chrome should reveal the primary content quickly. Avoid stacked setup cards, counter strips, and toolbar blocks before the table/list unless each visible block supports the immediate task.
 - When improving a messy page, audit the sequence of neighboring regions, not only the requested component. Header, toolbar, filters, counters, alerts, and content must read as one workflow.
 - Do not restyle clutter. First remove duplicated regions, demote passive context, and collapse secondary setup/details. Only then tune spacing, radius, color, or shadow.
+- Before shortening a long page with sticky navigation, tabs, accordions, or grouped zones, ask whether the page owns too many jobs. Moving a workflow to its owning surface is usually better than making a mixed-purpose page easier to scroll.
 - Keep navigation transitions stable. Users should not see intermediate states where a sidebar row is wide but only shows a centered icon, or where labels affect icon alignment.
 - Empty, loading, and error states replace the content region they describe.
 

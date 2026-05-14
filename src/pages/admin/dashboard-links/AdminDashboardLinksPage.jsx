@@ -80,6 +80,9 @@ export function AdminDashboardLinksPage({ routeParams = {}, runtime }) {
   })
   const clients = dashboardLinksResource.data?.clients ?? []
   const dashboardLinks = dashboardLinksResource.data?.dashboardLinks ?? []
+  const visibleDashboardLinks = routeParams.clientId
+    ? dashboardLinks.filter((dashboardLink) => dashboardLink.clientId === routeParams.clientId)
+    : dashboardLinks
   const defaultClientId = routeParams.clientId || clients[0]?.id || ''
 
   function reloadDashboardLinks() {
@@ -87,7 +90,7 @@ export function AdminDashboardLinksPage({ routeParams = {}, runtime }) {
   }
 
   function closeCreateModal() {
-    navigate('/admin/dashboard-links', { replace: true })
+    navigate(routeParams.clientId ? `/admin/dashboard-links?clientId=${routeParams.clientId}` : '/admin/dashboard-links', { replace: true })
   }
 
   function handleSaved(dashboardLink) {
@@ -111,9 +114,9 @@ export function AdminDashboardLinksPage({ routeParams = {}, runtime }) {
 
   return (
     <>
-      {dashboardLinks.length > 0 ? (
+      {visibleDashboardLinks.length > 0 ? (
         <DashboardLinksTable
-          dashboardLinks={dashboardLinks}
+          dashboardLinks={visibleDashboardLinks}
           onDeleteDashboardLink={(dashboardLinkId) => {
             const deletedDashboard = dashboardLinks.find((dashboardLink) => dashboardLink.id === dashboardLinkId)
 

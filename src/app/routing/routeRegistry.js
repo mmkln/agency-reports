@@ -12,6 +12,7 @@ import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReport
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClientActivityPage } from '../../pages/admin/client-activity/AdminClientActivityPage'
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
+import { AdminClientRequestsPage } from '../../pages/admin/client-requests/AdminClientRequestsPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
@@ -206,6 +207,19 @@ export const routes = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
     subtitle: 'Review recent client-facing portal activity.',
+  },
+  {
+    component: AdminClientRequestsPage,
+    fullBleedContent: true,
+    href: '/admin/client-requests',
+    hidePageHeader: true,
+    iconName: 'messageSquare',
+    id: 'admin-client-requests',
+    label: 'Requests',
+    pageTitle: 'Client Requests',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    subtitle: 'Manage client dependencies and responses.',
   },
   {
     component: AdminClientOverviewPage,

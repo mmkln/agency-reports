@@ -69,6 +69,22 @@ function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
 }
 
+function matchesSearch(task, clientsById, projectsById, searchValue) {
+  const normalizedSearch = normalizeText(searchValue).toLowerCase()
+
+  if (!normalizedSearch) {
+    return true
+  }
+
+  return [
+    task.title,
+    task.description,
+    task.assignee_name,
+    clientsById.get(task.client_id)?.name,
+    projectsById.get(task.project_id)?.name,
+  ].some((value) => normalizeText(value).toLowerCase().includes(normalizedSearch))
+}
+
 function mapTask({ clientsById, projectsById, task, viewer }) {
   const isAssignedToViewer = task.assignee_name === viewer.name
 
@@ -115,6 +131,7 @@ export function listTaskWorkspace({
     .filter((task) => matchesFilter(task.status, filters.status))
     .filter((task) => matchesFilter(task.visibility, filters.visibility))
     .filter((task) => filters.scope !== 'mine' || task.assignee_name === viewer.name)
+    .filter((task) => matchesSearch(task, clientsById, projectsById, filters.search))
     .sort((a, b) => {
       const dateA = new Date(a.due_date ?? '9999-12-31').getTime()
       const dateB = new Date(b.due_date ?? '9999-12-31').getTime()
@@ -134,6 +151,7 @@ export function listTaskWorkspace({
     filters: {
       clientId: filters.clientId ?? 'all',
       projectId: filters.projectId ?? 'all',
+      search: filters.search ?? '',
       scope: filters.scope ?? 'all',
       status: filters.status ?? 'all',
       visibility: filters.visibility ?? 'all',

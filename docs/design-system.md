@@ -79,6 +79,7 @@ Component spacing:
 - Controls should use control spacing tokens or shared primitive defaults.
 - Cards, panels, sheets, dialogs, tables, and form groups should inherit shared primitive spacing before page-local overrides.
 - Avoid one-off pixel values unless matching an existing component contract.
+- Attached input actions should read as one compound control: shared height, shared border/radius, one control background, and a trailing action segment separated by a subtle divider.
 
 ## Radius
 
@@ -118,6 +119,8 @@ Component library contract:
 - Public design-system components are exported from `src/shared/ui`; prefer that API for reusable structure and controls before adding page-local wrappers.
 - Appearance mode is owned by `ThemeProvider` from `src/shared/theme`; components should not toggle `.dark` or read/write theme storage directly.
 - Dropdowns, selects, and sheets use the shared material/motion tokens. Keep placement, padding, radius, shadow, and close-control behavior in the primitive unless a workflow has a concrete accessibility or layout requirement.
+- Native file inputs should not be visible as polished product UI. Hide the native input, trigger it from a styled control, and render filename, preview, validation, and removal actions explicitly.
+- When a value can be provided by URL or upload, use one value field with an attached upload action instead of showing two competing inputs or a mode switch.
 
 Brand:
 - Use `BrandLogo` from `src/shared/ui`.

@@ -1,4 +1,13 @@
-export function PageHeader({ actions, title }) {
+import { PagePrimaryAction } from '@/shared/ui'
+
+export function PageHeader({ actions, primaryAction, title }) {
+  const renderedActions = (
+    <>
+      {actions}
+      {primaryAction ? <PagePrimaryAction {...primaryAction} /> : null}
+    </>
+  )
+
   return (
     <header className="border-b border-separator bg-surface">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:flex lg:items-center lg:justify-between lg:px-8">
@@ -7,7 +16,7 @@ export function PageHeader({ actions, title }) {
             {title}
           </h1>
         </div>
-        {actions ? <div className="mt-5 flex gap-3 lg:mt-0 lg:ml-4">{actions}</div> : null}
+        {actions || primaryAction ? <div className="mt-5 flex gap-3 lg:mt-0 lg:ml-4">{renderedActions}</div> : null}
       </div>
     </header>
   )

@@ -89,6 +89,8 @@ Pages should not:
 - contain reusable business widgets
 ```
 
+Pages also should not become mixed ownership surfaces. When a route starts combining authored publishing, operational tasks, client requests, dashboard management, report publishing, access control, and activity history, split those jobs into owning pages and connect them through summaries or links.
+
 ### widgets
 
 Widgets are large screen blocks built from entities and shared UI.
@@ -168,6 +170,31 @@ Services should:
 ```
 
 Today services may use fixtures. Later they can call Supabase/API without rewriting UI.
+
+## Product Ownership Boundaries
+
+Treat the main admin product surfaces as ownership boundaries:
+
+```text
+Client workspace = client-scoped container and navigation context
+Overview = authored client-facing communication and publish state
+Tasks = agency execution workflow
+Requests = client dependency workflow
+Dashboards = external dashboard links and embed state
+Reports = monthly report publishing and archive
+Access = members and invitations
+Activity = audit/history
+```
+
+Rules:
+
+```text
+- Client-scoped pages should share the client workspace header/tabs so context does not reset between surfaces.
+- Overview editors can reference tasks, requests, dashboards, and reports, but full management belongs to the owning surface.
+- Workflow records remain live source records in their repositories/services. Do not copy them into overview draft/publish snapshots unless a use case explicitly requires a frozen historical artifact.
+- Draft/publish state belongs to authored overview content and report content, not to operational workflow records by default.
+- If a workflow has status transitions, responses, history, filters, creation, or destructive actions, model it as a feature/domain service and route-level surface rather than an embedded section in another page.
+```
 
 ### shared
 

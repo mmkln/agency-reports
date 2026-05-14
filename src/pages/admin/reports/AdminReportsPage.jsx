@@ -179,7 +179,10 @@ export function AdminReportsPage({ routeParams = {}, runtime }) {
   }
 
   function resetFilters() {
-    setFilters(initialFilters)
+    setFilters({
+      ...initialFilters,
+      clientId: routeParams.clientId || REPORT_FILTER_ALL,
+    })
   }
 
   function reloadReports() {
@@ -187,7 +190,7 @@ export function AdminReportsPage({ routeParams = {}, runtime }) {
   }
 
   function closeCreateModal() {
-    navigate('/admin/reports', { replace: true })
+    navigate(routeParams.clientId ? `/admin/reports?clientId=${routeParams.clientId}` : '/admin/reports', { replace: true })
   }
 
   function handleSaved(report) {

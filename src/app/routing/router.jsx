@@ -24,6 +24,7 @@ import {
   AdminReportsPageRoute,
   AdminClientAccessPageRoute,
   AdminClientActivityPageRoute,
+  AdminClientRequestsPageRoute,
   AdminClientPreviewPageRoute,
   AdminClientOverviewPageRoute,
   AdminTasksPageRoute,
@@ -213,6 +214,18 @@ export const routeMetadata = [
     hidePageHeader: true,
     subtitle: 'Review recent client-facing portal activity.',
     iconName: 'clock',
+  },
+  {
+    path: '/admin/client-requests',
+    id: 'admin-client-requests',
+    label: 'Requests',
+    pageTitle: 'Client Requests',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    subtitle: 'Manage client dependencies and responses.',
+    iconName: 'messageSquare',
   },
   {
     path: '/admin/client-overview',
@@ -436,6 +449,16 @@ export const router = createBrowserRouter(
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
                 <Suspense fallback={<LoadingFallback />}>
                   <AdminClientActivityPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'client-requests',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminClientRequestsPageRoute />
                 </Suspense>
               </ProtectedRoute>
             ),

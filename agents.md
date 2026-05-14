@@ -28,12 +28,15 @@
 - Add product pages deliberately from a use case or requested workflow, not as placeholder shells.
 - Centralize routing and route metadata instead of scattering navigation behavior across pages.
 - Keep shared infrastructure generic and product-specific behavior near the feature or domain that owns it.
+- Resolve product ownership before layout: if a page mixes publishing, operations, access, reports, and activity, split or link the workflows instead of adding visual groups.
+- Treat client-scoped admin work as a client workspace. Reuse the shared client workspace header/tabs for client-specific overview, tasks, requests, dashboards, reports, access, and activity instead of making isolated query-param pages feel unrelated.
 
 ## UI Composition
 
 - Reuse existing shared layout, UI, chart, icon, and primitive components before creating page-local equivalents.
 - Prefer shadcn primitives from `src/components/ui` for low-level controls and compose business UI around them.
 - Do not build parallel base components when an existing primitive can express the same interaction.
+- Treat Apple/HIG-style references as hierarchy and restraint guidance, not as a reason to copy platform chrome literally or redesign the information architecture prematurely.
 - Avoid borders when spacing, background, typography, or state color can communicate structure clearly; too many borders make dense admin UI feel overloaded.
 - Keep primitive defaults aligned through shared tokens and component defaults instead of repeated page-level corrective classes.
 - Let shared primitives own icon/text alignment, size, and line-height; pass icons through the primitive API instead of mixing SVG nodes into text children.
@@ -50,8 +53,14 @@
 ## Page Layout
 
 - Put page-level entity context, primary status, filters, and main actions in the route header when they control the whole screen.
+- Keep global navigation quiet and structural. It should orient and switch major destinations, not compete with page content, search, or primary workflow actions.
+- Choose top navigation, sidebar, or split navigation from the actual information architecture: use a top nav for a small flat set of destinations, a sidebar for many stable destinations or nested workspaces, and avoid role-specific shells until the role workflows truly diverge.
+- Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
+- Define page-level create actions through `PageHeader.primaryAction`, `AdminClientWorkspaceHeader.primaryAction`, or `PagePrimaryAction`; do not hand-style buttons such as New Client, New Task, New Dashboard, or New Report in page code.
+- Treat primary create action styling as a design-system responsibility. Pages may provide label, destination, disabled state, and product behavior, but not local color, radius, shadow, size, or icon sizing.
 - In editors with auto-save, keep the action bar compact and trust-based: visible save status, preview menu, one primary publish/submit action, and secondary/destructive actions in overflow.
 - Separate client-visible/front-stage content from internal/back-stage agency workflow instead of mixing both audiences in one undifferentiated card stack.
+- Do not turn audience labels such as "client-facing", "internal", or "agency workspace" into large layout wrappers. Prefer object-based surfaces and sections such as Overview, Tasks, Requests, Reports, Dashboards, Access, and Activity.
 - Avoid redundant local headers or top cards that repeat information already owned by the page header.
 - Keep filters close to the page-level controls they affect, with accessible hidden headings when the visual title is intentionally omitted.
 - Keep page-header status metadata inline and unboxed; do not put status labels inside bordered containers.
@@ -69,6 +78,9 @@
 - Gate destructive admin actions behind the shared confirmation dialog and phrase the consequence in terms of draft/published/client access impact.
 - Keep confirmation dialogs text-first and consistent: no icons in dialog action buttons, no decorative decision icons, shared primary/destructive tone mapping only.
 - Keep create/edit modals focused on fields and decisions required before submission; move explanatory future-state guidance into post-success states or follow-up actions.
+- Do not ask for lifecycle/status choices during creation when a safe default can be assigned in the domain and edited later in the owning workflow.
+- Treat multiple ways of setting the same value, such as upload or URL, as one field with a trailing action rather than separate inputs or mode switches unless the modes create genuinely different workflows.
+- Do not expose native file inputs as visible UI; use a hidden file input, a styled trigger, explicit filename/preview text, and shared validation handling.
 - Auto-derived editable values may auto-fill until the user edits them; after that, preserve user control while continuing validation.
 - Put file parsing, preview, size/type checks, and `FileReader` behavior in dedicated inputs or feature hooks.
 - Keep internal notes, client-visible text, and reusable summaries as separate fields when they have different audiences.
@@ -86,6 +98,7 @@
 - Validate client-facing admin records in domain services before saving: required safe text, valid dates/URLs, visibility rules, and ordering must not depend on UI-only checks.
 - Model client-request workflows as explicit status transitions with actor, timestamp, and history metadata so client responses and admin processing remain auditable when persistence changes.
 - Keep admin draft state separate from published client-facing state; client routes must read published data unless an authorized admin explicitly requests a draft preview.
+- Keep workflow records as live source records owned by their workflow surfaces. Do not copy tasks, client requests, activity, access, dashboards, or reports into an overview draft/publish snapshot unless the product explicitly needs a historical frozen artifact.
 - Record client activity through a domain activity service and keep activity feeds admin/team-only unless a use case explicitly exposes them to clients.
 - Preserve controlled fallback states for unavailable external resources, but do not use fallback UI as a reason to duplicate an active workflow.
 
@@ -94,6 +107,13 @@
 - Keep dashboard integrations embed/link oriented unless a use case explicitly requires custom analytics.
 - Keep report and summary content human-authored unless a use case explicitly requires generated content.
 - Link overview blocks to dedicated surfaces for deeper workflows instead of embedding full secondary experiences inside summaries.
+- Do not expose a choice unless each option produces a distinct, useful behavior or data source. If two options lead to the same result, collapse them into one action or implement the missing distinction first.
+- Label cross-role previews by what the user will actually see and who can see it, such as published client version or saved draft preview, instead of vague implementation labels.
+- Before adding a dropdown, segmented control, or mode switch, verify that the use case defines multiple states the user can meaningfully choose between.
+- Treat overview editors as publishing surfaces for authored communication. They may summarize related live workflows, but full task, request, report, dashboard, access, and activity management belongs on the owning surface.
+- When a workflow has lifecycle, status, response/history, filters, or create/edit actions, give it a dedicated surface or detail flow instead of embedding it inside another editor.
+- Keep row actions pointed at admin-owned management surfaces; do not send admins into client-facing acceptance or consumption flows unless the action is explicitly labeled as a preview.
+- Put lifecycle actions for secondary records, such as invitations, in the surface that owns that lifecycle instead of duplicating shortcut actions in parent tables.
 - In task detail overlays, keep the structure workflow-first: entity badges and meta, status control, conditional status reason panel, private/internal notes, client-safe summary, and primary actions in the actual overlay footer.
 - In task detail status sections, present status as a compact property where the current status value itself opens the status menu; avoid separate "Change" buttons and visible transition button banks.
 - Single status menus should behave like selection controls: include the current value and only domain-allowed target statuses, with the current draft value visibly selected.
@@ -110,6 +130,7 @@
 - For appearance/theme mode, use `ThemeProvider` and `useTheme` from `src/shared/theme`; do not toggle `.dark` or read/write theme storage from feature components.
 - After bulk remapping palette utilities to semantic tokens, audit for malformed opacity suffixes such as `bg-token0` or `bg-token/100` and replace them with the intended semantic class.
 - When routing page and feature imports through shared UI wrappers, preserve primitive behavior such as `asChild`, icon children, size variants, and explicit `className` tone overrides so the wrapper does not subtly change existing interactions.
+- When overriding shared primitive sizing with semantic Tailwind tokens, confirm `tailwind-merge` understands the custom token group so defaults such as sheet/modal widths do not silently win.
 - When changing primitive controls, dropdowns, selects, sheets, or cards, update `src/components/ui` defaults first so page components do not accumulate corrective Tailwind overrides.
 - Keep generated or third-party component files compatible with lint rules through minimal, targeted adjustments.
 - Avoid broad refactors while implementing a specific user request unless the refactor is necessary to complete it safely.

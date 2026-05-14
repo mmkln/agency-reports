@@ -1,21 +1,38 @@
-import { Link } from 'react-router-dom'
-
-import { Button } from '@/shared/ui'
-
-import { Icon } from '../../../shared/icons'
+import { listAdminClients } from '../../../domain/services/adminClientService'
+import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
 import { PageHeader } from '../../../shared/layout/PageHeader'
 
-export function AdminReportsPageHeader() {
+function getRouteClient(clientId, runtime) {
+  if (!clientId) {
+    return null
+  }
+
+  return listAdminClients({
+    repositories: runtime.repositories,
+    viewer: runtime.viewer,
+  }).find((client) => client.id === clientId) ?? null
+}
+
+export function AdminReportsPageHeader({ routeParams = {}, runtime }) {
+  const client = getRouteClient(routeParams.clientId, runtime)
+  const createHref = client
+    ? `/admin/reports?clientId=${client.id}&newReport=true`
+    : '/admin/reports?newReport=true'
+
+  if (client) {
+    return (
+      <AdminClientWorkspaceHeader
+        client={client}
+        currentPage="reports"
+        eyebrow="Client reports"
+        primaryAction={{ children: 'New Report', to: createHref }}
+      />
+    )
+  }
+
   return (
     <PageHeader
-      actions={(
-        <Button asChild>
-          <Link to="/admin/reports?newReport=true">
-            <Icon name="plus" size={16} />
-            New Report
-          </Link>
-        </Button>
-      )}
+      primaryAction={{ children: 'New Report', to: createHref }}
       subtitle="Create, publish, archive, and manage client-facing monthly summaries."
       title="Reports"
     />

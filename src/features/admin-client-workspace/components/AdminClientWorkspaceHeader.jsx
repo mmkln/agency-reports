@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   FoundationPageHeader,
+  PagePrimaryAction,
   PageShell,
 } from '@/shared/ui'
 
@@ -15,6 +16,30 @@ const tabs = [
     iconName: 'fileText',
     label: 'Overview',
     route: '/admin/client-overview',
+  },
+  {
+    id: 'tasks',
+    iconName: 'checkCircle2',
+    label: 'Tasks',
+    route: '/admin/tasks',
+  },
+  {
+    id: 'requests',
+    iconName: 'messageSquare',
+    label: 'Requests',
+    route: '/admin/client-requests',
+  },
+  {
+    id: 'dashboards',
+    iconName: 'layoutDashboard',
+    label: 'Dashboards',
+    route: '/admin/dashboard-links',
+  },
+  {
+    id: 'reports',
+    iconName: 'fileText',
+    label: 'Reports',
+    route: '/admin/reports',
   },
   {
     id: 'access',
@@ -40,6 +65,7 @@ export function AdminClientWorkspaceHeader({
   currentPage = 'overview',
   eyebrow = 'Client workspace',
   onStatusChange,
+  primaryAction,
 }) {
   const clientId = client?.id
   const portalSlug = getClientField(client, 'portalSlug', 'portal_slug')
@@ -67,6 +93,9 @@ export function AdminClientWorkspaceHeader({
             <div className="flex flex-wrap items-center justify-end gap-control">
               <ClientStatusSelector onSelect={onStatusChange} status={status} />
               {actions}
+              {primaryAction ? (
+                <PagePrimaryAction context="workspace" {...primaryAction} />
+              ) : null}
             </div>
           )}
           className="lg:items-center"

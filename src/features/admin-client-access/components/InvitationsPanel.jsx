@@ -185,7 +185,7 @@ export function InvitationsPanel({ clientId, runtime }) {
                     </Button>
                     <Button asChild size="sm" type="button" variant="outline">
                       <Link to={`/accept-invite?token=${invitation.token}`}>
-                        Open
+                        Preview invite page
                         <Icon name="arrowUpRight" size={13} />
                       </Link>
                     </Button>

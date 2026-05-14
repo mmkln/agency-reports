@@ -1,43 +1,48 @@
 import {
   getTaskCreatePath,
-  getTeamTaskFilterPath,
-  loadTeamTasks,
   normalizeTeamTaskFilters,
 } from './teamTaskFilterState'
-import { TaskFilters } from './teamTaskFilters'
-import { Link, useNavigate } from 'react-router-dom'
-import { Button } from '../../../shared/ui'
-import { Icon } from '../../../shared/icons'
 import { USER_ROLES } from '../../../entities/profile'
+import { listAdminClients } from '../../../domain/services/adminClientService'
+import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import { PageHeader } from '../../../shared/layout/PageHeader'
 
 function getTaskWorkspacePath(viewer) {
   return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
 }
 
+function getRouteClient(clientId, runtime) {
+  if (!clientId || clientId === 'all' || runtime.viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+    return null
+  }
+
+  return listAdminClients({
+    repositories: runtime.repositories,
+    viewer: runtime.viewer,
+  }).find((client) => client.id === clientId) ?? null
+}
+
 export function TeamTasksPageHeader({ activeRoute, routeParams = {}, runtime }) {
-  const navigate = useNavigate()
   const filters = normalizeTeamTaskFilters(routeParams)
-  const taskData = loadTeamTasks(filters, runtime)
   const basePath = activeRoute?.path ?? getTaskWorkspacePath(runtime.viewer)
+  const client = getRouteClient(filters.clientId, runtime)
+  const primaryAction = { children: 'New Task', to: getTaskCreatePath(filters, basePath) }
+
+  if (client) {
+    return (
+      <AdminClientWorkspaceHeader
+        client={client}
+        currentPage="tasks"
+        eyebrow="Client tasks"
+        primaryAction={primaryAction}
+      />
+    )
+  }
 
   return (
-    <header className="border-b border-control-border bg-block">
-      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-        <h1 className="sr-only">{activeRoute?.pageTitle ?? 'Tasks'}</h1>
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <TaskFilters
-            filters={filters}
-            onChange={(nextFilters) => navigate(getTeamTaskFilterPath(nextFilters, basePath))}
-            taskData={taskData}
-          />
-          <Button asChild className="shrink-0 bg-action text-action-foreground hover:bg-action-hover">
-            <Link to={getTaskCreatePath(filters, basePath)}>
-              <Icon name="plus" size={16} />
-              New Task
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </header>
+    <PageHeader
+      primaryAction={primaryAction}
+      title={activeRoute?.pageTitle ?? 'Tasks'}
+    />
   )
 }

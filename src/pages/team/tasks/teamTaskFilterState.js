@@ -4,6 +4,7 @@ export function normalizeTeamTaskFilters(routeParams = {}) {
   return {
     clientId: routeParams.clientId || 'all',
     projectId: routeParams.projectId || 'all',
+    search: routeParams.search || '',
     scope: routeParams.scope || 'all',
     status: routeParams.status || 'all',
     visibility: routeParams.visibility || 'all',
