@@ -132,6 +132,29 @@ function ReportUnavailableState({ clientId, latestReport }) {
   )
 }
 
+function PreviewOnlyNotice({ report }) {
+  if (report.isClientVisible) {
+    return null
+  }
+
+  return (
+    <Card className="border-warning/30 bg-warning/10 shadow-none">
+      <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-block text-warning-foreground ring-1 ring-warning/20">
+          <Icon name="eye" size={18} />
+        </span>
+        <div>
+          <h2 className="text-sm font-semibold text-text-primary">Preview only</h2>
+          <p className="mt-1 text-sm leading-6 text-text-secondary">
+            Preview only. This report is not visible to the client. Publish it when the client-facing
+            narrative is ready.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function ReportSection({ children, title }) {
   if (!children) {
     return null
@@ -605,7 +628,10 @@ export function ClientReportsPage({ routeParams = {}, runtime }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       {page.selectedReport ? (
-        <ReportReader report={page.selectedReport} />
+        <div className="grid gap-4">
+          <PreviewOnlyNotice report={page.selectedReport} />
+          <ReportReader report={page.selectedReport} />
+        </div>
       ) : (
         <ReportUnavailableState clientId={clientId} latestReport={page.latestReport} />
       )}

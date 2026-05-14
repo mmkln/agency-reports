@@ -108,6 +108,13 @@ function createClientViewer(clientId = IDS.CLIENT_A) {
   }
 }
 
+function createAdminViewer() {
+  return {
+    agencyId: IDS.AGENCY,
+    role: USER_ROLES.AGENCY_ADMIN,
+  }
+}
+
 describe('getClientReportsPage', () => {
   it('returns only published and archived reports sorted by latest period', () => {
     const page = getClientReportsPage({
@@ -147,6 +154,31 @@ describe('getClientReportsPage', () => {
 
     expect(page.reason).toBe('report_not_found')
     expect(page.selectedReport).toBeNull()
+  })
+
+  it('allows agency admins to preview draft and ready reports without changing the latest client-visible report', () => {
+    const page = getClientReportsPage({
+      clientId: IDS.CLIENT_A,
+      reportId: IDS.REPORT_DRAFT,
+      repositories: createRepositories(),
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.reports.map((report) => report.title)).toEqual([
+      'June Ready',
+      'May Draft',
+      'April Summary',
+      'March Summary',
+    ])
+    expect(page.selectedReport).toMatchObject({
+      isClientVisible: false,
+      title: 'May Draft',
+    })
+    expect(page.latestReport).toMatchObject({
+      isClientVisible: true,
+      title: 'April Summary',
+    })
   })
 
   it('denies cross-client access', () => {

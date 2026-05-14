@@ -1,4 +1,5 @@
 import { REPORT_STATUS_META } from '../../entities/report'
+import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -11,6 +12,7 @@ function mapReport(report) {
     clientDecisionsNeeded: report.client_decisions_needed,
     dashboardUrl: report.dashboard_url,
     id: report.id,
+    isClientVisible: isReportVisibleToClient(report),
     nextActions: report.next_actions,
     pdfUrl: report.pdf_url,
     periodEnd: report.period_end,
@@ -40,15 +42,17 @@ export function getClientReportsPage({ clientId, reportId, repositories, viewer 
     }
   }
 
-  const visibleReports = repositories.reports
+  const canPreviewAllClientReports = viewer?.role === USER_ROLES.AGENCY_ADMIN
+  const reports = repositories.reports
     .listByClientId(clientId)
-    .filter(isReportVisibleToClient)
+    .filter((report) => canPreviewAllClientReports || isReportVisibleToClient(report))
     .sort(sortByPeriodDesc)
     .map(mapReport)
+  const latestClientVisibleReport = reports.find((report) => report.isClientVisible) ?? null
 
   const selectedReport = reportId
-    ? visibleReports.find((report) => report.id === reportId) ?? null
-    : visibleReports[0] ?? null
+    ? reports.find((report) => report.id === reportId) ?? null
+    : latestClientVisibleReport ?? reports[0] ?? null
 
   return {
     client: {
@@ -56,9 +60,9 @@ export function getClientReportsPage({ clientId, reportId, repositories, viewer 
       name: client.name,
       portalSlug: client.portal_slug,
     },
-    latestReport: visibleReports[0] ?? null,
+    latestReport: latestClientVisibleReport,
     reason: reportId && !selectedReport ? 'report_not_found' : null,
-    reports: visibleReports,
+    reports,
     selectedReport,
     status: 'ready',
   }

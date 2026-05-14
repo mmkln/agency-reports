@@ -143,11 +143,6 @@ export function ReportsTable({
           </TableHeader>
           <TableBody className="divide-y divide-separator">
             {reports.map((report) => {
-              const canPreview = [
-                REPORT_STATUSES.PUBLISHED,
-                REPORT_STATUSES.ARCHIVED,
-              ].includes(report.status)
-
               return (
                 <TableRow className="transition-colors hover:bg-block-subtle" key={report.id}>
                   <TableCell className="px-6 py-4">
@@ -183,19 +178,12 @@ export function ReportsTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-56">
-                          {canPreview ? (
-                            <DropdownMenuItem asChild>
-                              <Link to={`/admin/client-report-preview?clientId=${report.clientId}&reportId=${report.id}`}>
-                                <Icon name="fileText" size={15} />
-                                Preview report
-                              </Link>
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem disabled>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/client-report-preview?clientId=${report.clientId}&reportId=${report.id}`}>
                               <Icon name="fileText" size={15} />
-                              Preview unavailable
-                            </DropdownMenuItem>
-                          )}
+                              Preview report
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onDuplicateReport(report.id)}>
                             <Icon name="fileText" size={15} />

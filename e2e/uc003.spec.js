@@ -142,6 +142,13 @@ test('client report archive hides draft reports', async ({ page }) => {
     title: reportTitle,
   })
 
+  const draftRow = page.getByRole('row').filter({ hasText: reportTitle })
+  await draftRow.getByLabel('Report actions').click()
+  await page.getByRole('menuitem', { name: 'Preview report' }).click()
+  await expect(page).toHaveURL(/\/admin\/client-report-preview/)
+  await expect(page.getByText(reportTitle).first()).toBeVisible()
+  await expect(page.getByText('Preview only. This report is not visible to the client.')).toBeVisible()
+
   await signInAsClient(page)
   await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByText(reportTitle)).toHaveCount(0)
