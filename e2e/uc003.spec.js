@@ -210,3 +210,23 @@ test('agency admin can filter monthly reports', async ({ page }) => {
   await page.getByRole('option', { name: 'Published' }).click()
   await expect(sourceReport).toBeVisible()
 })
+
+test('agency admin can archive a published report and client still sees it in the archive', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto('/admin/reports')
+
+  const sourceReport = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
+  await expect(sourceReport).toBeVisible()
+  await sourceReport.getByLabel('Report actions').click()
+  await page.getByRole('menuitem', { name: 'Set Archived' }).click()
+
+  await expect(page.getByRole('dialog', { name: 'Archive published report?' })).toBeVisible()
+  await expect(page.getByText('will remain visible in the client report archive')).toBeVisible()
+  await page.getByRole('button', { name: 'Archive report' }).click()
+  await expect(sourceReport).toContainText('Archived')
+
+  await signInAsClient(page)
+  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`)
+  await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
+  await expect(page.getByText('Archived').first()).toBeVisible()
+})

@@ -40,6 +40,53 @@ function formatPeriod(report) {
   return `${formatDate(report.periodStart)} - ${formatDate(report.periodEnd)}`
 }
 
+const statusOrder = [
+  REPORT_STATUSES.DRAFT,
+  REPORT_STATUSES.READY,
+  REPORT_STATUSES.PUBLISHED,
+  REPORT_STATUSES.ARCHIVED,
+]
+
+function getStatusChangeCopy(report, nextStatus) {
+  const nextStatusMeta = REPORT_STATUS_META[nextStatus] ?? {
+    label: nextStatus,
+  }
+
+  if (report.status === REPORT_STATUSES.PUBLISHED && nextStatus === REPORT_STATUSES.DRAFT) {
+    return {
+      confirmLabel: 'Move to draft',
+      description: `"${report.title}" will be hidden from client users immediately. Use this only when the published report needs to be pulled back for editing.`,
+      title: 'Move published report to draft?',
+      tone: 'destructive',
+    }
+  }
+
+  if (report.status === REPORT_STATUSES.PUBLISHED && nextStatus === REPORT_STATUSES.ARCHIVED) {
+    return {
+      confirmLabel: 'Archive report',
+      description: `"${report.title}" will remain visible in the client report archive, but it will no longer be treated as the active published report.`,
+      title: 'Archive published report?',
+      tone: 'primary',
+    }
+  }
+
+  if (nextStatus === REPORT_STATUSES.PUBLISHED) {
+    return {
+      confirmLabel: 'Publish report',
+      description: `"${report.title}" will become visible to the client on the overview and in the report archive.`,
+      title: 'Publish monthly report?',
+      tone: 'primary',
+    }
+  }
+
+  return {
+    confirmLabel: `Set ${nextStatusMeta.label}`,
+    description: `"${report.title}" will be set to ${nextStatusMeta.label}.`,
+    title: 'Change report status?',
+    tone: 'primary',
+  }
+}
+
 export function ReportsTable({
   onDeleteReport,
   onDuplicateReport,
@@ -48,6 +95,7 @@ export function ReportsTable({
   reports,
 }) {
   const [reportPendingDelete, setReportPendingDelete] = useState(null)
+  const [statusChange, setStatusChange] = useState(null)
 
   function confirmDeleteReport() {
     if (!reportPendingDelete) {
@@ -56,6 +104,27 @@ export function ReportsTable({
 
     onDeleteReport(reportPendingDelete.id)
     setReportPendingDelete(null)
+  }
+
+  function requestStatusChange(report, status) {
+    if (status === report.status) {
+      return
+    }
+
+    setStatusChange({
+      report,
+      status,
+      ...getStatusChangeCopy(report, status),
+    })
+  }
+
+  function confirmStatusChange() {
+    if (!statusChange) {
+      return
+    }
+
+    onUpdateStatus(statusChange.report.id, statusChange.status)
+    setStatusChange(null)
   }
 
   return (
@@ -133,16 +202,11 @@ export function ReportsTable({
                             Duplicate report
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {[
-                            REPORT_STATUSES.DRAFT,
-                            REPORT_STATUSES.READY,
-                            REPORT_STATUSES.PUBLISHED,
-                            REPORT_STATUSES.ARCHIVED,
-                          ].map((status) => (
+                          {statusOrder.map((status) => (
                             <DropdownMenuItem
                               disabled={status === report.status}
                               key={status}
-                              onClick={() => onUpdateStatus(report.id, status)}
+                              onClick={() => requestStatusChange(report, status)}
                             >
                               <Icon name={REPORT_STATUS_META[status]?.icon ?? 'circle'} size={15} />
                               <span>Set {REPORT_STATUS_META[status]?.label ?? status}</span>
@@ -183,6 +247,20 @@ export function ReportsTable({
         open={Boolean(reportPendingDelete)}
         title="Delete monthly report?"
         tone="destructive"
+      />
+
+      <ConfirmationDialog
+        confirmLabel={statusChange?.confirmLabel ?? 'Change status'}
+        description={statusChange?.description ?? ''}
+        onConfirm={confirmStatusChange}
+        onOpenChange={(open) => {
+          if (!open) {
+            setStatusChange(null)
+          }
+        }}
+        open={Boolean(statusChange)}
+        title={statusChange?.title ?? 'Change report status?'}
+        tone={statusChange?.tone ?? 'primary'}
       />
     </>
   )
