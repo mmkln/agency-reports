@@ -2,12 +2,15 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
+  Badge,
   Button,
   CardContent,
   CardDescription,
   CardTitle,
+  EmptyState,
   PrimitiveCard as Card,
   PrimitiveCardHeader as CardHeader,
+  Separator,
   StatusBadge,
 } from '@/shared/ui'
 
@@ -22,14 +25,20 @@ import { AccessDeniedState } from '../../../widgets/client-overview'
 
 function formatDate(date) {
   if (!date) {
-    return ''
+    return 'Not set'
+  }
+
+  const parsedDate = new Date(date)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Not set'
   }
 
   return new Intl.DateTimeFormat('en', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  }).format(new Date(date))
+  }).format(parsedDate)
 }
 
 function formatPeriod(report) {
@@ -40,15 +49,33 @@ function EmptyReportsState() {
   return (
     <Card className="border-dashed border-border-strong bg-block shadow-none">
       <CardContent className="py-12">
-        <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-block bg-surface-subtle text-text-muted ring-1 ring-control-border">
-            <Icon name="fileText" size={28} />
-          </div>
-          <h2 className="mt-5 text-xl font-semibold text-heading">No published report yet</h2>
-          <p className="mt-2 text-sm leading-6 text-text-muted">
-            The first monthly summary will appear here after the agency publishes it.
-          </p>
-        </div>
+        <EmptyState
+          className="mx-auto max-w-lg items-center text-center"
+          description="The first monthly summary will appear here after the agency publishes it."
+          iconName="fileText"
+          title="No published report yet"
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+function ReportUnavailableState({ clientId, latestReport }) {
+  return (
+    <Card className="border-control-border bg-block shadow-none">
+      <CardContent className="py-8">
+        <EmptyState
+          action={latestReport ? (
+            <Button asChild variant="outline">
+              <Link to={`/client/reports?clientId=${clientId}&reportId=${latestReport.id}`}>
+                Go to latest report
+              </Link>
+            </Button>
+          ) : null}
+          description="This report is unavailable, unpublished, or no longer part of your client archive."
+          iconName="fileText"
+          title="Report unavailable"
+        />
       </CardContent>
     </Card>
   )
@@ -67,15 +94,61 @@ function ReportSection({ children, title }) {
   )
 }
 
+function ReportLinkActions({ report }) {
+  return (
+    <div className="grid gap-3 pt-2 sm:grid-cols-2">
+      <div className="rounded-control border border-control-border bg-block-subtle p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-text-primary">Dashboard</p>
+            <p className="mt-1 text-xs leading-5 text-text-muted">
+              Marketing numbers that support this summary.
+            </p>
+          </div>
+          <Icon className="text-action" name="layoutDashboard" size={20} />
+        </div>
+        {report.dashboardUrl ? (
+          <Button asChild className="mt-4 w-full" variant="outline">
+            <a href={report.dashboardUrl} rel="noreferrer" target="_blank">
+              Open dashboard
+            </a>
+          </Button>
+        ) : (
+          <p className="mt-4 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+            Dashboard link is not available for this report.
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-control border border-control-border bg-block-subtle p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-text-primary">Full report / PDF</p>
+            <p className="mt-1 text-xs leading-5 text-text-muted">
+              Formal report file, when the agency provides one.
+            </p>
+          </div>
+          <Icon className="text-destructive" name="fileText" size={20} />
+        </div>
+        {report.pdfUrl ? (
+          <Button asChild className="mt-4 w-full" variant="outline">
+            <a href={report.pdfUrl} rel="noreferrer" target="_blank">
+              Open PDF
+            </a>
+          </Button>
+        ) : (
+          <p className="mt-4 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+            PDF version is not available yet. Read the summary inside the portal.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ReportReader({ report }) {
   if (!report) {
-    return (
-      <Card className="border-control-border bg-block shadow-none">
-        <CardContent className="py-8 text-sm text-text-muted">
-          This report is not available. Draft and ready reports are hidden from the client portal.
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   return (
@@ -99,25 +172,64 @@ function ReportReader({ report }) {
           <ReportSection title="Next actions">{report.nextActions}</ReportSection>
           <ReportSection title="Needed from client">{report.clientDecisionsNeeded}</ReportSection>
         </div>
-        <div className="flex flex-wrap gap-2 pt-2">
+        <ReportLinkActions report={report} />
+      </CardContent>
+    </Card>
+  )
+}
+
+function LatestReportSummary({ clientId, report, selectedReport }) {
+  if (!report) {
+    return null
+  }
+
+  const isSelected = selectedReport?.id === report.id
+
+  return (
+    <Card className="border-control-border bg-block shadow-none">
+      <CardHeader className="border-b border-separator bg-surface-subtle">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Latest monthly summary</CardTitle>
+            <CardDescription className="mt-1">{formatPeriod(report)}</CardDescription>
+          </div>
+          <StatusBadge meta={report.statusMeta} />
+        </div>
+      </CardHeader>
+      <CardContent className="py-4">
+        <h3 className="font-semibold text-text-primary">{report.title}</h3>
+        {report.summary ? (
+          <p className="mt-2 line-clamp-4 text-sm leading-6 text-text-secondary">{report.summary}</p>
+        ) : (
+          <p className="mt-2 text-sm text-text-muted">No executive summary was added.</p>
+        )}
+        <Separator className="my-4" />
+        <div className="grid gap-2">
+          {isSelected ? (
+            <Button disabled size="sm" type="button" variant="outline">
+              Currently open
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}>
+                Open latest report
+              </Link>
+            </Button>
+          )}
           {report.dashboardUrl ? (
-            <Button asChild variant="outline">
+            <Button asChild size="sm" variant="outline">
               <a href={report.dashboardUrl} rel="noreferrer" target="_blank">
-                Open dashboard
+                Open latest dashboard
               </a>
             </Button>
           ) : null}
           {report.pdfUrl ? (
-            <Button asChild variant="outline">
+            <Button asChild size="sm" variant="outline">
               <a href={report.pdfUrl} rel="noreferrer" target="_blank">
-                Open PDF
+                Open latest PDF
               </a>
             </Button>
-          ) : (
-            <Button disabled type="button" variant="outline">
-              PDF not available
-            </Button>
-          )}
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -132,8 +244,15 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
   return (
     <Card className="border-control-border bg-block shadow-none">
       <CardHeader className="border-b border-separator bg-surface-subtle">
-        <CardTitle className="text-base">Report archive</CardTitle>
-        <CardDescription>Published and archived reports, sorted by latest period first.</CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Report archive</CardTitle>
+            <CardDescription className="mt-1">Newest reporting periods first.</CardDescription>
+          </div>
+          <Badge className="border-control-border bg-block text-text-secondary" variant="outline">
+            {reports.length}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="grid gap-2 py-4">
         {reports.map((report) => {
@@ -147,8 +266,13 @@ function ReportArchiveList({ clientId, reports, selectedReport }) {
               key={report.id}
               to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}
             >
-              <span className="block font-semibold text-text-primary">{report.title}</span>
-              <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
+              <span className="flex items-start justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-text-primary">{report.title}</span>
+                  <span className="mt-1 block text-xs text-text-muted">{formatPeriod(report)}</span>
+                </span>
+                <StatusBadge meta={report.statusMeta} />
+              </span>
             </Link>
           )
         })}
@@ -211,9 +335,14 @@ export function ClientReportsPage({ routeParams = {}, runtime }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <ReportReader report={page.selectedReport} />
-      <aside>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      {page.selectedReport ? (
+        <ReportReader report={page.selectedReport} />
+      ) : (
+        <ReportUnavailableState clientId={clientId} latestReport={page.latestReport} />
+      )}
+      <aside className="grid content-start gap-4">
+        <LatestReportSummary clientId={clientId} report={page.latestReport} selectedReport={page.selectedReport} />
         <ReportArchiveList clientId={clientId} reports={page.reports} selectedReport={page.selectedReport} />
       </aside>
     </div>
