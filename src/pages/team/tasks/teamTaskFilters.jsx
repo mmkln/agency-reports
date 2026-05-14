@@ -1,5 +1,9 @@
 import {
+  Button,
   Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   RadixSelect as Select,
   SelectContent,
   SelectItem,
@@ -16,8 +20,8 @@ function ScopeToggle({ filters, onChange }) {
   const isMine = filters.scope === 'mine'
 
   return (
-    <div className="flex items-center justify-end gap-3 py-2">
-      <span className="text-sm font-medium text-text-secondary">
+    <div className="flex h-control-small shrink-0 items-center justify-end gap-3">
+      <span className="text-label text-text-secondary">
         My tasks
       </span>
       <Switch
@@ -29,102 +33,156 @@ function ScopeToggle({ filters, onChange }) {
   )
 }
 
+function FilterField({ children, label }) {
+  return (
+    <label className="grid grid-cols-[minmax(4.5rem,0.75fr)_minmax(0,1fr)] items-center gap-control">
+      <span className="text-label text-text-muted">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-sm'
+
 export function TaskFilters({ filters, onChange, taskData }) {
   const projectOptions = taskData.projects
     .filter((project) => filters.clientId === 'all' || project.client_id === filters.clientId)
+  const activeFilterCount = [
+    filters.clientId !== 'all',
+    filters.projectId !== 'all',
+    filters.status !== 'all',
+    filters.visibility !== 'all',
+  ].filter(Boolean).length
+
+  function clearFilters() {
+    onChange({
+      ...filters,
+      clientId: 'all',
+      projectId: 'all',
+      status: 'all',
+      visibility: 'all',
+    })
+  }
 
   return (
-    <div className="flex flex-col gap-component xl:flex-row xl:items-end xl:justify-between">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-        <div className="grid gap-4 sm:grid-cols-[220px_200px_170px_170px]">
-          <label className="grid gap-2 text-sm font-medium text-text-secondary">
-            <span>Client</span>
-            <Select
-              onValueChange={(value) => onChange({ ...filters, clientId: value, projectId: 'all' })}
-              value={filters.clientId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All clients" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All clients</SelectItem>
-                {taskData.clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-text-secondary">
-            <span>Project</span>
-            <Select
-              onValueChange={(value) => onChange({ ...filters, projectId: value })}
-              value={filters.projectId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All projects</SelectItem>
-                {projectOptions.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-text-secondary">
-            <span>Status</span>
-            <Select
-              onValueChange={(value) => onChange({ ...filters, status: value })}
-              value={filters.status}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {Object.values(TASK_STATUSES).map((status) => (
-                  <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-text-secondary">
-            <span>Visibility</span>
-            <Select
-              onValueChange={(value) => onChange({ ...filters, visibility: value })}
-              value={filters.visibility}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All visibility" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All visibility</SelectItem>
-                <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
-                <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
-              </SelectContent>
-            </Select>
-          </label>
-        </div>
+    <div className="flex w-full flex-col gap-control sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 flex-col gap-control sm:flex-row sm:items-center">
         {taskData.canUseMineFilter ? (
-          <div className="lg:min-w-[160px]">
-            <ScopeToggle filters={filters} onChange={onChange} />
-          </div>
+          <ScopeToggle filters={filters} onChange={onChange} />
         ) : null}
-      </div>
-      <label className="grid gap-2 text-sm font-medium text-text-secondary xl:w-search-compact" htmlFor="task-search">
-        <span className="sr-only">Search tasks</span>
-        <span className="relative">
-          <Icon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary" name="search" size={16} />
+        <label className="relative min-w-0 flex-1 sm:max-w-search-compact" htmlFor="task-search">
+          <span className="sr-only">Search tasks</span>
+          <Icon className="pointer-events-none absolute top-1/2 left-control -translate-y-1/2 text-text-secondary" name="search" size={15} />
           <Input
-            className="bg-control pl-10"
+            className="h-control-small border-transparent bg-control pl-card text-sm"
             id="task-search"
             onChange={(event) => onChange({ ...filters, search: event.target.value })}
             placeholder="Search"
             type="text"
             value={filters.search}
           />
-        </span>
-      </label>
+        </label>
+      </div>
+
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            aria-label={activeFilterCount > 0 ? `${activeFilterCount} filters active` : 'Open task filters'}
+            className={`w-full justify-between sm:w-32 ${
+              activeFilterCount > 0 ? 'bg-control-selected text-text-primary' : ''
+            }`}
+            size="sm"
+            type="button"
+            variant="secondary"
+          >
+            <span>Filters</span>
+            {activeFilterCount > 0 ? (
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            ) : (
+              <Icon className="text-text-muted" name="chevronDown" size={14} />
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-popover p-card">
+          <div className="grid gap-component">
+            <div className="flex items-center justify-between gap-component">
+              <p className="text-sm font-semibold text-text-primary">Filters</p>
+              {activeFilterCount > 0 ? (
+                <Button onClick={clearFilters} size="xs" type="button" variant="ghost">
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+            <div className="grid gap-control">
+              <FilterField label="Client">
+                <Select
+                  onValueChange={(value) => onChange({ ...filters, clientId: value, projectId: 'all' })}
+                  value={filters.clientId}
+                >
+                  <SelectTrigger className={filterSelectTriggerClass} size="sm">
+                    <SelectValue placeholder="All clients" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All clients</SelectItem>
+                    {taskData.clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              <FilterField label="Project">
+                <Select
+                  onValueChange={(value) => onChange({ ...filters, projectId: value })}
+                  value={filters.projectId}
+                >
+                  <SelectTrigger className={filterSelectTriggerClass} size="sm">
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projectOptions.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              <FilterField label="Status">
+                <Select
+                  onValueChange={(value) => onChange({ ...filters, status: value })}
+                  value={filters.status}
+                >
+                  <SelectTrigger className={filterSelectTriggerClass} size="sm">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    {Object.values(TASK_STATUSES).map((status) => (
+                      <SelectItem key={status} value={status}>{TASK_STATUS_META[status].label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
+              <FilterField label="Visibility">
+                <Select
+                  onValueChange={(value) => onChange({ ...filters, visibility: value })}
+                  value={filters.visibility}
+                >
+                  <SelectTrigger className={filterSelectTriggerClass} size="sm">
+                    <SelectValue placeholder="All visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All visibility</SelectItem>
+                    <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
+                    <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FilterField>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }

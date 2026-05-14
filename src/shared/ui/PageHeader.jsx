@@ -16,11 +16,11 @@ function HeaderContent({
     : null
   const titleClassName = titleScale === 'display'
     ? 'text-display text-text-primary'
-    : 'm-0 text-2xl leading-7 font-bold text-text-primary transition-all sm:truncate sm:text-3xl'
+    : 'm-0 text-heading text-text-primary transition-all sm:truncate'
 
   return (
     <>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[min(18rem,100%)] flex-1">
         <div className="max-w-readable space-y-micro">
           {eyebrow ? <div className="text-label text-text-muted">{eyebrow}</div> : null}
           <h1 className={titleClassName}>{title}</h1>
@@ -54,7 +54,7 @@ export function PageHeader({
 
   const inspectorId = useInspectorId('PageHeader', id)
   const isInline = variant === 'inline'
-  const resolvedTitleScale = titleScale ?? (isInline ? 'display' : 'title')
+  const resolvedTitleScale = titleScale ?? 'title'
 
   const content = (
     <HeaderContent

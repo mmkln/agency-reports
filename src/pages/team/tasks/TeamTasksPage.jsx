@@ -205,11 +205,6 @@ function TaskRow({ isSelected = false, onOpenTask, task }) {
               />
               <h2 className="text-base font-semibold text-text-primary">{task.title}</h2>
             </div>
-            {task.description ? (
-              <p className="mt-2 line-clamp-2 max-w-readable text-sm leading-6 text-text-secondary">
-                {task.description}
-              </p>
-            ) : null}
             {task.blockerNote ? (
               <p className="mt-2 line-clamp-1 text-sm leading-6 text-destructive">
                 {task.blockerNote}
@@ -235,37 +230,6 @@ function TaskRow({ isSelected = false, onOpenTask, task }) {
         </div>
       </button>
     </article>
-  )
-}
-
-function BoardTaskTile({ isSelected = false, onOpenTask, task }) {
-  return (
-    <button
-      className={`rounded-control px-control py-control text-left shadow-none transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover ${
-        isSelected ? 'bg-control-selected ring-1 ring-control-border' : 'bg-block'
-      }`}
-      onClick={() => onOpenTask(task.id)}
-      type="button"
-    >
-      <div className="flex items-start gap-2">
-        <Icon
-          className={isAttentionTask(task) ? 'mt-0.5 text-destructive' : 'mt-0.5 text-text-quaternary'}
-          name={isAttentionTask(task) ? 'triangleAlert' : 'circle'}
-          size={14}
-        />
-        <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-text-primary">{task.title}</h3>
-          <p className="mt-1 truncate text-xs text-text-muted">{task.clientName}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
-            <span className="inline-flex items-center gap-1">
-              <Icon name="calendar" size={12} />
-              {formatTaskDueDate(task.dueDate)}
-            </span>
-            <VisibilityInline visibility={task.visibility} />
-          </div>
-        </div>
-      </div>
-    </button>
   )
 }
 
@@ -308,52 +272,6 @@ function TeamTaskInbox({ onOpenTask, selectedTaskId, tasks }) {
       <TaskSection onOpenTask={onOpenTask} selectedTaskId={selectedTaskId} tasks={todayTasks} title="Today" />
       <TaskSection onOpenTask={onOpenTask} selectedTaskId={selectedTaskId} tasks={upcomingTasks} title="Upcoming" />
       <TaskSection onOpenTask={onOpenTask} selectedTaskId={selectedTaskId} tasks={doneTasks} title="Done" />
-    </div>
-  )
-}
-
-function AdminTaskBoard({ onOpenTask, selectedTaskId, tasks }) {
-  const columns = [
-    TASK_STATUSES.TODO,
-    TASK_STATUSES.IN_PROGRESS,
-    TASK_STATUSES.WAITING_CLIENT,
-    TASK_STATUSES.BLOCKED,
-    TASK_STATUSES.DONE,
-  ]
-
-  return (
-    <div className="grid auto-cols-[minmax(260px,1fr)] grid-flow-col gap-component overflow-x-auto pb-2">
-      {columns.map((status) => {
-        const columnTasks = tasks.filter((task) => task.status === status)
-        const meta = TASK_STATUS_META[status]
-
-        return (
-          <section className="grid min-w-[260px] content-start gap-control rounded-block bg-block-subtle p-component" key={status}>
-            <div className="flex items-center justify-between gap-component">
-              <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
-                <Icon className="text-text-quaternary" name={meta.icon} size={15} />
-                {meta.label}
-              </h2>
-              <span className="text-label text-text-muted">{columnTasks.length}</span>
-            </div>
-            <div className="grid gap-control">
-              {columnTasks.map((task) => (
-                <BoardTaskTile
-                  isSelected={selectedTaskId === task.id}
-                  key={task.id}
-                  onOpenTask={onOpenTask}
-                  task={task}
-                />
-              ))}
-              {columnTasks.length === 0 ? (
-                <div className="rounded-control px-control py-component text-sm text-text-muted">
-                  No tasks
-                </div>
-              ) : null}
-            </div>
-          </section>
-        )
-      })}
     </div>
   )
 }
@@ -519,34 +437,32 @@ function TaskDetailPanel({
   error,
   isDirty,
   onChange,
+  onClose,
   onReset,
   onSave,
   saveState,
   task,
 }) {
   if (!task || !draft) {
-    return (
-      <Card className="border-control-border bg-block shadow-none xl:sticky xl:top-card">
-        <CardContent className="flex min-h-[320px] items-center justify-center p-card">
-          <div className="max-w-xs text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-control text-text-quaternary">
-              <Icon name="fileText" size={22} />
-            </div>
-            <h2 className="mt-4 text-base font-semibold text-text-primary">Select a task</h2>
-            <p className="mt-2 text-sm leading-6 text-text-muted">
-              Choose a task to update its status, notes, and client-safe summary.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   return (
-    <Card className="overflow-hidden border-control-border bg-block py-0 shadow-none xl:sticky xl:top-card xl:max-h-[calc(100vh-8rem)]">
+    <Card className="overflow-hidden rounded-island border border-island-border bg-block py-0 shadow-none xl:sticky xl:top-card xl:max-h-[calc(100vh-8rem)]">
       <div className="grid min-h-0 xl:max-h-[calc(100vh-8rem)] xl:grid-rows-[auto_minmax(0,1fr)_auto]">
         <div className="border-b border-separator px-card py-component">
-          <h2 className="text-base font-semibold text-text-primary">{task.title}</h2>
+          <div className="flex items-start justify-between gap-component">
+            <h2 className="min-w-0 text-base font-semibold text-text-primary">{task.title}</h2>
+            <Button
+              aria-label="Close task details"
+              onClick={onClose}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <Icon name="close" size={16} />
+            </Button>
+          </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
             <span>{task.clientName}</span>
             <span>{task.projectName}</span>
@@ -863,9 +779,9 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
     void reloadTick
     return loadTeamTasks(filters, runtime)
   }, [filters, reloadTick, runtime])
-  const [selectedTaskId, setSelectedTaskId] = useState(taskData.tasks[0]?.id ?? '')
+  const [selectedTaskId, setSelectedTaskId] = useState('')
   const selectedTask = useMemo(
-    () => taskData.tasks.find((task) => task.id === selectedTaskId) ?? taskData.tasks[0] ?? null,
+    () => taskData.tasks.find((task) => task.id === selectedTaskId) ?? null,
     [selectedTaskId, taskData.tasks],
   )
   const [taskDraft, setTaskDraft] = useState(() => createTaskDraft(selectedTask))
@@ -881,9 +797,28 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const isTaskDetailsDirty = isTaskDraftChanged(selectedTask, taskDraft)
 
   function selectTask(taskId) {
+    if (isTaskDetailsDirty && taskId !== selectedTask?.id) {
+      setError('')
+      setSaveState('Save or reset changes before selecting another task.')
+      return
+    }
+
     const task = taskData.tasks.find((item) => item.id === taskId) ?? null
     setSelectedTaskId(taskId)
     setTaskDraft(createTaskDraft(task))
+    setError('')
+    setSaveState('')
+  }
+
+  function closeTaskDetails() {
+    if (isTaskDetailsDirty) {
+      setError('')
+      setSaveState('Save or reset changes before closing task details.')
+      return
+    }
+
+    setSelectedTaskId('')
+    setTaskDraft(null)
     setError('')
     setSaveState('')
   }
@@ -944,15 +879,6 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
       .then((createdTask) => {
         setCreateTaskSaveState('')
         setReloadTick((currentTick) => currentTick + 1)
-        setSelectedTaskId(createdTask.id)
-        setTaskDraft(createTaskDraft({
-          assigneeName: createdTask.assignee_name,
-          blockerNote: createdTask.blocker_note ?? '',
-          clientSafeSummary: createdTask.client_safe_summary ?? '',
-          internalNote: createdTask.internal_note ?? '',
-          status: createdTask.status,
-          visibility: createdTask.visibility,
-        }))
         toast.success('Task created', `${createdTask.title} was added to Tasks.`)
         closeCreateTask()
       })
@@ -966,7 +892,6 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const hasFilters = Object.entries(filters).some(([key, value]) => (
     key === 'search' ? Boolean(value) : key !== 'scope' && value !== 'all'
   ))
-  const isAdminWorkspace = runtime.viewer?.role === USER_ROLES.AGENCY_ADMIN
 
   function updateTaskDraft(nextDraft) {
     setTaskDraft(nextDraft)
@@ -976,43 +901,38 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
 
   return (
     <PageShell>
-      <ContentToolbar>
-        <TaskFilters
-          filters={filters}
-          onChange={(nextFilters) => navigate(getTeamTaskFilterPath(nextFilters, basePath))}
-          taskData={taskData}
-        />
-      </ContentToolbar>
-      <div className="grid items-start gap-card xl:grid-cols-inspector">
-        <div className="min-w-0">
+      <div className={`grid items-start gap-card ${selectedTask ? 'xl:grid-cols-inspector' : ''}`}>
+        <div className="grid min-w-0 gap-card">
+          <ContentToolbar className="rounded-none bg-transparent p-0">
+            <TaskFilters
+              filters={filters}
+              onChange={(nextFilters) => navigate(getTeamTaskFilterPath(nextFilters, basePath))}
+              taskData={taskData}
+            />
+          </ContentToolbar>
           {taskData.tasks.length > 0 ? (
-            isAdminWorkspace ? (
-              <AdminTaskBoard
-                onOpenTask={selectTask}
-                selectedTaskId={selectedTask?.id}
-                tasks={taskData.tasks}
-              />
-            ) : (
-              <TeamTaskInbox
-                onOpenTask={selectTask}
-                selectedTaskId={selectedTask?.id}
-                tasks={taskData.tasks}
-              />
-            )
+            <TeamTaskInbox
+              onOpenTask={selectTask}
+              selectedTaskId={selectedTask?.id}
+              tasks={taskData.tasks}
+            />
           ) : (
             <EmptyTasksState hasFilters={hasFilters} />
           )}
         </div>
-        <TaskDetailPanel
-          draft={taskDraft}
-          error={error}
-          isDirty={isTaskDetailsDirty}
-          onChange={updateTaskDraft}
-          onReset={resetTaskDraft}
-          onSave={saveTaskUpdate}
-          saveState={saveState}
-          task={selectedTask}
-        />
+        {selectedTask ? (
+          <TaskDetailPanel
+            draft={taskDraft}
+            error={error}
+            isDirty={isTaskDetailsDirty}
+            onChange={updateTaskDraft}
+            onClose={closeTaskDetails}
+            onReset={resetTaskDraft}
+            onSave={saveTaskUpdate}
+            saveState={saveState}
+            task={selectedTask}
+          />
+        ) : null}
       </div>
       <CreateTaskDialog
         error={createTaskError}

@@ -69,8 +69,8 @@ function ClientWorkspaceTabs({ clientId, currentPage }) {
               aria-current={isActive ? 'page' : undefined}
               className={`inline-flex h-control-small items-center gap-tag rounded-control px-control text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard ${
                 isActive
-                  ? 'bg-control-selected text-text-primary'
-                  : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'
+                  ? 'bg-fill-secondary text-text-primary'
+                  : 'text-text-secondary hover:bg-fill-tertiary hover:text-text-primary'
               }`}
               key={tab.id}
               to={`${tab.route}?clientId=${clientId}`}
@@ -111,6 +111,17 @@ export function AdminClientWorkspaceHeader({
           actions={(
             <>
               <ClientStatusSelector onSelect={onStatusChange} status={status} />
+              {portalSlug ? (
+                <Link
+                  className="inline-flex h-control-small items-center gap-1 text-label text-link no-underline hover:text-link-hover"
+                  to={`/admin/client-preview?clientId=${clientId}`}
+                >
+                  agency.com/{portalSlug}
+                  <Icon name="arrowUpRight" size={12} />
+                </Link>
+              ) : null}
+              {primaryContactName ? <span className="text-label text-text-muted">{primaryContactName}</span> : null}
+              {primaryContactEmail ? <span className="text-label text-text-muted">{primaryContactEmail}</span> : null}
               {actions}
             </>
           )}
@@ -121,20 +132,6 @@ export function AdminClientWorkspaceHeader({
           title={client?.name ?? 'Client workspace'}
           variant="inline"
         />
-
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-label text-text-muted">
-          {portalSlug ? (
-            <Link
-              className="inline-flex items-center gap-1 text-link no-underline hover:text-link-hover"
-              to={`/admin/client-preview?clientId=${clientId}`}
-            >
-              agency.com/{portalSlug}
-              <Icon name="arrowUpRight" size={12} />
-            </Link>
-          ) : null}
-          {primaryContactName ? <span>{primaryContactName}</span> : null}
-          {primaryContactEmail ? <span>{primaryContactEmail}</span> : null}
-        </div>
 
         <ClientWorkspaceTabs clientId={clientId} currentPage={currentPage} />
       </PageShell>

@@ -37,13 +37,6 @@ export function getTaskCreatePath(filters, basePath = '/team/tasks') {
   return `${basePath}?${params.toString()}`
 }
 
-export function getTaskDetailPath(filters, taskId, basePath = '/team/tasks') {
-  const listPath = getTeamTaskFilterPath(filters, basePath)
-  const separator = listPath.includes('?') ? '&' : '?'
-
-  return `${listPath}${separator}taskId=${encodeURIComponent(taskId)}`
-}
-
 export function loadTeamTasks(filters, runtime) {
   return listTaskWorkspace({
     filters,
