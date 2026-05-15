@@ -1,5 +1,6 @@
 import { DASHBOARD_LINK_STATUSES } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
+import { canClientViewPerformanceDashboardPeriod } from '../../entities/performance-dashboard'
 import { REPORT_STATUSES } from '../../entities/report'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -40,4 +41,8 @@ export function isReportVisibleToClient(report) {
     REPORT_STATUSES.PUBLISHED,
     REPORT_STATUSES.ARCHIVED,
   ].includes(report?.status)
+}
+
+export function isPerformanceDashboardPeriodVisibleToClient(period) {
+  return canClientViewPerformanceDashboardPeriod(period)
 }

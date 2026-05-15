@@ -49,6 +49,7 @@ AppShell
 - Use `grid-cols-inspector` or `max-w-inspector` for list/detail and board/detail layouts.
 - Prefer spacing, alignment, and typography over hard section borders.
 - Do not make full pages look like a stack of bordered cards. Cards are for repeated content items, contained tools, and metrics.
+- Header density is structural, not typographic. Make page headers thinner by removing redundant rows, subtitles, breadcrumbs, duplicated toolbars, excessive padding, and unnecessary borders before changing title scale, title weight, or title prominence.
 
 ## Navigation
 

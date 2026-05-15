@@ -34,6 +34,12 @@ const tabs = [
     route: '/admin/dashboard-links',
   },
   {
+    id: 'performance',
+    iconName: 'barChart',
+    label: 'Performance',
+    route: '/admin/performance-dashboards',
+  },
+  {
     id: 'reports',
     iconName: 'fileText',
     label: 'Reports',

@@ -63,6 +63,7 @@ Project implementation:
 
 - Contains the screen title, optional compact metadata, and page-level actions.
 - Do not render descriptive subtitle text under page titles. Put explanatory copy in the content region, toolbar-adjacent help, empty state, onboarding state, or a contextual help surface.
+- Keep title hierarchy intact when tightening a header. A thinner page header should come from less container chrome, smaller vertical padding, fewer rows, and fewer redundant controls, not from making the title weaker.
 - Do not place dense filters in the header. Filters belong in `ContentToolbar`.
 - Use `text-heading` for normal product page titles. Reserve `text-display` for dashboard-level overview pages or hero metrics.
 
@@ -70,7 +71,9 @@ Project implementation:
 
 - Contains controls that change the content region: search, filters, sort, view mode, bulk actions, and refresh.
 - Keep search visually close to the list, table, or collection it searches.
+- Use the shared `SearchField` for toolbar search instead of recreating icon/input markup locally. Search should behave as one compound control with consistent height, icon alignment, accessible label, focus ring, and placeholder treatment.
 - Keep toolbar controls in logical groups. Search/filter controls, pagination, export, and primary actions should not collapse into one undifferentiated row.
+- Labels, active-filter counts, and empty-state copy must use the same vocabulary as the underlying filter logic.
 - Do not overload a toolbar with board descriptions, passive counters, and unrelated settings. Keep the default toolbar focused on the controls needed to act on the visible content.
 - Move board setup, source configuration, and passive summaries into a settings dialog, inspector, popover, or collapsed detail area unless they are needed for the primary task.
 - Use icon buttons with tooltips for compact repeated actions.
@@ -144,6 +147,9 @@ Do not solve top-of-page clutter by adding another compact row, card strip, bord
 - Keep labels close to their controls. Use `text-label` for labels and `text-text-secondary` or `text-text-muted` for supporting text.
 - Badges and badge-like chips must vertically center their text with `inline-flex`, `items-center`, `justify-center`, `min-h-control-mini`, and `leading-none`. Do not override shared `Badge` padding with local `py-*` classes unless the component is no longer visually a badge.
 - Use the control that matches the decision: checkbox/toggle for binary values, segmented control for small exclusive choices, select/menu for larger option sets, slider/stepper/input for numeric values.
+- Filter labels must name the exact domain field or interpretation being filtered. For example, use reporting month, published date, created date, assignee, or client rather than vague labels such as period or date when more than one meaning is possible.
+- Before adding a date or period filter, decide whether it targets a point date or a range relation. If it filters records whose range contains a month, use a label and option set that makes that containment behavior clear.
+- Prefer a select built from real available values when filtering an existing collection by month, status, owner, or another finite domain value. Use raw date/month inputs primarily when the user is entering a new value or intentionally searching an arbitrary range.
 - Use `bg-control`, `hover:bg-control-hover`, `bg-control-selected`, and `border-control-border` for standard interactive primitives. Do not reuse content block tokens such as `bg-block` for inputs or buttons.
 - Use shared primitives and semantic control sizes before local control styling. Avoid arbitrary heights and custom backgrounds when `h-target`, `h-control-small`, `h-control-large`, or an existing variant fits.
 - Use a compound input with an attached trailing action when one value can be typed, pasted, generated, uploaded, or selected by another short action. Keep the text field and action visually unified through shared height, border, radius, and background.

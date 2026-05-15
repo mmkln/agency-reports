@@ -18,6 +18,10 @@ Before changing UI components, layouts, copy, tables, metrics, charts, or page s
 - [UI Component Audit](./ui-component-audit.md): current component-level mismatches against the Apple-aligned tokens and structure rules.
 - [React Project Adoption](./react-project-adoption.md): how to move this design system into other React projects without direct-copy drift.
 
+## Research References
+
+- [Client Analytics Dashboard UI Recommendations](../research/client-analytics-dashboard-ui-recommendations.md): required research-derived reference before designing or implementing client-facing analytics dashboards, KPI cards, goal progress, funnel views, channel sections, dashboard insights, and dashboard drill-downs.
+
 ## Product Principles
 
 - The interface should feel light, structured, platform-native, precise, and premium through restraint rather than saturation.

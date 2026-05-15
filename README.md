@@ -7,6 +7,7 @@ Client-facing portal layer for marketing agencies. The product aggregates client
 - [UC-001 - Client Overview / Status Hub](docs/use-cases/UC-001-client-overview-status-hub.md)
 - [UC-002 - Embedded Marketing Dashboard](docs/use-cases/UC-002-embedded-marketing-dashboard.md)
 - [UC-003 - Monthly Summary / Report Archive](docs/use-cases/UC-003-monthly-summary-report-archive.md)
+- [UC-004 - Client Performance Dashboard](docs/use-cases/UC-004-client-performance-dashboard.md)
 - [Frontend Architecture](docs/frontend-architecture.md)
 - [Design System](docs/design-system.md)
 - [UC-001 Implementation Checklist](docs/implementation/UC-001-implementation-checklist.md)
@@ -14,6 +15,7 @@ Client-facing portal layer for marketing agencies. The product aggregates client
 - [UC-001 Acceptance Report](docs/implementation/UC-001-acceptance-report.md)
 - [UC-002 Acceptance Report](docs/implementation/UC-002-acceptance-report.md)
 - [UC-003 Acceptance Report](docs/implementation/UC-003-acceptance-report.md)
+- [UC-004 Implementation Checklist](docs/implementation/UC-004-implementation-checklist.md)
 - [Backend Readiness Plan](docs/implementation/backend-readiness-plan.md)
 
 ## Development

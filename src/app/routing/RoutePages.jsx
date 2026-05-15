@@ -6,6 +6,8 @@ import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPa
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboardPage'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
+import { ClientPerformancePage } from '../../pages/client/performance/ClientPerformancePage'
+import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
@@ -15,6 +17,10 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminPerformanceDashboardEditorPage } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPage'
+import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPageHeader'
+import { AdminPerformanceDashboardsPage } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPage'
+import { AdminPerformanceDashboardsPageHeader } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPageHeader'
 import { AdminReportsPage } from '../../pages/admin/reports/AdminReportsPage'
 import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
@@ -44,9 +50,18 @@ function withPageProps(PageComponent, HeaderComponent) {
 
 export const ClientOverviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
+export const ClientPerformancePageRoute = withPageProps(ClientPerformancePage, ClientPerformancePageHeader)
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)
+export const AdminPerformanceDashboardsPageRoute = withPageProps(
+  AdminPerformanceDashboardsPage,
+  AdminPerformanceDashboardsPageHeader,
+)
+export const AdminPerformanceDashboardEditorPageRoute = withPageProps(
+  AdminPerformanceDashboardEditorPage,
+  AdminPerformanceDashboardEditorPageHeader,
+)
 export const AdminReportsPageRoute = withPageProps(AdminReportsPage, AdminReportsPageHeader)
 export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, undefined)
 export const AdminClientActivityPageRoute = withPageProps(AdminClientActivityPage, undefined)

@@ -10,17 +10,23 @@ import { RootLayout } from '../layout/RootLayout'
 import { AuthLayout } from '../layout/AuthLayout'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPageHeader'
+import { AdminPerformanceDashboardsPageHeader } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPageHeader'
 import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
+import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 import {
   ClientOverviewPageRoute,
   ClientDashboardPageRoute,
+  ClientPerformancePageRoute,
   ClientReportsPageRoute,
   AdminClientsPageRoute,
   AdminDashboardLinksPageRoute,
+  AdminPerformanceDashboardEditorPageRoute,
+  AdminPerformanceDashboardsPageRoute,
   AdminReportsPageRoute,
   AdminClientAccessPageRoute,
   AdminClientActivityPageRoute,
@@ -106,6 +112,15 @@ export const routeMetadata = [
     iconName: 'layoutDashboard',
   },
   {
+    path: '/client/performance',
+    id: 'client-performance',
+    label: 'Performance',
+    pageTitle: 'Performance Dashboard',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientPerformancePageHeader,
+    iconName: 'barChart',
+  },
+  {
     path: '/client/reports',
     id: 'client-reports',
     label: 'Reports',
@@ -143,6 +158,25 @@ export const routeMetadata = [
     iconName: 'layoutDashboard',
   },
   {
+    path: '/admin/performance-dashboards',
+    id: 'admin-performance-dashboards',
+    label: 'Performance',
+    pageTitle: 'Performance Dashboards',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: AdminPerformanceDashboardsPageHeader,
+    iconName: 'barChart',
+  },
+  {
+    path: '/admin/performance-dashboard-editor',
+    id: 'admin-performance-dashboard-editor',
+    label: 'Performance Editor',
+    pageTitle: 'Performance Dashboard Editor',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: AdminPerformanceDashboardEditorPageHeader,
+    showInNav: false,
+    iconName: 'barChart',
+  },
+  {
     path: '/admin/reports',
     id: 'admin-reports',
     label: 'Reports',
@@ -170,6 +204,16 @@ export const routeMetadata = [
     header: ClientDashboardPageHeader,
     showInNav: false,
     iconName: 'layoutDashboard',
+  },
+  {
+    path: '/admin/client-performance-preview',
+    id: 'admin-client-performance-preview',
+    label: 'Performance Preview',
+    pageTitle: 'Performance Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    header: ClientPerformancePageHeader,
+    showInNav: false,
+    iconName: 'barChart',
   },
   {
     path: '/admin/client-report-preview',
@@ -334,6 +378,16 @@ export const router = createBrowserRouter(
             ),
           },
           {
+            path: 'performance',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.CLIENT_USER]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ClientPerformancePageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'reports',
             element: (
               <ProtectedRoute allowedRoles={[USER_ROLES.CLIENT_USER]}>
@@ -379,6 +433,26 @@ export const router = createBrowserRouter(
             ),
           },
           {
+            path: 'performance-dashboards',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminPerformanceDashboardsPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'performance-dashboard-editor',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AdminPerformanceDashboardEditorPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'reports',
             element: (
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
@@ -404,6 +478,16 @@ export const router = createBrowserRouter(
               <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
                 <Suspense fallback={<LoadingFallback />}>
                   <ClientDashboardPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'client-performance-preview',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.AGENCY_ADMIN]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ClientPerformancePageRoute />
                 </Suspense>
               </ProtectedRoute>
             ),

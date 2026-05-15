@@ -8,6 +8,7 @@ const TABLE_NAMES = Object.freeze([
   'client_memberships',
   'dashboard_links',
   'needed_from_client',
+  'performance_dashboard_periods',
   'profiles',
   'projects',
   'reports',
@@ -166,6 +167,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     clientMemberships: createEntityRepository('client_memberships', readSnapshot, writeSnapshot),
     dashboardLinks: createEntityRepository('dashboard_links', readSnapshot, writeSnapshot),
     neededFromClient: createEntityRepository('needed_from_client', readSnapshot, writeSnapshot),
+    performanceDashboardPeriods: createEntityRepository('performance_dashboard_periods', readSnapshot, writeSnapshot),
     profiles: {
       ...createEntityRepository('profiles', readSnapshot, writeSnapshot),
       findByUserId(userId) {

@@ -37,6 +37,7 @@ test-results
 .vscode/*
 !.vscode/extensions.json
 .idea
+.claude/worktrees/
 .DS_Store
 *.suo
 *.ntvs*

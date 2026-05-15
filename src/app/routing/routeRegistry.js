@@ -7,6 +7,8 @@ import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboar
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPage'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
+import { ClientPerformancePage } from '../../pages/client/performance/ClientPerformancePage'
+import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
@@ -17,6 +19,10 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
+import { AdminPerformanceDashboardEditorPage } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPage'
+import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPageHeader'
+import { AdminPerformanceDashboardsPage } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPage'
+import { AdminPerformanceDashboardsPageHeader } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPageHeader'
 import { AdminReportsPage } from '../../pages/admin/reports/AdminReportsPage'
 import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
@@ -89,6 +95,16 @@ export const routes = [
     showInNav: false,
   },
   {
+    component: ClientPerformancePage,
+    header: ClientPerformancePageHeader,
+    href: '/client/performance',
+    iconName: 'barChart',
+    id: 'client-performance',
+    label: 'Performance',
+    pageTitle: 'Performance Dashboard',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+  },
+  {
     component: ClientReportsPage,
     header: ClientReportsPageHeader,
     href: '/client/reports',
@@ -130,6 +146,27 @@ export const routes = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
   },
   {
+    component: AdminPerformanceDashboardsPage,
+    header: AdminPerformanceDashboardsPageHeader,
+    href: '/admin/performance-dashboards',
+    iconName: 'barChart',
+    id: 'admin-performance-dashboards',
+    label: 'Performance',
+    pageTitle: 'Performance Dashboards',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+  },
+  {
+    component: AdminPerformanceDashboardEditorPage,
+    header: AdminPerformanceDashboardEditorPageHeader,
+    href: '/admin/performance-dashboard-editor',
+    iconName: 'barChart',
+    id: 'admin-performance-dashboard-editor',
+    label: 'Performance Editor',
+    pageTitle: 'Performance Dashboard Editor',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+  },
+  {
     component: AdminReportsPage,
     header: AdminReportsPageHeader,
     href: '/admin/reports',
@@ -158,6 +195,17 @@ export const routes = [
     id: 'admin-client-dashboard-preview',
     label: 'Dashboard Preview',
     pageTitle: 'Dashboard Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    showInNav: false,
+  },
+  {
+    component: ClientPerformancePage,
+    header: ClientPerformancePageHeader,
+    href: '/admin/client-performance-preview',
+    iconName: 'barChart',
+    id: 'admin-client-performance-preview',
+    label: 'Performance Preview',
+    pageTitle: 'Performance Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     showInNav: false,
   },

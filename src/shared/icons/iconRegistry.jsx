@@ -225,6 +225,156 @@ export const iconRegistry = {
       </>
     ),
   },
+  fileJson: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M14 2v5h5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M10 12.5 8.5 14l1.5 1.5M14 12.5l1.5 1.5-1.5 1.5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  plug: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="M12 22v-5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M9 8V2"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M15 8V2"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M18 8v4a6 6 0 0 1-12 0V8z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  pencil: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="M21.17 6.83a2.83 2.83 0 0 0-4-4L4 16v4h4z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="m15 5 4 4"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  calculator: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <rect
+          width="16"
+          height="20"
+          x="4"
+          y="2"
+          fill="none"
+          rx="2"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
+  circleAlert: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <circle
+          cx="12"
+          cy="12"
+          fill="none"
+          r="10"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M12 8v4M12 16h.01"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
   layoutDashboard: {
     defaultSize: 20,
     viewBox: '0 0 24 24',

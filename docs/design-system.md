@@ -118,7 +118,9 @@ Component library contract:
 - If a primitive default conflicts with this design system, update the primitive or token once instead of repeating overrides in feature/page components.
 - Public design-system components are exported from `src/shared/ui`; prefer that API for reusable structure and controls before adding page-local wrappers.
 - Appearance mode is owned by `ThemeProvider` from `src/shared/theme`; components should not toggle `.dark` or read/write theme storage directly.
+- Toolbar search should use the shared `SearchField` compound control. Do not hand-place search icons with absolute positioning in feature or page components.
 - Dropdowns, selects, and sheets use the shared material/motion tokens. Keep placement, padding, radius, shadow, and close-control behavior in the primitive unless a workflow has a concrete accessibility or layout requirement.
+- Filters should expose the domain meaning of the value being filtered. If the available values come from existing records, prefer a select of those values over a raw date/month input.
 - Native file inputs should not be visible as polished product UI. Hide the native input, trigger it from a styled control, and render filename, preview, validation, and removal actions explicitly.
 - When a value can be provided by URL or upload, use one value field with an attached upload action instead of showing two competing inputs or a mode switch.
 
