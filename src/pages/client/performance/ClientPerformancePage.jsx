@@ -65,6 +65,12 @@ function formatMetricValue(metric) {
   return `${metric.value ?? ''}${metric.unit ? ` ${metric.unit}` : ''}`.trim() || 'Not set'
 }
 
+function formatMetricLabel(value) {
+  return String(value ?? '')
+    .replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
 function formatNumber(value, suffix = '') {
   if (typeof value !== 'number') {
     return 'n/a'
@@ -73,6 +79,23 @@ function formatNumber(value, suffix = '') {
   return `${new Intl.NumberFormat('en', {
     maximumFractionDigits: 2,
   }).format(value)}${suffix}`
+}
+
+function getMetricStatusTone(status) {
+  return {
+    ahead: 'green',
+    behind: 'amber',
+    neutral: 'neutral',
+    on_track: 'blue',
+  }[status] ?? 'neutral'
+}
+
+function getInsightTone(severity) {
+  return {
+    info: 'blue',
+    positive: 'green',
+    warning: 'amber',
+  }[severity] ?? 'blue'
 }
 
 function formatLooseValue(value) {
@@ -96,18 +119,33 @@ function getGoalProgress(goal) {
 }
 
 function MetricCard({ metric }) {
+  const deltaIsPositive = typeof metric.delta_pct === 'number' && metric.delta_pct >= 0
+
   return (
-    <Card as="article" className="border-control-border bg-block shadow-none">
+    <Card as="article" className="border-control-border bg-block shadow-none transition-colors hover:bg-block-subtle">
       <div className="p-card">
-        <p className="text-sm font-medium text-text-secondary">{metric.label || metric.name || 'Metric'}</p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm font-medium text-text-secondary">{metric.label || metric.name || 'Metric'}</p>
+          {metric.status ? <StatusBadge label={formatMetricLabel(metric.status)} tone={getMetricStatusTone(metric.status)} /> : null}
+        </div>
         <div className="mt-2 flex items-baseline justify-between gap-3">
           <strong className="text-3xl leading-9 text-text-primary">{formatMetricValue(metric)}</strong>
           {typeof metric.delta_pct === 'number' ? (
-            <span className={metric.delta_pct >= 0 ? 'text-sm font-semibold text-success-foreground' : 'text-sm font-semibold text-destructive'}>
+            <span className={deltaIsPositive ? 'text-sm font-semibold text-success-foreground' : 'text-sm font-semibold text-destructive'}>
               {metric.delta_pct >= 0 ? '+' : ''}{metric.delta_pct}%
             </span>
           ) : null}
         </div>
+        {typeof metric.goal_pct === 'number' ? (
+          <div className="mt-4">
+            <ProgressBar label="Goal progress" value={metric.goal_pct} />
+          </div>
+        ) : null}
+        {metric.goal || metric.benchmark ? (
+          <p className="mt-3 text-xs font-medium text-text-muted">
+            {metric.goal ? `Goal: ${formatLooseValue(metric.goal)}` : metric.benchmark}
+          </p>
+        ) : null}
         {metric.definition ? (
           <p className="mt-3 text-xs leading-5 text-text-muted">{metric.definition}</p>
         ) : null}
@@ -116,6 +154,88 @@ function MetricCard({ metric }) {
         ) : null}
       </div>
     </Card>
+  )
+}
+
+function ExecutiveSummaryHero({ dashboard, executiveSummary, heroMetric }) {
+  return (
+    <Panel className="border-action/20 bg-action-muted">
+      <PanelBody className="grid gap-6 p-6 lg:grid-cols-[0.9fr_1.35fr]">
+        <div className="rounded-block border border-action/20 bg-block p-5 shadow-none">
+          <p className="text-label text-action">{heroMetric?.label || 'Hero metric'}</p>
+          <strong className="mt-3 block text-5xl leading-tight text-text-primary">{formatMetricValue(heroMetric)}</strong>
+          <div className="mt-4 flex flex-wrap gap-tag">
+            {typeof heroMetric?.delta_pct === 'number' ? (
+              <StatusBadge
+                label={`${heroMetric.delta_pct >= 0 ? '+' : ''}${heroMetric.delta_pct}% vs prior period`}
+                tone={heroMetric.delta_pct >= 0 ? 'green' : 'amber'}
+              />
+            ) : null}
+            {typeof heroMetric?.goal_pct === 'number' ? (
+              <StatusBadge label={`${heroMetric.goal_pct}% of goal`} tone={heroMetric.goal_pct >= 100 ? 'green' : 'amber'} />
+            ) : null}
+          </div>
+          {typeof heroMetric?.goal_pct === 'number' ? (
+            <div className="mt-5">
+              <ProgressBar label="Hero metric goal progress" tone={heroMetric.goal_pct >= 100 ? 'green' : 'blue'} value={heroMetric.goal_pct} />
+            </div>
+          ) : null}
+          {heroMetric?.definition ? <p className="mt-4 text-sm leading-6 text-text-secondary">{heroMetric.definition}</p> : null}
+        </div>
+
+        <div className="grid content-between gap-5">
+          <div>
+            <p className="text-label text-text-muted">
+              {formatDate(dashboard.periodStart)} - {formatDate(dashboard.periodEnd)}
+            </p>
+            <h2 className="mt-2 text-heading text-text-primary">{dashboard.title}</h2>
+            <p className="mt-3 max-w-readable text-base leading-7 text-text-secondary">
+              {executiveSummary.narrative || 'The agency has not published an executive summary for this period yet.'}
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <SummaryPoint label="Main win" tone="green" value={executiveSummary.main_win || 'Not provided yet.'} />
+            <SummaryPoint label="Main issue" tone="amber" value={executiveSummary.main_issue || 'No issue noted.'} />
+            <SummaryPoint label="Next focus" tone="blue" value={executiveSummary.next_focus || 'Not provided yet.'} />
+          </div>
+        </div>
+      </PanelBody>
+    </Panel>
+  )
+}
+
+function SummaryPoint({ label, tone, value }) {
+  const toneClass = {
+    amber: 'border-warning/20 bg-warning/10',
+    blue: 'border-action/20 bg-block',
+    green: 'border-success/20 bg-success/10',
+  }[tone]
+
+  return (
+    <div className={`rounded-control border p-4 ${toneClass}`}>
+      <p className="text-label text-text-muted">{label}</p>
+      <p className="mt-2 text-sm leading-6 text-text-primary">{value}</p>
+    </div>
+  )
+}
+
+function TrustSignalStrip({ dashboard }) {
+  return (
+    <section className="grid gap-3 rounded-block border border-control-border bg-block px-4 py-3 text-sm text-text-secondary md:grid-cols-3">
+      <div>
+        <p className="text-label text-text-muted">Last updated</p>
+        <p className="mt-1 font-medium text-text-primary">{formatDateTime(dashboard.lastUpdatedAt)}</p>
+      </div>
+      <div>
+        <p className="text-label text-text-muted">Sources</p>
+        <p className="mt-1 font-medium text-text-primary">{dashboard.sourceSummary || 'Not provided'}</p>
+      </div>
+      <div>
+        <p className="text-label text-text-muted">Attribution</p>
+        <p className="mt-1 font-medium text-text-primary">{dashboard.attributionNote || 'No attribution note provided'}</p>
+      </div>
+    </section>
   )
 }
 
@@ -130,20 +250,24 @@ function GoalsSection({ goals }) {
         subtitle="Targets anchor performance so numbers are not shown without context."
         title="Goals vs Actual"
       />
-      <PanelBody className="grid gap-component">
+      <PanelBody className="grid gap-component md:grid-cols-2">
         {goals.map((goal, index) => {
           const progress = getGoalProgress(goal)
 
           return (
-            <div className="grid gap-2" key={goal.id || `${goal.name}-${index}`}>
+            <div className="grid gap-3 rounded-control border border-control-border bg-block-subtle p-4" key={goal.id || `${goal.name}-${index}`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-semibold text-text-primary">{goal.name || goal.metric}</p>
                   {goal.note ? <p className="mt-1 text-sm leading-5 text-text-secondary">{goal.note}</p> : null}
                 </div>
-                <StatusBadge label={goal.status?.replaceAll('_', ' ') ?? 'On track'} tone={goal.status === 'behind' ? 'amber' : 'green'} />
+                <StatusBadge label={formatMetricLabel(goal.status ?? 'on_track')} tone={getMetricStatusTone(goal.status)} />
               </div>
-              <ProgressBar label={`${goal.name || goal.metric} progress`} value={progress} />
+              <ProgressBar
+                label={`${goal.name || goal.metric} progress`}
+                tone={progress >= 100 ? 'green' : goal.status === 'behind' ? 'orange' : 'blue'}
+                value={progress}
+              />
               <p className="text-xs text-text-muted">
                 Actual {goal.actual ?? 'n/a'} / Target {goal.target ?? 'n/a'}
               </p>
@@ -189,7 +313,7 @@ function FunnelSection({ funnel }) {
       />
       <PanelBody className="grid gap-3">
         {populatedStages.map((stage) => (
-          <div className="grid gap-2" key={stage.label}>
+          <div className="grid gap-2 rounded-control bg-block-subtle p-3" key={stage.label}>
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="font-medium text-text-primary">{stage.label}</span>
               <span className="font-semibold text-text-secondary">{formatNumber(stage.value)}</span>
@@ -218,7 +342,7 @@ function ChannelBreakdownSection({ channels }) {
       />
       <PanelBody className="grid gap-component">
         {channels.map((channel, index) => (
-          <div className="rounded-control border border-control-border bg-block-subtle p-4" key={channel.id || `${channel.channel}-${index}`}>
+          <div className="rounded-block border border-control-border bg-block p-4 shadow-none" key={channel.id || `${channel.channel}-${index}`}>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-text-primary">
@@ -233,31 +357,25 @@ function ChannelBreakdownSection({ channels }) {
               ) : null}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <div>
-                <p className="text-label text-text-muted">Spend</p>
-                <p className="mt-1 font-semibold text-text-primary">{formatNumber(channel.spend)}</p>
-              </div>
-              <div>
-                <p className="text-label text-text-muted">Qualified leads</p>
-                <p className="mt-1 font-semibold text-text-primary">{formatNumber(channel.qualified_leads)}</p>
-              </div>
-              <div>
-                <p className="text-label text-text-muted">Revenue</p>
-                <p className="mt-1 font-semibold text-text-primary">{formatNumber(channel.revenue)}</p>
-              </div>
-              <div>
-                <p className="text-label text-text-muted">CPL</p>
-                <p className="mt-1 font-semibold text-text-primary">{formatNumber(channel.cpl)}</p>
-              </div>
-              <div>
-                <p className="text-label text-text-muted">CVR</p>
-                <p className="mt-1 font-semibold text-text-primary">{formatNumber(channel.conversion_rate, '%')}</p>
-              </div>
+              <SmallMetric label="Spend" value={formatNumber(channel.spend)} />
+              <SmallMetric label="Qualified leads" value={formatNumber(channel.qualified_leads)} />
+              <SmallMetric label="Revenue" value={formatNumber(channel.revenue)} />
+              <SmallMetric label="CPL" value={formatNumber(channel.cpl)} />
+              <SmallMetric label="CVR" value={formatNumber(channel.conversion_rate, '%')} />
             </div>
           </div>
         ))}
       </PanelBody>
     </Panel>
+  )
+}
+
+function SmallMetric({ label, value }) {
+  return (
+    <div className="rounded-control bg-surface-subtle px-3 py-2">
+      <p className="text-label text-text-muted">{label}</p>
+      <p className="mt-1 font-semibold text-text-primary">{value}</p>
+    </div>
   )
 }
 
@@ -288,16 +406,7 @@ function TrendSeriesSection({ trends }) {
                   {typeof trend.goal_value === 'number' ? <span> / goal {formatNumber(trend.goal_value)}</span> : null}
                 </div>
               </div>
-              {trend.series?.length ? (
-                <div className="mt-4 grid gap-2">
-                  {trend.series.map((point) => (
-                    <div className="flex items-center justify-between gap-3 text-xs" key={`${point.date}-${point.value}`}>
-                      <span className="text-text-muted">{formatDate(point.date)}</span>
-                      <span className="font-medium text-text-primary">{formatLooseValue(point.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              {trend.series?.length ? <TrendBars series={trend.series} /> : null}
               {trend.annotations?.length ? (
                 <div className="mt-4 grid gap-2 border-t border-separator pt-3">
                   {trend.annotations.map((annotation) => (
@@ -312,6 +421,33 @@ function TrendSeriesSection({ trends }) {
         })}
       </PanelBody>
     </Panel>
+  )
+}
+
+function TrendBars({ series }) {
+  const numericValues = series
+    .map((point) => point.value)
+    .filter((value) => typeof value === 'number')
+  const maxValue = Math.max(...numericValues, 1)
+
+  return (
+    <div className="mt-4 grid gap-2">
+      {series.map((point) => {
+        const barValue = typeof point.value === 'number'
+          ? Math.max(4, Math.round((point.value / maxValue) * 100))
+          : 0
+
+        return (
+          <div className="grid gap-1.5" key={`${point.date}-${point.value}`}>
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-text-muted">{formatDate(point.date)}</span>
+              <span className="font-medium text-text-primary">{formatLooseValue(point.value)}</span>
+            </div>
+            <ProgressBar label={`${point.date} trend value`} showLabel={false} value={barValue} />
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -434,6 +570,52 @@ function BulletPanel({ items, title, emptyText, renderItem }) {
   )
 }
 
+function InsightCard({ insight, index }) {
+  return (
+    <div className="rounded-control border border-control-border bg-block-subtle p-4" key={insight.id || `${insight.title}-${index}`}>
+      <div className="flex items-center gap-2">
+        <StatusBadge label={formatMetricLabel(insight.severity ?? 'info')} tone={getInsightTone(insight.severity)} />
+        <h3 className="text-sm font-semibold text-text-primary">{insight.title || 'Insight'}</h3>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-text-secondary">{insight.body}</p>
+      {insight.chart_ref ? <p className="mt-3 text-xs text-text-muted">Related: {insight.chart_ref}</p> : null}
+    </div>
+  )
+}
+
+function NextStepCard({ step, index }) {
+  return (
+    <div className="rounded-control border border-control-border bg-block-subtle p-4" key={step.id || `${step.title}-${index}`}>
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-sm font-semibold text-text-primary">{step.title || 'Next action'}</h3>
+        <StatusBadge label={formatMetricLabel(step.priority ?? 'medium')} tone={step.priority === 'high' ? 'amber' : 'neutral'} />
+      </div>
+      {step.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{step.description}</p> : null}
+      <p className="mt-3 text-xs text-text-muted">
+        {step.owner ? `Owner: ${step.owner}` : 'Owner not set'}
+        {step.due_date ? ` - Due ${formatDate(step.due_date)}` : ''}
+      </p>
+    </div>
+  )
+}
+
+function ClientActionCard({ action }) {
+  return (
+    <div className="rounded-control border border-warning/20 bg-warning/10 p-4" key={action.id}>
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-control bg-warning/20 text-warning-foreground">
+          <Icon name="warning" size={15} />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-text-primary">{action.title}</h3>
+          {action.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
+          <p className="mt-3 text-xs font-medium text-warning-foreground">Due {formatDate(action.dueDate)}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ClientPerformancePage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const periodId = routeParams.performancePeriodId ?? routeParams.periodId
@@ -471,59 +653,19 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
 
   return (
     <div className="grid gap-6">
-      <Panel>
-        <PanelBody className="grid gap-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-label text-text-muted">
-                {formatDate(dashboard.periodStart)} - {formatDate(dashboard.periodEnd)}
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold text-text-primary">{dashboard.title}</h2>
-              {executiveSummary.narrative ? (
-                <p className="mt-3 max-w-readable text-base leading-7 text-text-secondary">{executiveSummary.narrative}</p>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-tag lg:justify-end">
-              <StatusBadge meta={dashboard.statusMeta} />
-              <StatusBadge meta={dashboard.dataConfidenceMeta} />
-              <StatusBadge meta={dashboard.dataModeMeta} />
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-tag">
+        <StatusBadge meta={dashboard.statusMeta} />
+        <StatusBadge meta={dashboard.dataConfidenceMeta} />
+        <StatusBadge meta={dashboard.dataModeMeta} />
+      </div>
 
-          <div className="grid gap-component lg:grid-cols-[1.1fr_2fr]">
-            <Card className="border-action/20 bg-action-muted shadow-none">
-              <div className="p-card">
-                <p className="text-sm font-medium text-action">{heroMetric?.label || 'Hero metric'}</p>
-                <strong className="mt-2 block text-4xl leading-tight text-text-primary">{formatMetricValue(heroMetric)}</strong>
-                {typeof heroMetric?.goal_pct === 'number' ? (
-                  <p className="mt-2 text-sm text-text-secondary">{heroMetric.goal_pct}% of goal</p>
-                ) : null}
-              </div>
-            </Card>
+      <ExecutiveSummaryHero
+        dashboard={dashboard}
+        executiveSummary={executiveSummary}
+        heroMetric={heroMetric}
+      />
 
-            <div className="grid gap-component md:grid-cols-3">
-              <div className="rounded-block border border-control-border bg-block p-card">
-                <p className="text-label text-text-muted">Main win</p>
-                <p className="mt-2 text-sm leading-6 text-text-primary">{executiveSummary.main_win || 'Not provided yet.'}</p>
-              </div>
-              <div className="rounded-block border border-control-border bg-block p-card">
-                <p className="text-label text-text-muted">Main issue</p>
-                <p className="mt-2 text-sm leading-6 text-text-primary">{executiveSummary.main_issue || 'No issue noted.'}</p>
-              </div>
-              <div className="rounded-block border border-control-border bg-block p-card">
-                <p className="text-label text-text-muted">Next focus</p>
-                <p className="mt-2 text-sm leading-6 text-text-primary">{executiveSummary.next_focus || 'Not provided yet.'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-2 rounded-control border border-control-border bg-surface-subtle p-3 text-sm text-text-secondary">
-            <p><strong className="text-text-primary">Last updated:</strong> {formatDateTime(dashboard.lastUpdatedAt)}</p>
-            {dashboard.sourceSummary ? <p><strong className="text-text-primary">Sources:</strong> {dashboard.sourceSummary}</p> : null}
-            {dashboard.attributionNote ? <p><strong className="text-text-primary">Attribution:</strong> {dashboard.attributionNote}</p> : null}
-          </div>
-        </PanelBody>
-      </Panel>
+      <TrustSignalStrip dashboard={dashboard} />
 
       {kpiCards.length ? (
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -548,34 +690,14 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
         <BulletPanel
           emptyText="No insights have been added yet."
           items={insights}
-          renderItem={(insight, index) => (
-            <div className="rounded-control border border-control-border bg-block-subtle p-4" key={insight.id || `${insight.title}-${index}`}>
-              <div className="flex items-center gap-2">
-                <StatusBadge label={insight.severity ?? 'info'} tone={insight.severity === 'warning' ? 'amber' : insight.severity === 'positive' ? 'green' : 'blue'} />
-                <h3 className="text-sm font-semibold text-text-primary">{insight.title || 'Insight'}</h3>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">{insight.body}</p>
-            </div>
-          )}
+          renderItem={(insight, index) => <InsightCard index={index} insight={insight} key={insight.id || `${insight.title}-${index}`} />}
           title="What Changed"
         />
 
         <BulletPanel
           emptyText="No next actions have been added yet."
           items={nextSteps}
-          renderItem={(step, index) => (
-            <div className="rounded-control border border-control-border bg-block-subtle p-4" key={step.id || `${step.title}-${index}`}>
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-text-primary">{step.title || 'Next action'}</h3>
-                <StatusBadge label={step.priority ?? 'medium'} tone={step.priority === 'high' ? 'amber' : 'neutral'} />
-              </div>
-              {step.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{step.description}</p> : null}
-              <p className="mt-3 text-xs text-text-muted">
-                {step.owner ? `Owner: ${step.owner}` : 'Owner not set'}
-                {step.due_date ? ` - Due ${formatDate(step.due_date)}` : ''}
-              </p>
-            </div>
-          )}
+          renderItem={(step, index) => <NextStepCard index={index} key={step.id || `${step.title}-${index}`} step={step} />}
           title="Next Actions"
         />
       </div>
@@ -586,13 +708,7 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
         <BulletPanel
           emptyText="No client actions are open right now."
           items={page.neededFromClient}
-          renderItem={(action) => (
-            <div className="rounded-control border border-warning/20 bg-warning/10 p-4" key={action.id}>
-              <h3 className="text-sm font-semibold text-text-primary">{action.title}</h3>
-              {action.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
-              <p className="mt-3 text-xs text-warning-foreground">Due {formatDate(action.dueDate)}</p>
-            </div>
-          )}
+          renderItem={(action) => <ClientActionCard action={action} key={action.id} />}
           title="Needed From Client"
         />
 
