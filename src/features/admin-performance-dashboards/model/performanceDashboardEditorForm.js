@@ -5,6 +5,8 @@ import {
   PERFORMANCE_INSIGHT_SEVERITIES,
   PERFORMANCE_METRIC_STATUSES,
   PERFORMANCE_NEXT_STEP_PRIORITIES,
+  PERFORMANCE_SERVICE_TYPES,
+  PERFORMANCE_TREND_GRANULARITIES,
 } from '../../../entities/performance-dashboard'
 
 export function createUuid() {
@@ -128,6 +130,46 @@ export function createNextStep() {
   }
 }
 
+export function createTrend() {
+  return {
+    annotations: [],
+    annotationsText: '[]',
+    comparison_series: [],
+    comparisonSeriesText: '[]',
+    goal_value: null,
+    granularity: PERFORMANCE_TREND_GRANULARITIES.MONTHLY,
+    id: createUuid(),
+    metric: '',
+    series: [],
+    seriesText: '[]',
+  }
+}
+
+export function createServiceSection() {
+  return {
+    id: createUuid(),
+    insights: [],
+    insightsText: '[]',
+    metrics: {},
+    metricsText: '{}',
+    next_actions: [],
+    nextActionsText: '[]',
+    service_type: PERFORMANCE_SERVICE_TYPES.FULL_SERVICE,
+    summary: '',
+  }
+}
+
+export function createAppendixTable() {
+  return {
+    columns: [],
+    columnsText: '[]',
+    id: createUuid(),
+    rows: [],
+    rowsText: '[]',
+    title: '',
+  }
+}
+
 export const funnelFields = [
   ['spend', 'Spend'],
   ['impressions', 'Impressions'],
@@ -152,6 +194,26 @@ export const channelNumberFields = [
   ['roas', 'ROAS'],
   ['conversion_rate', 'Conversion rate'],
 ]
+
+function jsonText(value, fallback) {
+  try {
+    return JSON.stringify(value ?? fallback, null, 2)
+  } catch {
+    return JSON.stringify(fallback, null, 2)
+  }
+}
+
+function parseJsonValue(value, fallback) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return fallback
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
 
 export function periodToForm(period) {
   const content = createEmptyPerformanceDashboardContent(period.content)
@@ -182,6 +244,26 @@ export function periodToForm(period) {
       next_steps: content.next_steps.map((step) => ({
         ...step,
         id: step.id || createUuid(),
+      })),
+      appendix_tables: content.appendix_tables.map((table) => ({
+        ...table,
+        columnsText: jsonText(table.columns, []),
+        id: table.id || createUuid(),
+        rowsText: jsonText(table.rows, []),
+      })),
+      service_sections: content.service_sections.map((section) => ({
+        ...section,
+        id: section.id || createUuid(),
+        insightsText: jsonText(section.insights, []),
+        metricsText: jsonText(section.metrics, {}),
+        nextActionsText: jsonText(section.next_actions, []),
+      })),
+      trends: content.trends.map((trend) => ({
+        ...trend,
+        annotationsText: jsonText(trend.annotations, []),
+        comparisonSeriesText: jsonText(trend.comparison_series, []),
+        id: trend.id || createUuid(),
+        seriesText: jsonText(trend.series, []),
       })),
     },
     dataConfidence: period.dataConfidence,
@@ -242,6 +324,53 @@ export function serializeForm(form) {
         ...step,
         display_order: index,
       })),
+      appendix_tables: form.content.appendix_tables.map((table, index) => {
+        const {
+          columnsText,
+          rowsText,
+          ...tableRecord
+        } = table
+
+        return {
+          ...tableRecord,
+          columns: parseJsonValue(columnsText, []),
+          display_order: index,
+          rows: parseJsonValue(rowsText, []),
+        }
+      }),
+      service_sections: form.content.service_sections.map((section, index) => {
+        const {
+          insightsText,
+          metricsText,
+          nextActionsText,
+          ...sectionRecord
+        } = section
+
+        return {
+          ...sectionRecord,
+          display_order: index,
+          insights: parseJsonValue(insightsText, []),
+          metrics: parseJsonValue(metricsText, {}),
+          next_actions: parseJsonValue(nextActionsText, []),
+        }
+      }),
+      trends: form.content.trends.map((trend, index) => {
+        const {
+          annotationsText,
+          comparisonSeriesText,
+          seriesText,
+          ...trendRecord
+        } = trend
+
+        return {
+          ...trendRecord,
+          annotations: parseJsonValue(annotationsText, []),
+          comparison_series: parseJsonValue(comparisonSeriesText, []),
+          display_order: index,
+          goal_value: numberOrNull(trend.goal_value),
+          series: parseJsonValue(seriesText, []),
+        }
+      }),
     },
     lastUpdatedAt: fromDateTimeLocal(form.lastUpdatedAt),
   }

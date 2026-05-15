@@ -18,6 +18,7 @@ import {
 } from '../model'
 import { IssueList } from './editor/AdminPerformanceDashboardEditorPrimitives'
 import {
+  AppendixTablesSection,
   ChannelBreakdownSection,
   ClientPeriodDataTrustSection,
   EditorInspector,
@@ -28,6 +29,8 @@ import {
   InsightsSection,
   KpiCardsSection,
   NextActionsSection,
+  ServiceSectionsSection,
+  TrendSeriesSection,
 } from './editor/AdminPerformanceDashboardEditorSections'
 
 export function AdminPerformanceDashboardEditor({
@@ -165,7 +168,19 @@ export function AdminPerformanceDashboardEditor({
             form={form}
             updateContent={updateContent}
           />
+          <TrendSeriesSection
+            form={form}
+            removeArrayItem={removeArrayItem}
+            updateArrayItem={updateArrayItem}
+            updateContent={updateContent}
+          />
           <ChannelBreakdownSection
+            form={form}
+            removeArrayItem={removeArrayItem}
+            updateArrayItem={updateArrayItem}
+            updateContent={updateContent}
+          />
+          <ServiceSectionsSection
             form={form}
             removeArrayItem={removeArrayItem}
             updateArrayItem={updateArrayItem}
@@ -190,6 +205,12 @@ export function AdminPerformanceDashboardEditor({
             updateContent={updateContent}
           />
           <NextActionsSection
+            form={form}
+            removeArrayItem={removeArrayItem}
+            updateArrayItem={updateArrayItem}
+            updateContent={updateContent}
+          />
+          <AppendixTablesSection
             form={form}
             removeArrayItem={removeArrayItem}
             updateArrayItem={updateArrayItem}

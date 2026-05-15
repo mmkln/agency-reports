@@ -18,6 +18,9 @@ import {
   PERFORMANCE_GOAL_STATUSES,
   PERFORMANCE_INSIGHT_SEVERITIES,
   PERFORMANCE_NEXT_STEP_PRIORITIES,
+  PERFORMANCE_SERVICE_TYPE_META,
+  PERFORMANCE_SERVICE_TYPES,
+  PERFORMANCE_TREND_GRANULARITIES,
 } from '../../../../entities/performance-dashboard'
 import {
   InlineEmptyState,
@@ -30,6 +33,9 @@ import {
   createInsight,
   createMetric,
   createNextStep,
+  createAppendixTable,
+  createServiceSection,
+  createTrend,
   funnelFields,
   optionLabel,
   stringValue,
@@ -488,6 +494,230 @@ export function NextActionsSection({
   )
 }
 
+export function TrendSeriesSection({
+  form,
+  removeArrayItem,
+  updateArrayItem,
+  updateContent,
+}) {
+  return (
+    <WorkspaceCard
+      action={(
+        <Button
+          onClick={() => updateContent('trends', [...form.content.trends, createTrend()])}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Add Trend
+        </Button>
+      )}
+      description="Primary movement over time. Use JSON arrays for manual data until integrations provide series automatically."
+      iconName="trendingUp"
+      title="Trend Series"
+    >
+      <div className="grid gap-3">
+        {form.content.trends.length ? form.content.trends.map((trend, index) => (
+          <div className="rounded-control border border-control-border bg-surface-subtle p-3" key={trend.id}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-text-muted">Trend {index + 1}</p>
+              <Button onClick={() => removeArrayItem('trends', trend.id)} size="sm" type="button" variant="ghost">Remove</Button>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <FormField label="Metric key">
+                <Input onChange={(event) => updateArrayItem('trends', trend.id, 'metric', event.target.value)} placeholder="qualified_leads" value={trend.metric ?? ''} />
+              </FormField>
+              <SelectField label="Granularity" onChange={(value) => updateArrayItem('trends', trend.id, 'granularity', value)} value={trend.granularity ?? PERFORMANCE_TREND_GRANULARITIES.MONTHLY}>
+                {Object.values(PERFORMANCE_TREND_GRANULARITIES).map((granularity) => (
+                  <option key={granularity} value={granularity}>{optionLabel(granularity)}</option>
+                ))}
+              </SelectField>
+              <FormField label="Goal value">
+                <Input onChange={(event) => updateArrayItem('trends', trend.id, 'goal_value', event.target.value)} type="number" value={stringValue(trend.goal_value)} />
+              </FormField>
+              <div className="md:col-span-2">
+                <FormField label="Series JSON">
+                  <Textarea
+                    onChange={(event) => updateArrayItem('trends', trend.id, 'seriesText', event.target.value)}
+                    placeholder={'[{"date":"2026-04-01","value":61}]'}
+                    rows={5}
+                    value={trend.seriesText ?? '[]'}
+                  />
+                </FormField>
+              </div>
+              <div className="md:col-span-2">
+                <FormField label="Comparison series JSON">
+                  <Textarea
+                    onChange={(event) => updateArrayItem('trends', trend.id, 'comparisonSeriesText', event.target.value)}
+                    placeholder={'[{"date":"2026-03-01","value":54}]'}
+                    rows={4}
+                    value={trend.comparisonSeriesText ?? '[]'}
+                  />
+                </FormField>
+              </div>
+              <div className="md:col-span-2">
+                <FormField label="Annotations JSON">
+                  <Textarea
+                    onChange={(event) => updateArrayItem('trends', trend.id, 'annotationsText', event.target.value)}
+                    placeholder={'[{"date":"2026-04-15","label":"Negative keyword cleanup"}]'}
+                    rows={4}
+                    value={trend.annotationsText ?? '[]'}
+                  />
+                </FormField>
+              </div>
+            </div>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="trendingUp" title="No trend series yet">
+            Add a trend for the primary outcome metric so clients can see direction over time.
+          </InlineEmptyState>
+        )}
+      </div>
+    </WorkspaceCard>
+  )
+}
+
+export function ServiceSectionsSection({
+  form,
+  removeArrayItem,
+  updateArrayItem,
+  updateContent,
+}) {
+  return (
+    <WorkspaceCard
+      action={(
+        <Button
+          onClick={() => updateContent('service_sections', [...form.content.service_sections, createServiceSection()])}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Add Service
+        </Button>
+      )}
+      description="Service-specific client detail for paid ads, SEO, social, email/SMS, lead generation, CRO, or full-service work."
+      iconName="grid"
+      title="Service Detail Sections"
+    >
+      <div className="grid gap-3">
+        {form.content.service_sections.length ? form.content.service_sections.map((section, index) => (
+          <div className="rounded-control border border-control-border bg-surface-subtle p-3" key={section.id}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-text-muted">Service {index + 1}</p>
+              <Button onClick={() => removeArrayItem('service_sections', section.id)} size="sm" type="button" variant="ghost">Remove</Button>
+            </div>
+            <div className="mt-3 grid gap-3">
+              <SelectField label="Service type" onChange={(value) => updateArrayItem('service_sections', section.id, 'service_type', value)} value={section.service_type ?? PERFORMANCE_SERVICE_TYPES.FULL_SERVICE}>
+                {Object.values(PERFORMANCE_SERVICE_TYPES).map((serviceType) => (
+                  <option key={serviceType} value={serviceType}>
+                    {PERFORMANCE_SERVICE_TYPE_META[serviceType]?.label ?? optionLabel(serviceType)}
+                  </option>
+                ))}
+              </SelectField>
+              <FormField label="Summary">
+                <Textarea
+                  onChange={(event) => updateArrayItem('service_sections', section.id, 'summary', event.target.value)}
+                  rows={3}
+                  value={section.summary ?? ''}
+                />
+              </FormField>
+              <FormField label="Metrics JSON object">
+                <Textarea
+                  onChange={(event) => updateArrayItem('service_sections', section.id, 'metricsText', event.target.value)}
+                  placeholder={'{"spend":5050,"qualified_leads":63,"roas":4.45}'}
+                  rows={4}
+                  value={section.metricsText ?? '{}'}
+                />
+              </FormField>
+              <FormField label="Insights JSON array">
+                <Textarea
+                  onChange={(event) => updateArrayItem('service_sections', section.id, 'insightsText', event.target.value)}
+                  placeholder={'["Google Ads drove the most reliable appointment requests."]'}
+                  rows={4}
+                  value={section.insightsText ?? '[]'}
+                />
+              </FormField>
+              <FormField label="Next actions JSON array">
+                <Textarea
+                  onChange={(event) => updateArrayItem('service_sections', section.id, 'nextActionsText', event.target.value)}
+                  placeholder={'["Increase exact-match search budget gradually."]'}
+                  rows={4}
+                  value={section.nextActionsText ?? '[]'}
+                />
+              </FormField>
+            </div>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="grid" title="No service sections yet">
+            Add service detail only when a channel needs more explanation than the executive view.
+          </InlineEmptyState>
+        )}
+      </div>
+    </WorkspaceCard>
+  )
+}
+
+export function AppendixTablesSection({
+  form,
+  removeArrayItem,
+  updateArrayItem,
+  updateContent,
+}) {
+  return (
+    <WorkspaceCard
+      action={(
+        <Button
+          onClick={() => updateContent('appendix_tables', [...form.content.appendix_tables, createAppendixTable()])}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Add Table
+        </Button>
+      )}
+      description="Optional drill-down tables for top campaigns, pages, ads, keywords, or other appendix detail."
+      iconName="grid"
+      title="Appendix / Top Performer Tables"
+    >
+      <div className="grid gap-3">
+        {form.content.appendix_tables.length ? form.content.appendix_tables.map((table, index) => (
+          <div className="rounded-control border border-control-border bg-surface-subtle p-3" key={table.id}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-text-muted">Table {index + 1}</p>
+              <Button onClick={() => removeArrayItem('appendix_tables', table.id)} size="sm" type="button" variant="ghost">Remove</Button>
+            </div>
+            <div className="mt-3 grid gap-3">
+              <FormField label="Title">
+                <Input onChange={(event) => updateArrayItem('appendix_tables', table.id, 'title', event.target.value)} value={table.title ?? ''} />
+              </FormField>
+              <FormField label="Columns JSON array">
+                <Textarea
+                  onChange={(event) => updateArrayItem('appendix_tables', table.id, 'columnsText', event.target.value)}
+                  placeholder={'["Campaign","Spend","Qualified Leads","CPL","Status"]'}
+                  rows={3}
+                  value={table.columnsText ?? '[]'}
+                />
+              </FormField>
+              <FormField label="Rows JSON array">
+                <Textarea
+                  onChange={(event) => updateArrayItem('appendix_tables', table.id, 'rowsText', event.target.value)}
+                  placeholder={'[["Dental Implants Search","$3,200","42","$76.19","Scaling"]]'}
+                  rows={6}
+                  value={table.rowsText ?? '[]'}
+                />
+              </FormField>
+            </div>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="grid" title="No appendix tables yet">
+            Add drill-down tables only when the client needs detail below the executive dashboard.
+          </InlineEmptyState>
+        )}
+      </div>
+    </WorkspaceCard>
+  )
+}
+
 export function EditorInspector({
   form,
   selectedClient,
@@ -523,16 +753,16 @@ export function EditorInspector({
         </div>
       </WorkspaceCard>
 
-      <WorkspaceCard iconName="fileText" title="Deferred Detail Sections">
+      <WorkspaceCard iconName="fileText" title="Detail Coverage">
         <div className="grid gap-3">
           <EditorSectionHeader
-            description="Trend, service sections, and appendix tables are part of the contract but will get dedicated editors next."
-            title="Not edited in this first editor pass"
+            description="These sections are optional detail. Keep them focused so the executive view remains readable."
+            title="Additional dashboard depth"
           />
           <ul className="grid gap-2 text-xs text-text-muted">
-            <li>Trend series</li>
-            <li>Service sections</li>
-            <li>Appendix tables</li>
+            <li>{form.content.trends.length} trend series</li>
+            <li>{form.content.service_sections.length} service sections</li>
+            <li>{form.content.appendix_tables.length} appendix tables</li>
           </ul>
         </div>
       </WorkspaceCard>
