@@ -6,6 +6,7 @@ import {
   answerNeededAction,
   cancelNeededAction,
   createNeededAction,
+  listClientNeededActions,
   listNeededActionsWorkspace,
   reopenNeededAction,
   resolveNeededAction,
@@ -160,6 +161,51 @@ describe('neededFromClientService', () => {
     expect(repositories.neededFromClient.findById(IDS.ACTION)).toMatchObject({
       client_id: IDS.CLIENT,
     })
+  })
+
+  it('lists only client-visible own requests for client users', () => {
+    const repositories = {
+      clients: createEntityRepository([
+        {
+          id: IDS.CLIENT,
+          name: 'Client A',
+          portal_slug: 'client-a',
+        },
+      ]),
+      neededFromClient: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.ACTION,
+          internal_notes: 'Internal only.',
+          priority: 'high',
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Approve creatives',
+        },
+        {
+          client_id: IDS.CLIENT,
+          id: '66666666-6666-4666-8666-666666666666',
+          status: NEEDED_ACTION_STATUSES.CANCELLED,
+          title: 'Cancelled request',
+        },
+      ]),
+    }
+
+    const result = listClientNeededActions({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: {
+        clientId: IDS.CLIENT,
+        clientIds: [IDS.CLIENT],
+        role: USER_ROLES.CLIENT_USER,
+      },
+    })
+
+    expect(result.actions.map((action) => action.title)).toEqual(['Approve creatives'])
+    expect(result.actions[0]).toMatchObject({
+      priority: 'high',
+      status: NEEDED_ACTION_STATUSES.PENDING,
+    })
+    expect(result.actions[0].internalNotes).toBeUndefined()
   })
 
   it('requires generated request ids to be string UUIDs', () => {

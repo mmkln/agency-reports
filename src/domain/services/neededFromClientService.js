@@ -1,6 +1,8 @@
 import {
   NEEDED_ACTION_PRIORITIES,
+  NEEDED_ACTION_PRIORITY_META,
   NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_STATUS_META,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
@@ -9,6 +11,7 @@ import {
   canAgencyProcessNeededAction,
   canClientRespondToNeededAction,
 } from '../policies/neededActionPolicy'
+import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
 const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
@@ -185,6 +188,26 @@ function mapNeededAction({ action, client }) {
   }
 }
 
+function mapClientNeededAction(action) {
+  const normalizedAction = normalizeNeededAction(action)
+
+  return {
+    clientResponse: normalizedAction.client_response,
+    description: normalizedAction.description,
+    dueDate: normalizedAction.due_date,
+    id: normalizedAction.id,
+    priority: normalizedAction.priority,
+    priorityMeta: NEEDED_ACTION_PRIORITY_META[normalizedAction.priority],
+    relatedLink: normalizedAction.related_link,
+    respondedAt: normalizedAction.client_responded_at,
+    responseHistory: normalizedAction.response_history,
+    status: normalizedAction.status,
+    statusMeta: NEEDED_ACTION_STATUS_META[normalizedAction.status],
+    title: normalizedAction.title,
+    updatedAt: normalizedAction.updated_at,
+  }
+}
+
 function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
 }
@@ -224,6 +247,57 @@ export function listNeededActionsWorkspace({
     filters: {
       clientId: filters.clientId ?? 'all',
       status: filters.status ?? 'all',
+    },
+    status: 'ready',
+  }
+}
+
+export function listClientNeededActions({
+  clientId,
+  repositories,
+  viewer,
+}) {
+  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
+
+  if (!normalizedClientId || !canAccessClient(viewer, normalizedClientId)) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  const client = repositories.clients?.findById(normalizedClientId)
+
+  if (!client) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  const actions = repositories.neededFromClient
+    .listByClientId(normalizedClientId)
+    .filter(isNeededActionVisibleToClient)
+    .sort((a, b) => {
+      const priority = {
+        [NEEDED_ACTION_STATUSES.PENDING]: 0,
+        [NEEDED_ACTION_STATUSES.ANSWERED]: 1,
+        [NEEDED_ACTION_STATUSES.RESOLVED]: 2,
+      }
+
+      return (priority[a.status] ?? 3) - (priority[b.status] ?? 3)
+        || new Date(a.due_date || '9999-12-31').getTime() - new Date(b.due_date || '9999-12-31').getTime()
+    })
+    .map(mapClientNeededAction)
+
+  return {
+    actions,
+    client: {
+      id: client.id,
+      name: client.name,
+      portalSlug: client.portal_slug,
+      primaryContactEmail: client.primary_contact_email,
+      primaryContactName: client.primary_contact_name,
     },
     status: 'ready',
   }
