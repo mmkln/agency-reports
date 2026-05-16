@@ -130,18 +130,46 @@ export function createNextStep() {
   }
 }
 
+export function createTrendPoint() {
+  return {
+    date: '',
+    id: createUuid(),
+    value: null,
+  }
+}
+
+export function createTrendAnnotation() {
+  return {
+    date: '',
+    id: createUuid(),
+    label: '',
+  }
+}
+
 export function createTrend() {
   return {
     annotations: [],
-    annotationsText: '[]',
     comparison_series: [],
-    comparisonSeriesText: '[]',
     goal_value: null,
     granularity: PERFORMANCE_TREND_GRANULARITIES.MONTHLY,
     id: createUuid(),
     metric: '',
     series: [],
-    seriesText: '[]',
+  }
+}
+
+export function createServiceMetricEntry() {
+  return {
+    id: createUuid(),
+    key: '',
+    value: '',
+  }
+}
+
+export function createServiceTextItem() {
+  return {
+    id: createUuid(),
+    text: '',
   }
 }
 
@@ -149,23 +177,40 @@ export function createServiceSection() {
   return {
     id: createUuid(),
     insights: [],
-    insightsText: '[]',
     metrics: {},
-    metricsText: '{}',
+    metrics_entries: [],
     next_actions: [],
-    nextActionsText: '[]',
     service_type: PERFORMANCE_SERVICE_TYPES.FULL_SERVICE,
     summary: '',
+  }
+}
+
+export function createAppendixColumn() {
+  return {
+    id: createUuid(),
+    label: '',
+  }
+}
+
+export function createAppendixCell(value = '') {
+  return {
+    id: createUuid(),
+    value,
+  }
+}
+
+export function createAppendixRow(columnCount = 0) {
+  return {
+    cells: Array.from({ length: columnCount }, () => createAppendixCell()),
+    id: createUuid(),
   }
 }
 
 export function createAppendixTable() {
   return {
     columns: [],
-    columnsText: '[]',
     id: createUuid(),
     rows: [],
-    rowsText: '[]',
     title: '',
   }
 }
@@ -195,24 +240,123 @@ export const channelNumberFields = [
   ['conversion_rate', 'Conversion rate'],
 ]
 
-function jsonText(value, fallback) {
-  try {
-    return JSON.stringify(value ?? fallback, null, 2)
-  } catch {
-    return JSON.stringify(fallback, null, 2)
+function trendPointToForm(point = {}) {
+  return {
+    date: point.date ?? '',
+    id: point.id || createUuid(),
+    value: point.value ?? null,
   }
 }
 
-function parseJsonValue(value, fallback) {
-  if (typeof value !== 'string' || !value.trim()) {
-    return fallback
+function trendAnnotationToForm(annotation = {}) {
+  return {
+    date: annotation.date ?? '',
+    id: annotation.id || createUuid(),
+    label: annotation.label ?? '',
+  }
+}
+
+function serviceMetricEntriesToForm(metrics = {}) {
+  if (!metrics || typeof metrics !== 'object' || Array.isArray(metrics)) {
+    return []
   }
 
-  try {
-    return JSON.parse(value)
-  } catch {
-    return fallback
+  return Object.entries(metrics).map(([key, value]) => ({
+    id: createUuid(),
+    key,
+    value: value ?? '',
+  }))
+}
+
+function textItemsToForm(items = []) {
+  return Array.isArray(items)
+    ? items.map((text) => ({
+      id: createUuid(),
+      text: text ?? '',
+    }))
+    : []
+}
+
+function appendixColumnsToForm(columns = []) {
+  return Array.isArray(columns)
+    ? columns.map((label) => ({
+      id: createUuid(),
+      label: label ?? '',
+    }))
+    : []
+}
+
+function appendixRowsToForm(rows = [], columnCount = 0) {
+  return Array.isArray(rows)
+    ? rows.map((row) => ({
+      cells: Array.from({ length: columnCount }, (_, index) => (
+        createAppendixCell(Array.isArray(row) ? row[index] ?? '' : '')
+      )),
+      id: createUuid(),
+    }))
+    : []
+}
+
+function compactTrendPoints(points = []) {
+  return points
+    .map((point) => ({
+      date: point.date ?? '',
+      value: numberOrNull(point.value),
+    }))
+    .filter((point) => point.date || point.value !== null)
+}
+
+function compactTrendAnnotations(annotations = []) {
+  return annotations
+    .map((annotation) => ({
+      date: annotation.date ?? '',
+      label: typeof annotation.label === 'string' ? annotation.label.trim() : '',
+    }))
+    .filter((annotation) => annotation.date || annotation.label)
+}
+
+function serviceMetricValue(value) {
+  const numberValue = numberOrNull(value)
+
+  if (numberValue !== null) {
+    return numberValue
   }
+
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function serviceMetricEntriesToRecord(entries = []) {
+  return Object.fromEntries(
+    entries
+      .map((entry) => [
+        typeof entry.key === 'string' ? entry.key.trim() : '',
+        serviceMetricValue(entry.value),
+      ])
+      .filter(([key, value]) => key && value !== ''),
+  )
+}
+
+function compactTextItems(items = []) {
+  return items
+    .map((item) => (typeof item === 'string' ? item : item.text))
+    .map((text) => (typeof text === 'string' ? text.trim() : ''))
+    .filter(Boolean)
+}
+
+function compactAppendixColumns(columns = []) {
+  return columns
+    .map((column) => (typeof column === 'string' ? column : column.label))
+    .map((label) => (typeof label === 'string' ? label.trim() : ''))
+    .filter(Boolean)
+}
+
+function compactAppendixRows(rows = []) {
+  return rows
+    .map((row) => (Array.isArray(row) ? row : row.cells ?? []))
+    .map((cells) => cells.map((cell) => (
+      typeof cell === 'string' ? cell : stringValue(cell.value)
+    )))
+    .filter((row) => row.some((value) => value.trim()))
 }
 
 export function periodToForm(period) {
@@ -247,23 +391,23 @@ export function periodToForm(period) {
       })),
       appendix_tables: content.appendix_tables.map((table) => ({
         ...table,
-        columnsText: jsonText(table.columns, []),
+        columns: appendixColumnsToForm(table.columns),
         id: table.id || createUuid(),
-        rowsText: jsonText(table.rows, []),
+        rows: appendixRowsToForm(table.rows, table.columns.length),
       })),
       service_sections: content.service_sections.map((section) => ({
         ...section,
         id: section.id || createUuid(),
-        insightsText: jsonText(section.insights, []),
-        metricsText: jsonText(section.metrics, {}),
-        nextActionsText: jsonText(section.next_actions, []),
+        insights: textItemsToForm(section.insights),
+        metrics_entries: serviceMetricEntriesToForm(section.metrics),
+        next_actions: textItemsToForm(section.next_actions),
       })),
       trends: content.trends.map((trend) => ({
         ...trend,
-        annotationsText: jsonText(trend.annotations, []),
-        comparisonSeriesText: jsonText(trend.comparison_series, []),
+        annotations: trend.annotations.map(trendAnnotationToForm),
+        comparison_series: trend.comparison_series.map(trendPointToForm),
         id: trend.id || createUuid(),
-        seriesText: jsonText(trend.series, []),
+        series: trend.series.map(trendPointToForm),
       })),
     },
     dataConfidence: period.dataConfidence,
@@ -325,50 +469,35 @@ export function serializeForm(form) {
         display_order: index,
       })),
       appendix_tables: form.content.appendix_tables.map((table, index) => {
-        const {
-          columnsText,
-          rowsText,
-          ...tableRecord
-        } = table
-
         return {
-          ...tableRecord,
-          columns: parseJsonValue(columnsText, []),
+          ...table,
+          columns: compactAppendixColumns(table.columns),
           display_order: index,
-          rows: parseJsonValue(rowsText, []),
+          rows: compactAppendixRows(table.rows),
         }
       }),
       service_sections: form.content.service_sections.map((section, index) => {
         const {
-          insightsText,
-          metricsText,
-          nextActionsText,
+          metrics_entries,
           ...sectionRecord
         } = section
 
         return {
           ...sectionRecord,
           display_order: index,
-          insights: parseJsonValue(insightsText, []),
-          metrics: parseJsonValue(metricsText, {}),
-          next_actions: parseJsonValue(nextActionsText, []),
+          insights: compactTextItems(section.insights),
+          metrics: serviceMetricEntriesToRecord(metrics_entries),
+          next_actions: compactTextItems(section.next_actions),
         }
       }),
       trends: form.content.trends.map((trend, index) => {
-        const {
-          annotationsText,
-          comparisonSeriesText,
-          seriesText,
-          ...trendRecord
-        } = trend
-
         return {
-          ...trendRecord,
-          annotations: parseJsonValue(annotationsText, []),
-          comparison_series: parseJsonValue(comparisonSeriesText, []),
+          ...trend,
+          annotations: compactTrendAnnotations(trend.annotations),
+          comparison_series: compactTrendPoints(trend.comparison_series),
           display_order: index,
           goal_value: numberOrNull(trend.goal_value),
-          series: parseJsonValue(seriesText, []),
+          series: compactTrendPoints(trend.series),
         }
       }),
     },

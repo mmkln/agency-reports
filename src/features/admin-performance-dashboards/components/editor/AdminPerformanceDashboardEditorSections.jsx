@@ -34,8 +34,12 @@ import {
   createMetric,
   createNextStep,
   createAppendixTable,
+  createServiceMetricEntry,
   createServiceSection,
+  createServiceTextItem,
   createTrend,
+  createTrendAnnotation,
+  createTrendPoint,
   funnelFields,
   optionLabel,
   stringValue,
@@ -495,10 +499,13 @@ export function NextActionsSection({
 }
 
 export function TrendSeriesSection({
+  addNestedArrayItem,
   form,
+  removeNestedArrayItem,
   removeArrayItem,
   updateArrayItem,
   updateContent,
+  updateNestedArrayItem,
 }) {
   return (
     <WorkspaceCard
@@ -512,7 +519,7 @@ export function TrendSeriesSection({
           Add Trend
         </Button>
       )}
-      description="Primary movement over time. Use JSON arrays for manual data until integrations provide series automatically."
+      description="Primary movement over time. Add points and annotations directly so manual data stays readable before integrations exist."
       iconName="trendingUp"
       title="Trend Series"
     >
@@ -536,34 +543,34 @@ export function TrendSeriesSection({
                 <Input onChange={(event) => updateArrayItem('trends', trend.id, 'goal_value', event.target.value)} type="number" value={stringValue(trend.goal_value)} />
               </FormField>
               <div className="md:col-span-2">
-                <FormField label="Series JSON">
-                  <Textarea
-                    onChange={(event) => updateArrayItem('trends', trend.id, 'seriesText', event.target.value)}
-                    placeholder={'[{"date":"2026-04-01","value":61}]'}
-                    rows={5}
-                    value={trend.seriesText ?? '[]'}
-                  />
-                </FormField>
+                <SeriesEditor
+                  addLabel="Add Point"
+                  emptyTitle="No primary series points"
+                  items={trend.series}
+                  onAdd={() => addNestedArrayItem('trends', trend.id, 'series', createTrendPoint())}
+                  onRemove={(pointId) => removeNestedArrayItem('trends', trend.id, 'series', pointId)}
+                  onUpdate={(pointId, field, value) => updateNestedArrayItem('trends', trend.id, 'series', pointId, field, value)}
+                  title="Primary series"
+                />
               </div>
               <div className="md:col-span-2">
-                <FormField label="Comparison series JSON">
-                  <Textarea
-                    onChange={(event) => updateArrayItem('trends', trend.id, 'comparisonSeriesText', event.target.value)}
-                    placeholder={'[{"date":"2026-03-01","value":54}]'}
-                    rows={4}
-                    value={trend.comparisonSeriesText ?? '[]'}
-                  />
-                </FormField>
+                <SeriesEditor
+                  addLabel="Add Comparison Point"
+                  emptyTitle="No comparison points"
+                  items={trend.comparison_series}
+                  onAdd={() => addNestedArrayItem('trends', trend.id, 'comparison_series', createTrendPoint())}
+                  onRemove={(pointId) => removeNestedArrayItem('trends', trend.id, 'comparison_series', pointId)}
+                  onUpdate={(pointId, field, value) => updateNestedArrayItem('trends', trend.id, 'comparison_series', pointId, field, value)}
+                  title="Comparison series"
+                />
               </div>
               <div className="md:col-span-2">
-                <FormField label="Annotations JSON">
-                  <Textarea
-                    onChange={(event) => updateArrayItem('trends', trend.id, 'annotationsText', event.target.value)}
-                    placeholder={'[{"date":"2026-04-15","label":"Negative keyword cleanup"}]'}
-                    rows={4}
-                    value={trend.annotationsText ?? '[]'}
-                  />
-                </FormField>
+                <AnnotationEditor
+                  items={trend.annotations}
+                  onAdd={() => addNestedArrayItem('trends', trend.id, 'annotations', createTrendAnnotation())}
+                  onRemove={(annotationId) => removeNestedArrayItem('trends', trend.id, 'annotations', annotationId)}
+                  onUpdate={(annotationId, field, value) => updateNestedArrayItem('trends', trend.id, 'annotations', annotationId, field, value)}
+                />
               </div>
             </div>
           </div>
@@ -577,11 +584,104 @@ export function TrendSeriesSection({
   )
 }
 
+function SeriesEditor({
+  addLabel,
+  emptyTitle,
+  items,
+  onAdd,
+  onRemove,
+  onUpdate,
+  title,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">{title}</p>
+        <Button onClick={onAdd} size="sm" type="button" variant="outline">
+          {addLabel}
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {items.length ? items.map((point) => (
+          <div className="grid gap-2 md:grid-cols-[180px_1fr_auto]" key={point.id}>
+            <Input
+              aria-label={`${title} date`}
+              onChange={(event) => onUpdate(point.id, 'date', event.target.value)}
+              type="date"
+              value={point.date ?? ''}
+            />
+            <Input
+              aria-label={`${title} value`}
+              onChange={(event) => onUpdate(point.id, 'value', event.target.value)}
+              placeholder="Value"
+              type="number"
+              value={stringValue(point.value)}
+            />
+            <Button onClick={() => onRemove(point.id)} size="sm" type="button" variant="ghost">
+              Remove
+            </Button>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="trendingUp" title={emptyTitle}>
+            Add dated values to render this trend for clients.
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AnnotationEditor({
+  items,
+  onAdd,
+  onRemove,
+  onUpdate,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">Annotations</p>
+        <Button onClick={onAdd} size="sm" type="button" variant="outline">
+          Add Annotation
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {items.length ? items.map((annotation) => (
+          <div className="grid gap-2 md:grid-cols-[180px_1fr_auto]" key={annotation.id}>
+            <Input
+              aria-label="Annotation date"
+              onChange={(event) => onUpdate(annotation.id, 'date', event.target.value)}
+              type="date"
+              value={annotation.date ?? ''}
+            />
+            <Input
+              aria-label="Annotation label"
+              onChange={(event) => onUpdate(annotation.id, 'label', event.target.value)}
+              placeholder="Campaign launch, tracking fix, offer test..."
+              value={annotation.label ?? ''}
+            />
+            <Button onClick={() => onRemove(annotation.id)} size="sm" type="button" variant="ghost">
+              Remove
+            </Button>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="messageSquare" title="No annotations yet">
+            Add notes for campaign launches, tracking fixes, budget changes, or other events that explain movement.
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function ServiceSectionsSection({
+  addNestedArrayItem,
   form,
+  removeNestedArrayItem,
   removeArrayItem,
   updateArrayItem,
   updateContent,
+  updateNestedArrayItem,
 }) {
   return (
     <WorkspaceCard
@@ -621,30 +721,34 @@ export function ServiceSectionsSection({
                   value={section.summary ?? ''}
                 />
               </FormField>
-              <FormField label="Metrics JSON object">
-                <Textarea
-                  onChange={(event) => updateArrayItem('service_sections', section.id, 'metricsText', event.target.value)}
-                  placeholder={'{"spend":5050,"qualified_leads":63,"roas":4.45}'}
-                  rows={4}
-                  value={section.metricsText ?? '{}'}
-                />
-              </FormField>
-              <FormField label="Insights JSON array">
-                <Textarea
-                  onChange={(event) => updateArrayItem('service_sections', section.id, 'insightsText', event.target.value)}
-                  placeholder={'["Google Ads drove the most reliable appointment requests."]'}
-                  rows={4}
-                  value={section.insightsText ?? '[]'}
-                />
-              </FormField>
-              <FormField label="Next actions JSON array">
-                <Textarea
-                  onChange={(event) => updateArrayItem('service_sections', section.id, 'nextActionsText', event.target.value)}
-                  placeholder={'["Increase exact-match search budget gradually."]'}
-                  rows={4}
-                  value={section.nextActionsText ?? '[]'}
-                />
-              </FormField>
+              <ServiceMetricsEditor
+                items={section.metrics_entries ?? []}
+                onAdd={() => addNestedArrayItem('service_sections', section.id, 'metrics_entries', createServiceMetricEntry())}
+                onRemove={(entryId) => removeNestedArrayItem('service_sections', section.id, 'metrics_entries', entryId)}
+                onUpdate={(entryId, field, value) => updateNestedArrayItem('service_sections', section.id, 'metrics_entries', entryId, field, value)}
+              />
+              <TextListEditor
+                addLabel="Add Insight"
+                emptyText="Add at least one plain-language note explaining what changed for this service."
+                emptyTitle="No service insights"
+                items={section.insights ?? []}
+                onAdd={() => addNestedArrayItem('service_sections', section.id, 'insights', createServiceTextItem())}
+                onRemove={(itemId) => removeNestedArrayItem('service_sections', section.id, 'insights', itemId)}
+                onUpdate={(itemId, value) => updateNestedArrayItem('service_sections', section.id, 'insights', itemId, 'text', value)}
+                placeholder="Google Ads drove the most reliable appointment requests."
+                title="Service insights"
+              />
+              <TextListEditor
+                addLabel="Add Action"
+                emptyText="Add the next optimization, test, or recommendation for this service."
+                emptyTitle="No service next actions"
+                items={section.next_actions ?? []}
+                onAdd={() => addNestedArrayItem('service_sections', section.id, 'next_actions', createServiceTextItem())}
+                onRemove={(itemId) => removeNestedArrayItem('service_sections', section.id, 'next_actions', itemId)}
+                onUpdate={(itemId, value) => updateNestedArrayItem('service_sections', section.id, 'next_actions', itemId, 'text', value)}
+                placeholder="Increase exact-match search budget gradually."
+                title="Service next actions"
+              />
             </div>
           </div>
         )) : (
@@ -657,9 +761,99 @@ export function ServiceSectionsSection({
   )
 }
 
+function ServiceMetricsEditor({
+  items,
+  onAdd,
+  onRemove,
+  onUpdate,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">Service metrics</p>
+        <Button onClick={onAdd} size="sm" type="button" variant="outline">
+          Add Metric
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {items.length ? items.map((entry) => (
+          <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]" key={entry.id}>
+            <Input
+              aria-label="Metric key"
+              onChange={(event) => onUpdate(entry.id, 'key', event.target.value)}
+              placeholder="qualified_leads"
+              value={entry.key ?? ''}
+            />
+            <Input
+              aria-label="Metric value"
+              onChange={(event) => onUpdate(entry.id, 'value', event.target.value)}
+              placeholder="63"
+              value={stringValue(entry.value)}
+            />
+            <Button onClick={() => onRemove(entry.id)} size="sm" type="button" variant="ghost">
+              Remove
+            </Button>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="barChart" title="No service metrics">
+            Add a small set of service-specific metrics only when they help explain the channel.
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TextListEditor({
+  addLabel,
+  emptyText,
+  emptyTitle,
+  items,
+  onAdd,
+  onRemove,
+  onUpdate,
+  placeholder,
+  title,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">{title}</p>
+        <Button onClick={onAdd} size="sm" type="button" variant="outline">
+          {addLabel}
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {items.length ? items.map((item) => (
+          <div className="grid gap-2 md:grid-cols-[1fr_auto]" key={item.id}>
+            <Input
+              aria-label={title}
+              onChange={(event) => onUpdate(item.id, event.target.value)}
+              placeholder={placeholder}
+              value={item.text ?? ''}
+            />
+            <Button onClick={() => onRemove(item.id)} size="sm" type="button" variant="ghost">
+              Remove
+            </Button>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="messageSquare" title={emptyTitle}>
+            {emptyText}
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function AppendixTablesSection({
+  addAppendixColumn,
+  addAppendixRow,
   form,
+  removeAppendixColumn,
+  removeAppendixRow,
   removeArrayItem,
+  updateAppendixCell,
   updateArrayItem,
   updateContent,
 }) {
@@ -690,22 +884,25 @@ export function AppendixTablesSection({
               <FormField label="Title">
                 <Input onChange={(event) => updateArrayItem('appendix_tables', table.id, 'title', event.target.value)} value={table.title ?? ''} />
               </FormField>
-              <FormField label="Columns JSON array">
-                <Textarea
-                  onChange={(event) => updateArrayItem('appendix_tables', table.id, 'columnsText', event.target.value)}
-                  placeholder={'["Campaign","Spend","Qualified Leads","CPL","Status"]'}
-                  rows={3}
-                  value={table.columnsText ?? '[]'}
-                />
-              </FormField>
-              <FormField label="Rows JSON array">
-                <Textarea
-                  onChange={(event) => updateArrayItem('appendix_tables', table.id, 'rowsText', event.target.value)}
-                  placeholder={'[["Dental Implants Search","$3,200","42","$76.19","Scaling"]]'}
-                  rows={6}
-                  value={table.rowsText ?? '[]'}
-                />
-              </FormField>
+              <AppendixColumnsEditor
+                columns={table.columns ?? []}
+                onAdd={() => addAppendixColumn(table.id)}
+                onRemove={(columnId) => removeAppendixColumn(table.id, columnId)}
+                onUpdate={(columnId, value) => updateNestedAppendixColumn({
+                  form,
+                  tableId: table.id,
+                  columnId,
+                  updateContent,
+                  value,
+                })}
+              />
+              <AppendixRowsEditor
+                columns={table.columns ?? []}
+                onAddRow={() => addAppendixRow(table.id)}
+                onRemoveRow={(rowId) => removeAppendixRow(table.id, rowId)}
+                onUpdateCell={(rowId, cellId, value) => updateAppendixCell(table.id, rowId, cellId, value)}
+                rows={table.rows ?? []}
+              />
             </div>
           </div>
         )) : (
@@ -715,6 +912,121 @@ export function AppendixTablesSection({
         )}
       </div>
     </WorkspaceCard>
+  )
+}
+
+function updateNestedAppendixColumn({
+  columnId,
+  form,
+  tableId,
+  updateContent,
+  value,
+}) {
+  updateContent(
+    'appendix_tables',
+    form.content.appendix_tables.map((table) => (
+      table.id === tableId
+        ? {
+          ...table,
+          columns: table.columns.map((column) => (
+            column.id === columnId ? { ...column, label: value } : column
+          )),
+        }
+        : table
+    )),
+  )
+}
+
+function AppendixColumnsEditor({
+  columns,
+  onAdd,
+  onRemove,
+  onUpdate,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">Columns</p>
+        <Button onClick={onAdd} size="sm" type="button" variant="outline">
+          Add Column
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {columns.length ? columns.map((column) => (
+          <div className="grid gap-2 md:grid-cols-[1fr_auto]" key={column.id}>
+            <Input
+              aria-label="Column label"
+              onChange={(event) => onUpdate(column.id, event.target.value)}
+              placeholder="Campaign"
+              value={column.label ?? ''}
+            />
+            <Button onClick={() => onRemove(column.id)} size="sm" type="button" variant="ghost">
+              Remove
+            </Button>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="grid" title="No columns yet">
+            Add column names before entering table rows.
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AppendixRowsEditor({
+  columns,
+  onAddRow,
+  onRemoveRow,
+  onUpdateCell,
+  rows,
+}) {
+  return (
+    <div className="rounded-control border border-control-border bg-block p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-text-secondary">Rows</p>
+        <Button disabled={!columns.length} onClick={onAddRow} size="sm" type="button" variant="outline">
+          Add Row
+        </Button>
+      </div>
+      <div className="mt-3 grid gap-3">
+        {!columns.length ? (
+          <InlineEmptyState iconName="grid" title="Columns required">
+            Create at least one column before adding appendix rows.
+          </InlineEmptyState>
+        ) : rows.length ? rows.map((row, rowIndex) => (
+          <div className="rounded-control border border-control-border bg-surface-subtle p-3" key={row.id}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-text-muted">Row {rowIndex + 1}</p>
+              <Button onClick={() => onRemoveRow(row.id)} size="sm" type="button" variant="ghost">
+                Remove
+              </Button>
+            </div>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {columns.map((column, columnIndex) => {
+                const cell = row.cells[columnIndex] ?? {
+                  id: `${row.id}-${column.id}`,
+                  value: '',
+                }
+
+                return (
+                  <FormField key={`${row.id}-${column.id}`} label={column.label || `Column ${columnIndex + 1}`}>
+                    <Input
+                      onChange={(event) => onUpdateCell(row.id, cell.id, event.target.value)}
+                      value={cell.value ?? ''}
+                    />
+                  </FormField>
+                )
+              })}
+            </div>
+          </div>
+        )) : (
+          <InlineEmptyState iconName="grid" title="No rows yet">
+            Add rows for top campaigns, pages, ads, keywords, or other useful client detail.
+          </InlineEmptyState>
+        )}
+      </div>
+    </div>
   )
 }
 

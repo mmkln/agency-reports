@@ -12,6 +12,9 @@ import {
 } from '../../../entities/performance-dashboard'
 import { Icon } from '../../../shared/icons'
 import {
+  createAppendixCell,
+  createAppendixColumn,
+  createAppendixRow,
   formatPeriod,
   periodToForm,
   useAdminPerformanceDashboardEditorActions,
@@ -101,6 +104,143 @@ export function AdminPerformanceDashboardEditor({
     )
   }
 
+  function updateNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItemId, field, value) {
+    updateContent(
+      collectionName,
+      form.content[collectionName].map((item) => (
+        item.id === itemId
+          ? {
+            ...item,
+            [nestedCollectionName]: item[nestedCollectionName].map((nestedItem) => (
+              nestedItem.id === nestedItemId ? { ...nestedItem, [field]: value } : nestedItem
+            )),
+          }
+          : item
+      )),
+    )
+  }
+
+  function addNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItem) {
+    updateContent(
+      collectionName,
+      form.content[collectionName].map((item) => (
+        item.id === itemId
+          ? {
+            ...item,
+            [nestedCollectionName]: [...item[nestedCollectionName], nestedItem],
+          }
+          : item
+      )),
+    )
+  }
+
+  function removeNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItemId) {
+    updateContent(
+      collectionName,
+      form.content[collectionName].map((item) => (
+        item.id === itemId
+          ? {
+            ...item,
+            [nestedCollectionName]: item[nestedCollectionName].filter((nestedItem) => nestedItem.id !== nestedItemId),
+          }
+          : item
+      )),
+    )
+  }
+
+  function addAppendixColumn(tableId) {
+    updateContent(
+      'appendix_tables',
+      form.content.appendix_tables.map((table) => (
+        table.id === tableId
+          ? {
+            ...table,
+            columns: [...table.columns, createAppendixColumn()],
+            rows: table.rows.map((row) => ({
+              ...row,
+              cells: [...row.cells, createAppendixCell()],
+            })),
+          }
+          : table
+      )),
+    )
+  }
+
+  function removeAppendixColumn(tableId, columnId) {
+    updateContent(
+      'appendix_tables',
+      form.content.appendix_tables.map((table) => {
+        if (table.id !== tableId) {
+          return table
+        }
+
+        const columnIndex = table.columns.findIndex((column) => column.id === columnId)
+
+        return {
+          ...table,
+          columns: table.columns.filter((column) => column.id !== columnId),
+          rows: table.rows.map((row) => ({
+            ...row,
+            cells: columnIndex >= 0
+              ? row.cells.filter((_, index) => index !== columnIndex)
+              : row.cells,
+          })),
+        }
+      }),
+    )
+  }
+
+  function addAppendixRow(tableId) {
+    updateContent(
+      'appendix_tables',
+      form.content.appendix_tables.map((table) => (
+        table.id === tableId
+          ? {
+            ...table,
+            rows: [...table.rows, createAppendixRow(table.columns.length)],
+          }
+          : table
+      )),
+    )
+  }
+
+  function removeAppendixRow(tableId, rowId) {
+    updateContent(
+      'appendix_tables',
+      form.content.appendix_tables.map((table) => (
+        table.id === tableId
+          ? {
+            ...table,
+            rows: table.rows.filter((row) => row.id !== rowId),
+          }
+          : table
+      )),
+    )
+  }
+
+  function updateAppendixCell(tableId, rowId, cellId, value) {
+    updateContent(
+      'appendix_tables',
+      form.content.appendix_tables.map((table) => (
+        table.id === tableId
+          ? {
+            ...table,
+            rows: table.rows.map((row) => (
+              row.id === rowId
+                ? {
+                  ...row,
+                  cells: row.cells.map((cell) => (
+                    cell.id === cellId ? { ...cell, value } : cell
+                  )),
+                }
+                : row
+            )),
+          }
+          : table
+      )),
+    )
+  }
+
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6 px-app-gutter py-6">
       <section className="rounded-block border border-control-border bg-block shadow-card">
@@ -169,10 +309,13 @@ export function AdminPerformanceDashboardEditor({
             updateContent={updateContent}
           />
           <TrendSeriesSection
+            addNestedArrayItem={addNestedArrayItem}
             form={form}
+            removeNestedArrayItem={removeNestedArrayItem}
             removeArrayItem={removeArrayItem}
             updateArrayItem={updateArrayItem}
             updateContent={updateContent}
+            updateNestedArrayItem={updateNestedArrayItem}
           />
           <ChannelBreakdownSection
             form={form}
@@ -181,10 +324,13 @@ export function AdminPerformanceDashboardEditor({
             updateContent={updateContent}
           />
           <ServiceSectionsSection
+            addNestedArrayItem={addNestedArrayItem}
             form={form}
+            removeNestedArrayItem={removeNestedArrayItem}
             removeArrayItem={removeArrayItem}
             updateArrayItem={updateArrayItem}
             updateContent={updateContent}
+            updateNestedArrayItem={updateNestedArrayItem}
           />
           <KpiCardsSection
             form={form}
@@ -211,8 +357,13 @@ export function AdminPerformanceDashboardEditor({
             updateContent={updateContent}
           />
           <AppendixTablesSection
+            addAppendixColumn={addAppendixColumn}
+            addAppendixRow={addAppendixRow}
             form={form}
+            removeAppendixColumn={removeAppendixColumn}
+            removeAppendixRow={removeAppendixRow}
             removeArrayItem={removeArrayItem}
+            updateAppendixCell={updateAppendixCell}
             updateArrayItem={updateArrayItem}
             updateContent={updateContent}
           />

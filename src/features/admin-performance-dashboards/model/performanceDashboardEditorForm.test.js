@@ -6,7 +6,7 @@ import {
 } from './performanceDashboardEditorForm'
 
 describe('performance dashboard editor form', () => {
-  it('keeps detail section JSON editable and serializes it back to normalized content', () => {
+  it('keeps detail sections structured and serializes them back to normalized content', () => {
     const form = periodToForm({
       accountManager: '',
       agencyContact: '',
@@ -56,13 +56,52 @@ describe('performance dashboard editor form', () => {
       title: 'April Performance',
     })
 
-    expect(form.content.trends[0].seriesText).toContain('2026-04-01')
-    expect(form.content.service_sections[0].metricsText).toContain('qualified_leads')
-    expect(form.content.appendix_tables[0].rowsText).toContain('Search')
+    expect(form.content.trends[0].series[0]).toMatchObject({
+      date: '2026-04-01',
+      value: 24,
+    })
+    expect(form.content.service_sections[0].metrics_entries[0]).toMatchObject({
+      key: 'qualified_leads',
+      value: 24,
+    })
+    expect(form.content.appendix_tables[0].rows[0].cells[0]).toMatchObject({
+      value: 'Search',
+    })
 
-    form.content.trends[0].seriesText = '[{"date":"2026-04-08","value":28}]'
-    form.content.service_sections[0].metricsText = '{"qualified_leads":28,"cpl":72}'
-    form.content.appendix_tables[0].rowsText = '[["Meta","$300"]]'
+    form.content.trends[0].series = [
+      {
+        date: '2026-04-08',
+        id: 'point-a',
+        value: 28,
+      },
+    ]
+    form.content.service_sections[0].metrics_entries = [
+      {
+        id: 'metric-a',
+        key: 'qualified_leads',
+        value: 28,
+      },
+      {
+        id: 'metric-b',
+        key: 'cpl',
+        value: 72,
+      },
+    ]
+    form.content.appendix_tables[0].rows = [
+      {
+        cells: [
+          {
+            id: 'cell-a',
+            value: 'Meta',
+          },
+          {
+            id: 'cell-b',
+            value: '$300',
+          },
+        ],
+        id: 'row-a',
+      },
+    ]
 
     const serialized = serializeForm(form)
 
