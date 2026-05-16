@@ -471,7 +471,7 @@ function RequestCard({ action, onCancel, onEdit, onOpenDetail, onReopen, onResol
             ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 md:shrink-0 md:justify-end">
             <Button onClick={() => onOpenDetail(action)} size="sm" type="button" variant="outline">
               Details
             </Button>
@@ -689,9 +689,9 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
       />
 
       <PageShell className="px-app-gutter py-content-gutter">
-        <div className="grid gap-card">
+        <div className="grid grid-cols-1 gap-card">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="inline-flex w-fit rounded-full bg-control p-micro">
+            <div className="inline-flex max-w-full overflow-x-auto rounded-full bg-control p-micro">
               {statusFilters.map((filter) => (
                 <button
                   className={`h-control-small rounded-full px-control text-label transition-colors ${
@@ -713,7 +713,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
           </div>
 
           {filteredActions.length > 0 ? (
-            <div className="grid gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {filteredActions.map((action) => (
                 <RequestCard
                   action={action}

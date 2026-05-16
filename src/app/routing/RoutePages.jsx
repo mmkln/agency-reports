@@ -28,7 +28,7 @@ import { AdminClientOverviewPage } from '../../pages/admin/client-overview/Admin
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 
-const LoadingFallback = () => <div className="p-6 text-sm text-slate-500">Loading...</div>
+const LoadingFallback = () => <div className="p-6 text-sm text-text-muted">Loading...</div>
 
 function withPageProps(PageComponent, HeaderComponent) {
   return function PageWithProps() {

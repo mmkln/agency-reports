@@ -11,7 +11,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-component overflow-hidden rounded-block bg-block py-card text-ui text-card-foreground shadow-none has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-item data-[size=sm]:rounded-control data-[size=sm]:py-component data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-block *:[img:last-child]:rounded-b-block",
+        "group/card flex min-w-0 flex-col gap-component overflow-hidden rounded-block bg-block py-card text-ui text-card-foreground shadow-none has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-item data-[size=sm]:rounded-control data-[size=sm]:py-component data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-block *:[img:last-child]:rounded-b-block",
         className
       )}
       {...props} />
@@ -82,7 +82,7 @@ function CardContent({
   return (
     <div
       data-slot="card-content"
-      className={cn("px-card group-data-[size=sm]/card:px-component", className)}
+      className={cn("min-w-0 px-card group-data-[size=sm]/card:px-component", className)}
       {...props} />
   );
 }

@@ -9,7 +9,7 @@ import { ToastContext } from './toastContext'
 const toneConfig = {
   error: {
     icon: XCircle,
-    iconClassName: 'bg-destructive/10 text-rose-600',
+    iconClassName: 'bg-destructive/10 text-destructive',
     rootClassName: 'border-destructive/20',
   },
   info: {

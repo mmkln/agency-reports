@@ -4,8 +4,9 @@ import { flushSync } from 'react-dom'
 import { useAuth } from '../providers/auth/useAuth'
 import { AppShell } from '../../shared/layout'
 import { DemoRoleSwitcher } from '../components/DemoRoleSwitcher'
-import { routeMetadata } from '../routing/router'
+import { canAccessRoute, filterRoutesForViewer } from '../routing/roleAccess'
 import { getPathFromLegacyHash } from '../routing/legacyHashRoutes'
+import { routeMetadata } from '../routing/routeMetadata'
 import {
   getDemoRoleOption,
   getDemoRoleOptionByRole,
@@ -48,7 +49,7 @@ export function RootLayout() {
     return <Outlet />
   }
 
-  const canAccessActiveRoute = !activeRoute.allowedRoles?.length || activeRoute.allowedRoles.includes(viewer.role)
+  const canAccessActiveRoute = canAccessRoute(viewer, activeRoute)
 
   if (!canAccessActiveRoute) {
     return <Outlet />
@@ -56,10 +57,7 @@ export function RootLayout() {
 
   const routeParams = Object.fromEntries(searchParams.entries())
 
-  const accessibleRoutes = routeMetadata.filter((route) => {
-    if (!route.allowedRoles?.length) return true
-    return route.allowedRoles.includes(viewer.role)
-  })
+  const accessibleRoutes = filterRoutesForViewer(routeMetadata, viewer)
 
   return (
     <>

@@ -104,7 +104,7 @@ function TableActionHead({
   return (
     <TableHead
       className={cn(
-        "sticky right-0 z-30 bg-surface-subtle text-right shadow-[-16px_0_18px_-20px_rgb(29_29_31/0.45)]",
+        "sticky right-0 z-30 bg-surface-subtle text-right shadow-sticky-edge-header",
         className
       )}
       {...props} />
@@ -118,7 +118,7 @@ function TableActionCell({
   return (
     <TableCell
       className={cn(
-        "sticky right-0 z-20 bg-block text-right shadow-[-16px_0_18px_-20px_rgb(29_29_31/0.35)] group-hover/table-row:bg-control-hover",
+        "sticky right-0 z-20 bg-block text-right shadow-sticky-edge-cell group-hover/table-row:bg-control-hover",
         className
       )}
       {...props} />

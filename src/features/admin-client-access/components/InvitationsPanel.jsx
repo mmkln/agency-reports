@@ -156,9 +156,9 @@ export function InvitationsPanel({ clientId, runtime }) {
       iconName="mail"
       title="Invitations"
     >
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {invitations.length > 0 ? (
-          <div className="grid gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {invitations.map((invitation) => {
               const inviteLink = buildInviteLink(invitation.token)
               const isPending = invitation.status === CLIENT_INVITATION_STATUSES.PENDING
@@ -216,7 +216,7 @@ export function InvitationsPanel({ clientId, runtime }) {
           </InlineEmptyState>
         )}
 
-        <form className="grid gap-3 border-t border-separator pt-4" noValidate onSubmit={handleCreateInvitation}>
+        <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={handleCreateInvitation}>
           <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Create invitation</p>
           <label className="grid gap-1.5">
             <span className="text-xs font-medium text-text-secondary">Name</span>

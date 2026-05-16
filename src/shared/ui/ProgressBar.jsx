@@ -10,7 +10,7 @@ export function ProgressBar({ id, label, showLabel = true, value, tone = 'blue' 
     green: '[&_[data-slot=progress-indicator]]:bg-success',
     orange: '[&_[data-slot=progress-indicator]]:bg-warning',
     purple: '[&_[data-slot=progress-indicator]]:bg-chart-4',
-    rose: '[&_[data-slot=progress-indicator]]:bg-rose-600',
+    rose: '[&_[data-slot=progress-indicator]]:bg-destructive',
   }[tone]
 
   return (

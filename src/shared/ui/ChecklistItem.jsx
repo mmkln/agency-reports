@@ -9,7 +9,7 @@ export function ChecklistItem({ children, checked = false, id, pendingIcon = tru
       <span
         className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[0.68rem] font-black ${
           checked
-            ? 'border-success bg-success text-text-inverted after:mt-[-1px] after:h-1 after:w-2 after:-rotate-45 after:border-b-2 after:border-l-2 after:border-white after:content-[""]'
+            ? 'border-success bg-success text-text-inverted after:mt-[-1px] after:h-1 after:w-2 after:-rotate-45 after:border-b-2 after:border-l-2 after:border-text-inverted after:content-[""]'
             : 'border-control-border bg-control text-text-muted'
         }`}
         aria-hidden="true"

@@ -135,9 +135,9 @@ export function AccessMembersPanel({ clientId, runtime }) {
       iconName="users"
       title="Members"
     >
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {members.length > 0 ? (
-          <div className="grid gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {members.map((member) => (
               <article className="rounded-control bg-block-subtle p-3" key={member.id}>
                 <div className="flex items-start gap-3">
@@ -183,7 +183,7 @@ export function AccessMembersPanel({ clientId, runtime }) {
           </InlineEmptyState>
         )}
 
-        <form className="grid gap-3 border-t border-separator pt-4" noValidate onSubmit={handleAddMember}>
+        <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={handleAddMember}>
           <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Add client user</p>
           <label className="grid gap-1.5">
             <span className="text-xs font-medium text-text-secondary">Name</span>

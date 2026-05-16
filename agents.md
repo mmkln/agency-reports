@@ -143,6 +143,8 @@
 - Always run shell commands with the resolved project `workdir`, and use absolute paths for `apply_patch` when the environment cwd differs from the active repository, so edits never land in an old or adjacent workspace.
 - Keep Tailwind and styling aligned with the project's current setup; do not introduce legacy configuration or global CSS patterns without a concrete need.
 - For completed client-facing workflows, add or update browser/e2e coverage for role transitions, publish boundaries, and visibility guards instead of relying only on unit tests.
+- In e2e tests, assert against stable semantic targets such as role, heading, label, row, or dialog scope; avoid raw page-wide text assertions when the same content can appear in inputs, previews, toasts, or hidden UI.
+- After responsive shell, primitive, table, or dense admin layout changes, audit mobile and desktop routes for horizontal overflow and clipped interactive controls before treating tests as sufficient.
 - For shared UI styling, use the Tailwind v4 semantic foundation tokens in `src/index.css`; do not add a legacy `tailwind.config` or copy Tailwind v3 presets into this project.
 - For appearance/theme mode, use `ThemeProvider` and `useTheme` from `src/shared/theme`; do not toggle `.dark` or read/write theme storage from feature components.
 - After bulk remapping palette utilities to semantic tokens, audit for malformed opacity suffixes such as `bg-token0` or `bg-token/100` and replace them with the intended semantic class.

@@ -114,6 +114,7 @@
   --color-material-vibrant: var(--material-vibrant);
   --color-material-chrome: var(--material-chrome);
   --color-material-border: var(--material-border);
+  --color-scrim: var(--scrim);
   --color-switch-thumb: var(--switch-thumb);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
@@ -166,6 +167,8 @@
   --shadow-block: 0 8px 24px -18px var(--block-shadow), 0 2px 8px -6px var(--block-shadow);
   --shadow-material: 0 10px 30px -10px var(--material-shadow), 0 4px 12px -6px var(--material-shadow);
   --shadow-premium: 0 18px 48px -18px var(--premium-shadow), 0 8px 20px -12px var(--premium-shadow);
+  --shadow-sticky-edge-header: -16px 0 18px -20px var(--premium-shadow);
+  --shadow-sticky-edge-cell: -16px 0 18px -20px var(--block-shadow);
   --ease-motion-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-motion-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-motion-exit: cubic-bezier(0.4, 0, 1, 1);
@@ -323,6 +326,7 @@
   --material-vibrant: rgb(245 245 247 / 0.84);
   --material-chrome: rgb(241 243 247 / 0.86);
   --material-border: rgb(203 213 225 / 0.72);
+  --scrim: rgb(29 29 31 / 0.35);
   --material-shadow: rgb(29 29 31 / 0.14);
   --premium-shadow: rgb(29 29 31 / 0.18);
   --switch-thumb: #ffffff;
@@ -432,6 +436,7 @@
   --material-vibrant: rgb(43 43 47 / 0.86);
   --material-chrome: rgb(35 35 38 / 0.88);
   --material-border: rgb(72 72 74 / 0.72);
+  --scrim: rgb(0 0 0 / 0.5);
   --material-shadow: rgb(0 0 0 / 0.42);
   --premium-shadow: rgb(0 0 0 / 0.54);
   --switch-thumb: #ffffff;

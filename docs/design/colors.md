@@ -116,6 +116,7 @@ Use material tokens sparingly for overlays that should feel elevated without bec
 | Vibrant material | `bg-material-vibrant` | Higher-readability glass layer for dialogs, sheets, and tooltips. |
 | Chrome material | `bg-material-chrome` | Subtle translucent chrome-like strips and floating bars. |
 | Premium shadow | `shadow-premium` | Deeper, softer elevation for liquid/vibrant overlays. |
+| Scrim | `bg-scrim` | Modal, dialog, sheet, and blocking overlay backdrops. |
 
 ## Status Roles
 
@@ -152,5 +153,6 @@ Use `src/shared/theme/chartColors.js` for Recharts and inline chart styles:
 - Use `bg-surface-elevated` for content surfaces and `bg-control` for premium neutral control backing.
 - Use control tokens for interactive primitives and fill tokens for chips, row highlights, and non-control backing fills.
 - Use `bg-material-liquid` and `bg-material-vibrant` only for overlays; do not make ordinary cards look glassy.
+- Use `bg-scrim` for blocking overlay backdrops instead of hardcoded black opacity classes.
 - Use `src/shared/theme/chartColors.js` when Tailwind classes cannot drive the color.
 - Add a new semantic role when a new purpose appears; do not add one-off arbitrary hex values.

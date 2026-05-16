@@ -12,9 +12,9 @@ export function DemoRoleSwitcher({ activeRoleKey, onRoleChange }) {
   return (
     <aside
       aria-label="Demo role switcher"
-      className="fixed right-4 bottom-4 z-[80] w-[220px] rounded-lg border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur"
+      className="fixed right-4 bottom-4 z-[80] w-[220px] rounded-lg border border-island-border bg-material-regular p-2 shadow-material backdrop-blur"
     >
-      <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+      <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">
         Demo role
       </div>
       <div className="grid gap-1">
@@ -28,8 +28,8 @@ export function DemoRoleSwitcher({ activeRoleKey, onRoleChange }) {
               className={[
                 'flex min-h-10 w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition',
                 isActive
-                  ? 'bg-slate-950 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950',
+                  ? 'bg-control-selected text-text-primary shadow-sm'
+                  : 'text-text-secondary hover:bg-control-hover hover:text-text-primary',
               ].join(' ')}
               key={option.key}
               onClick={() => onRoleChange(option.key)}

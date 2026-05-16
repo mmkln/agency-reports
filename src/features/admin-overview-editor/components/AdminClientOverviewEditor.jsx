@@ -617,8 +617,8 @@ function ClientLinksAssetsPanel({ draft, onUpdateDashboardLinks, onUpdateReports
 
   return (
     <EditorCard iconName="link" title="Client Links & Assets">
-      <div className="grid gap-5">
-        <div className="grid gap-2">
+      <div className="grid grid-cols-1 gap-5">
+        <div className="grid grid-cols-1 gap-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Marketing Dashboard</p>
             <SharedStatusBadge meta={DASHBOARD_LINK_STATUS_META[dashboardLink.status]} />
@@ -678,7 +678,7 @@ function ClientLinksAssetsPanel({ draft, onUpdateDashboardLinks, onUpdateReports
           </label>
         </div>
 
-        <div className="border-t border-separator pt-5">
+        <div className="min-w-0 border-t border-separator pt-5">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Latest Published Report</p>
             <Button
@@ -753,7 +753,7 @@ function ClientLinksAssetsPanel({ draft, onUpdateDashboardLinks, onUpdateReports
               value={report.period_end}
             />
           </div>
-          <div className="mt-3 grid gap-2">
+          <div className="mt-3 grid grid-cols-1 gap-2">
             <Input
               onChange={(event) => updateReportField('dashboard_url', event.target.value)}
               placeholder="Dashboard URL"

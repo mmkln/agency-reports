@@ -13,7 +13,7 @@ export function PhaseCard({ accent = 'blue', duration, iconName, id, items, phas
     },
     green: {
       background: 'bg-success-muted/70',
-      border: 'border-l-emerald-600',
+      border: 'border-l-success',
       text: 'text-success-foreground',
     },
     orange: {
@@ -28,8 +28,8 @@ export function PhaseCard({ accent = 'blue', duration, iconName, id, items, phas
     },
     rose: {
       background: 'bg-destructive/10/70',
-      border: 'border-l-rose-600',
-      text: 'text-rose-600',
+      border: 'border-l-destructive',
+      text: 'text-destructive',
     },
   }[accent]
 

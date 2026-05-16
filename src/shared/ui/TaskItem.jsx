@@ -13,7 +13,7 @@ export function TaskItem({ completed = false, id, meta, priority, title }) {
   }[priority] ?? 'neutral'
   const stateClass = completed ? 'bg-success-muted/40' : 'bg-block'
   const indicatorClass = completed
-    ? 'border-success bg-success after:mt-[-2px] after:h-1.5 after:w-3 after:-rotate-45 after:border-b-2 after:border-l-2 after:border-white after:content-[""]'
+    ? 'border-success bg-success after:mt-[-2px] after:h-1.5 after:w-3 after:-rotate-45 after:border-b-2 after:border-l-2 after:border-text-inverted after:content-[""]'
     : 'border-control-border bg-control'
 
   return (

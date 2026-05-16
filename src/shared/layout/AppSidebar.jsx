@@ -237,7 +237,7 @@ function AccountMenu({ activeRole, hasUnsavedChanges, onAuthChange, viewer }) {
         <ThemeModeControl />
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer text-rose-600 focus:text-destructive"
+          className="cursor-pointer text-destructive focus:text-destructive"
           onSelect={() => {
             if (
               hasUnsavedChanges
