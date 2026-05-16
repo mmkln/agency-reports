@@ -1182,10 +1182,10 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
             {page.sourceLinks?.length ? (
               <div className="grid gap-2">
                 {page.sourceLinks.map((sourceLink) => (
-                  <Button asChild key={sourceLink.id} variant="outline">
+                  <Button asChild className="w-full min-w-0 justify-start" key={sourceLink.id} variant="outline">
                     <a href={sourceLink.publicUrl || sourceLink.embedUrl} rel="noreferrer" target="_blank">
                       <Icon name="layoutDashboard" size={15} />
-                      {sourceLink.name}
+                      <span className="min-w-0 truncate">{sourceLink.name}</span>
                     </a>
                   </Button>
                 ))}

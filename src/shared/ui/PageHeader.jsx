@@ -27,7 +27,7 @@ function HeaderContent({
         </div>
       </div>
       {actions || resolvedPrimaryAction ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-control">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-control lg:w-auto lg:justify-end">
           {actions}
           {resolvedPrimaryAction ? <PagePrimaryAction {...resolvedPrimaryAction} /> : null}
         </div>

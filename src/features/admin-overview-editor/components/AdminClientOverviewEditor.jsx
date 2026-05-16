@@ -178,9 +178,9 @@ function SaveStatusIndicator({ editor, isDirty, saveState }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex cursor-default items-center gap-tag text-label ${tone}`}>
+        <span className={`inline-flex min-w-0 cursor-default items-center gap-tag text-label ${tone}`}>
           {icon}
-          <span>{label}</span>
+          <span className="min-w-0 truncate">{label}</span>
         </span>
       </TooltipTrigger>
       <TooltipContent className="grid gap-1">
@@ -209,10 +209,10 @@ function EditorActionToolbar({
   const isSinglePreviewDisabled = !hasDraft && !hasPublished
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-control">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-control lg:justify-end">
       <SaveStatusIndicator editor={editor} isDirty={isDirty} saveState={saveState} />
 
-      <div className="flex items-center gap-tag">
+      <div className="flex min-w-0 flex-wrap items-center gap-tag">
         {hasMultiplePreviewSources ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
