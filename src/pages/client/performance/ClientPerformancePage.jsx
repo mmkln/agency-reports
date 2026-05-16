@@ -649,17 +649,19 @@ function CampaignExecutionSection({ campaign }) {
               </div>
               <CampaignChartLegend bars={bars} line={line} />
             </div>
-            <StackedBarLineChart
-              ariaLabel="Campaign touchpoints and cumulative bookings"
-              bars={bars}
-              data={chartData}
-              leftAxisLabel={campaign.left_axis_label || 'Touches per day'}
-              line={line}
-              rightAxisLabel={campaign.right_axis_label || 'Cumulative bookings'}
-              xKey="label"
-              yLeftMax={Math.ceil(maxTouches / 10) * 10}
-              yRightMax={Math.ceil(maxBookings / 5) * 5}
-            />
+            <div className="overflow-x-auto pb-2">
+              <StackedBarLineChart
+                ariaLabel="Campaign touchpoints and cumulative bookings"
+                bars={bars}
+                data={chartData}
+                leftAxisLabel={campaign.left_axis_label || 'Touches per day'}
+                line={line}
+                rightAxisLabel={campaign.right_axis_label || 'Cumulative bookings'}
+                xKey="label"
+                yLeftMax={Math.ceil(maxTouches / 10) * 10}
+                yRightMax={Math.ceil(maxBookings / 5) * 5}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -878,7 +880,7 @@ function WorkTextRow({ text }) {
   return (
     <article className="flex items-start gap-3 rounded-control border border-control-border bg-block-subtle p-4">
       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-        <Icon name="check" size={13} />
+        <Icon name="checkCircle2" size={13} />
       </span>
       <p className="text-sm leading-6 text-text-primary">{text}</p>
     </article>

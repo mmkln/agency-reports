@@ -325,6 +325,22 @@ export function PerformanceDashboardJsonImportModal({
               <IssueList issues={importResult?.errors} title="Import blocked" />
               <IssueList issues={importResult?.warnings} title="Imported with warnings" tone="warning" />
 
+              <div className="flex items-start gap-3 rounded-control border border-action/20 bg-action-muted px-3 py-3 text-sm">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-block text-action ring-1 ring-action/20">
+                  <Icon name="code" size={15} />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-text-primary">JSON contract reference</p>
+                  <p className="mt-1 leading-6 text-text-secondary">
+                    Import accepts the UC-004 dashboard period contract, including `campaign_execution` and `agency_work`.
+                    Valid imports always become drafts and still require review before publishing.
+                  </p>
+                  <p className="mt-2 break-all font-mono text-xs text-text-muted">
+                    docs/implementation/UC-004-json-import-contract.md
+                  </p>
+                </div>
+              </div>
+
               <section className="rounded-block border border-control-border bg-block shadow-none">
                 <div className="border-b border-separator bg-surface-subtle px-card py-component">
                   <div className="flex items-start gap-3">

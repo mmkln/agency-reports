@@ -144,7 +144,7 @@ It should reference or aggregate:
   - [ ] no funnel
   - [x] no channel breakdown
   - [x] low data confidence
-  - [ ] stale data
+  - [x] stale data
 - [x] Define client visibility policy:
   - [x] client can only see own client_id
   - [x] client can only see `published` or `archived`
@@ -304,7 +304,7 @@ It should reference or aggregate:
 - [x] Add tests:
   - [x] valid JSON imports
   - [x] invalid JSON fails
-  - [ ] missing required fields show errors
+  - [x] missing required fields show errors
   - [x] import creates draft only
 
 ### Completion Criteria

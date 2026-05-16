@@ -52,7 +52,7 @@ export function StackedBarLineChart({
     .join(' ')
 
   return (
-    <svg aria-label={ariaLabel} className="h-[360px] w-full overflow-visible" role="img" viewBox={viewBox}>
+    <svg aria-label={ariaLabel} className="h-[360px] w-full min-w-[56rem] overflow-visible" role="img" viewBox={viewBox}>
       {leftAxisLabel ? (
         <text
           fill={chartColors.label}

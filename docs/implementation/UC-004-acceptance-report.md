@@ -108,9 +108,10 @@ npm run build
 Results:
 
 ```text
-Unit tests: 132 passed
+Unit tests: 133 passed
 Lint: passed
-Full e2e: 20 passed
+UC-004 e2e: 6 passed
+Full e2e: 21 passed
 Build: passed
 ```
 
@@ -151,7 +152,7 @@ Deferred items:
 - email/SMS platform connectors
 - call tracking connectors
 - server-side RLS or equivalent authorization
-- automatic stale-data warnings
+- server-side/integration stale-data monitoring
 - historical dashboard versioning
 - integration status and sync health
 ```
@@ -161,9 +162,7 @@ Deferred items:
 Recommended before moving deeply into integrations:
 
 ```text
-1. Add admin-side help link to the JSON contract document.
-2. Review responsive layout of campaign execution chart on narrow screens.
-3. Decide if archived periods should be a selector only or a richer archive list.
+1. Decide if archived periods should be a selector only or a richer archive list.
 ```
 
 ## Delivery Summary

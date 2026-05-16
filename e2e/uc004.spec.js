@@ -182,6 +182,8 @@ test('invalid performance dashboard JSON stays in the import modal with validati
   await page.getByRole('link', { name: 'Import JSON' }).click()
 
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+  await expect(page.getByText('JSON contract reference')).toBeVisible()
+  await expect(page.getByText('docs/implementation/UC-004-json-import-contract.md')).toBeVisible()
   await page.getByLabel('Dashboard JSON *').fill('{bad json')
   await page.getByRole('button', { name: 'Import as draft' }).click()
 
