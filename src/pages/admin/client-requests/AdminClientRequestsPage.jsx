@@ -92,6 +92,33 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
+function formatDateTime(date) {
+  if (!date) {
+    return 'Not recorded'
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(date))
+}
+
+function getHistoryEventLabel(event) {
+  const labels = {
+    admin_cancelled: 'Request cancelled',
+    admin_created: 'Request created',
+    admin_reopened: 'Request reopened',
+    admin_resolved: 'Request resolved',
+    admin_updated: 'Request updated',
+    client_answered: 'Client responded',
+  }
+
+  return labels[event?.type] ?? 'Request activity'
+}
+
 function filterActions(actions, statusFilter) {
   if (statusFilter === 'all') {
     return actions
@@ -241,7 +268,148 @@ function RequestDialog({
   )
 }
 
-function RequestCard({ action, onCancel, onEdit, onReopen, onResolve }) {
+function RequestDetailDialog({
+  action,
+  onCancel,
+  onClose,
+  onEdit,
+  onReopen,
+  onResolve,
+}) {
+  if (!action) {
+    return null
+  }
+
+  const meta = NEEDED_ACTION_STATUS_META[action.status]
+  const priorityMeta = NEEDED_ACTION_PRIORITY_META[action.priority] ?? NEEDED_ACTION_PRIORITY_META[NEEDED_ACTION_PRIORITIES.MEDIUM]
+  const canResolve = [
+    NEEDED_ACTION_STATUSES.PENDING,
+    NEEDED_ACTION_STATUSES.ANSWERED,
+  ].includes(action.status)
+  const canCancel = action.status !== NEEDED_ACTION_STATUSES.CANCELLED
+    && action.status !== NEEDED_ACTION_STATUSES.RESOLVED
+  const canReopen = action.status !== NEEDED_ACTION_STATUSES.PENDING
+  const history = [...(action.responseHistory ?? [])].reverse()
+
+  return (
+    <Dialog onOpenChange={(open) => !open && onClose()} open={Boolean(action)}>
+      <DialogContent className="max-w-modal-lg">
+        <DialogHeader>
+          <DialogTitle>{action.title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-5 px-5 py-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge meta={meta} />
+            <StatusBadge meta={priorityMeta} />
+            <Badge className="bg-control text-text-secondary" variant="outline">
+              Updated {formatDateTime(action.updatedAt)}
+            </Badge>
+          </div>
+
+          <div className="grid gap-3 rounded-control border border-control-border bg-surface-subtle p-4 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-label text-text-muted">Client</p>
+              <p className="mt-1 font-medium text-text-primary">{action.clientName}</p>
+            </div>
+            <div>
+              <p className="text-label text-text-muted">Owner</p>
+              <p className="mt-1 font-medium text-text-primary">{action.ownerName || 'Unassigned'}</p>
+            </div>
+            <div>
+              <p className="text-label text-text-muted">Due date</p>
+              <p className="mt-1 font-medium text-text-primary">{formatDate(action.dueDate)}</p>
+            </div>
+            <div>
+              <p className="text-label text-text-muted">Related link</p>
+              {action.relatedLink ? (
+                <a
+                  className="mt-1 inline-flex items-center gap-1 font-medium text-link no-underline hover:text-link-hover"
+                  href={action.relatedLink}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Open link
+                  <Icon name="arrowUpRight" size={13} />
+                </a>
+              ) : (
+                <p className="mt-1 font-medium text-text-primary">No link</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Client-facing description</h3>
+            <p className="mt-2 rounded-control border border-control-border bg-block p-3 text-sm leading-6 text-text-secondary">
+              {action.description || 'No description provided.'}
+            </p>
+          </div>
+
+          {action.clientResponse ? (
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">Client response</h3>
+              <div className="mt-2 rounded-control border border-action/20 bg-action-muted p-3 text-sm text-action">
+                <p className="leading-6">{action.clientResponse}</p>
+                <p className="mt-2 text-xs">Sent {formatDateTime(action.respondedAt)}</p>
+              </div>
+            </div>
+          ) : null}
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Internal notes</h3>
+            <p className="mt-2 rounded-control border border-warning/20 bg-warning/10 p-3 text-sm leading-6 text-text-secondary">
+              {action.internalNotes || 'No internal notes.'}
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary">Lifecycle history</h3>
+            {history.length > 0 ? (
+              <ol className="mt-3 grid gap-2">
+                {history.map((event, index) => (
+                  <li className="rounded-control border border-control-border bg-block p-3 text-sm" key={`${event.type}-${event.created_at}-${index}`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium text-text-primary">{getHistoryEventLabel(event)}</p>
+                      <p className="text-xs text-text-muted">{formatDateTime(event.created_at)}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-text-muted">
+                      Actor: {event.metadata?.actor_role ?? 'Unknown'}
+                      {event.created_by ? ` · ${event.created_by}` : ''}
+                    </p>
+                    {event.metadata?.note ? (
+                      <p className="mt-2 text-sm leading-5 text-text-secondary">{event.metadata.note}</p>
+                    ) : null}
+                    {event.metadata?.response ? (
+                      <p className="mt-2 text-sm leading-5 text-text-secondary">{event.metadata.response}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-2 rounded-control border border-control-border bg-block p-3 text-sm text-text-muted">
+                No lifecycle events recorded yet.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={onClose} type="button" variant="outline">Close</Button>
+          <Button onClick={() => onEdit(action)} type="button" variant="outline">Edit</Button>
+          {canResolve ? <Button onClick={() => onResolve(action)} type="button">Resolve</Button> : null}
+          {canReopen ? <Button onClick={() => onReopen(action)} type="button" variant="outline">Reopen</Button> : null}
+          {canCancel ? (
+            <Button className="text-destructive hover:text-destructive" onClick={() => onCancel(action)} type="button" variant="ghost">
+              Cancel
+            </Button>
+          ) : null}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RequestCard({ action, onCancel, onEdit, onOpenDetail, onReopen, onResolve }) {
   const meta = NEEDED_ACTION_STATUS_META[action.status]
   const priorityMeta = NEEDED_ACTION_PRIORITY_META[action.priority] ?? NEEDED_ACTION_PRIORITY_META[NEEDED_ACTION_PRIORITIES.MEDIUM]
   const canResolve = [
@@ -266,6 +434,8 @@ function RequestCard({ action, onCancel, onEdit, onReopen, onResolve }) {
               <span>{formatDate(action.dueDate)}</span>
               <span aria-hidden="true">-</span>
               <span>{action.clientName}</span>
+              <span aria-hidden="true">-</span>
+              <span>Updated {formatDateTime(action.updatedAt)}</span>
               {action.ownerName ? (
                 <>
                   <span aria-hidden="true">-</span>
@@ -302,6 +472,9 @@ function RequestCard({ action, onCancel, onEdit, onReopen, onResolve }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Button onClick={() => onOpenDetail(action)} size="sm" type="button" variant="outline">
+              Details
+            </Button>
             <Button onClick={() => onEdit(action)} size="sm" type="button" variant="ghost">
               Edit
             </Button>
@@ -336,6 +509,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   const [requestError, setRequestError] = useState('')
   const [requestSaveState, setRequestSaveState] = useState('')
   const [editingAction, setEditingAction] = useState(null)
+  const [selectedAction, setSelectedAction] = useState(null)
   const [pendingCancel, setPendingCancel] = useState(null)
   const requestsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-client-requests:${routeClientId ?? ''}`,
@@ -370,6 +544,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   }
 
   function openEditDialog(action) {
+    setSelectedAction(null)
     setEditingAction(action)
     setRequestDraft(createRequestDraftFromAction(action))
     setRequestError('')
@@ -411,6 +586,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
       .then((savedAction) => {
         setRequestSaveState('')
         setEditingAction(null)
+        setSelectedAction(null)
         setIsCreateOpen(false)
         reloadRequests()
         toast.success(editingAction ? 'Request updated' : 'Request created', `${savedAction.title} was saved.`)
@@ -429,6 +605,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
       viewer: runtime.viewer,
     }))
       .then(() => {
+        setSelectedAction(null)
         reloadRequests()
         toast.success('Request reopened', `${action.title} is pending again.`)
       })
@@ -444,6 +621,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
       viewer: runtime.viewer,
     }))
       .then(() => {
+        setSelectedAction(null)
         reloadRequests()
         toast.success('Request resolved', `${action.title} was marked resolved.`)
       })
@@ -463,6 +641,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
       viewer: runtime.viewer,
     }))
       .then(() => {
+        setSelectedAction(null)
         reloadRequests()
         toast.success('Request cancelled', `${pendingCancel.title} was cancelled.`)
         setPendingCancel(null)
@@ -541,6 +720,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
                   key={action.id}
                   onCancel={setPendingCancel}
                   onEdit={openEditDialog}
+                  onOpenDetail={setSelectedAction}
                   onReopen={reopenRequest}
                   onResolve={resolveRequest}
                 />
@@ -567,6 +747,15 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
         onClose={closeCreateDialog}
         onSubmit={submitRequest}
         saveState={requestSaveState}
+      />
+
+      <RequestDetailDialog
+        action={selectedAction}
+        onCancel={setPendingCancel}
+        onClose={() => setSelectedAction(null)}
+        onEdit={openEditDialog}
+        onReopen={reopenRequest}
+        onResolve={resolveRequest}
       />
 
       <ConfirmationDialog
