@@ -298,7 +298,7 @@ function NeededActionTimeline({ action }) {
   )
 }
 
-export function NeededFromClientBlock({ actions, onAnswerAction }) {
+export function NeededFromClientBlock({ actions, onAnswerAction, requestsHref = '/client/requests' }) {
   if (actions.length === 0) {
     return null
   }
@@ -308,6 +308,14 @@ export function NeededFromClientBlock({ actions, onAnswerAction }) {
       contentClassName="grid gap-3"
       description="These items are blocking or slowing current work."
       iconName="bell"
+      action={(
+        <Button asChild size="sm" variant="ghost">
+          <Link to={requestsHref}>
+            View requests
+            <Icon name="arrowUpRight" size={13} />
+          </Link>
+        </Button>
+      )}
       title="Action needed from you"
     >
       {actions.map((action) => (

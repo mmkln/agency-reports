@@ -23,6 +23,7 @@ import {
   ClientDashboardPageRoute,
   ClientPerformancePageRoute,
   ClientReportsPageRoute,
+  ClientRequestsPageRoute,
   AdminClientsPageRoute,
   AdminDashboardLinksPageRoute,
   AdminPerformanceDashboardEditorPageRoute,
@@ -119,6 +120,15 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientPerformancePageHeader,
     iconName: 'barChart',
+  },
+  {
+    path: '/client/requests',
+    id: 'client-requests',
+    label: 'Requests',
+    pageTitle: 'Client Requests',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    showInNav: true,
+    iconName: 'messageSquare',
   },
   {
     path: '/client/reports',
@@ -393,6 +403,16 @@ export const router = createBrowserRouter(
               <ProtectedRoute allowedRoles={[USER_ROLES.CLIENT_USER]}>
                 <Suspense fallback={<LoadingFallback />}>
                   <ClientReportsPageRoute />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'requests',
+            element: (
+              <ProtectedRoute allowedRoles={[USER_ROLES.CLIENT_USER]}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <ClientRequestsPageRoute />
                 </Suspense>
               </ProtectedRoute>
             ),

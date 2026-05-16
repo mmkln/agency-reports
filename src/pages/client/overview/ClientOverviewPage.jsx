@@ -105,6 +105,7 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
           <div className="grid gap-6">
             <NeededFromClientBlock
               actions={overview.neededActions}
+              requestsHref={`/client/requests?clientId=${overview.client.id}`}
               onAnswerAction={runtime.viewer.role === USER_ROLES.CLIENT_USER
                 ? (actionId, message) => {
                     answerNeededAction({

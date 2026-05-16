@@ -13,6 +13,7 @@ const routeMap = {
   'admin-reports': '/admin/reports',
   'admin-client-report-preview': '/admin/client-report-preview',
   'client-dashboard': '/client/dashboard',
+  'client-requests': '/client/requests',
   'client-reports': '/client/reports',
   'legacy-build-board': '/legacy/build-board',
   'legacy-crm-dashboard': '/legacy/crm-dashboard',

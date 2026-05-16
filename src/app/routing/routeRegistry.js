@@ -11,6 +11,7 @@ import { ClientPerformancePage } from '../../pages/client/performance/ClientPerf
 import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { ClientRequestsPage } from '../../pages/client/requests/ClientRequestsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClientActivityPage } from '../../pages/admin/client-activity/AdminClientActivityPage'
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
@@ -114,6 +115,15 @@ export const routes = [
     pageTitle: 'Monthly Reports',
     allowedRoles: [USER_ROLES.CLIENT_USER],
     showInNav: false,
+  },
+  {
+    component: ClientRequestsPage,
+    href: '/client/requests',
+    iconName: 'messageSquare',
+    id: 'client-requests',
+    label: 'Requests',
+    pageTitle: 'Client Requests',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
   },
   {
     component: AdminClientsPage,

@@ -1035,7 +1035,7 @@ function NextStepCard({ step, index }) {
   )
 }
 
-function ClientActionCard({ action }) {
+function ClientActionCard({ action, requestsHref }) {
   return (
     <div className="rounded-control border border-warning/20 bg-warning/10 p-4" key={action.id}>
       <div className="flex items-start gap-3">
@@ -1050,6 +1050,12 @@ function ClientActionCard({ action }) {
           </div>
           {action.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
           <p className="mt-3 text-xs font-medium text-warning-foreground">Due {formatDate(action.dueDate)}</p>
+          <Button asChild className="mt-3" size="sm" variant="outline">
+            <Link to={requestsHref}>
+              View request
+              <Icon name="arrowUpRight" size={14} />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
@@ -1160,7 +1166,13 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
         <BulletPanel
           emptyText="No client actions are open right now."
           items={page.neededFromClient}
-          renderItem={(action) => <ClientActionCard action={action} key={action.id} />}
+          renderItem={(action) => (
+            <ClientActionCard
+              action={action}
+              key={action.id}
+              requestsHref={`/client/requests?clientId=${page.client.id}`}
+            />
+          )}
           title="Needed From Client"
         />
 

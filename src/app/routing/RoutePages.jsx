@@ -8,6 +8,7 @@ import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboar
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientPerformancePage } from '../../pages/client/performance/ClientPerformancePage'
 import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
+import { ClientRequestsPage } from '../../pages/client/requests/ClientRequestsPage'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
@@ -51,6 +52,7 @@ function withPageProps(PageComponent, HeaderComponent) {
 export const ClientOverviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
 export const ClientPerformancePageRoute = withPageProps(ClientPerformancePage, ClientPerformancePageHeader)
+export const ClientRequestsPageRoute = withPageProps(ClientRequestsPage, undefined)
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)

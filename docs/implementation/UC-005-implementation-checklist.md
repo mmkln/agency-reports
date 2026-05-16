@@ -133,15 +133,15 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Confirm repository adapter supports `neededFromClient` CRUD/upsert.
+- [x] Confirm repository adapter supports `neededFromClient` CRUD/upsert.
 - [ ] Add repository methods if missing:
-  - [ ] `listByClientId`
-  - [ ] `findById`
-  - [ ] `upsert`
+  - [x] `listByClientId`
+  - [x] `findById`
+  - [x] `upsert`
   - [ ] `remove` only if needed
 - [ ] Add localStorage schema migration if new fields require normalization.
 - [ ] Add seed data examples:
-  - [ ] pending request
+  - [x] pending request
   - [ ] answered request
   - [ ] resolved request
   - [ ] cancelled request
@@ -161,24 +161,24 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Create or extend admin request service:
-  - [ ] list client requests
-  - [ ] create request
-  - [ ] update request
-  - [ ] resolve request
-  - [ ] cancel request
-  - [ ] reopen request
+- [x] Create or extend admin request service:
+  - [x] list client requests
+  - [x] create request
+  - [x] update request
+  - [x] resolve request
+  - [x] cancel request
+  - [x] reopen request
 - [ ] Create client request service:
-  - [ ] list visible own requests
+  - [x] list visible own requests
   - [ ] get request detail
-  - [ ] submit response
+  - [x] submit response
 - [ ] Add validation:
-  - [ ] required title
+  - [x] required title
   - [ ] safe client-facing description
-  - [ ] valid status transition
-  - [ ] valid due date
-  - [ ] valid related URL
-  - [ ] no client response to non-pending request
+  - [x] valid status transition
+  - [x] valid due date
+  - [x] valid related URL
+  - [x] no client response to non-pending request
 - [ ] Add read models:
   - [ ] admin list item
   - [ ] admin detail
@@ -207,12 +207,12 @@ Until backend integration exists:
 - [x] Add route tab to `AdminClientWorkspaceHeader`.
 - [x] Build `AdminClientRequestsPage`.
 - [x] Use canonical `PageHeader` / client workspace header patterns.
-- [ ] Build request filters:
-  - [ ] all
-  - [ ] pending
-  - [ ] answered
-  - [ ] resolved
-  - [ ] cancelled
+- [x] Build request filters:
+  - [x] all
+  - [x] pending
+  - [x] answered
+  - [x] resolved
+  - [x] cancelled
 - [x] Build requests list:
   - [x] title
   - [x] status
@@ -241,7 +241,7 @@ Until backend integration exists:
   - [x] cancel
   - [x] reopen
 - [x] Add empty state.
-- [ ] Add loading/error states through runtime data client.
+- [x] Add loading/error states through runtime data client.
 
 ### Completion Criteria
 
@@ -257,37 +257,37 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Add route:
-  - [ ] `#client-requests`
-- [ ] Add route metadata.
-- [ ] Add client navigation entry only if IA supports it.
-- [ ] Build `ClientRequestsPage`.
-- [ ] List requests grouped or filtered by:
-  - [ ] pending
-  - [ ] answered
-  - [ ] resolved
-- [ ] Hide cancelled requests by default.
-- [ ] Build request detail panel/card:
-  - [ ] title
-  - [ ] due date
-  - [ ] related link
-  - [ ] description
-  - [ ] status
-  - [ ] response state
-- [ ] Build response form:
-  - [ ] response textarea
-  - [ ] submit response
-  - [ ] disabled state for non-pending requests
-- [ ] Add client empty state:
-  - [ ] "No actions needed from you right now."
-- [ ] Add access denied state.
+- [x] Add route:
+  - [x] `#client-requests`
+- [x] Add route metadata.
+- [x] Add client navigation entry only if IA supports it.
+- [x] Build `ClientRequestsPage`.
+- [x] List requests grouped or filtered by:
+  - [x] pending
+  - [x] answered
+  - [x] resolved
+- [x] Hide cancelled requests by default.
+- [x] Build request detail panel/card:
+  - [x] title
+  - [x] due date
+  - [x] related link
+  - [x] description
+  - [x] status
+  - [x] response state
+- [x] Build response form:
+  - [x] response textarea
+  - [x] submit response
+  - [x] disabled state for non-pending requests
+- [x] Add client empty state:
+  - [x] "No actions needed from you right now."
+- [x] Add access denied state.
 
 ### Completion Criteria
 
-- [ ] client_user can respond to pending requests.
-- [ ] response changes request to `answered`.
-- [ ] client_user cannot see another client's requests.
-- [ ] client_user cannot see internal notes.
+- [x] client_user can respond to pending requests.
+- [x] response changes request to `answered`.
+- [x] client_user cannot see another client's requests.
+- [x] client_user cannot see internal notes.
 
 ## Stage 6 - Overview And Performance Integration
 
@@ -297,16 +297,16 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Update Client Overview Needed From Client block:
-  - [ ] show active pending/answered requests
-  - [ ] hide cancelled requests
-  - [ ] show due date and status
-  - [ ] link to request detail/page
-  - [ ] do not expose internal notes
-- [ ] Update Client Performance Needed From Client block:
-  - [ ] show active requests as analytics blockers/context
-  - [ ] link to request detail/page
-  - [ ] do not duplicate response form unless product explicitly wants it
+- [x] Update Client Overview Needed From Client block:
+  - [x] show active pending/answered requests
+  - [x] hide cancelled requests
+  - [x] show due date and status
+  - [x] link to request detail/page
+  - [x] do not expose internal notes
+- [x] Update Client Performance Needed From Client block:
+  - [x] show active requests as analytics blockers/context
+  - [x] link to request detail/page
+  - [x] do not duplicate response form unless product explicitly wants it
 - [ ] Update Admin Client Overview Editor:
   - [ ] remove any duplicated full request management if present
   - [ ] link to Admin Client Requests surface
@@ -351,12 +351,12 @@ Until backend integration exists:
 ### Tests
 
 - [ ] Unit tests:
-  - [ ] status metadata
-  - [ ] transition policy
-  - [ ] visibility policy
-  - [ ] admin service operations
-  - [ ] client response operation
-  - [ ] access denial
+  - [x] status metadata
+  - [x] transition policy
+  - [x] visibility policy
+  - [x] admin service operations
+  - [x] client response operation
+  - [x] access denial
 - [ ] E2E tests:
   - [ ] agency_admin creates request
   - [ ] client_user sees own request
