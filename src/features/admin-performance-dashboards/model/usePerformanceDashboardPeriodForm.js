@@ -19,7 +19,7 @@ function createInitialForm({ clientId = '', period = null } = {}) {
     agencyContact: period?.agencyContact ?? '',
     attributionNote: period?.attributionNote ?? '',
     clientId: period?.clientId ?? period?.client_id ?? clientId,
-    contentJson: JSON.stringify(content, null, 2),
+    content,
     dataConfidence: period?.dataConfidence ?? period?.data_confidence ?? PERFORMANCE_DATA_CONFIDENCE.MEDIUM,
     dataMode: period?.dataMode ?? period?.data_mode ?? PERFORMANCE_DATA_MODES.MANUAL,
     id: period?.id ?? '',
@@ -48,18 +48,8 @@ export function usePerformanceDashboardPeriodForm({ clientId, onSubmit, period }
   function handleSubmit(event) {
     event.preventDefault()
 
-    let content
-
-    try {
-      content = JSON.parse(form.contentJson)
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? `Content JSON is invalid: ${caughtError.message}` : 'Content JSON is invalid.')
-      return Promise.resolve()
-    }
-
     return Promise.resolve(onSubmit({
       ...form,
-      content,
     })).catch((caughtError) => {
       setError(caughtError.message)
     })

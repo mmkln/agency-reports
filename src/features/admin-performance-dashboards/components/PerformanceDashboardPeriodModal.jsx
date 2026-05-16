@@ -19,8 +19,6 @@ import {
 } from '@/shared/ui'
 
 import {
-  PERFORMANCE_DASHBOARD_STATUSES,
-  PERFORMANCE_DASHBOARD_STATUS_META,
   PERFORMANCE_DATA_CONFIDENCE,
   PERFORMANCE_DATA_CONFIDENCE_META,
   PERFORMANCE_DATA_MODES,
@@ -60,6 +58,9 @@ export function PerformanceDashboardPeriodModal({
   onUpdateField,
 }) {
   const title = mode === 'edit' ? 'Edit performance dashboard' : 'Create performance dashboard'
+  const description = mode === 'edit'
+    ? 'Update reporting-period metadata. Dashboard content is managed in the structured editor.'
+    : 'Create a draft reporting period. Add metrics, narrative, trends, and tables in the structured editor after creation.'
   const hasClients = clients.length > 0
 
   return (
@@ -74,7 +75,7 @@ export function PerformanceDashboardPeriodModal({
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-text-primary">{title}</DialogTitle>
               <DialogDescription>
-                Manage one reporting-period analytics dashboard. Draft and ready periods stay hidden from client users.
+                {description}
               </DialogDescription>
             </DialogHeader>
           </OverlayHeader>
@@ -94,7 +95,7 @@ export function PerformanceDashboardPeriodModal({
               ) : null}
 
               <FormSection
-                description="Define ownership, reporting period, visibility status, and data trust metadata."
+                description="Define ownership, reporting period, and the trust metadata clients will see. New dashboards start as draft and stay hidden until published."
                 iconName="layoutDashboard"
                 title="Dashboard setup"
               >
@@ -129,7 +130,7 @@ export function PerformanceDashboardPeriodModal({
                   />
                 </div>
 
-                <div className="grid gap-3 lg:grid-cols-4 sm:grid-cols-2">
+                <div className="grid gap-3 lg:grid-cols-3 sm:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="performance-period-start">Period start *</Label>
                     <Input
@@ -149,21 +150,6 @@ export function PerformanceDashboardPeriodModal({
                       type="date"
                       value={form.periodEnd}
                     />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="performance-status">Status *</Label>
-                    <Select onValueChange={(value) => onUpdateField('status', value)} value={form.status}>
-                      <SelectTrigger id="performance-status">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(PERFORMANCE_DASHBOARD_STATUSES).map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {PERFORMANCE_DASHBOARD_STATUS_META[status]?.label ?? status}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="performance-last-updated">Last updated *</Label>
@@ -258,24 +244,6 @@ export function PerformanceDashboardPeriodModal({
                     placeholder="Last-click attribution via GA4 with CRM revenue matched manually."
                     rows={3}
                     value={form.attributionNote}
-                  />
-                </div>
-              </FormSection>
-
-              <FormSection
-                description="Temporary professional input surface for manual or imported dashboard content. The richer editor will be built on top of this schema."
-                iconName="code"
-                title="Dashboard content JSON"
-              >
-                <div className="grid gap-2">
-                  <Label htmlFor="performance-content-json">Content JSON *</Label>
-                  <Textarea
-                    className="min-h-80 font-mono text-xs leading-5"
-                    id="performance-content-json"
-                    onChange={(event) => onUpdateField('contentJson', event.target.value)}
-                    required
-                    spellCheck={false}
-                    value={form.contentJson}
                   />
                 </div>
               </FormSection>
