@@ -24,7 +24,7 @@ export function AppShell({
         runtime={runtime}
         routes={navRoutes}
       />
-      <div className="min-h-screen pl-sidebar-collapsed">
+      <div className="min-h-screen overflow-x-hidden pl-sidebar-collapsed">
         {!showRouteHeader || activeRoute.hidePageHeader ? null : (
           RouteHeader ? (
             <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />

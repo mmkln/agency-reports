@@ -1088,7 +1088,7 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
   const nextSteps = content.next_steps ?? []
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 grid-cols-1 gap-6">
       <DashboardContextBar
         client={page.client}
         dashboard={dashboard}
