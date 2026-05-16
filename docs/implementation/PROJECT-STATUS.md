@@ -32,11 +32,11 @@ It is not intended to become a full analytics platform, CRM, project management 
 | UC-002 - Embedded Marketing Dashboard | Frontend/localStorage MVP implemented | `docs/implementation/UC-002-acceptance-report.md` |
 | UC-003 - Monthly Summary / Report Archive | Frontend/localStorage MVP implemented | `docs/implementation/UC-003-acceptance-report.md` |
 | UC-004 - Client Performance Dashboard | Frontend/localStorage MVP implemented | `docs/implementation/UC-004-acceptance-report.md` |
-| UC-005 - Needed From Client / Blockers | Planning ready | `docs/implementation/UC-005-implementation-checklist.md` |
+| UC-005 - Needed From Client / Blockers | Frontend/localStorage MVP implemented | `docs/implementation/UC-005-acceptance-report.md` |
 
 ## Current Verification Baseline
 
-Latest full verification recorded after UC-004:
+Latest full verification recorded after UC-005:
 
 ```text
 npm run lint
@@ -45,11 +45,11 @@ npx playwright test
 npm run build
 ```
 
-Expected current baseline from the last UC-004 run:
+Current baseline from the last UC-005 run:
 
 ```text
-Unit tests: 133 passed
-Full e2e: 21 passed
+Unit tests: 150 passed
+Full e2e: 22 passed
 Build: passed
 ```
 
@@ -69,18 +69,17 @@ The current frontend architecture expects:
 
 ## Next Recommended Work
 
-Recommended next use case:
+Recommended next step:
 
 ```text
-UC-005 - Needed From Client / Blockers
+Review and clean unrelated legacy board/import work before starting the next use case.
 ```
 
 Reason:
 
 ```text
-UC-001 and UC-004 already display needed-from-client records.
-UC-005 should now turn those records into a dedicated lifecycle workflow:
-create request, client response, agency review, resolve, cancel, and audit.
+The UC-001 through UC-005 frontend/localStorage MVP path is now implemented.
+The current worktree contains unrelated uncommitted legacy board changes that should be resolved separately before new product work starts.
 ```
 
 ## Known Backend/Integration Deferrals

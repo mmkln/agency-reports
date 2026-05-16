@@ -52,13 +52,13 @@ Until backend integration exists:
 - [x] Define UC-005 as the owner of `needed_from_client` lifecycle.
 - [x] Keep Client Overview as a compact summary only.
 - [x] Keep Client Performance Dashboard as an analytics context surface only.
-- [ ] Update navigation/product docs after routes are implemented.
-- [ ] Confirm whether agency_team can create requests or only update assigned/request-related requests.
+- [x] Update navigation/product docs after routes are implemented.
+- [x] Confirm whether agency_team can create requests or only update assigned/request-related requests.
 
 ### Completion Criteria
 
-- [ ] A developer can explain where request lifecycle editing belongs.
-- [ ] Overview and analytics pages do not duplicate request lifecycle controls.
+- [x] A developer can explain where request lifecycle editing belongs.
+- [x] Overview and analytics pages do not duplicate request lifecycle controls.
 
 ## Stage 1 - Entity Model And Policies
 
@@ -134,24 +134,24 @@ Until backend integration exists:
 ### Tasks
 
 - [x] Confirm repository adapter supports `neededFromClient` CRUD/upsert.
-- [ ] Add repository methods if missing:
+- [x] Add repository methods if missing:
   - [x] `listByClientId`
   - [x] `findById`
   - [x] `upsert`
-  - [ ] `remove` only if needed
-- [ ] Add localStorage schema migration if new fields require normalization.
-- [ ] Add seed data examples:
+  - [x] `remove` only if needed
+- [x] Confirm no localStorage schema migration is required because new fields are normalized at service/model boundaries.
+- [x] Add seed/runtime test data examples:
   - [x] pending request
-  - [ ] answered request
-  - [ ] resolved request
-  - [ ] cancelled request
-  - [ ] internal notes on admin-only request
-- [ ] Ensure reset/reseed dev utility handles new fields.
+  - [x] answered request
+  - [x] resolved request
+  - [x] cancelled request
+  - [x] internal notes on admin-only request
+- [x] Ensure reset/reseed dev utility handles new fields.
 
 ### Completion Criteria
 
-- [ ] Existing UC-001 and UC-004 pages still render active requests.
-- [ ] Repository adapter can later be replaced by API/Supabase without page rewrites.
+- [x] Existing UC-001 and UC-004 pages still render active requests.
+- [x] Repository adapter can later be replaced by API/Supabase without page rewrites.
 
 ## Stage 3 - Domain Services
 
@@ -168,30 +168,30 @@ Until backend integration exists:
   - [x] resolve request
   - [x] cancel request
   - [x] reopen request
-- [ ] Create client request service:
+- [x] Create client request service:
   - [x] list visible own requests
-  - [ ] get request detail
+  - [x] get request detail
   - [x] submit response
-- [ ] Add validation:
+- [x] Add validation:
   - [x] required title
-  - [ ] safe client-facing description
+  - [x] safe client-facing description
   - [x] valid status transition
   - [x] valid due date
   - [x] valid related URL
   - [x] no client response to non-pending request
-- [ ] Add read models:
-  - [ ] admin list item
-  - [ ] admin detail
-  - [ ] client list item
-  - [ ] client detail
-  - [ ] overview summary item
-- [ ] Add activity events if current activity service supports it.
+- [x] Add read models:
+  - [x] admin list item
+  - [x] admin detail
+  - [x] client list item
+  - [x] client detail
+  - [x] overview summary item
+- [x] Add activity events if current activity service supports it.
 
 ### Completion Criteria
 
-- [ ] UI can render admin/client request pages from service read models.
-- [ ] Services reject unauthorized or invalid operations.
-- [ ] Services never return internal notes to client read models.
+- [x] UI can render admin/client request pages from service read models.
+- [x] Services reject unauthorized or invalid operations.
+- [x] Services never return internal notes to client read models.
 
 ## Stage 4 - Admin Client Requests Surface
 
@@ -247,7 +247,7 @@ Until backend integration exists:
 
 - [x] agency_admin can create, edit, resolve, cancel, and reopen requests.
 - [x] admin page uses existing workspace/navigation patterns.
-- [ ] no request lifecycle editing remains embedded in unrelated editors.
+- [x] no request lifecycle editing remains embedded in unrelated editors.
 
 ## Stage 5 - Client Requests Surface
 
@@ -307,16 +307,16 @@ Until backend integration exists:
   - [x] show active requests as analytics blockers/context
   - [x] link to request detail/page
   - [x] do not duplicate response form unless product explicitly wants it
-- [ ] Update Admin Client Overview Editor:
-  - [ ] remove any duplicated full request management if present
-  - [ ] link to Admin Client Requests surface
-- [ ] Ensure active request count/status can influence client status if manually set by admin.
+- [x] Update Admin Client Overview Editor:
+  - [x] remove any duplicated full request management if present
+  - [x] link to Admin Client Requests surface
+- [x] Ensure active request count/status can influence client status if manually set by admin.
 
 ### Completion Criteria
 
-- [ ] Client Overview remains a status hub.
-- [ ] Client Performance remains an analytics dashboard.
-- [ ] Requests page owns request lifecycle.
+- [x] Client Overview remains a status hub.
+- [x] Client Performance remains an analytics dashboard.
+- [x] Requests page owns request lifecycle.
 
 ## Stage 7 - Activity And Audit Trail
 
@@ -326,21 +326,21 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Add activity events for:
-  - [ ] request created
-  - [ ] request updated
-  - [ ] client responded
-  - [ ] request resolved
-  - [ ] request cancelled
-  - [ ] request reopened
-- [ ] Include actor metadata.
-- [ ] Keep admin/team activity feed private.
-- [ ] Do not expose internal notes to client activity.
+- [x] Add activity events for:
+  - [x] request created
+  - [x] request updated
+  - [x] client responded
+  - [x] request resolved
+  - [x] request cancelled
+  - [x] request reopened
+- [x] Include actor metadata.
+- [x] Keep admin/team activity feed private.
+- [x] Do not expose internal notes to client activity.
 
 ### Completion Criteria
 
-- [ ] Admin can inspect request lifecycle context through existing activity surfaces.
-- [ ] Client-facing views remain client-safe.
+- [x] Admin can inspect request lifecycle context through existing activity surfaces.
+- [x] Client-facing views remain client-safe.
 
 ## Stage 8 - Tests And Acceptance
 
@@ -350,31 +350,31 @@ Until backend integration exists:
 
 ### Tests
 
-- [ ] Unit tests:
+- [x] Unit tests:
   - [x] status metadata
   - [x] transition policy
   - [x] visibility policy
   - [x] admin service operations
   - [x] client response operation
   - [x] access denial
-- [ ] E2E tests:
-  - [ ] agency_admin creates request
-  - [ ] client_user sees own request
-  - [ ] client_user submits response
-  - [ ] agency_admin marks request resolved
-  - [ ] agency_admin cancels request and client summary hides it
-  - [ ] client_user cannot access another client's request
-  - [ ] internal notes never appear client-side
-- [ ] Regression checks:
-  - [ ] UC-001 overview still works
-  - [ ] UC-004 performance dashboard still works
+- [x] E2E tests:
+  - [x] agency_admin creates request
+  - [x] client_user sees own request
+  - [x] client_user submits response
+  - [x] agency_admin marks request resolved
+  - [x] agency_admin cancels request and client summary hides it
+  - [x] client_user cannot access another client's request
+  - [x] internal notes never appear client-side
+- [x] Regression checks:
+  - [x] UC-001 overview still works
+  - [x] UC-004 performance dashboard still works
 
 ### Build Checks
 
-- [ ] `npm run lint`
-- [ ] `npm test -- --run`
-- [ ] `npx playwright test`
-- [ ] `npm run build`
+- [x] `npm run lint`
+- [x] `npm test -- --run`
+- [x] `npx playwright test`
+- [x] `npm run build`
 
 ## Stage 9 - Acceptance Report
 
@@ -384,16 +384,16 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Create `docs/implementation/UC-005-acceptance-report.md`.
-- [ ] Mark acceptance criteria complete/deferred.
-- [ ] Document frontend/localStorage limitations.
-- [ ] Document backend deferred items:
-  - [ ] server-side access enforcement
-  - [ ] real notification delivery
-  - [ ] email reminders
-  - [ ] file upload/storage
-  - [ ] approval workflow
-  - [ ] audit log persistence
+- [x] Create `docs/implementation/UC-005-acceptance-report.md`.
+- [x] Mark acceptance criteria complete/deferred.
+- [x] Document frontend/localStorage limitations.
+- [x] Document backend deferred items:
+  - [x] server-side access enforcement
+  - [x] real notification delivery
+  - [x] email reminders
+  - [x] file upload/storage
+  - [x] approval workflow
+  - [x] audit log persistence
 
 ## Final Completion Definition
 
