@@ -2,7 +2,10 @@ import { CLIENT_STATUSES } from '../../../entities/client'
 import { CLIENT_INVITATION_STATUSES } from '../../../entities/client-invitation'
 import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
-import { NEEDED_ACTION_STATUSES } from '../../../entities/needed-from-client'
+import {
+  NEEDED_ACTION_PRIORITIES,
+  NEEDED_ACTION_STATUSES,
+} from '../../../entities/needed-from-client'
 import {
   PERFORMANCE_CHANNELS,
   PERFORMANCE_DASHBOARD_STATUSES,
@@ -325,6 +328,9 @@ export const portalSeedData = Object.freeze({
       description: 'Confirm the final discount and treatment package wording before campaign scaling.',
       due_date: '2026-05-10',
       id: SEED_IDS.NEEDED_OFFER_DETAILS,
+      internal_notes: 'Confirm before increasing campaign budget.',
+      owner_name: 'Sarah Johnson',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
       related_link: '',
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Confirm final offer details',
@@ -336,6 +342,9 @@ export const portalSeedData = Object.freeze({
       description: 'Approve or request edits on the second creative batch.',
       due_date: '2026-05-09',
       id: SEED_IDS.NEEDED_CREATIVE_APPROVAL,
+      internal_notes: 'Creative batch blocks the next ad test.',
+      owner_name: 'Sarah Johnson',
+      priority: NEEDED_ACTION_PRIORITIES.MEDIUM,
       related_link: 'https://drive.google.com/example',
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Approve creative batch #2',

@@ -1044,6 +1044,10 @@ function ClientActionCard({ action }) {
         </span>
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-text-primary">{action.title}</h3>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <StatusBadge meta={action.priorityMeta} />
+            <StatusBadge meta={action.statusMeta} />
+          </div>
           {action.description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
           <p className="mt-3 text-xs font-medium text-warning-foreground">Due {formatDate(action.dueDate)}</p>
         </div>
