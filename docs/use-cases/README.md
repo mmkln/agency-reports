@@ -11,7 +11,8 @@ Use these documents as the source of truth for product behavior, permissions, sc
 | UC-001 | Client Overview / Status Hub | MVP-ready | [UC-001-client-overview-status-hub.md](./UC-001-client-overview-status-hub.md) |
 | UC-002 | Embedded Marketing Dashboard | MVP-ready | [UC-002-embedded-marketing-dashboard.md](./UC-002-embedded-marketing-dashboard.md) |
 | UC-003 | Monthly Summary / Report Archive | MVP-ready | [UC-003-monthly-summary-report-archive.md](./UC-003-monthly-summary-report-archive.md) |
-| UC-004 | Client Performance Dashboard | MVP-planning-ready | [UC-004-client-performance-dashboard.md](./UC-004-client-performance-dashboard.md) |
+| UC-004 | Client Performance Dashboard | Frontend/localStorage MVP implemented | [UC-004-client-performance-dashboard.md](./UC-004-client-performance-dashboard.md) |
+| UC-005 | Needed From Client / Blockers | MVP-planning-ready | [UC-005-needed-from-client-blockers.md](./UC-005-needed-from-client-blockers.md) |
 
 ## Implementation Rule
 
