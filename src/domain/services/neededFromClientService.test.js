@@ -161,6 +161,15 @@ describe('neededFromClientService', () => {
     expect(repositories.neededFromClient.findById(IDS.ACTION)).toMatchObject({
       client_id: IDS.CLIENT,
     })
+    expect(createdAction.response_history).toEqual([
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          actor_role: USER_ROLES.AGENCY_ADMIN,
+          title: 'Approve creatives',
+        }),
+        type: 'admin_created',
+      }),
+    ])
   })
 
   it('lists only client-visible own requests for client users', () => {

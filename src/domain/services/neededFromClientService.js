@@ -49,7 +49,10 @@ function createHistoryEvent({ metadata = {}, now, type, viewer }) {
   return {
     created_at: now(),
     created_by: viewer?.userId ?? null,
-    metadata,
+    metadata: {
+      actor_role: viewer?.role ?? null,
+      ...metadata,
+    },
     type,
   }
 }
@@ -334,7 +337,16 @@ export function createNeededAction({
       ...input,
       title,
     }),
-    response_history: [],
+    response_history: [
+      createHistoryEvent({
+        metadata: {
+          title,
+        },
+        now,
+        type: 'admin_created',
+        viewer,
+      }),
+    ],
     status: NEEDED_ACTION_STATUSES.PENDING,
     updated_at: timestamp,
   }
