@@ -52,6 +52,183 @@ export const SEED_IDS = Object.freeze({
   USER_TEAM_MIA: 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
 })
 
+function addDays(date, days) {
+  const nextDate = new Date(date)
+  nextDate.setUTCDate(nextDate.getUTCDate() + days)
+  return nextDate
+}
+
+function formatIsoDate(date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function formatShortDate(date) {
+  return date.toISOString().slice(5, 10)
+}
+
+function getReactivationTouchPlan(dayIndex, weekIndex) {
+  if (weekIndex <= 2) {
+    return {
+      email: dayIndex % 3 === 0 ? 13 : 0,
+      manager_calls: 0,
+      sms: dayIndex % 4 === 0 ? 13 : 14,
+    }
+  }
+
+  if (weekIndex <= 7) {
+    const peakBoost = weekIndex === 6 || weekIndex === 7 ? 8 : 0
+
+    return {
+      email: 25 + peakBoost,
+      manager_calls: weekIndex >= 4 ? 12 + peakBoost : 0,
+      sms: 27 + peakBoost,
+    }
+  }
+
+  if (weekIndex <= 13) {
+    const spike = weekIndex === 11 ? 12 : 0
+
+    return {
+      email: 27 + spike,
+      manager_calls: 18 + spike,
+      sms: 29 + (spike ? 0 : 0),
+    }
+  }
+
+  return {
+    email: Math.max(5, 24 - (weekIndex - 13) * 8),
+    manager_calls: Math.max(0, 18 - (weekIndex - 13) * 7),
+    sms: Math.max(0, 22 - (weekIndex - 13) * 8),
+  }
+}
+
+function createGreenDentalReactivationCampaignExecution() {
+  const startDate = new Date(Date.UTC(2026, 5, 1))
+  const activitySeries = []
+  let cumulativeBookings = 0
+  let calendarOffset = 0
+
+  while (activitySeries.length < 75) {
+    const date = addDays(startDate, calendarOffset)
+    calendarOffset += 1
+
+    const dayOfWeek = date.getUTCDay()
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      continue
+    }
+
+    const dayIndex = activitySeries.length
+    const weekIndex = Math.floor(dayIndex / 5) + 1
+    const touches = getReactivationTouchPlan(dayIndex, weekIndex)
+    const bookingLift = weekIndex <= 2
+      ? 0.1
+      : weekIndex <= 7
+        ? 0.45
+        : weekIndex <= 13
+          ? 0.65
+          : 0.35
+
+    cumulativeBookings = Math.min(40, cumulativeBookings + bookingLift)
+    activitySeries.push({
+      ...touches,
+      cumulative_bookings: Number(cumulativeBookings.toFixed(1)),
+      date: formatIsoDate(date),
+      label: formatShortDate(date),
+    })
+  }
+
+  return {
+    activity_series: activitySeries,
+    assumptions: [
+      'Business days only. Dates are illustrative and assume a Monday June 1, 2026 start.',
+      'Volumes are realistic planning estimates after approximately 5% touch attrition.',
+    ],
+    kpis: [
+      {
+        display_order: 10,
+        id: 'reactivation-kpi-patients',
+        label: 'Patients',
+        tone: 'neutral',
+        value: 804,
+      },
+      {
+        display_order: 20,
+        id: 'reactivation-kpi-sms',
+        label: 'SMS sent',
+        tone: 'blue',
+        value: '~1,660',
+      },
+      {
+        display_order: 30,
+        id: 'reactivation-kpi-emails',
+        label: 'Emails sent',
+        tone: 'green',
+        value: '~1,580',
+      },
+      {
+        display_order: 40,
+        id: 'reactivation-kpi-calls',
+        label: 'Manager calls',
+        tone: 'orange',
+        value: '~870',
+      },
+      {
+        display_order: 50,
+        id: 'reactivation-kpi-bookings',
+        label: 'Projected bookings',
+        tone: 'amber',
+        value: '38-42',
+      },
+      {
+        display_order: 60,
+        id: 'reactivation-kpi-duration',
+        label: 'Duration',
+        tone: 'neutral',
+        value: '~15 wk',
+      },
+    ],
+    left_axis_label: 'Touches per day',
+    right_axis_label: 'Cumulative bookings',
+    subtitle: 'Planned reactivation touches across SMS, email, and manager calls with cumulative booking projection.',
+    title: 'Patient Reactivation Campaign Plan',
+    tracks: [
+      {
+        display_order: 10,
+        end_week: 2,
+        id: 'track-r-pilot',
+        label: 'Track R - pilot (wk 1-2)',
+        start_week: 1,
+        tone: 'orange',
+      },
+      {
+        display_order: 20,
+        end_week: 7,
+        id: 'track-a-gentle',
+        label: 'Track A - gentle reactivation (wk 2-7)',
+        start_week: 2,
+        tone: 'green',
+      },
+      {
+        display_order: 30,
+        end_week: 13,
+        id: 'track-b-core',
+        label: 'Track B - core reactivation (wk 5-13)',
+        start_week: 5,
+        tone: 'blue',
+      },
+      {
+        display_order: 40,
+        end_week: 15,
+        id: 'track-c-winback',
+        label: 'Track C - win-back (wk 10-15)',
+        start_week: 10,
+        tone: 'purple',
+      },
+    ],
+  }
+}
+
 export const portalSeedData = Object.freeze({
   activity_events: [],
   client_invitations: [
@@ -185,6 +362,7 @@ export const portalSeedData = Object.freeze({
             title: 'Top Campaigns',
           },
         ],
+        campaign_execution: createGreenDentalReactivationCampaignExecution(),
         channel_breakdown: [
           {
             channel: PERFORMANCE_CHANNELS.GOOGLE_ADS,

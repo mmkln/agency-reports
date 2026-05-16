@@ -505,6 +505,65 @@ function normalizeAppendixTable(value = {}) {
   })
 }
 
+function normalizeCampaignKpi(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return compactRecord({
+    display_order: typeof source.display_order === 'number' ? source.display_order : undefined,
+    helper_text: normalizeString(source.helper_text),
+    id: normalizeString(source.id),
+    label: normalizeString(source.label),
+    tone: normalizeString(source.tone),
+    unit: normalizeString(source.unit),
+    value: normalizeNumberOrString(source.value),
+  })
+}
+
+function normalizeCampaignTrack(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return compactRecord({
+    display_order: typeof source.display_order === 'number' ? source.display_order : undefined,
+    end_date: normalizeString(source.end_date),
+    end_week: typeof source.end_week === 'number' ? source.end_week : null,
+    id: normalizeString(source.id),
+    label: normalizeString(source.label),
+    start_date: normalizeString(source.start_date),
+    start_week: typeof source.start_week === 'number' ? source.start_week : null,
+    tone: normalizeString(source.tone),
+  })
+}
+
+function normalizeCampaignActivityPoint(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return compactRecord({
+    cumulative_bookings: typeof source.cumulative_bookings === 'number'
+      ? source.cumulative_bookings
+      : null,
+    date: normalizeString(source.date),
+    email: typeof source.email === 'number' ? source.email : 0,
+    label: normalizeString(source.label),
+    manager_calls: typeof source.manager_calls === 'number' ? source.manager_calls : 0,
+    sms: typeof source.sms === 'number' ? source.sms : 0,
+  })
+}
+
+function normalizeCampaignExecution(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return {
+    activity_series: normalizeArray(source.activity_series).map(normalizeCampaignActivityPoint),
+    assumptions: normalizeArray(source.assumptions).map((item) => normalizeString(item)).filter(Boolean),
+    kpis: normalizeArray(source.kpis).map(normalizeCampaignKpi),
+    left_axis_label: normalizeString(source.left_axis_label),
+    right_axis_label: normalizeString(source.right_axis_label),
+    subtitle: normalizeString(source.subtitle),
+    title: normalizeString(source.title),
+    tracks: normalizeArray(source.tracks).map(normalizeCampaignTrack),
+  }
+}
+
 export function createEmptyPerformanceDashboardContent(overrides = {}) {
   const source = isPlainObject(overrides) ? overrides : {}
 
@@ -520,6 +579,7 @@ export function createEmptyPerformanceDashboardContent(overrides = {}) {
     insights: normalizeArray(source.insights).map(normalizeInsight),
     kpi_cards: normalizeArray(source.kpi_cards).map(normalizeMetric),
     next_steps: normalizeArray(source.next_steps).map(normalizeNextStep),
+    campaign_execution: normalizeCampaignExecution(source.campaign_execution),
     service_sections: normalizeArray(source.service_sections).map(normalizeServiceSection),
     trends: normalizeArray(source.trends).map(normalizeTrend),
   }

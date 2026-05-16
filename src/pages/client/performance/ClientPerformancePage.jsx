@@ -7,6 +7,7 @@ import {
 } from '../../../entities/performance-dashboard'
 import { USER_ROLES } from '../../../entities/profile'
 import { AccessDeniedState } from '../../../widgets/client-overview'
+import { StackedBarLineChart } from '../../../shared/charts'
 import {
   Button,
   EmptyState,
@@ -18,6 +19,7 @@ import {
   ProgressBar,
 } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
+import { chartColors } from '../../../shared/theme'
 
 function formatDate(date) {
   if (!date) {
@@ -379,6 +381,139 @@ function SmallMetric({ label, value }) {
   )
 }
 
+function getCampaignToneClasses(tone) {
+  return {
+    amber: 'border-warning/20 bg-warning/10 text-warning-foreground',
+    blue: 'border-action/20 bg-action-muted text-action',
+    green: 'border-success/20 bg-success/10 text-success-foreground',
+    neutral: 'border-control-border bg-surface-subtle text-text-secondary',
+    orange: 'border-warning/20 bg-warning/10 text-warning-foreground',
+    purple: 'border-accent/20 bg-accent/10 text-accent-foreground',
+    red: 'border-destructive/20 bg-destructive/10 text-destructive',
+  }[tone] ?? 'border-control-border bg-surface-subtle text-text-secondary'
+}
+
+function CampaignKpiCard({ kpi }) {
+  return (
+    <div className="rounded-block border border-control-border bg-block-subtle p-4">
+      <p className="text-sm font-medium text-text-secondary">{kpi.label || 'Metric'}</p>
+      <p className={`mt-2 text-3xl font-semibold leading-none ${getCampaignToneClasses(kpi.tone).split(' ').at(-1)}`}>
+        {formatLooseValue(kpi.value)}{kpi.unit ? ` ${kpi.unit}` : ''}
+      </p>
+      {kpi.helper_text ? <p className="mt-2 text-xs leading-5 text-text-muted">{kpi.helper_text}</p> : null}
+    </div>
+  )
+}
+
+function CampaignTracks({ tracks }) {
+  if (!tracks?.length) {
+    return null
+  }
+
+  return (
+    <div className="grid gap-3 md:grid-cols-4">
+      {tracks.map((track, index) => (
+        <div
+          className={`rounded-control border px-4 py-3 text-center text-sm font-semibold ${getCampaignToneClasses(track.tone)}`}
+          key={track.id || `${track.label}-${index}`}
+        >
+          {track.label}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CampaignExecutionSection({ campaign }) {
+  const hasCampaignData = campaign?.kpis?.length
+    || campaign?.tracks?.length
+    || campaign?.activity_series?.length
+
+  if (!hasCampaignData) {
+    return null
+  }
+
+  const chartData = campaign.activity_series ?? []
+  const maxTouches = Math.max(
+    1,
+    ...chartData.map((point) => (
+      (Number(point.sms) || 0)
+      + (Number(point.email) || 0)
+      + (Number(point.manager_calls) || 0)
+    )),
+  )
+  const maxBookings = Math.max(
+    1,
+    ...chartData.map((point) => Number(point.cumulative_bookings) || 0),
+  )
+  const bars = [
+    { color: chartColors.primary, key: 'sms', label: 'SMS' },
+    { color: chartColors.teal, key: 'email', label: 'Email' },
+    { color: chartColors.rose, key: 'manager_calls', label: 'Manager calls' },
+  ]
+  const line = {
+    color: chartColors.amber,
+    key: 'cumulative_bookings',
+    label: 'Cumulative bookings',
+  }
+
+  return (
+    <Panel>
+      <PanelHeader
+        subtitle={campaign.subtitle || 'Shows planned outreach volume, phased campaign execution, and projected bookings over time.'}
+        title={campaign.title || 'Campaign Execution'}
+      />
+      <PanelBody className="grid gap-6">
+        {campaign.kpis?.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            {campaign.kpis.map((kpi, index) => (
+              <CampaignKpiCard key={kpi.id || `${kpi.label}-${index}`} kpi={kpi} />
+            ))}
+          </div>
+        ) : null}
+
+        <CampaignTracks tracks={campaign.tracks} />
+
+        {chartData.length ? (
+          <div className="rounded-block border border-control-border bg-block p-4">
+            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-text-secondary">
+              {bars.map((bar) => (
+                <span className="inline-flex items-center gap-2" key={bar.key}>
+                  <span className="size-3 rounded-[3px]" style={{ backgroundColor: bar.color }} />
+                  {bar.label}
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-2">
+                <span className="h-0 w-7 border-t-2 border-dashed" style={{ borderColor: line.color }} />
+                {line.label}
+              </span>
+            </div>
+            <StackedBarLineChart
+              ariaLabel="Campaign touchpoints and cumulative bookings"
+              bars={bars}
+              data={chartData}
+              leftAxisLabel={campaign.left_axis_label || 'Touches per day'}
+              line={line}
+              rightAxisLabel={campaign.right_axis_label || 'Cumulative bookings'}
+              xKey="label"
+              yLeftMax={Math.ceil(maxTouches / 10) * 10}
+              yRightMax={Math.ceil(maxBookings / 5) * 5}
+            />
+          </div>
+        ) : null}
+
+        {campaign.assumptions?.length ? (
+          <div className="rounded-control border border-control-border bg-surface-subtle px-4 py-3">
+            {campaign.assumptions.map((assumption) => (
+              <p className="text-sm leading-6 text-text-muted" key={assumption}>{assumption}</p>
+            ))}
+          </div>
+        ) : null}
+      </PanelBody>
+    </Panel>
+  )
+}
+
 function TrendSeriesSection({ trends }) {
   if (!trends?.length) {
     return null
@@ -674,6 +809,8 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
           ))}
         </section>
       ) : null}
+
+      <CampaignExecutionSection campaign={content.campaign_execution} />
 
       <GoalsSection goals={content.goals} />
 

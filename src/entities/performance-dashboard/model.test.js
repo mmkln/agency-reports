@@ -192,6 +192,70 @@ describe('performance dashboard model', () => {
     })
   })
 
+  it('normalizes campaign execution data for imported dashboards', () => {
+    const result = parsePerformanceDashboardJson(JSON.stringify(createValidPeriod({
+      content: {
+        ...createValidPeriod().content,
+        campaign_execution: {
+          activity_series: [
+            {
+              cumulative_bookings: 2.5,
+              date: '2026-06-01',
+              email: 10,
+              label: '06-01',
+              manager_calls: 3,
+              sms: 12,
+            },
+          ],
+          assumptions: ['Business days only.'],
+          kpis: [
+            {
+              label: 'Patients',
+              tone: 'neutral',
+              value: 804,
+            },
+          ],
+          tracks: [
+            {
+              end_week: 2,
+              label: 'Pilot',
+              start_week: 1,
+              tone: 'orange',
+            },
+          ],
+        },
+      },
+    })))
+
+    expect(result.isValid).toBe(true)
+    expect(result.period.content.campaign_execution).toMatchObject({
+      activity_series: [
+        {
+          cumulative_bookings: 2.5,
+          email: 10,
+          manager_calls: 3,
+          sms: 12,
+        },
+      ],
+      assumptions: ['Business days only.'],
+      kpis: [
+        {
+          label: 'Patients',
+          tone: 'neutral',
+          value: 804,
+        },
+      ],
+      tracks: [
+        {
+          end_week: 2,
+          label: 'Pilot',
+          start_week: 1,
+          tone: 'orange',
+        },
+      ],
+    })
+  })
+
   it('returns validation errors for invalid JSON imports', () => {
     const result = parsePerformanceDashboardJson('{bad json')
 
