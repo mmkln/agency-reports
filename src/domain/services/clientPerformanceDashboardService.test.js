@@ -28,6 +28,11 @@ const IDS = Object.freeze({
   PERIOD_DRAFT: '66666666-6666-4666-8666-666666666666',
   PERIOD_PUBLISHED: '77777777-7777-4777-8777-777777777777',
   REPORT: '88888888-8888-4888-8888-888888888888',
+  TASK_DONE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  TASK_INTERNAL: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  TASK_ACTIVE: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  UPDATE_CLIENT_VISIBLE: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+  UPDATE_INTERNAL: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
   USER_CLIENT: '99999999-9999-4999-8999-999999999999',
 })
 
@@ -196,6 +201,53 @@ function createRepositories() {
         title: 'April Report',
       },
     ]),
+    tasks: createEntityRepository([
+      {
+        assignee_name: 'Agency Strategist',
+        client_id: IDS.CLIENT_A,
+        id: IDS.TASK_DONE,
+        status: 'done',
+        title: 'Launch first campaign structure',
+        updated_at: '2026-05-01T10:00:00.000Z',
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+      {
+        assignee_name: 'Agency Analyst',
+        client_id: IDS.CLIENT_A,
+        id: IDS.TASK_ACTIVE,
+        status: 'in_progress',
+        title: 'Monitor CPL stability',
+        updated_at: '2026-05-03T10:00:00.000Z',
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+      {
+        assignee_name: 'Internal Team',
+        client_id: IDS.CLIENT_A,
+        id: IDS.TASK_INTERNAL,
+        status: 'done',
+        title: 'Debug internal attribution issue',
+        updated_at: '2026-05-02T10:00:00.000Z',
+        visibility: VISIBILITY.INTERNAL,
+      },
+    ]),
+    updates: createEntityRepository([
+      {
+        body: 'We launched the first campaign structure and connected the tracking baseline.',
+        client_id: IDS.CLIENT_A,
+        id: IDS.UPDATE_CLIENT_VISIBLE,
+        title: 'Weekly performance update',
+        updated_at: '2026-05-04T10:00:00.000Z',
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+      {
+        body: 'Internal attribution issue is under review.',
+        client_id: IDS.CLIENT_A,
+        id: IDS.UPDATE_INTERNAL,
+        title: 'Internal update',
+        updated_at: '2026-05-04T09:00:00.000Z',
+        visibility: VISIBILITY.INTERNAL,
+      },
+    ]),
   }
 }
 
@@ -224,17 +276,23 @@ describe('clientPerformanceDashboardService', () => {
     expect(page.sourceLinks).toHaveLength(1)
     expect(page.latestReport.title).toBe('April Report')
     expect(page.neededFromClient.map((item) => item.title)).toEqual(['Approve creative batch'])
+    expect(page.workSummary.completedTasks.map((task) => task.title)).toEqual(['Launch first campaign structure'])
+    expect(page.workSummary.activeTasks.map((task) => task.title)).toEqual(['Monitor CPL stability'])
+    expect(page.workSummary.recentUpdates.map((update) => update.title)).toEqual(['Weekly performance update'])
     expect(page.periods.map((period) => period.id)).toEqual([
       IDS.PERIOD_PUBLISHED,
       IDS.PERIOD_ARCHIVED,
     ])
     expect(JSON.stringify(page)).not.toContain('May Draft')
     expect(JSON.stringify(page)).not.toContain('Cancelled request')
+    expect(JSON.stringify(page)).not.toContain('Internal update')
+    expect(JSON.stringify(page)).not.toContain('Debug internal attribution issue')
   })
 
   it('allows a client to open an archived dashboard period for their own client', () => {
     const page = getClientPerformanceDashboardPage({
       clientId: IDS.CLIENT_A,
+      now: () => new Date('2026-05-16T09:00:00.000Z'),
       periodId: IDS.PERIOD_ARCHIVED,
       repositories: createRepositories(),
       viewer: createClientViewer(),
@@ -245,6 +303,10 @@ describe('clientPerformanceDashboardService', () => {
       id: IDS.PERIOD_ARCHIVED,
       status: PERFORMANCE_DASHBOARD_STATUSES.ARCHIVED,
       title: 'March Dashboard',
+    })
+    expect(page.performanceDashboard.freshness).toMatchObject({
+      ageDays: 45,
+      isStale: true,
     })
   })
 

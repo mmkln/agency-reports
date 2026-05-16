@@ -22,6 +22,7 @@ import {
 import { IssueList } from './editor/AdminPerformanceDashboardEditorPrimitives'
 import {
   AppendixTablesSection,
+  AgencyWorkSection,
   ChannelBreakdownSection,
   ClientPeriodDataTrustSection,
   EditorInspector,
@@ -333,6 +334,10 @@ export function AdminPerformanceDashboardEditor({
             updateArrayItem={updateArrayItem}
             updateContent={updateContent}
             updateNestedArrayItem={updateNestedArrayItem}
+          />
+          <AgencyWorkSection
+            form={form}
+            updateContent={updateContent}
           />
           <KpiCardsSection
             form={form}

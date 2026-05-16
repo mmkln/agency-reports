@@ -61,11 +61,11 @@ The current implementation supports:
 | 28 | client_user can see hero metric and KPI cards above detailed sections. | Done | KPI section appears before campaign/trends/funnel details. |
 | 29 | client_user can see goals vs actual. | Done | Goals section renders when data exists. |
 | 30 | client_user can see trend, funnel, and channel breakdown. | Done | All three sections are implemented. |
-| 31 | client_user can see insights, what changed, what we did, and next actions. | Partial | Insights and next actions are implemented. "What we did" is still represented indirectly through service sections and UC-001 references; a dedicated block is deferred. |
+| 31 | client_user can see insights, what changed, what we did, and next actions. | Done | What We Did now renders client-visible updates plus completed/active client-visible tasks from UC-001 source records. |
 | 32 | client_user can see needed-from-client items without cancelled items. | Done | Reads UC-001 source records with visibility filtering. |
 | 33 | client_user can open source dashboard links if available. | Done | Source link buttons render from UC-002 links. |
 | 34 | client_user can open latest monthly report if available. | Done | Latest report link renders from UC-003 reports. |
-| 35 | stale or low-confidence data is visibly labeled. | Partial | Low/estimated confidence is visible. Automatic stale-data detection is deferred. |
+| 35 | stale or low-confidence data is visibly labeled. | Done | Low/estimated confidence is visible and dashboards older than the freshness threshold show a stale-data warning. |
 | 36 | Client Overview shows only a compact performance preview and link to the full dashboard. | Done | Overview block avoids full analytics. |
 | 37 | The dashboard avoids raw platform data as the default top-level experience. | Done | Page leads with summary, hero metric, KPIs, and narrative. |
 | 38 | The dashboard answers whether marketing is creating business value and what happens next. | Done | Supported by hero metric, KPIs, goals, insights, and next actions. |
@@ -161,11 +161,9 @@ Deferred items:
 Recommended before moving deeply into integrations:
 
 ```text
-1. Add a dedicated "What We Did" block that references UC-001 completed client-visible work.
-2. Add explicit stale-data warning logic based on last_updated_at.
-3. Add admin-side help link to the JSON contract document.
-4. Review responsive layout of campaign execution chart on narrow screens.
-5. Decide if archived periods should be a selector only or a richer archive list.
+1. Add admin-side help link to the JSON contract document.
+2. Review responsive layout of campaign execution chart on narrow screens.
+3. Decide if archived periods should be a selector only or a richer archive list.
 ```
 
 ## Delivery Summary

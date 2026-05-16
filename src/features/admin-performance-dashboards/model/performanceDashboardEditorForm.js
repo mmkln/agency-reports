@@ -377,6 +377,11 @@ export function periodToForm(period) {
         ...goal,
         id: goal.id || createUuid(),
       })),
+      agency_work: {
+        active: textItemsToForm(content.agency_work.active),
+        completed: textItemsToForm(content.agency_work.completed),
+        next: textItemsToForm(content.agency_work.next),
+      },
       insights: content.insights.map((insight) => ({
         ...insight,
         id: insight.id || createUuid(),
@@ -453,6 +458,11 @@ export function serializeForm(form) {
         ...form.content.hero_metric,
         delta_pct: numberOrNull(form.content.hero_metric.delta_pct),
         goal_pct: numberOrNull(form.content.hero_metric.goal_pct),
+      },
+      agency_work: {
+        active: compactTextItems(form.content.agency_work.active),
+        completed: compactTextItems(form.content.agency_work.completed),
+        next: compactTextItems(form.content.agency_work.next),
       },
       insights: form.content.insights.map((insight, index) => ({
         ...insight,

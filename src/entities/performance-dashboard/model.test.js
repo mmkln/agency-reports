@@ -256,6 +256,26 @@ describe('performance dashboard model', () => {
     })
   })
 
+  it('normalizes agency work summaries for manual what-we-did sections', () => {
+    const result = parsePerformanceDashboardJson(JSON.stringify(createValidPeriod({
+      content: {
+        ...createValidPeriod().content,
+        agency_work: {
+          active: ['Optimizing landing page conversion path', ' '],
+          completed: ['Launched Meta retargeting campaign'],
+          next: ['Prepare next creative testing batch'],
+        },
+      },
+    })))
+
+    expect(result.isValid).toBe(true)
+    expect(result.period.content.agency_work).toEqual({
+      active: ['Optimizing landing page conversion path'],
+      completed: ['Launched Meta retargeting campaign'],
+      next: ['Prepare next creative testing batch'],
+    })
+  })
+
   it('returns validation errors for invalid JSON imports', () => {
     const result = parsePerformanceDashboardJson('{bad json')
 

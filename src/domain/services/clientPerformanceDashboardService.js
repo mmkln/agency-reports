@@ -4,6 +4,7 @@ import {
   PERFORMANCE_DATA_MODE_META,
 } from '../../entities/performance-dashboard'
 import { REPORT_STATUS_META } from '../../entities/report'
+import { TASK_STATUSES, TASK_STATUS_META } from '../../entities/task'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
@@ -11,13 +12,52 @@ import {
   isNeededActionVisibleToClient,
   isPerformanceDashboardPeriodVisibleToClient,
   isReportVisibleToClient,
+  isTaskVisibleToClient,
+  isUpdateVisibleToClient,
 } from '../policies/visibilityPolicy'
+
+const STALE_DATA_THRESHOLD_DAYS = 14
 
 function sortByPeriodDesc(a, b) {
   return new Date(b.period_end).getTime() - new Date(a.period_end).getTime()
 }
 
-function mapPerformanceDashboardPeriod(period) {
+function sortByUpdatedDesc(a, b) {
+  return new Date(b.updated_at ?? b.created_at ?? 0).getTime()
+    - new Date(a.updated_at ?? a.created_at ?? 0).getTime()
+}
+
+function getStatusMeta(status, registry) {
+  return registry[status] ?? {
+    label: status,
+    tone: 'neutral',
+  }
+}
+
+function getDataFreshness(lastUpdatedAt, now) {
+  const updatedDate = new Date(lastUpdatedAt)
+
+  if (!lastUpdatedAt || Number.isNaN(updatedDate.getTime())) {
+    return {
+      ageDays: null,
+      isStale: true,
+      label: 'Update date unavailable',
+      thresholdDays: STALE_DATA_THRESHOLD_DAYS,
+    }
+  }
+
+  const ageMs = now.getTime() - updatedDate.getTime()
+  const ageDays = Math.max(0, Math.floor(ageMs / 86_400_000))
+
+  return {
+    ageDays,
+    isStale: ageDays > STALE_DATA_THRESHOLD_DAYS,
+    label: `${ageDays} day${ageDays === 1 ? '' : 's'} old`,
+    thresholdDays: STALE_DATA_THRESHOLD_DAYS,
+  }
+}
+
+function mapPerformanceDashboardPeriod(period, { now }) {
   return {
     accountManager: period.account_manager ?? '',
     agencyContact: period.agency_contact ?? '',
@@ -38,6 +78,7 @@ function mapPerformanceDashboardPeriod(period) {
     periodEnd: period.period_end,
     periodStart: period.period_start,
     publishedAt: period.published_at,
+    freshness: getDataFreshness(period.last_updated_at, now),
     sourceSummary: period.source_summary ?? '',
     status: period.status,
     statusMeta: PERFORMANCE_DASHBOARD_STATUS_META[period.status] ?? {
@@ -90,6 +131,52 @@ function mapNeededAction(action) {
   }
 }
 
+function mapWorkTask(task) {
+  return {
+    assigneeName: task.assignee_name ?? '',
+    dueDate: task.due_date ?? '',
+    id: task.id,
+    status: task.status,
+    statusMeta: getStatusMeta(task.status, TASK_STATUS_META),
+    title: task.title,
+    updatedAt: task.updated_at ?? task.created_at ?? '',
+  }
+}
+
+function mapClientVisibleUpdate(update) {
+  return {
+    body: update.body ?? '',
+    id: update.id,
+    title: update.title,
+    updatedAt: update.updated_at ?? update.created_at ?? '',
+  }
+}
+
+function createWorkSummary({ repositories, clientId }) {
+  const visibleTasks = (repositories.tasks?.listByClientId(clientId) ?? [])
+    .filter(isTaskVisibleToClient)
+    .sort(sortByUpdatedDesc)
+  const completedTasks = visibleTasks
+    .filter((task) => task.status === TASK_STATUSES.DONE)
+    .slice(0, 5)
+    .map(mapWorkTask)
+  const activeTasks = visibleTasks
+    .filter((task) => task.status !== TASK_STATUSES.DONE)
+    .slice(0, 5)
+    .map(mapWorkTask)
+  const recentUpdates = (repositories.updates?.listByClientId(clientId) ?? [])
+    .filter(isUpdateVisibleToClient)
+    .sort(sortByUpdatedDesc)
+    .slice(0, 3)
+    .map(mapClientVisibleUpdate)
+
+  return {
+    activeTasks,
+    completedTasks,
+    recentUpdates,
+  }
+}
+
 function canAccessDashboardClient({ client, clientId, viewer }) {
   if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
     return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
@@ -112,6 +199,7 @@ export function getClientPerformanceDashboardPage({
   periodId,
   repositories,
   viewer,
+  now = () => new Date(),
 }) {
   const client = repositories.clients.findById(clientId)
 
@@ -142,6 +230,7 @@ export function getClientPerformanceDashboardPage({
     .listByClientId(clientId)
     .filter(isNeededActionVisibleToClient)
     .map(mapNeededAction)
+  const resolvedNow = now()
 
   return {
     client: {
@@ -152,11 +241,12 @@ export function getClientPerformanceDashboardPage({
     },
     latestReport: latestReport ? mapReport(latestReport) : null,
     neededFromClient,
-    performanceDashboard: selectedPeriod ? mapPerformanceDashboardPeriod(selectedPeriod) : null,
-    periods: periods.map(mapPerformanceDashboardPeriod),
+    performanceDashboard: selectedPeriod ? mapPerformanceDashboardPeriod(selectedPeriod, { now: resolvedNow }) : null,
+    periods: periods.map((period) => mapPerformanceDashboardPeriod(period, { now: resolvedNow })),
     reason: periodId && !selectedPeriod ? 'performance_dashboard_not_found' : null,
     sourceLinks,
     status: 'ready',
+    workSummary: createWorkSummary({ clientId, repositories }),
   }
 }
 

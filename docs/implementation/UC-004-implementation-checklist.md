@@ -348,7 +348,7 @@ It should reference or aggregate:
 - [x] Build channel breakdown section.
 - [x] Build service-specific sections.
 - [x] Build insights / what changed section.
-- [ ] Build what we did section.
+- [x] Build what we did section.
 - [x] Build next actions / recommendations section.
 - [x] Build needed-from-client section using UC-001 source records.
 - [x] Build source links section using UC-002 dashboard links.
@@ -430,7 +430,7 @@ It should reference or aggregate:
 - [x] client_user cannot view another client's dashboard.
 - [x] no published dashboard shows fallback.
 - [x] low confidence state is visible.
-- [ ] stale data state is visible.
+- [x] stale data state is visible.
 - [x] client overview shows compact performance preview.
 
 ### Build Checks

@@ -84,6 +84,18 @@ function createPerformanceSummaryExampleJson(clientId) {
           summary: 'Search campaigns produced the strongest lead quality.',
         },
       ],
+      agency_work: {
+        completed: [
+          'Launched new search campaign structure.',
+          'Reviewed CRM lead quality with the client team.',
+        ],
+        active: [
+          'Monitoring Meta lead quality and filtering rules.',
+        ],
+        next: [
+          'Prepare the next landing page test brief.',
+        ],
+      },
       insights: [
         {
           id: 'search-quality',
@@ -193,6 +205,18 @@ function createCampaignExecutionExampleJson(clientId) {
           'Business days only. Dates are illustrative and assume a Monday June 1, 2026 start.',
           'Volumes are realistic planning estimates after approximately 5% touch attrition.'
         ]
+      },
+      agency_work: {
+        completed: [
+          'Segmented eligible reactivation audience.',
+          'Built staged SMS, email, and manager-call outreach plan.',
+        ],
+        active: [
+          'Preparing pilot launch checklist and front desk call handling notes.',
+        ],
+        next: [
+          'Launch pilot track and review first-week response quality.',
+        ],
       },
       insights: [
         {

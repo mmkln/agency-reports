@@ -96,6 +96,13 @@ test('agency admin creates a draft performance dashboard and enters structured d
   await page.getByRole('button', { name: 'Add Action' }).first().click()
   await page.getByLabel('Service next actions').fill('Scale exact-match campaigns gradually.')
 
+  await page.getByRole('button', { name: 'Add Completed' }).click()
+  await page.getByLabel('Completed this period').fill('Completed tracking QA and campaign naming cleanup.')
+  await page.getByRole('button', { name: 'Add Active' }).click()
+  await page.getByLabel('Active now').fill('Monitoring qualified lead quality with the client team.')
+  await page.getByRole('button', { name: 'Add Planned' }).click()
+  await page.getByLabel('Planned next').fill('Prepare next landing page test brief.')
+
   await page.getByRole('button', { name: 'Add Table' }).click()
   await page.getByLabel('Appendix table title').fill('Top Campaigns')
   await page.getByRole('button', { name: 'Add Column' }).click()
@@ -121,6 +128,9 @@ test('agency admin creates a draft performance dashboard and enters structured d
   expect(savedPeriod.content.service_sections[0].metrics).toEqual({ qualified_leads: 24 })
   expect(savedPeriod.content.service_sections[0].insights).toEqual(['Google Ads lead quality improved.'])
   expect(savedPeriod.content.service_sections[0].next_actions).toEqual(['Scale exact-match campaigns gradually.'])
+  expect(savedPeriod.content.agency_work.completed).toEqual(['Completed tracking QA and campaign naming cleanup.'])
+  expect(savedPeriod.content.agency_work.active).toEqual(['Monitoring qualified lead quality with the client team.'])
+  expect(savedPeriod.content.agency_work.next).toEqual(['Prepare next landing page test brief.'])
   expect(savedPeriod.content.appendix_tables[0].columns).toEqual(['Campaign'])
   expect(savedPeriod.content.appendix_tables[0].rows).toEqual([['Implants Search']])
   expect(savedPeriod.status).toBe('draft')
@@ -145,6 +155,9 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByText('Last updated').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'What Changed' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Next Actions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What We Did' })).toBeVisible()
+  await expect(page.getByText('Weekly progress update')).toBeVisible()
+  await expect(page.getByText('Connect GA4 conversion event')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
   await expect(page.getByText('Projected bookings', { exact: true })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Campaign touchpoints and cumulative bookings' })).toBeVisible()
@@ -152,6 +165,7 @@ test('client can view published performance dashboard but cannot view draft or a
   await page.getByLabel('Dashboard period').selectOption(SEED_IDS.PERFORMANCE_GREEN_ARCHIVED_MARCH)
   await expect(page).toHaveURL(new RegExp(`performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_ARCHIVED_MARCH}`))
   await expect(page.getByRole('heading', { name: 'March 2026 Performance Dashboard' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data may be stale' })).toBeVisible()
 
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
   await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
@@ -173,6 +187,28 @@ test('invalid performance dashboard JSON stays in the import modal with validati
 
   await expect(page.getByText('Import blocked')).toBeVisible()
   await expect(page.locator('li').filter({ hasText: 'Dashboard JSON is not valid JSON' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+})
+
+test('performance dashboard JSON with missing required fields stays in the import modal', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto('/admin/performance-dashboards')
+  await page.getByRole('link', { name: 'Import JSON' }).click()
+
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+  await page.getByLabel('Dashboard JSON *').fill(JSON.stringify({
+    content: {
+      executive_summary: {},
+      hero_metric: {},
+    },
+    title: 'Incomplete Dashboard',
+  }, null, 2))
+  await page.getByRole('button', { name: 'Import as draft' }).click()
+
+  await expect(page.getByText('Import blocked')).toBeVisible()
+  await expect(page.locator('li').filter({ hasText: 'period_start is required before publishing.' })).toBeVisible()
+  await expect(page.locator('li').filter({ hasText: 'content.executive_summary.narrative is required before publishing.' })).toBeVisible()
+  await expect(page.locator('li').filter({ hasText: 'At least one KPI card is required before publishing.' })).toBeVisible()
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
 })
 

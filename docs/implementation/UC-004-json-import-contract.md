@@ -92,12 +92,49 @@ Import behavior:
     "funnel": {},
     "channel_breakdown": [],
     "service_sections": [],
+    "agency_work": {
+      "completed": [],
+      "active": [],
+      "next": []
+    },
     "insights": [],
     "next_steps": [],
     "appendix_tables": [],
     "campaign_execution": {}
   }
 }
+```
+
+## Agency Work Shape
+
+Use `content.agency_work` when the dashboard needs period-specific manual "what we did" notes.
+
+The client performance page also reads client-visible tasks and updates from UC-001 source records. `agency_work` is for concise dashboard-period context that should live with the analytics period.
+
+```json
+{
+  "agency_work": {
+    "completed": [
+      "Launched Meta retargeting campaign",
+      "Connected CRM conversion event baseline"
+    ],
+    "active": [
+      "Optimizing landing page conversion path"
+    ],
+    "next": [
+      "Prepare next creative testing batch"
+    ]
+  }
+}
+```
+
+Rules:
+
+```text
+- keep each item short and client-facing
+- do not include internal notes
+- do not duplicate long task descriptions from UC-001
+- use this only when a dashboard-period snapshot is useful
 ```
 
 ## Campaign Execution Shape

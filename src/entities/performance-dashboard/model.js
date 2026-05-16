@@ -307,6 +307,11 @@ function createEmptyContent() {
       unit: '',
       value: '',
     },
+    agency_work: {
+      active: [],
+      completed: [],
+      next: [],
+    },
     insights: [],
     kpi_cards: [],
     next_steps: [],
@@ -458,6 +463,16 @@ function normalizeServiceSection(value = {}) {
   })
 }
 
+function normalizeAgencyWork(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return {
+    active: normalizeArray(source.active).map((item) => normalizeString(item)).filter(Boolean),
+    completed: normalizeArray(source.completed).map((item) => normalizeString(item)).filter(Boolean),
+    next: normalizeArray(source.next).map((item) => normalizeString(item)).filter(Boolean),
+  }
+}
+
 function normalizeInsight(value = {}) {
   const source = isPlainObject(value) ? value : {}
 
@@ -576,6 +591,7 @@ export function createEmptyPerformanceDashboardContent(overrides = {}) {
     funnel: normalizeFunnel(source.funnel),
     goals: normalizeArray(source.goals).map(normalizeGoal),
     hero_metric: normalizeMetric(source.hero_metric),
+    agency_work: normalizeAgencyWork(source.agency_work),
     insights: normalizeArray(source.insights).map(normalizeInsight),
     kpi_cards: normalizeArray(source.kpi_cards).map(normalizeMetric),
     next_steps: normalizeArray(source.next_steps).map(normalizeNextStep),
