@@ -71,6 +71,36 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
+function formatLooseValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return '—'
+  }
+
+  return typeof value === 'number' ? new Intl.NumberFormat('en').format(value) : String(value)
+}
+
+function formatMetricValue(metric) {
+  if (!metric) {
+    return '—'
+  }
+
+  const value = formatLooseValue(metric.value)
+
+  if (metric.unit === 'currency') {
+    return `$${value}`
+  }
+
+  if (metric.unit === 'percent') {
+    return `${value}%`
+  }
+
+  if (metric.unit) {
+    return `${value} ${metric.unit}`
+  }
+
+  return value
+}
+
 export function AccessDeniedState() {
   return (
     <div className="flex min-h-[520px] items-center justify-center px-4 py-14">
@@ -394,6 +424,70 @@ export function ActiveTasksBlock({ tasks }) {
         </Table>
       ) : (
         <EmptyState>No active client-visible tasks right now.</EmptyState>
+      )}
+    </SectionCard>
+  )
+}
+
+export function PerformanceOverviewBlock({ clientId, hrefBase = '/client/performance', preview }) {
+  const heroMetric = preview?.heroMetric
+  const kpiCards = preview?.kpiCards ?? []
+  const showConfidenceWarning = preview?.dataConfidence === 'low' || preview?.dataConfidence === 'estimated'
+
+  return (
+    <SectionCard
+      description="Business-value analytics published by the agency."
+      iconName="barChart"
+      title="Performance snapshot"
+    >
+      {preview ? (
+        <div className="grid gap-4">
+          <div className="rounded-control border border-control-border bg-block-subtle p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-text-muted">Hero metric</p>
+                <h3 className="mt-2 text-2xl font-semibold leading-8 text-text-primary">
+                  {formatMetricValue(heroMetric)}
+                </h3>
+                <p className="mt-1 text-sm text-text-secondary">{heroMetric?.label || preview.title}</p>
+              </div>
+              <StatusBadge meta={preview.dataConfidenceMeta} />
+            </div>
+            <p className="mt-3 text-xs text-text-muted">
+              Last updated {formatDate(preview.lastUpdatedAt)}
+            </p>
+          </div>
+
+          {kpiCards.length > 0 ? (
+            <div className="grid gap-2">
+              {kpiCards.map((metric) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-control border border-control-border bg-block px-3 py-2"
+                  key={metric.id || metric.name}
+                >
+                  <span className="truncate text-sm text-text-secondary">{metric.name}</span>
+                  <span className="shrink-0 text-sm font-semibold text-text-primary">{formatMetricValue(metric)}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {showConfidenceWarning ? (
+            <p className="rounded-control border border-warning/20 bg-warning-muted px-3 py-2 text-sm leading-6 text-warning-foreground">
+              Review this period with context. The agency marked this dashboard as {preview.dataConfidenceMeta?.label?.toLowerCase()}.
+            </p>
+          ) : null}
+
+          <Button asChild className="w-full" size="lg">
+            <Link to={`${hrefBase}?clientId=${clientId}&performancePeriodId=${preview.id}`}>
+              View Performance Dashboard
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <EmptyState iconName="barChart">
+          Performance dashboard is being prepared. Published analytics will appear here after agency review.
+        </EmptyState>
       )}
     </SectionCard>
   )

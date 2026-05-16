@@ -4,6 +4,7 @@ import { NEEDED_ACTION_STATUS_META } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META } from '../../entities/task'
 import { canAccessClient } from '../policies/accessPolicy'
+import { getClientPerformanceOverviewPreview } from './clientPerformanceDashboardService'
 import {
   isActiveClientTask,
   isDashboardVisibleToClient,
@@ -120,6 +121,20 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
   }
 }
 
+function getPerformancePreview({ clientId, repositories, viewer }) {
+  if (!repositories.performanceDashboardPeriods) {
+    return null
+  }
+
+  const preview = getClientPerformanceOverviewPreview({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  return preview.status === 'ready' ? preview.performanceDashboard : null
+}
+
 export function getClientOverview({ clientId, repositories, source = 'published', viewer }) {
   const client = repositories.clients.findById(clientId)
 
@@ -181,6 +196,11 @@ export function getClientOverview({ clientId, repositories, source = 'published'
   const latestReport = collections.reports
     .filter(isReportVisibleToClient)
     .sort((a, b) => sortByDateDesc(a, b, 'period_end'))[0] ?? null
+  const performancePreview = getPerformancePreview({
+    clientId,
+    repositories,
+    viewer,
+  })
   const currentFocus = collections.currentFocus
   const isEmpty = currentFocus.length === 0
     && projects.length === 0
@@ -189,6 +209,7 @@ export function getClientOverview({ clientId, repositories, source = 'published'
     && neededActions.length === 0
     && !dashboard
     && !latestReport
+    && !performancePreview
 
   return {
     activeTasks,
@@ -237,6 +258,7 @@ export function getClientOverview({ clientId, repositories, source = 'published'
         }
       : null,
     neededActions,
+    performancePreview,
     progressSummary: projects,
     status: 'ready',
   }

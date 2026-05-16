@@ -341,31 +341,31 @@ It should reference or aggregate:
 - [x] Build hero metric block.
 - [x] Build primary KPI cards.
 - [x] Build goals vs actual section.
-- [ ] Build primary trend chart.
+- [x] Build primary trend chart.
 - [x] Build funnel view.
 - [x] Build channel breakdown section.
-- [ ] Build service-specific sections.
+- [x] Build service-specific sections.
 - [x] Build insights / what changed section.
 - [ ] Build what we did section.
 - [x] Build next actions / recommendations section.
 - [x] Build needed-from-client section using UC-001 source records.
 - [x] Build source links section using UC-002 dashboard links.
 - [x] Build latest monthly report section using UC-003 reports.
-- [ ] Build appendix / drill-down section.
+- [x] Build appendix / drill-down section.
 - [x] Ensure summary appears before details.
 - [x] Ensure vanity/secondary metrics do not dominate the top-level view.
 - [x] Ensure data freshness/confidence is visible.
 - [x] Ensure draft/ready periods cannot be loaded by client.
-- [ ] Add tests for client dashboard read behavior.
+- [x] Add tests for client dashboard read behavior.
 
 ### Completion Criteria
 
-- [ ] Client sees published dashboard only.
-- [ ] Client cannot see other client dashboards.
-- [ ] Dashboard starts with summary and outcomes.
-- [ ] Data trust labels are visible.
-- [ ] Insights and next actions are visible.
-- [ ] Source links and report links are present when available.
+- [x] Client sees published dashboard only.
+- [x] Client cannot see other client dashboards.
+- [x] Dashboard starts with summary and outcomes.
+- [x] Data trust labels are visible.
+- [x] Insights and next actions are visible.
+- [x] Source links and report links are present when available.
 
 ## Stage 6 - Client Overview Integration
 
@@ -375,26 +375,26 @@ It should reference or aggregate:
 
 ### Tasks
 
-- [ ] Add performance preview read model.
-- [ ] Add compact performance preview block to Client Overview.
-- [ ] Include only:
-  - [ ] performance status or data confidence
-  - [ ] hero metric
-  - [ ] 2-3 primary KPIs if appropriate
-  - [ ] last updated timestamp
-  - [ ] View Performance Dashboard action
-- [ ] Do not include full trend/funnel/channel breakdown in overview.
-- [ ] Add empty state:
-  - [ ] Performance dashboard is being prepared.
-- [ ] Add stale/low-confidence compact warning if needed.
-- [ ] Add tests for overview preview visibility.
+- [x] Add performance preview read model.
+- [x] Add compact performance preview block to Client Overview.
+- [x] Include only:
+  - [x] performance status or data confidence
+  - [x] hero metric
+  - [x] 2-3 primary KPIs if appropriate
+  - [x] last updated timestamp
+  - [x] View Performance Dashboard action
+- [x] Do not include full trend/funnel/channel breakdown in overview.
+- [x] Add empty state:
+  - [x] Performance dashboard is being prepared.
+- [x] Add stale/low-confidence compact warning if needed.
+- [x] Add tests for overview preview visibility.
 
 ### Completion Criteria
 
-- [ ] Overview links to performance dashboard.
-- [ ] Overview does not duplicate the full analytics page.
-- [ ] Empty state is clear.
-- [ ] Client still gets UC-001 status hub value immediately.
+- [x] Overview links to performance dashboard.
+- [x] Overview does not duplicate the full analytics page.
+- [x] Empty state is clear.
+- [x] Client still gets UC-001 status hub value immediately.
 
 ## Stage 7 - QA And Acceptance
 
@@ -404,40 +404,40 @@ It should reference or aggregate:
 
 ### Unit And Service Tests
 
-- [ ] Entity validation tests.
-- [ ] JSON import validation tests.
-- [ ] Publish validation tests.
-- [ ] Admin service tests.
-- [ ] Client read service tests.
-- [ ] Visibility policy tests.
+- [x] Entity validation tests.
+- [x] JSON import validation tests.
+- [x] Publish validation tests.
+- [x] Admin service tests.
+- [x] Client read service tests.
+- [x] Visibility policy tests.
 - [ ] Repository persistence tests.
-- [ ] Client overview preview read model tests.
+- [x] Client overview preview read model tests.
 
 ### E2E Tests
 
-- [ ] agency_admin can create dashboard period.
-- [ ] agency_admin can save draft.
-- [ ] agency_admin can import valid JSON.
+- [x] agency_admin can create dashboard period.
+- [x] agency_admin can save draft.
+- [x] agency_admin can import valid JSON.
 - [ ] invalid JSON shows validation errors.
-- [ ] JSON import does not publish automatically.
+- [x] JSON import does not publish automatically.
 - [ ] agency_admin can preview as client.
-- [ ] agency_admin can publish.
-- [ ] client_user can view published dashboard.
-- [ ] client_user cannot view draft dashboard.
-- [ ] client_user cannot view another client's dashboard.
+- [x] agency_admin can publish.
+- [x] client_user can view published dashboard.
+- [x] client_user cannot view draft dashboard.
+- [x] client_user cannot view another client's dashboard.
 - [ ] no published dashboard shows fallback.
 - [ ] low confidence / stale data state is visible.
-- [ ] client overview shows compact performance preview.
+- [x] client overview shows compact performance preview.
 
 ### Build Checks
 
-- [ ] `npm run lint`
-- [ ] `npm test -- --run`
-- [ ] UC-004 e2e spec passes.
+- [x] `npm run lint`
+- [x] `npm test -- --run`
+- [x] UC-004 e2e spec passes.
 - [ ] Existing UC-001 e2e spec still passes.
 - [ ] Existing UC-002 e2e spec still passes.
 - [ ] Existing UC-003 e2e spec still passes.
-- [ ] `npm run build`
+- [x] `npm run build`
 
 ### Acceptance Report
 

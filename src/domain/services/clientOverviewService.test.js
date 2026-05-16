@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
+import {
+  PERFORMANCE_DASHBOARD_STATUSES,
+  PERFORMANCE_DATA_CONFIDENCE,
+  PERFORMANCE_DATA_MODES,
+} from '../../entities/performance-dashboard'
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { TASK_STATUSES } from '../../entities/task'
@@ -18,6 +23,8 @@ const IDS = Object.freeze({
   DASHBOARD_UNAVAILABLE: '66666666-6666-4666-8666-666666666666',
   PROJECT_A: '77777777-7777-4777-8777-777777777777',
   PROJECT_B: '88888888-8888-4888-8888-888888888888',
+  PERFORMANCE_DRAFT: '456e4567-e89b-42d3-a456-426614174100',
+  PERFORMANCE_PUBLISHED: '456e4567-e89b-42d3-a456-426614174101',
   REPORT_DRAFT: '99999999-9999-4999-8999-999999999999',
   REPORT_OLD: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   REPORT_PUBLISHED: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
@@ -125,6 +132,86 @@ function createRepositories(overrides = {}) {
         status: 'in_progress',
       },
     ],
+    performanceDashboardPeriods: [
+      {
+        account_manager: 'Sarah Johnson',
+        attribution_note: 'Manual demo attribution.',
+        client_id: IDS.CLIENT_A,
+        content: {
+          executive_summary: {
+            narrative: 'Performance improved this month.',
+          },
+          hero_metric: {
+            label: 'Qualified Leads',
+            unit: 'number',
+            value: 81,
+          },
+          insights: [
+            {
+              body: 'Search lead quality improved.',
+              severity: 'positive',
+              title: 'Lead quality improved',
+            },
+          ],
+          kpi_cards: [
+            {
+              name: 'Pipeline',
+              unit: 'currency',
+              value: 124000,
+            },
+            {
+              name: 'CPL',
+              unit: 'currency',
+              value: 48,
+            },
+            {
+              name: 'Conversion Rate',
+              unit: 'percent',
+              value: 12,
+            },
+            {
+              name: 'Spend',
+              unit: 'currency',
+              value: 3900,
+            },
+          ],
+          next_steps: [
+            {
+              title: 'Scale search campaigns',
+            },
+          ],
+        },
+        data_confidence: PERFORMANCE_DATA_CONFIDENCE.HIGH,
+        data_mode: PERFORMANCE_DATA_MODES.MANUAL,
+        id: IDS.PERFORMANCE_PUBLISHED,
+        last_updated_at: '2026-05-08T10:00:00.000Z',
+        period_end: '2026-04-30',
+        period_start: '2026-04-01',
+        published_at: '2026-05-08T10:00:00.000Z',
+        status: PERFORMANCE_DASHBOARD_STATUSES.PUBLISHED,
+        title: 'April Performance',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        content: {
+          executive_summary: {
+            narrative: 'Draft performance must stay hidden.',
+          },
+          hero_metric: {
+            label: 'Draft Leads',
+            value: 999,
+          },
+        },
+        data_confidence: PERFORMANCE_DATA_CONFIDENCE.MEDIUM,
+        data_mode: PERFORMANCE_DATA_MODES.MANUAL,
+        id: IDS.PERFORMANCE_DRAFT,
+        last_updated_at: '2026-06-01T10:00:00.000Z',
+        period_end: '2026-05-31',
+        period_start: '2026-05-01',
+        status: PERFORMANCE_DASHBOARD_STATUSES.DRAFT,
+        title: 'May Draft Performance',
+      },
+    ],
     reports: [
       {
         client_id: IDS.CLIENT_A,
@@ -221,6 +308,7 @@ function createRepositories(overrides = {}) {
     clients: createEntityRepository(data.clients),
     dashboardLinks: createEntityRepository(data.dashboardLinks),
     neededFromClient: createEntityRepository(data.neededFromClient),
+    performanceDashboardPeriods: createEntityRepository(data.performanceDashboardPeriods),
     projects: createEntityRepository(data.projects),
     reports: createEntityRepository(data.reports),
     tasks: createEntityRepository(data.tasks),
@@ -261,6 +349,11 @@ describe('getClientOverview', () => {
     expect(overview.dashboard.name).toBe('Active Dashboard')
     expect(overview.isEmpty).toBe(false)
     expect(overview.latestReport.title).toBe('April Summary')
+    expect(overview.performancePreview.heroMetric).toMatchObject({
+      label: 'Qualified Leads',
+      value: 81,
+    })
+    expect(overview.performancePreview.kpiCards).toHaveLength(3)
   })
 
   it('denies access when a client user requests another client overview', () => {
@@ -301,6 +394,7 @@ describe('getClientOverview', () => {
     expect(serializedOverview).not.toContain('Internal update')
     expect(serializedOverview).not.toContain('Draft Dashboard')
     expect(serializedOverview).not.toContain('May Draft Summary')
+    expect(serializedOverview).not.toContain('May Draft Performance')
   })
 
   it('returns empty-state-safe values when optional overview records are missing', () => {
@@ -309,6 +403,7 @@ describe('getClientOverview', () => {
       repositories: createRepositories({
         dashboardLinks: [],
         neededFromClient: [],
+        performanceDashboardPeriods: [],
         projects: [],
         reports: [],
         tasks: [],

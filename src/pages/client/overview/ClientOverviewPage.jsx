@@ -18,6 +18,7 @@ import {
   LatestUpdateBlock,
   LoadingOverviewState,
   NeededFromClientBlock,
+  PerformanceOverviewBlock,
   ProgressSummaryBlock,
 } from '../../../widgets/client-overview'
 
@@ -49,6 +50,9 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
   const dashboardHrefBase = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN
     ? '/admin/client-dashboard-preview'
     : '/client/dashboard'
+  const performanceHrefBase = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN
+    ? '/admin/client-performance-preview'
+    : '/client/performance'
   const overviewResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientOverview({
@@ -128,6 +132,11 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
           </div>
           <aside className="grid gap-6">
             <ProgressSummaryBlock projects={overview.progressSummary} />
+            <PerformanceOverviewBlock
+              clientId={overview.client.id}
+              hrefBase={performanceHrefBase}
+              preview={overview.performancePreview}
+            />
             <DashboardOverviewBlock
               clientId={overview.client.id}
               dashboard={overview.dashboard}

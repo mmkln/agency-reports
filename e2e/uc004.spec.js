@@ -128,6 +128,12 @@ test('agency admin creates a draft performance dashboard and enters structured d
 
 test('client can view published performance dashboard but cannot view draft or another client dashboard', async ({ page }) => {
   await signInAsClient(page)
+  await expect(page.getByText('Performance snapshot')).toBeVisible()
+  await expect(page.getByText('Qualified Leads').first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View Performance Dashboard' })).toHaveAttribute(
+    'href',
+    new RegExp(`/client/performance\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`),
+  )
 
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'April 2026 Performance Dashboard' }).first()).toBeVisible()
@@ -146,4 +152,44 @@ test('client can view published performance dashboard but cannot view draft or a
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
+})
+
+test('agency admin imports campaign execution JSON and publishes it for the client', async ({ page }) => {
+  const campaignTitle = 'June 2026 Patient Reactivation Campaign'
+
+  await signInAsAdmin(page)
+  await page.goto('/admin/performance-dashboards')
+  await page.getByRole('link', { name: 'Import JSON' }).click()
+
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+  await page.getByLabel('Example payload').click()
+  await page.getByRole('option', { name: 'Campaign execution' }).click()
+  await page.getByRole('button', { name: 'Use example' }).click()
+  await expect(page.getByLabel('Dashboard JSON *')).toContainText('campaign_execution')
+  await Promise.all([
+    page.waitForURL(/\/admin\/performance-dashboard-editor/),
+    page.getByRole('button', { name: 'Import as draft' }).click(),
+  ])
+  await expect(page.getByRole('heading', { name: campaignTitle })).toBeVisible()
+  await page.getByRole('button', { name: 'Publish' }).click()
+  await expect(page.getByText('Performance dashboard published', { exact: true }).first()).toBeVisible()
+
+  const importedPeriod = await page.evaluate(({ portalKey, title }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    return portalData.performance_dashboard_periods.find((period) => period.title === title)
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    title: campaignTitle,
+  })
+
+  expect(importedPeriod.status).toBe('published')
+  expect(importedPeriod.content.campaign_execution.activity_series.length).toBeGreaterThan(0)
+
+  await signInAsClient(page)
+  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${importedPeriod.id}`)
+  await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
+  await expect(page.getByText('SMS sent')).toBeVisible()
+  await expect(page.getByText('Track B - core reactivation (wk 5-13)')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Campaign touchpoints and cumulative bookings' })).toBeVisible()
 })

@@ -7,5 +7,6 @@ export {
   LatestUpdateBlock,
   LoadingOverviewState,
   NeededFromClientBlock,
+  PerformanceOverviewBlock,
   ProgressSummaryBlock,
 } from './ClientOverviewBlocks'
