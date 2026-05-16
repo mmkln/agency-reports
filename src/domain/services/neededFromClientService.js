@@ -1,8 +1,18 @@
-import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
+import {
+  NEEDED_ACTION_PRIORITIES,
+  NEEDED_ACTION_STATUSES,
+  normalizeNeededAction,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import {
+  canAgencyProcessNeededAction,
+  canClientRespondToNeededAction,
+} from '../policies/neededActionPolicy'
 
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
+const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function requireText(value, fieldName) {
   const normalizedValue = String(value ?? '').trim()
@@ -58,6 +68,16 @@ function assertUuidGenerator(idGenerator) {
   if (!idGenerator) {
     throw new Error('idGenerator is required.')
   }
+}
+
+function createNeededActionId(idGenerator) {
+  const id = idGenerator()
+
+  if (!UUID_PATTERN.test(id)) {
+    throw new Error('Needed action id must be a string uuid.')
+  }
+
+  return id
 }
 
 function normalizeText(value = '') {
@@ -121,24 +141,47 @@ function getNeededActionStatusMeta(status) {
   return VALID_NEEDED_ACTION_STATUSES.has(status) ? status : NEEDED_ACTION_STATUSES.PENDING
 }
 
-function mapNeededAction({ action, client }) {
+function normalizePriority(priority) {
+  return VALID_NEEDED_ACTION_PRIORITIES.has(priority) ? priority : NEEDED_ACTION_PRIORITIES.MEDIUM
+}
+
+function normalizeEditableActionFields(input = {}) {
   return {
-    cancellationNote: action.cancellation_note ?? '',
-    cancelledAt: action.cancelled_at ?? null,
-    clientId: action.client_id,
+    description: normalizeText(input.description),
+    due_date: normalizeOptionalDate(input.dueDate, 'Request due date'),
+    internal_notes: normalizeText(input.internalNotes),
+    owner_name: normalizeText(input.ownerName),
+    priority: normalizePriority(input.priority),
+    related_link: normalizeOptionalUrl(input.relatedLink, 'Request related link'),
+    title: requireText(input.title, 'Request title'),
+  }
+}
+
+function mapNeededAction({ action, client }) {
+  const normalizedAction = normalizeNeededAction(action)
+
+  return {
+    cancellationNote: normalizedAction.cancellation_note ?? '',
+    cancelledAt: normalizedAction.cancelled_at,
+    clientId: normalizedAction.client_id,
     clientName: client?.name ?? 'Unknown client',
-    clientResponse: action.client_response ?? '',
-    description: action.description ?? '',
-    dueDate: action.due_date ?? '',
-    id: action.id,
-    relatedLink: action.related_link ?? '',
-    respondedAt: action.responded_at ?? null,
-    resolutionNote: action.resolution_note ?? '',
-    resolvedAt: action.resolved_at ?? null,
-    responseHistory: Array.isArray(action.response_history) ? action.response_history : [],
-    status: getNeededActionStatusMeta(action.status),
-    title: action.title,
-    updatedAt: action.updated_at ?? action.created_at ?? null,
+    clientResponse: normalizedAction.client_response,
+    description: normalizedAction.description,
+    dueDate: normalizedAction.due_date,
+    id: normalizedAction.id,
+    internalNotes: normalizedAction.internal_notes,
+    ownerName: normalizedAction.owner_name,
+    priority: normalizedAction.priority,
+    relatedLink: normalizedAction.related_link,
+    respondedAt: normalizedAction.client_responded_at,
+    respondedBy: normalizedAction.client_responded_by,
+    resolutionNote: normalizedAction.resolution_note ?? '',
+    resolvedAt: normalizedAction.resolved_at,
+    resolvedBy: normalizedAction.resolved_by,
+    responseHistory: normalizedAction.response_history,
+    status: getNeededActionStatusMeta(normalizedAction.status),
+    title: normalizedAction.title,
+    updatedAt: normalizedAction.updated_at,
   }
 }
 
@@ -208,22 +251,59 @@ export function createNeededAction({
   }
 
   const timestamp = now()
+  const actionId = createNeededActionId(idGenerator)
   const action = {
     client_id: client.id,
     created_at: timestamp,
-    description: normalizeText(input.description),
-    due_date: normalizeOptionalDate(input.dueDate, 'Request due date'),
-    id: idGenerator(),
-    related_link: normalizeOptionalUrl(input.relatedLink, 'Request related link'),
+    id: actionId,
+    ...normalizeEditableActionFields({
+      ...input,
+      title,
+    }),
     response_history: [],
     status: NEEDED_ACTION_STATUSES.PENDING,
-    title,
     updated_at: timestamp,
   }
 
   repositories.neededFromClient.upsert(action)
 
   return action
+}
+
+export function updateNeededAction({
+  actionId,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const action = getAction({ actionId, repositories, viewer })
+  getAdminClient({
+    clientId: action.client_id,
+    repositories,
+    viewer,
+  })
+
+  const timestamp = now()
+  const updatedAction = {
+    ...action,
+    ...normalizeEditableActionFields(input),
+    response_history: appendHistory(action, createHistoryEvent({
+      metadata: {
+        fields: ['title', 'description', 'due_date', 'related_link', 'priority', 'owner_name', 'internal_notes'],
+      },
+      now,
+      type: 'admin_updated',
+      viewer,
+    })),
+    updated_at: timestamp,
+  }
+
+  repositories.neededFromClient.upsert(updatedAction)
+
+  return updatedAction
 }
 
 export function answerNeededAction({
@@ -239,7 +319,7 @@ export function answerNeededAction({
     throw new Error('Only client users can respond to needed actions.')
   }
 
-  if (action.status !== NEEDED_ACTION_STATUSES.PENDING) {
+  if (!canClientRespondToNeededAction({ action, viewer })) {
     throw new Error('Only pending actions can be answered.')
   }
 
@@ -248,6 +328,8 @@ export function answerNeededAction({
   const updatedAction = {
     ...action,
     client_response: clientResponse,
+    client_responded_at: timestamp,
+    client_responded_by: viewer.userId,
     response_history: appendHistory(action, createHistoryEvent({
       metadata: {
         response: clientResponse,
@@ -278,7 +360,11 @@ export function resolveNeededAction({
 
   const action = getAction({ actionId, repositories, viewer })
 
-  if (![NEEDED_ACTION_STATUSES.ANSWERED, NEEDED_ACTION_STATUSES.PENDING].includes(action.status)) {
+  if (!canAgencyProcessNeededAction({
+    action,
+    targetStatus: NEEDED_ACTION_STATUSES.RESOLVED,
+    viewer,
+  })) {
     throw new Error('Only pending or answered actions can be resolved.')
   }
 
@@ -316,7 +402,11 @@ export function cancelNeededAction({
 
   const action = getAction({ actionId, repositories, viewer })
 
-  if (action.status === NEEDED_ACTION_STATUSES.CANCELLED) {
+  if (!canAgencyProcessNeededAction({
+    action,
+    targetStatus: NEEDED_ACTION_STATUSES.CANCELLED,
+    viewer,
+  })) {
     throw new Error('Action is already cancelled.')
   }
 
@@ -335,6 +425,51 @@ export function cancelNeededAction({
       viewer,
     })),
     status: NEEDED_ACTION_STATUSES.CANCELLED,
+    updated_at: timestamp,
+  }
+
+  repositories.neededFromClient.upsert(updatedAction)
+
+  return updatedAction
+}
+
+export function reopenNeededAction({
+  actionId,
+  note = '',
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const action = getAction({ actionId, repositories, viewer })
+
+  if (!canAgencyProcessNeededAction({
+    action,
+    targetStatus: NEEDED_ACTION_STATUSES.PENDING,
+    viewer,
+  })) {
+    throw new Error('Only answered, resolved, or cancelled actions can be reopened.')
+  }
+
+  const timestamp = now()
+  const updatedAction = {
+    ...action,
+    cancelled_at: null,
+    cancelled_by: null,
+    cancellation_note: '',
+    resolved_at: null,
+    resolved_by: null,
+    resolution_note: '',
+    response_history: appendHistory(action, createHistoryEvent({
+      metadata: {
+        note: String(note ?? '').trim(),
+      },
+      now,
+      type: 'admin_reopened',
+      viewer,
+    })),
+    status: NEEDED_ACTION_STATUSES.PENDING,
     updated_at: timestamp,
   }
 

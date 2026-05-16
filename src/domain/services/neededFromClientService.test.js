@@ -7,7 +7,9 @@ import {
   cancelNeededAction,
   createNeededAction,
   listNeededActionsWorkspace,
+  reopenNeededAction,
   resolveNeededAction,
+  updateNeededAction,
 } from './neededFromClientService'
 
 const IDS = Object.freeze({
@@ -78,6 +80,8 @@ describe('neededFromClientService', () => {
           client_id: IDS.CLIENT,
           due_date: '2026-05-10',
           id: IDS.ACTION,
+          internal_notes: 'Client should not see this.',
+          priority: 'high',
           status: NEEDED_ACTION_STATUSES.PENDING,
           title: 'Approve creatives',
         },
@@ -105,8 +109,10 @@ describe('neededFromClientService', () => {
     expect(result.actions.map((action) => action.title)).toEqual(['Approve creatives'])
     expect(result.actions[0]).toMatchObject({
       clientName: 'Client A',
+      priority: 'high',
       status: NEEDED_ACTION_STATUSES.PENDING,
     })
+    expect(result.actions[0].internalNotes).toBe('Client should not see this.')
   })
 
   it('creates pending client requests for agency admins', () => {
@@ -127,6 +133,9 @@ describe('neededFromClientService', () => {
         clientId: IDS.CLIENT,
         description: 'Please approve the next creative batch.',
         dueDate: '2026-05-10',
+        internalNotes: 'We need this before launch.',
+        ownerName: 'Sarah Johnson',
+        priority: 'high',
         relatedLink: 'https://example.com/creative',
         title: 'Approve creatives',
       },
@@ -141,6 +150,9 @@ describe('neededFromClientService', () => {
 
     expect(createdAction).toMatchObject({
       due_date: '2026-05-10',
+      internal_notes: 'We need this before launch.',
+      owner_name: 'Sarah Johnson',
+      priority: 'high',
       related_link: 'https://example.com/creative',
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Approve creatives',
@@ -148,6 +160,87 @@ describe('neededFromClientService', () => {
     expect(repositories.neededFromClient.findById(IDS.ACTION)).toMatchObject({
       client_id: IDS.CLIENT,
     })
+  })
+
+  it('requires generated request ids to be string UUIDs', () => {
+    const repositories = {
+      clients: createEntityRepository([
+        {
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+          name: 'Client A',
+        },
+      ]),
+      neededFromClient: createEntityRepository([]),
+    }
+
+    expect(() => createNeededAction({
+      idGenerator: () => '1',
+      input: {
+        clientId: IDS.CLIENT,
+        title: 'Approve creatives',
+      },
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+      },
+    })).toThrow('Needed action id must be a string uuid.')
+  })
+
+  it('lets agency admins update editable request fields', () => {
+    const repositories = {
+      clients: {
+        findById: () => ({
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+        }),
+      },
+      neededFromClient: createRepository({
+        client_id: IDS.CLIENT,
+        description: 'Old description',
+        id: IDS.ACTION,
+        status: NEEDED_ACTION_STATUSES.PENDING,
+        title: 'Old title',
+      }),
+    }
+
+    const updatedAction = updateNeededAction({
+      actionId: IDS.ACTION,
+      input: {
+        description: 'New details',
+        dueDate: '2026-05-20',
+        internalNotes: 'Internal follow-up note',
+        ownerName: 'Sarah Johnson',
+        priority: 'high',
+        relatedLink: 'https://example.com/request',
+        title: 'Updated request',
+      },
+      now: () => '2026-05-10T10:00:00.000Z',
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })
+
+    expect(updatedAction).toMatchObject({
+      description: 'New details',
+      due_date: '2026-05-20',
+      internal_notes: 'Internal follow-up note',
+      owner_name: 'Sarah Johnson',
+      priority: 'high',
+      related_link: 'https://example.com/request',
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Updated request',
+      updated_at: '2026-05-10T10:00:00.000Z',
+    })
+    expect(updatedAction.response_history).toEqual([
+      expect.objectContaining({
+        type: 'admin_updated',
+      }),
+    ])
   })
 
   it('lets a client user answer a pending needed action', () => {
@@ -175,6 +268,9 @@ describe('neededFromClientService', () => {
 
     expect(updatedAction).toMatchObject({
       client_response: 'Approved.',
+      client_responded_at: '2026-05-09T10:00:00.000Z',
+      client_responded_by: IDS.USER,
+      responded_at: '2026-05-09T10:00:00.000Z',
       responded_by: IDS.USER,
       status: NEEDED_ACTION_STATUSES.ANSWERED,
     })
@@ -293,5 +389,49 @@ describe('neededFromClientService', () => {
       cancelled_by: 'admin-user',
       status: NEEDED_ACTION_STATUSES.CANCELLED,
     })
+  })
+
+  it('lets agency admins reopen closed or answered actions', () => {
+    const repositories = {
+      clients: {
+        findById: () => ({
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+        }),
+      },
+      neededFromClient: createRepository({
+        cancelled_at: '2026-05-09T11:30:00.000Z',
+        cancelled_by: 'admin-user',
+        cancellation_note: 'No longer needed.',
+        client_id: IDS.CLIENT,
+        id: IDS.ACTION,
+        status: NEEDED_ACTION_STATUSES.CANCELLED,
+      }),
+    }
+
+    const updatedAction = reopenNeededAction({
+      actionId: IDS.ACTION,
+      note: 'Needed again.',
+      now: () => '2026-05-10T11:30:00.000Z',
+      repositories,
+      viewer: {
+        agencyId: IDS.AGENCY,
+        role: USER_ROLES.AGENCY_ADMIN,
+        userId: 'admin-user',
+      },
+    })
+
+    expect(updatedAction).toMatchObject({
+      cancellation_note: '',
+      cancelled_at: null,
+      cancelled_by: null,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      updated_at: '2026-05-10T11:30:00.000Z',
+    })
+    expect(updatedAction.response_history).toEqual([
+      expect.objectContaining({
+        type: 'admin_reopened',
+      }),
+    ])
   })
 })

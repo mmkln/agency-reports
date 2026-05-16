@@ -68,62 +68,62 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Extend `needed_from_client` model with backend-ready optional fields:
-  - [ ] `priority`
-  - [ ] `owner_name`
-  - [ ] `client_response`
-  - [ ] `client_responded_at`
-  - [ ] `client_responded_by`
-  - [ ] `resolved_at`
-  - [ ] `resolved_by`
-  - [ ] `cancelled_at`
-  - [ ] `cancelled_by`
-  - [ ] `internal_notes`
-- [ ] Keep existing MVP fields compatible:
-  - [ ] `id`
-  - [ ] `client_id`
-  - [ ] `title`
-  - [ ] `description`
-  - [ ] `status`
-  - [ ] `due_date`
-  - [ ] `related_link`
-  - [ ] `created_at`
-  - [ ] `updated_at`
-- [ ] Ensure IDs are string UUIDs.
-- [ ] Centralize request status metadata:
-  - [ ] `pending`
-  - [ ] `answered`
-  - [ ] `resolved`
-  - [ ] `cancelled`
-- [ ] Add priority metadata if needed:
-  - [ ] `low`
-  - [ ] `medium`
-  - [ ] `high`
-- [ ] Add request status transition policy:
-  - [ ] `pending -> answered`
-  - [ ] `pending -> resolved`
-  - [ ] `pending -> cancelled`
-  - [ ] `answered -> resolved`
-  - [ ] `answered -> pending`
-  - [ ] `answered -> cancelled`
-  - [ ] `resolved -> pending`
-  - [ ] `cancelled -> pending`
-- [ ] Add client response policy:
-  - [ ] client can only respond to own pending requests
-  - [ ] client response moves status to `answered`
-  - [ ] client cannot resolve or cancel directly
-- [ ] Update visibility policy:
-  - [ ] cancelled hidden from client active summaries
-  - [ ] internal notes hidden from client routes
-  - [ ] access denial uses existing client isolation behavior
-- [ ] Add unit tests for statuses, transitions, and visibility.
+- [x] Extend `needed_from_client` model with backend-ready optional fields:
+  - [x] `priority`
+  - [x] `owner_name`
+  - [x] `client_response`
+  - [x] `client_responded_at`
+  - [x] `client_responded_by`
+  - [x] `resolved_at`
+  - [x] `resolved_by`
+  - [x] `cancelled_at`
+  - [x] `cancelled_by`
+  - [x] `internal_notes`
+- [x] Keep existing MVP fields compatible:
+  - [x] `id`
+  - [x] `client_id`
+  - [x] `title`
+  - [x] `description`
+  - [x] `status`
+  - [x] `due_date`
+  - [x] `related_link`
+  - [x] `created_at`
+  - [x] `updated_at`
+- [x] Ensure IDs are string UUIDs.
+- [x] Centralize request status metadata:
+  - [x] `pending`
+  - [x] `answered`
+  - [x] `resolved`
+  - [x] `cancelled`
+- [x] Add priority metadata if needed:
+  - [x] `low`
+  - [x] `medium`
+  - [x] `high`
+- [x] Add request status transition policy:
+  - [x] `pending -> answered`
+  - [x] `pending -> resolved`
+  - [x] `pending -> cancelled`
+  - [x] `answered -> resolved`
+  - [x] `answered -> pending`
+  - [x] `answered -> cancelled`
+  - [x] `resolved -> pending`
+  - [x] `cancelled -> pending`
+- [x] Add client response policy:
+  - [x] client can only respond to own pending requests
+  - [x] client response moves status to `answered`
+  - [x] client cannot resolve or cancel directly
+- [x] Update visibility policy:
+  - [x] cancelled hidden from client active summaries
+  - [x] internal notes hidden from client routes
+  - [x] access denial uses existing client isolation behavior
+- [x] Add unit tests for statuses, transitions, and visibility.
 
 ### Completion Criteria
 
-- [ ] Domain tests prove client isolation.
-- [ ] Domain tests prove internal notes are hidden.
-- [ ] Domain tests prove cancelled records are not shown in client summaries.
-- [ ] Domain tests prove client response changes status to `answered`.
+- [x] Domain tests prove client isolation.
+- [x] Domain tests prove internal notes are hidden.
+- [x] Domain tests prove cancelled records are not shown in client summaries.
+- [x] Domain tests prove client response changes status to `answered`.
 
 ## Stage 2 - Repository And Seed Data
 
