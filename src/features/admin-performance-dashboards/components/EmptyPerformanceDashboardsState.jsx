@@ -33,7 +33,7 @@ export function EmptyPerformanceDashboardsState({ hasClients }) {
           </Link>
         </Button>
       )}
-      description="Create a draft dashboard period, import JSON or enter manual content, validate it, then publish it to the client."
+      description="Create a draft dashboard period, fill it in with the structured editor or import prepared JSON, validate it, then publish it to the client."
       iconName="layoutDashboard"
       title="No performance dashboards yet"
     />
