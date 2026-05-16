@@ -24,6 +24,7 @@ const IDS = Object.freeze({
   DASHBOARD: '33333333-3333-4333-8333-333333333333',
   NEEDED_ACTIVE: '44444444-4444-4444-8444-444444444444',
   NEEDED_CANCELLED: '55555555-5555-4555-8555-555555555555',
+  PERIOD_ARCHIVED: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   PERIOD_DRAFT: '66666666-6666-4666-8666-666666666666',
   PERIOD_PUBLISHED: '77777777-7777-4777-8777-777777777777',
   REPORT: '88888888-8888-4888-8888-888888888888',
@@ -142,6 +143,33 @@ function createRepositories() {
         client_id: IDS.CLIENT_A,
         content: {
           executive_summary: {
+            narrative: 'Archived dashboard narrative',
+          },
+          hero_metric: {
+            label: 'Booked Calls',
+            value: 34,
+          },
+          kpi_cards: [
+            {
+              name: 'Booked Calls',
+              value: 34,
+            },
+          ],
+        },
+        data_confidence: PERFORMANCE_DATA_CONFIDENCE.MEDIUM,
+        data_mode: PERFORMANCE_DATA_MODES.JSON_IMPORT,
+        id: IDS.PERIOD_ARCHIVED,
+        last_updated_at: '2026-04-01T09:00:00.000Z',
+        period_end: '2026-03-31',
+        period_start: '2026-03-01',
+        published_at: '2026-04-02T09:00:00.000Z',
+        status: PERFORMANCE_DASHBOARD_STATUSES.ARCHIVED,
+        title: 'March Dashboard',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        content: {
+          executive_summary: {
             narrative: 'Draft dashboard narrative',
           },
         },
@@ -196,8 +224,28 @@ describe('clientPerformanceDashboardService', () => {
     expect(page.sourceLinks).toHaveLength(1)
     expect(page.latestReport.title).toBe('April Report')
     expect(page.neededFromClient.map((item) => item.title)).toEqual(['Approve creative batch'])
+    expect(page.periods.map((period) => period.id)).toEqual([
+      IDS.PERIOD_PUBLISHED,
+      IDS.PERIOD_ARCHIVED,
+    ])
     expect(JSON.stringify(page)).not.toContain('May Draft')
     expect(JSON.stringify(page)).not.toContain('Cancelled request')
+  })
+
+  it('allows a client to open an archived dashboard period for their own client', () => {
+    const page = getClientPerformanceDashboardPage({
+      clientId: IDS.CLIENT_A,
+      periodId: IDS.PERIOD_ARCHIVED,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.performanceDashboard).toMatchObject({
+      id: IDS.PERIOD_ARCHIVED,
+      status: PERFORMANCE_DASHBOARD_STATUSES.ARCHIVED,
+      title: 'March Dashboard',
+    })
   })
 
   it('denies access to another client dashboard', () => {

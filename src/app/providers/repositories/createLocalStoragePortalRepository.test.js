@@ -122,6 +122,25 @@ describe('createLocalStoragePortalRepository', () => {
     ])
   })
 
+  it('persists performance dashboard periods through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const period = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '44444444-4444-4444-8444-444444444444',
+      period_end: '2026-04-30',
+      period_start: '2026-04-01',
+      status: 'draft',
+      title: 'April Performance',
+    }
+
+    repository.performanceDashboardPeriods.upsert(period)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.performanceDashboardPeriods.findById(period.id)).toMatchObject(period)
+    expect(reloadedRepository.performanceDashboardPeriods.listByClientId(period.client_id)).toHaveLength(1)
+  })
+
   it('reseeds malformed JSON snapshots', () => {
     const storage = createStorage({
       [PORTAL_STORAGE_KEY]: '{broken-json',

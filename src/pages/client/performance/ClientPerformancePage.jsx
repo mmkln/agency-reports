@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { getClientPerformanceDashboardPage } from '../../../domain/services/clientPerformanceDashboardService'
 import {
@@ -11,6 +11,7 @@ import { StackedBarLineChart } from '../../../shared/charts'
 import {
   Button,
   EmptyState,
+  NativeSelect,
   Panel,
   PanelBody,
   PanelHeader,
@@ -241,6 +242,61 @@ function TrustSignalStrip({ dashboard }) {
   )
 }
 
+function DashboardContextBar({ client, dashboard, mode, periods }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const hasMultiplePeriods = periods.length > 1
+
+  function changePeriod(event) {
+    const params = new URLSearchParams(location.search)
+    params.set('clientId', client.id)
+    params.set('performancePeriodId', event.target.value)
+    navigate(`${location.pathname}?${params.toString()}`)
+  }
+
+  return (
+    <section className="rounded-block border border-control-border bg-block p-5 shadow-none">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-label text-text-muted">{mode === 'admin_preview' ? 'Client preview' : 'Client performance'}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-semibold leading-tight text-text-primary">{client.name}</h2>
+            <StatusBadge meta={dashboard.statusMeta} />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-3 text-sm text-text-muted">
+            <span>{formatDate(dashboard.periodStart)} - {formatDate(dashboard.periodEnd)}</span>
+            {dashboard.accountManager ? <span>Account manager: {dashboard.accountManager}</span> : null}
+            {dashboard.publishedAt ? <span>Published {formatDate(dashboard.publishedAt)}</span> : null}
+          </div>
+        </div>
+
+        <div className="grid gap-2 lg:min-w-72">
+          <label className="text-label text-text-muted" htmlFor="performance-period-selector">
+            Dashboard period
+          </label>
+          <NativeSelect
+            disabled={!hasMultiplePeriods}
+            id="performance-period-selector"
+            onChange={changePeriod}
+            value={dashboard.id}
+          >
+            {periods.map((period) => (
+              <option key={period.id} value={period.id}>
+                {period.title} ({formatDate(period.periodStart)} - {formatDate(period.periodEnd)})
+              </option>
+            ))}
+          </NativeSelect>
+          <p className="text-xs leading-5 text-text-muted">
+            {hasMultiplePeriods
+              ? 'Published and archived dashboards are available here.'
+              : 'Only one client-visible dashboard is available.'}
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function GoalsSection({ goals }) {
   if (!goals?.length) {
     return null
@@ -393,14 +449,76 @@ function getCampaignToneClasses(tone) {
   }[tone] ?? 'border-control-border bg-surface-subtle text-text-secondary'
 }
 
+function getCampaignTextClass(tone) {
+  return {
+    amber: 'text-warning-foreground',
+    blue: 'text-action',
+    green: 'text-success-foreground',
+    neutral: 'text-text-primary',
+    orange: 'text-warning-foreground',
+    purple: 'text-accent-foreground',
+    red: 'text-destructive',
+  }[tone] ?? 'text-text-primary'
+}
+
+function getCampaignTotals(series = []) {
+  return series.reduce((totals, point) => ({
+    bookings: Number(point.cumulative_bookings) || totals.bookings,
+    email: totals.email + (Number(point.email) || 0),
+    managerCalls: totals.managerCalls + (Number(point.manager_calls) || 0),
+    sms: totals.sms + (Number(point.sms) || 0),
+  }), {
+    bookings: 0,
+    email: 0,
+    managerCalls: 0,
+    sms: 0,
+  })
+}
+
+function findCampaignKpi(kpis = [], keyword) {
+  return kpis.find((kpi) => String(kpi.label ?? '').toLowerCase().includes(keyword)) ?? null
+}
+
 function CampaignKpiCard({ kpi }) {
   return (
-    <div className="rounded-block border border-control-border bg-block-subtle p-4">
+    <div className="rounded-block border border-control-border bg-block p-4 shadow-none">
       <p className="text-sm font-medium text-text-secondary">{kpi.label || 'Metric'}</p>
-      <p className={`mt-2 text-3xl font-semibold leading-none ${getCampaignToneClasses(kpi.tone).split(' ').at(-1)}`}>
+      <p className={`mt-2 text-3xl font-semibold leading-none ${getCampaignTextClass(kpi.tone)}`}>
         {formatLooseValue(kpi.value)}{kpi.unit ? ` ${kpi.unit}` : ''}
       </p>
       {kpi.helper_text ? <p className="mt-2 text-xs leading-5 text-text-muted">{kpi.helper_text}</p> : null}
+    </div>
+  )
+}
+
+function CampaignPlanSummary({ campaign, totals }) {
+  const bookingsKpi = findCampaignKpi(campaign.kpis, 'booking')
+  const durationKpi = findCampaignKpi(campaign.kpis, 'duration')
+  const totalTouches = totals.sms + totals.email + totals.managerCalls
+
+  return (
+    <div className="grid gap-4 rounded-block border border-action/20 bg-action-muted p-5 lg:grid-cols-[1fr_auto]">
+      <div>
+        <p className="text-label text-action">Campaign model</p>
+        <h3 className="mt-2 text-xl font-semibold text-text-primary">
+          {campaign.title || 'Campaign Execution'}
+        </h3>
+        <p className="mt-2 max-w-readable text-sm leading-6 text-text-secondary">
+          {campaign.subtitle || 'Planned outreach volume, phased campaign execution, and projected bookings over time.'}
+        </p>
+      </div>
+      <div className="grid min-w-60 gap-3 rounded-control border border-action/15 bg-block p-4">
+        <div>
+          <p className="text-label text-text-muted">Projected outcome</p>
+          <p className="mt-1 text-2xl font-semibold text-text-primary">
+            {bookingsKpi ? formatLooseValue(bookingsKpi.value) : formatNumber(totals.bookings)}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 border-t border-separator pt-3">
+          <SmallMetric label="Total touches" value={formatNumber(totalTouches)} />
+          <SmallMetric label="Duration" value={durationKpi ? formatLooseValue(durationKpi.value) : `${campaign.activity_series?.length ?? 0} days`} />
+        </div>
+      </div>
     </div>
   )
 }
@@ -411,15 +529,38 @@ function CampaignTracks({ tracks }) {
   }
 
   return (
-    <div className="grid gap-3 md:grid-cols-4">
-      {tracks.map((track, index) => (
-        <div
-          className={`rounded-control border px-4 py-3 text-center text-sm font-semibold ${getCampaignToneClasses(track.tone)}`}
-          key={track.id || `${track.label}-${index}`}
-        >
-          {track.label}
-        </div>
+    <div className="grid gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-text-primary">Execution tracks</h3>
+        <p className="text-xs text-text-muted">{tracks.length} stages</p>
+      </div>
+      <div className="grid gap-3 md:grid-cols-4">
+        {tracks.map((track, index) => (
+          <div
+            className={`rounded-control border px-4 py-3 text-center text-sm font-semibold ${getCampaignToneClasses(track.tone)}`}
+            key={track.id || `${track.label}-${index}`}
+          >
+            {track.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CampaignChartLegend({ bars, line }) {
+  return (
+    <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary">
+      {bars.map((bar) => (
+        <span className="inline-flex items-center gap-2" key={bar.key}>
+          <span className="size-3 rounded-[3px]" style={{ backgroundColor: bar.color }} />
+          {bar.label}
+        </span>
       ))}
+      <span className="inline-flex items-center gap-2">
+        <span className="h-0 w-7 border-t-2 border-dashed" style={{ borderColor: line.color }} />
+        {line.label}
+      </span>
     </div>
   )
 }
@@ -456,16 +597,19 @@ function CampaignExecutionSection({ campaign }) {
     key: 'cumulative_bookings',
     label: 'Cumulative bookings',
   }
+  const totals = getCampaignTotals(chartData)
 
   return (
     <Panel>
       <PanelHeader
-        subtitle={campaign.subtitle || 'Shows planned outreach volume, phased campaign execution, and projected bookings over time.'}
-        title={campaign.title || 'Campaign Execution'}
+        subtitle="A client-readable view of campaign volume, staged outreach, and expected booking lift."
+        title="Campaign Execution"
       />
       <PanelBody className="grid gap-6">
+        <CampaignPlanSummary campaign={campaign} totals={totals} />
+
         {campaign.kpis?.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
             {campaign.kpis.map((kpi, index) => (
               <CampaignKpiCard key={kpi.id || `${kpi.label}-${index}`} kpi={kpi} />
             ))}
@@ -475,18 +619,15 @@ function CampaignExecutionSection({ campaign }) {
         <CampaignTracks tracks={campaign.tracks} />
 
         {chartData.length ? (
-          <div className="rounded-block border border-control-border bg-block p-4">
-            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-text-secondary">
-              {bars.map((bar) => (
-                <span className="inline-flex items-center gap-2" key={bar.key}>
-                  <span className="size-3 rounded-[3px]" style={{ backgroundColor: bar.color }} />
-                  {bar.label}
-                </span>
-              ))}
-              <span className="inline-flex items-center gap-2">
-                <span className="h-0 w-7 border-t-2 border-dashed" style={{ borderColor: line.color }} />
-                {line.label}
-              </span>
+          <div className="rounded-block border border-control-border bg-block p-5">
+            <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-text-primary">Touch volume and booking projection</h3>
+                <p className="mt-1 text-sm leading-6 text-text-muted">
+                  Bars show daily outreach volume. The dashed line shows cumulative projected bookings.
+                </p>
+              </div>
+              <CampaignChartLegend bars={bars} line={line} />
             </div>
             <StackedBarLineChart
               ariaLabel="Campaign touchpoints and cumulative bookings"
@@ -503,10 +644,18 @@ function CampaignExecutionSection({ campaign }) {
         ) : null}
 
         {campaign.assumptions?.length ? (
-          <div className="rounded-control border border-control-border bg-surface-subtle px-4 py-3">
-            {campaign.assumptions.map((assumption) => (
-              <p className="text-sm leading-6 text-text-muted" key={assumption}>{assumption}</p>
-            ))}
+          <div className="flex items-start gap-3 rounded-control border border-control-border bg-surface-subtle px-4 py-3">
+            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-control bg-block text-text-quaternary ring-1 ring-control-border">
+              <Icon name="circleAlert" size={15} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Planning assumptions</p>
+              <div className="mt-1 grid gap-1">
+                {campaign.assumptions.map((assumption) => (
+                  <p className="text-sm leading-6 text-text-muted" key={assumption}>{assumption}</p>
+                ))}
+              </div>
+            </div>
           </div>
         ) : null}
       </PanelBody>
@@ -788,8 +937,14 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
 
   return (
     <div className="grid gap-6">
+      <DashboardContextBar
+        client={page.client}
+        dashboard={dashboard}
+        mode={mode}
+        periods={page.periods}
+      />
+
       <div className="flex flex-wrap gap-tag">
-        <StatusBadge meta={dashboard.statusMeta} />
         <StatusBadge meta={dashboard.dataConfidenceMeta} />
         <StatusBadge meta={dashboard.dataModeMeta} />
       </div>

@@ -41,7 +41,7 @@ export function EmptyFilteredReportsState({ onReset }) {
       <EmptyState
         action={(
           <Button onClick={onReset} type="button" variant="outline">
-            Clear filters
+            Reset
           </Button>
         )}
         description="Try a different search term, client, status, or reporting month."

@@ -64,34 +64,36 @@ export function AdminPerformanceDashboardEditor({
     }))
   }
 
-  function updateContent(path, value) {
+  function updateContent(path, valueOrUpdater) {
     setForm((currentForm) => ({
       ...currentForm,
       content: {
         ...currentForm.content,
-        [path]: value,
+        [path]: typeof valueOrUpdater === 'function'
+          ? valueOrUpdater(currentForm.content[path], currentForm)
+          : valueOrUpdater,
       },
     }))
   }
 
   function updateExecutiveSummary(field, value) {
-    updateContent('executive_summary', {
-      ...form.content.executive_summary,
+    updateContent('executive_summary', (currentSummary) => ({
+      ...currentSummary,
       [field]: value,
-    })
+    }))
   }
 
   function updateHeroMetric(field, value) {
-    updateContent('hero_metric', {
-      ...form.content.hero_metric,
+    updateContent('hero_metric', (currentHeroMetric) => ({
+      ...currentHeroMetric,
       [field]: value,
-    })
+    }))
   }
 
   function updateArrayItem(collectionName, itemId, field, value) {
     updateContent(
       collectionName,
-      form.content[collectionName].map((item) => (
+      (currentItems) => currentItems.map((item) => (
         item.id === itemId ? { ...item, [field]: value } : item
       )),
     )
@@ -100,14 +102,14 @@ export function AdminPerformanceDashboardEditor({
   function removeArrayItem(collectionName, itemId) {
     updateContent(
       collectionName,
-      form.content[collectionName].filter((item) => item.id !== itemId),
+      (currentItems) => currentItems.filter((item) => item.id !== itemId),
     )
   }
 
   function updateNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItemId, field, value) {
     updateContent(
       collectionName,
-      form.content[collectionName].map((item) => (
+      (currentItems) => currentItems.map((item) => (
         item.id === itemId
           ? {
             ...item,
@@ -123,7 +125,7 @@ export function AdminPerformanceDashboardEditor({
   function addNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItem) {
     updateContent(
       collectionName,
-      form.content[collectionName].map((item) => (
+      (currentItems) => currentItems.map((item) => (
         item.id === itemId
           ? {
             ...item,
@@ -137,7 +139,7 @@ export function AdminPerformanceDashboardEditor({
   function removeNestedArrayItem(collectionName, itemId, nestedCollectionName, nestedItemId) {
     updateContent(
       collectionName,
-      form.content[collectionName].map((item) => (
+      (currentItems) => currentItems.map((item) => (
         item.id === itemId
           ? {
             ...item,
@@ -151,7 +153,7 @@ export function AdminPerformanceDashboardEditor({
   function addAppendixColumn(tableId) {
     updateContent(
       'appendix_tables',
-      form.content.appendix_tables.map((table) => (
+      (currentTables) => currentTables.map((table) => (
         table.id === tableId
           ? {
             ...table,
@@ -169,7 +171,7 @@ export function AdminPerformanceDashboardEditor({
   function removeAppendixColumn(tableId, columnId) {
     updateContent(
       'appendix_tables',
-      form.content.appendix_tables.map((table) => {
+      (currentTables) => currentTables.map((table) => {
         if (table.id !== tableId) {
           return table
         }
@@ -193,7 +195,7 @@ export function AdminPerformanceDashboardEditor({
   function addAppendixRow(tableId) {
     updateContent(
       'appendix_tables',
-      form.content.appendix_tables.map((table) => (
+      (currentTables) => currentTables.map((table) => (
         table.id === tableId
           ? {
             ...table,
@@ -207,7 +209,7 @@ export function AdminPerformanceDashboardEditor({
   function removeAppendixRow(tableId, rowId) {
     updateContent(
       'appendix_tables',
-      form.content.appendix_tables.map((table) => (
+      (currentTables) => currentTables.map((table) => (
         table.id === tableId
           ? {
             ...table,
@@ -221,7 +223,7 @@ export function AdminPerformanceDashboardEditor({
   function updateAppendixCell(tableId, rowId, cellId, value) {
     updateContent(
       'appendix_tables',
-      form.content.appendix_tables.map((table) => (
+      (currentTables) => currentTables.map((table) => (
         table.id === tableId
           ? {
             ...table,

@@ -128,6 +128,7 @@ It should reference or aggregate:
   - [x] next steps
   - [x] appendix tables
 - [x] Define JSON import shape.
+- [x] Document JSON import contract in `docs/implementation/UC-004-json-import-contract.md`.
 - [x] Define validation rules for required fields.
 - [x] Define publish validation rules:
   - [x] period metadata exists
@@ -145,11 +146,11 @@ It should reference or aggregate:
   - [x] low data confidence
   - [ ] stale data
 - [x] Define client visibility policy:
-  - [ ] client can only see own client_id
+  - [x] client can only see own client_id
   - [x] client can only see `published` or `archived`
   - [x] client cannot see `draft` or `ready`
 - [x] Define admin visibility policy.
-- [ ] Define how Client Overview links to UC-004 without becoming the analytics screen.
+- [x] Define how Client Overview links to UC-004 without becoming the analytics screen.
 
 ### Completion Criteria
 
@@ -157,7 +158,7 @@ It should reference or aggregate:
 - [x] Enums are centralized.
 - [x] Validation shape is defined.
 - [x] JSON import schema is defined.
-- [ ] UC-001/002/003 relationship rules are clear.
+- [x] UC-001/002/003 relationship rules are clear.
 
 ## Stage 2 - Local Repository And Domain Services
 
@@ -187,7 +188,7 @@ It should reference or aggregate:
   - [x] validate period
 - [x] Create client domain service:
   - [x] get latest published dashboard period
-  - [ ] get archived periods
+  - [x] get archived periods
   - [x] get dashboard period by id
   - [x] enforce client isolation
   - [x] hide draft/ready periods
@@ -223,7 +224,7 @@ It should reference or aggregate:
 - [x] Add route metadata for admin performance dashboards.
 - [x] Add admin performance dashboards page.
 - [x] Use canonical app shell and page header.
-- [ ] Build dashboard periods table/list with columns:
+- [x] Build dashboard periods table/list with columns:
   - [x] client
   - [x] title
   - [x] reporting period
@@ -243,29 +244,29 @@ It should reference or aggregate:
 - [x] Add empty state.
 - [x] Add access denied/admin-only behavior if existing app patterns require it.
 - [x] Build admin editor shell.
-- [ ] Add editor sections:
+- [x] Add editor sections:
   - [x] Client and Period
   - [x] Data Trust
   - [x] Executive Summary
   - [x] Hero Metric
   - [x] KPI Cards
   - [x] Goals vs Actual
-  - [ ] Trend Series
+  - [x] Trend Series
   - [x] Funnel
   - [x] Channel Breakdown
-  - [ ] Service Sections
+  - [x] Service Sections
   - [x] Insights / What Changed
   - [x] Next Actions
   - [ ] Source Links
   - [ ] Latest Report
-  - [ ] Appendix Tables
+  - [x] Appendix Tables
 - [x] Add save draft.
 - [x] Add publish validation.
 - [x] Add validation error display.
 - [x] Add validation warning display.
 - [ ] Keep editor sections manageable with progressive disclosure where appropriate.
 - [x] Prevent accidental client exposure of drafts.
-- [ ] Add tests for admin service and route flows.
+- [x] Add tests for admin service and route flows.
 
 ### Completion Criteria
 
@@ -274,7 +275,7 @@ It should reference or aggregate:
 - [x] agency_admin can publish valid periods.
 - [x] agency_admin can archive periods.
 - [x] agency_admin can preview as client.
-- [ ] Editor does not mix unrelated access/report/task management into the analytics editor.
+- [x] Editor does not mix unrelated access/report/task management into the analytics editor.
 
 ## Stage 4 - JSON Import
 
@@ -288,6 +289,7 @@ It should reference or aggregate:
 - [x] Build import modal or page using project overlay patterns.
 - [x] Add JSON paste input.
 - [x] Add example JSON or schema reference link.
+- [x] Add campaign execution JSON example for reactivation-style dashboards.
 - [x] Parse JSON safely.
 - [x] Validate required fields.
 - [x] Show field-level or path-level validation errors.
@@ -299,11 +301,11 @@ It should reference or aggregate:
 - [x] Allow editing after import.
 - [x] Add invalid JSON state.
 - [x] Add partial/missing data warning state.
-- [ ] Add tests:
-  - [ ] valid JSON imports
-  - [ ] invalid JSON fails
+- [x] Add tests:
+  - [x] valid JSON imports
+  - [x] invalid JSON fails
   - [ ] missing required fields show errors
-  - [ ] import creates draft only
+  - [x] import creates draft only
 
 ### Completion Criteria
 
@@ -325,13 +327,13 @@ It should reference or aggregate:
 - [ ] Build dashboard loading state.
 - [x] Build access denied state.
 - [x] Build no published dashboard state.
-- [ ] Build dashboard header:
-  - [ ] client name
+- [x] Build dashboard header:
+  - [x] client name
   - [x] reporting period
   - [x] last updated
   - [x] data mode
   - [x] data confidence
-  - [ ] account manager
+  - [x] account manager
   - [x] attribution note
 - [ ] Build executive summary block:
   - [x] summary narrative
@@ -410,23 +412,25 @@ It should reference or aggregate:
 - [x] Admin service tests.
 - [x] Client read service tests.
 - [x] Visibility policy tests.
-- [ ] Repository persistence tests.
+- [x] Repository persistence tests.
 - [x] Client overview preview read model tests.
+- [x] Client can navigate published/archived dashboard periods.
 
 ### E2E Tests
 
 - [x] agency_admin can create dashboard period.
 - [x] agency_admin can save draft.
 - [x] agency_admin can import valid JSON.
-- [ ] invalid JSON shows validation errors.
+- [x] invalid JSON shows validation errors.
 - [x] JSON import does not publish automatically.
-- [ ] agency_admin can preview as client.
+- [x] agency_admin can preview as client.
 - [x] agency_admin can publish.
 - [x] client_user can view published dashboard.
 - [x] client_user cannot view draft dashboard.
 - [x] client_user cannot view another client's dashboard.
-- [ ] no published dashboard shows fallback.
-- [ ] low confidence / stale data state is visible.
+- [x] no published dashboard shows fallback.
+- [x] low confidence state is visible.
+- [ ] stale data state is visible.
 - [x] client overview shows compact performance preview.
 
 ### Build Checks
@@ -434,25 +438,25 @@ It should reference or aggregate:
 - [x] `npm run lint`
 - [x] `npm test -- --run`
 - [x] UC-004 e2e spec passes.
-- [ ] Existing UC-001 e2e spec still passes.
-- [ ] Existing UC-002 e2e spec still passes.
-- [ ] Existing UC-003 e2e spec still passes.
+- [x] Existing UC-001 e2e spec still passes.
+- [x] Existing UC-002 e2e spec still passes.
+- [x] Existing UC-003 e2e spec still passes.
 - [x] `npm run build`
 
 ### Acceptance Report
 
-- [ ] Create `docs/implementation/UC-004-acceptance-report.md`.
-- [ ] Map each UC-004 acceptance criterion to implementation status.
-- [ ] Document frontend/localStorage limitations.
-- [ ] Document backend/integration gaps.
-- [ ] Document any intentionally deferred items.
+- [x] Create `docs/implementation/UC-004-acceptance-report.md`.
+- [x] Map each UC-004 acceptance criterion to implementation status.
+- [x] Document frontend/localStorage limitations.
+- [x] Document backend/integration gaps.
+- [x] Document any intentionally deferred items.
 
 ### Completion Criteria
 
-- [ ] UC-004 acceptance criteria are implemented or explicitly deferred.
-- [ ] Existing use cases are not regressed.
-- [ ] Client-facing dashboard is useful with manual/JSON data.
-- [ ] Architecture remains backend-ready.
+- [x] UC-004 acceptance criteria are implemented or explicitly deferred.
+- [x] Existing use cases are not regressed.
+- [x] Client-facing dashboard is useful with manual/JSON data.
+- [x] Architecture remains backend-ready.
 
 ## Stage 8 - Future Integration Readiness
 
@@ -462,27 +466,27 @@ It should reference or aggregate:
 
 ### Tasks
 
-- [ ] Keep data source labels on KPI cards and sections.
-- [ ] Keep data mode separate from UI rendering.
-- [ ] Keep repository access behind adapters.
+- [x] Keep data source labels on KPI cards and sections.
+- [x] Keep data mode separate from UI rendering.
+- [x] Keep repository access behind adapters.
 - [ ] Keep services async/API-like.
 - [ ] Keep dashboard period model compatible with imported/integrated data.
-- [ ] Document future integration mapping for:
-  - [ ] Google Ads
-  - [ ] Meta Ads
-  - [ ] GA4
-  - [ ] Google Search Console
-  - [ ] CRM / GHL / HubSpot / Salesforce
-  - [ ] Klaviyo / Mailchimp / ActiveCampaign
-  - [ ] Shopify / Stripe
-  - [ ] CallRail / WhatConverts
+- [x] Document future integration mapping for:
+  - [x] Google Ads
+  - [x] Meta Ads
+  - [x] GA4
+  - [x] Google Search Console
+  - [x] CRM / GHL / HubSpot / Salesforce
+  - [x] Klaviyo / Mailchimp / ActiveCampaign
+  - [x] Shopify / Stripe
+  - [x] CallRail / WhatConverts
 - [ ] Do not hardcode manual-only assumptions in UI.
 
 ### Completion Criteria
 
-- [ ] Future integrations can populate the same dashboard period contract.
-- [ ] Manual/JSON data remains first-class.
-- [ ] UI clearly distinguishes manual, imported, embedded, and integrated data.
+- [x] Future integrations can populate the same dashboard period contract.
+- [x] Manual/JSON data remains first-class.
+- [x] UI clearly distinguishes manual, imported, embedded, and integrated data.
 
 ## Out Of Scope For UC-004 MVP
 

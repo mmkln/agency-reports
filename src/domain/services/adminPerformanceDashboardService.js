@@ -322,11 +322,11 @@ export function importAdminPerformanceDashboardJson({
 
   try {
     parsedJson = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson
-  } catch (error) {
+  } catch {
     return {
       errors: [
         {
-          message: error instanceof Error ? error.message : 'Invalid JSON.',
+          message: 'Dashboard JSON is not valid JSON.',
           path: '$',
           severity: 'error',
         },

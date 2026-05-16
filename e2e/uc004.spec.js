@@ -124,6 +124,10 @@ test('agency admin creates a draft performance dashboard and enters structured d
   expect(savedPeriod.content.appendix_tables[0].columns).toEqual(['Campaign'])
   expect(savedPeriod.content.appendix_tables[0].rows).toEqual([['Implants Search']])
   expect(savedPeriod.status).toBe('draft')
+
+  await page.getByRole('link', { name: 'Preview' }).click()
+  await expect(page).toHaveURL(/\/admin\/client-performance-preview/)
+  await expect(page.getByRole('heading', { name: title }).first()).toBeVisible()
 })
 
 test('client can view published performance dashboard but cannot view draft or another client dashboard', async ({ page }) => {
@@ -142,8 +146,12 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByRole('heading', { name: 'What Changed' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Next Actions' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
-  await expect(page.getByText('Projected bookings')).toBeVisible()
+  await expect(page.getByText('Projected bookings', { exact: true })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Campaign touchpoints and cumulative bookings' })).toBeVisible()
+  await expect(page.getByLabel('Dashboard period')).toBeVisible()
+  await page.getByLabel('Dashboard period').selectOption(SEED_IDS.PERFORMANCE_GREEN_ARCHIVED_MARCH)
+  await expect(page).toHaveURL(new RegExp(`performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_ARCHIVED_MARCH}`))
+  await expect(page.getByRole('heading', { name: 'March 2026 Performance Dashboard' }).first()).toBeVisible()
 
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
   await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
@@ -152,6 +160,52 @@ test('client can view published performance dashboard but cannot view draft or a
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
+})
+
+test('invalid performance dashboard JSON stays in the import modal with validation errors', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto('/admin/performance-dashboards')
+  await page.getByRole('link', { name: 'Import JSON' }).click()
+
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+  await page.getByLabel('Dashboard JSON *').fill('{bad json')
+  await page.getByRole('button', { name: 'Import as draft' }).click()
+
+  await expect(page.getByText('Import blocked')).toBeVisible()
+  await expect(page.locator('li').filter({ hasText: 'Dashboard JSON is not valid JSON' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+})
+
+test('client performance page shows a clear fallback when no dashboard is published', async ({ page }) => {
+  const clientId = '90909090-9090-4090-9090-909090909090'
+
+  await signInAsAdmin(page)
+  await page.evaluate(({ portalKey, seedIds, targetClientId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    portalData.clients.push({
+      agency_id: seedIds.AGENCY_GROWTHLAB,
+      created_at: '2026-05-16T12:00:00.000Z',
+      current_focus: [],
+      id: targetClientId,
+      logo_url: '',
+      name: 'No Dashboard Client',
+      portal_slug: 'no-dashboard-client',
+      primary_contact_email: 'owner@example.com',
+      primary_contact_name: 'Owner Example',
+      status: 'on_track',
+      updated_at: '2026-05-16T12:00:00.000Z',
+    })
+    window.localStorage.setItem(portalKey, JSON.stringify(portalData))
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    seedIds: SEED_IDS,
+    targetClientId: clientId,
+  })
+
+  await page.goto(`/admin/client-performance-preview?clientId=${clientId}`)
+  await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
+  await expect(page.getByText('Published analytics will appear here once reviewed.')).toBeVisible()
 })
 
 test('agency admin imports campaign execution JSON and publishes it for the client', async ({ page }) => {
@@ -189,6 +243,7 @@ test('agency admin imports campaign execution JSON and publishes it for the clie
   await signInAsClient(page)
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${importedPeriod.id}`)
   await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
+  await expect(page.getByText('Estimated', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('SMS sent')).toBeVisible()
   await expect(page.getByText('Track B - core reactivation (wk 5-13)')).toBeVisible()
   await expect(page.getByRole('img', { name: 'Campaign touchpoints and cumulative bookings' })).toBeVisible()

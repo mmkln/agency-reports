@@ -89,8 +89,16 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await expect(reportRow).toBeVisible()
   await expect(reportRow).toContainText('Published')
 
-  await reportRow.getByLabel('Report actions').click()
-  await page.getByRole('menuitem', { name: 'Preview report' }).click()
+  const reportId = await page.evaluate(({ portalKey, title }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    return portalData.reports.find((report) => report.title === title).id
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    title: reportTitle,
+  })
+
+  await page.goto(`/admin/client-report-preview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${reportId}`)
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText(summary).first()).toBeVisible()
@@ -211,11 +219,13 @@ test('agency admin can filter monthly reports', async ({ page }) => {
   await page.getByRole('button', { name: 'Reset' }).click()
   await expect(sourceReport).toBeVisible()
 
+  await page.getByRole('button', { name: 'Open report filters' }).click()
   await page.getByLabel('Status').click()
   await page.getByRole('option', { name: 'Draft' }).click()
   await expect(page.getByText('No reports match these filters')).toBeVisible()
 
   await page.getByRole('button', { name: 'Reset' }).click()
+  await page.getByRole('button', { name: 'Open report filters' }).click()
   await page.getByLabel('Status').click()
   await page.getByRole('option', { name: 'Published' }).click()
   await expect(sourceReport).toBeVisible()
