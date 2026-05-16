@@ -37,6 +37,32 @@ export function getTaskCreatePath(filters, basePath = '/team/tasks') {
   return `${basePath}?${params.toString()}`
 }
 
+export function getTaskImportPath(filters, basePath = '/team/tasks') {
+  const params = new URLSearchParams()
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value !== 'all') {
+      params.set(key, value)
+    }
+  })
+  params.set('import', '1')
+
+  return `${basePath}?${params.toString()}`
+}
+
+export function getTaskExportPath(filters, basePath = '/team/tasks') {
+  const params = new URLSearchParams()
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value !== 'all') {
+      params.set(key, value)
+    }
+  })
+  params.set('export', '1')
+
+  return `${basePath}?${params.toString()}`
+}
+
 export function loadTeamTasks(filters, runtime) {
   return listTaskWorkspace({
     filters,

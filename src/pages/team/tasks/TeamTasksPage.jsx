@@ -39,6 +39,12 @@ import { getTaskStatusSelectionOptions } from '../../../domain/policies/taskPoli
 import { USER_ROLES } from '../../../entities/profile'
 import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
+import {
+  TaskMarkdownImportModal,
+  applyTaskMarkdownImport,
+  previewTaskMarkdownImport,
+} from '../../../features/tasks/import-task-markdown'
+import { TaskMarkdownExportModal } from '../../../features/tasks/export-task-markdown'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { getTeamTaskFilterPath, loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
@@ -775,6 +781,8 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const filters = useMemo(() => normalizeTeamTaskFilters(routeParams), [routeParams])
   const basePath = getTaskWorkspacePath(runtime.viewer)
   const isCreateTaskOpen = routeParams.create === '1'
+  const isExportTaskOpen = routeParams.export === '1'
+  const isImportTaskOpen = routeParams.import === '1'
   const taskData = useMemo(() => {
     void reloadTick
     return loadTeamTasks(filters, runtime)
@@ -794,6 +802,9 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const [saveState, setSaveState] = useState('')
   const [createTaskError, setCreateTaskError] = useState('')
   const [createTaskSaveState, setCreateTaskSaveState] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importSaveState, setImportSaveState] = useState('')
   const isTaskDetailsDirty = isTaskDraftChanged(selectedTask, taskDraft)
 
   function selectTask(taskId) {
@@ -865,6 +876,17 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
     navigate(getTeamTaskFilterPath(filters, basePath), { replace: true })
   }
 
+  function closeTaskImport() {
+    setImportError('')
+    setImportPlan(null)
+    setImportSaveState('')
+    navigate(getTeamTaskFilterPath(filters, basePath), { replace: true })
+  }
+
+  function closeTaskExport() {
+    navigate(getTeamTaskFilterPath(filters, basePath), { replace: true })
+  }
+
   function saveNewTask(event) {
     event.preventDefault()
     setCreateTaskError('')
@@ -886,6 +908,58 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         setCreateTaskError(caughtError.message)
         setCreateTaskSaveState('')
         toast.error('Task was not created', caughtError.message)
+      })
+  }
+
+  function previewTaskImport(input) {
+    try {
+      const nextPlan = previewTaskMarkdownImport({
+        ...input,
+        repositories: runtime.repositories,
+        viewer: runtime.viewer,
+      })
+
+      setImportPlan(nextPlan)
+      setImportError('')
+      setImportSaveState('Preview is ready.')
+    } catch (caughtError) {
+      setImportPlan(null)
+      setImportError(caughtError.message)
+      setImportSaveState('')
+      toast.error('Import preview failed', caughtError.message)
+    }
+  }
+
+  function clearTaskImportPreview() {
+    setImportError('')
+    setImportPlan(null)
+    setImportSaveState('')
+  }
+
+  function applyTaskImport() {
+    if (!importPlan) {
+      return
+    }
+
+    setImportError('')
+    setImportSaveState('Creating tasks...')
+
+    runtime.dataClient.write((repositories) => applyTaskMarkdownImport({
+      idGenerator: createUuid,
+      preview: importPlan,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((createdTasks) => {
+        setImportSaveState('')
+        setReloadTick((currentTick) => currentTick + 1)
+        toast.success('Tasks imported', `${createdTasks.length} tasks were created.`)
+        closeTaskImport()
+      })
+      .catch((caughtError) => {
+        setImportError(caughtError.message)
+        setImportSaveState('')
+        toast.error('Task import failed', caughtError.message)
       })
   }
 
@@ -949,6 +1023,25 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         taskData={taskData}
         taskDraft={taskCreationDraft}
         viewer={runtime.viewer}
+      />
+      <TaskMarkdownImportModal
+        clients={taskData.clients}
+        defaultClientId={filters.clientId === 'all' ? taskData.clients[0]?.id : filters.clientId}
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportTaskOpen}
+        onApply={applyTaskImport}
+        onClose={closeTaskImport}
+        onInvalidatePreview={clearTaskImportPreview}
+        onPreview={previewTaskImport}
+        projects={taskData.projects}
+        saveState={importSaveState}
+      />
+      <TaskMarkdownExportModal
+        isOpen={isExportTaskOpen}
+        onClose={closeTaskExport}
+        tasks={taskData.tasks}
+        title={filters.clientId === 'all' ? 'Tasks' : `${taskData.clients.find((client) => client.id === filters.clientId)?.name ?? 'Client'} Tasks`}
       />
     </PageShell>
   )
