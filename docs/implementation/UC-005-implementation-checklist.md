@@ -219,7 +219,7 @@ Until backend integration exists:
   - [x] priority
   - [x] due date
   - [x] owner
-  - [ ] updated time
+  - [x] updated time
 - [x] Build create/edit modal:
   - [x] title
   - [x] description
@@ -228,13 +228,13 @@ Until backend integration exists:
   - [x] priority
   - [x] owner
   - [x] internal notes
-- [ ] Build detail modal:
-  - [ ] request title as modal title
-  - [ ] compact metadata
-  - [ ] client-facing description
-  - [ ] client response panel
-  - [ ] internal notes panel
-  - [ ] lifecycle actions in footer/overflow
+- [x] Build detail modal:
+  - [x] request title as modal title
+  - [x] compact metadata
+  - [x] client-facing description
+  - [x] client response panel
+  - [x] internal notes panel
+  - [x] lifecycle actions in footer/overflow
 - [x] Add actions:
   - [x] save draft/update
   - [x] mark resolved
@@ -245,8 +245,8 @@ Until backend integration exists:
 
 ### Completion Criteria
 
-- [ ] agency_admin can create, edit, resolve, cancel, and reopen requests.
-- [ ] admin page uses existing workspace/navigation patterns.
+- [x] agency_admin can create, edit, resolve, cancel, and reopen requests.
+- [x] admin page uses existing workspace/navigation patterns.
 - [ ] no request lifecycle editing remains embedded in unrelated editors.
 
 ## Stage 5 - Client Requests Surface
