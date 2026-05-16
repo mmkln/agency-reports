@@ -532,7 +532,12 @@ export function TrendSeriesSection({
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <FormField label="Metric key">
-                <Input onChange={(event) => updateArrayItem('trends', trend.id, 'metric', event.target.value)} placeholder="qualified_leads" value={trend.metric ?? ''} />
+                <Input
+                  aria-label="Trend metric key"
+                  onChange={(event) => updateArrayItem('trends', trend.id, 'metric', event.target.value)}
+                  placeholder="qualified_leads"
+                  value={trend.metric ?? ''}
+                />
               </FormField>
               <SelectField label="Granularity" onChange={(value) => updateArrayItem('trends', trend.id, 'granularity', value)} value={trend.granularity ?? PERFORMANCE_TREND_GRANULARITIES.MONTHLY}>
                 {Object.values(PERFORMANCE_TREND_GRANULARITIES).map((granularity) => (
@@ -540,7 +545,12 @@ export function TrendSeriesSection({
                 ))}
               </SelectField>
               <FormField label="Goal value">
-                <Input onChange={(event) => updateArrayItem('trends', trend.id, 'goal_value', event.target.value)} type="number" value={stringValue(trend.goal_value)} />
+                <Input
+                  aria-label="Trend goal value"
+                  onChange={(event) => updateArrayItem('trends', trend.id, 'goal_value', event.target.value)}
+                  type="number"
+                  value={stringValue(trend.goal_value)}
+                />
               </FormField>
               <div className="md:col-span-2">
                 <SeriesEditor
@@ -716,6 +726,7 @@ export function ServiceSectionsSection({
               </SelectField>
               <FormField label="Summary">
                 <Textarea
+                  aria-label="Service summary"
                   onChange={(event) => updateArrayItem('service_sections', section.id, 'summary', event.target.value)}
                   rows={3}
                   value={section.summary ?? ''}
@@ -882,7 +893,11 @@ export function AppendixTablesSection({
             </div>
             <div className="mt-3 grid gap-3">
               <FormField label="Title">
-                <Input onChange={(event) => updateArrayItem('appendix_tables', table.id, 'title', event.target.value)} value={table.title ?? ''} />
+                <Input
+                  aria-label="Appendix table title"
+                  onChange={(event) => updateArrayItem('appendix_tables', table.id, 'title', event.target.value)}
+                  value={table.title ?? ''}
+                />
               </FormField>
               <AppendixColumnsEditor
                 columns={table.columns ?? []}
@@ -1012,6 +1027,7 @@ function AppendixRowsEditor({
                 return (
                   <FormField key={`${row.id}-${column.id}`} label={column.label || `Column ${columnIndex + 1}`}>
                     <Input
+                      aria-label={`${column.label || `Column ${columnIndex + 1}`} cell`}
                       onChange={(event) => onUpdateCell(row.id, cell.id, event.target.value)}
                       value={cell.value ?? ''}
                     />

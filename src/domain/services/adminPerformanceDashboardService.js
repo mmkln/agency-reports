@@ -199,7 +199,7 @@ export function saveAdminPerformanceDashboardPeriod({
       created_by: existingPeriod?.created_by ?? viewer.userId,
       data_confidence: input.dataConfidence ?? input.data_confidence ?? existingPeriod?.data_confidence,
       data_mode: input.dataMode ?? input.data_mode ?? existingPeriod?.data_mode,
-      id: existingPeriod?.id ?? input.id,
+      id: existingPeriod?.id ?? (input.id || undefined),
       last_updated_at: input.lastUpdatedAt ?? input.last_updated_at ?? existingPeriod?.last_updated_at,
       period_end: periodEnd,
       period_start: periodStart,
