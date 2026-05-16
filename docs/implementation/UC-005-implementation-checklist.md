@@ -202,7 +202,7 @@ Until backend integration exists:
 ### Tasks
 
 - [x] Add route:
-  - [x] `#admin-client-requests?clientId=...`
+  - [x] `/admin/client-requests?clientId=...`
 - [x] Register route metadata with `showInNav: false`.
 - [x] Add route tab to `AdminClientWorkspaceHeader`.
 - [x] Build `AdminClientRequestsPage`.
@@ -258,7 +258,7 @@ Until backend integration exists:
 ### Tasks
 
 - [x] Add route:
-  - [x] `#client-requests`
+  - [x] `/client/requests`
 - [x] Add route metadata.
 - [x] Add client navigation entry only if IA supports it.
 - [x] Build `ClientRequestsPage`.
@@ -407,3 +407,4 @@ overview/performance pages show active request context without owning lifecycle;
 internal notes and other-client records never leak to client-facing routes;
 all behavior is backed by domain services and e2e coverage.
 ```
+

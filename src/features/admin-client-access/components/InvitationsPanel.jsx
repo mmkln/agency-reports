@@ -167,15 +167,15 @@ export function InvitationsPanel({ clientId, runtime }) {
                 <article className="rounded-control bg-block-subtle p-3" key={invitation.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-text-primary">{invitation.email}</p>
-                      <p className="mt-0.5 truncate text-xs text-text-muted">
+                      <p className="truncate text-ui text-text-primary">{invitation.email}</p>
+                      <p className="mt-0.5 truncate text-label font-normal text-text-muted">
                         {invitation.name || 'Unnamed invite'} | {invitation.role} | expires {formatInvitationDate(invitation.expires_at)}
                       </p>
                     </div>
                     <StatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
                   </div>
 
-                  <p className="mt-3 truncate rounded-item bg-block px-2 py-1.5 font-mono text-[11px] text-text-muted">
+                  <p className="mt-3 truncate rounded-item bg-block px-2 py-1.5 font-mono text-label font-normal text-text-muted">
                     {inviteLink}
                   </p>
 
@@ -217,9 +217,9 @@ export function InvitationsPanel({ clientId, runtime }) {
         )}
 
         <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={handleCreateInvitation}>
-          <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Create invitation</p>
+          <p className="text-label text-text-secondary uppercase">Create invitation</p>
           <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Name</span>
+            <span className="text-label text-text-secondary">Name</span>
             <Input
               onChange={(event) => updateForm('name', event.target.value)}
               placeholder="Sarah Johnson"
@@ -227,7 +227,7 @@ export function InvitationsPanel({ clientId, runtime }) {
             />
           </label>
           <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Email</span>
+            <span className="text-label text-text-secondary">Email</span>
             <Input
               aria-invalid={Boolean(invitationEmailIssue)}
               inputMode="email"
@@ -258,7 +258,7 @@ export function InvitationsPanel({ clientId, runtime }) {
           </div>
           <Button disabled={Boolean(invitationEmailIssue)} type="submit">Create invitation</Button>
           {error ? (
-            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
               {error}
             </p>
           ) : null}

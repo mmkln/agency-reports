@@ -18,7 +18,7 @@ export function ClientAvatar({ client, size = 'md' }) {
   }
 
   return (
-    <span className={`${sizeClass} flex items-center justify-center rounded-control border border-action/20 bg-action-muted text-xs font-bold text-action`}>
+    <span className={`${sizeClass} flex items-center justify-center rounded-control border border-action/20 bg-action-muted text-label text-action`}>
       {initials}
     </span>
   )

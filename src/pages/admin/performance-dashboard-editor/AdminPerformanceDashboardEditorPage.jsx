@@ -4,7 +4,7 @@ import { Button } from '@/shared/ui'
 
 import { listAdminClients } from '../../../domain/services/adminClientService'
 import { getAdminPerformanceDashboardPeriod } from '../../../domain/services/adminPerformanceDashboardService'
-import { AdminPerformanceDashboardEditor } from '../../../features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor'
+import { AdminPerformanceDashboardEditor } from '../../../features/admin-performance-dashboards'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 
@@ -56,7 +56,7 @@ export function AdminPerformanceDashboardEditorPage({ routeParams = {}, runtime 
       <div className="mx-auto grid w-full max-w-3xl gap-4 px-app-gutter py-10">
         <div className="rounded-block border border-destructive/20 bg-destructive/10 p-5">
           <h2 className="text-heading text-destructive">Performance dashboard was not found</h2>
-          <p className="mt-2 text-sm leading-6 text-destructive">
+          <p className="mt-2 text-body text-destructive">
             {editorResource.error}
           </p>
           <Button asChild className="mt-4" type="button" variant="outline">

@@ -33,3 +33,46 @@ export const TASK_STATUS_META = Object.freeze({
     tone: 'green',
   },
 })
+
+export function getTaskStatusMeta(status) {
+  return TASK_STATUS_META[status] ?? {
+    icon: 'circle',
+    label: status || 'Unknown',
+    tone: 'neutral',
+  }
+}
+
+export function formatTaskDueDate(date) {
+  if (!date) {
+    return 'No due date'
+  }
+
+  const dueDate = new Date(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const dueDay = new Date(dueDate)
+  dueDay.setHours(0, 0, 0, 0)
+
+  const dayDifference = Math.round((dueDay.getTime() - today.getTime()) / 86_400_000)
+
+  if (dayDifference === 0) {
+    return 'Today'
+  }
+
+  if (dayDifference === 1) {
+    return 'Tomorrow'
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(dueDate)
+}
+
+export function isTaskAttentionNeeded(task) {
+  return Boolean(task?.blockerNote)
+    || task?.status === TASK_STATUSES.BLOCKED
+    || task?.status === TASK_STATUSES.WAITING_CLIENT
+}

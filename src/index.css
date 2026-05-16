@@ -192,6 +192,10 @@
   --text-label--line-height: 18px;
   --text-label--letter-spacing: 0;
   --text-label--font-weight: 600;
+  --text-indicator: 10px;
+  --text-indicator--line-height: 12px;
+  --text-indicator--letter-spacing: 0;
+  --text-indicator--font-weight: 700;
   --text-data: 28px;
   --text-data--line-height: 34px;
   --text-data--letter-spacing: 0;

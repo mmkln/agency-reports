@@ -15,10 +15,15 @@ function formatTick(value) {
 export function StackedBarLineChart({
   ariaLabel,
   bars,
+  barWidthMax = 18,
+  barWidthMin = 4,
   data,
+  heightClassName = 'h-[360px]',
+  labelEvery: labelEveryOverride,
   line,
   leftAxisLabel,
   leftTicks,
+  minWidthClassName = 'min-w-[56rem]',
   rightAxisLabel,
   rightTicks,
   viewBox = '0 0 900 360',
@@ -38,10 +43,10 @@ export function StackedBarLineChart({
   )
   const rightMax = yRightMax ?? Math.max(1, ...normalizedData.map((item) => Number(item[line.key]) || 0))
   const xStep = normalizedData.length > 1 ? (xEnd - xStart) / normalizedData.length : 32
-  const barWidth = Math.max(4, Math.min(18, xStep * 0.72))
+  const barWidth = Math.max(barWidthMin, Math.min(barWidthMax, xStep * 0.72))
   const leftTickValues = leftTicks ?? [0, leftMax * 0.25, leftMax * 0.5, leftMax * 0.75, leftMax]
   const rightTickValues = rightTicks ?? [0, rightMax * 0.25, rightMax * 0.5, rightMax * 0.75, rightMax]
-  const labelEvery = Math.max(1, Math.ceil(normalizedData.length / 10))
+  const labelEvery = labelEveryOverride ?? Math.max(1, Math.ceil(normalizedData.length / 10))
 
   const getX = (index) => xStart + xStep * index + xStep / 2
   const getLeftY = (value) => yBottom - clampPercent(value / leftMax) * chartHeight
@@ -52,7 +57,7 @@ export function StackedBarLineChart({
     .join(' ')
 
   return (
-    <svg aria-label={ariaLabel} className="h-[360px] w-full min-w-[56rem] overflow-hidden" role="img" viewBox={viewBox}>
+    <svg aria-label={ariaLabel} className={`${heightClassName} w-full ${minWidthClassName} overflow-hidden`} role="img" viewBox={viewBox}>
       {leftAxisLabel ? (
         <text
           fill={chartColors.label}

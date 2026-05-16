@@ -44,7 +44,7 @@ export function TaskMarkdownExportModal({
       <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
         <OverlayHeader className="pr-control-xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-text-primary">Export task Markdown</DialogTitle>
+            <DialogTitle className="text-heading text-text-primary">Export task Markdown</DialogTitle>
             <DialogDescription>
               Current task results are grouped by status. Copy this Markdown into docs, planning notes, or a future import.
             </DialogDescription>
@@ -58,7 +58,7 @@ export function TaskMarkdownExportModal({
               <span className="text-label text-text-muted">{tasks.length} tasks</span>
             </div>
             <Textarea
-              className="min-h-[28rem] font-mono text-xs leading-5"
+              className="min-h-[28rem] font-mono text-label font-normal"
               id="task-export-markdown"
               readOnly
               spellCheck={false}
@@ -68,7 +68,7 @@ export function TaskMarkdownExportModal({
         </OverlayBody>
 
         <OverlayFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-h-5 text-sm text-text-muted">{copyState}</div>
+          <div className="min-h-5 text-ui text-text-muted">{copyState}</div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button onClick={onClose} type="button" variant="outline">
               Close

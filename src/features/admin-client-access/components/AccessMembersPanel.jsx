@@ -141,18 +141,18 @@ export function AccessMembersPanel({ clientId, runtime }) {
             {members.map((member) => (
               <article className="rounded-control bg-block-subtle p-3" key={member.id}>
                 <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action-muted text-sm font-semibold text-action">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action-muted text-ui text-action">
                     {member.name.slice(0, 1).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-text-primary">{member.name}</p>
-                    <p className="truncate text-xs text-text-muted">{member.email}</p>
+                    <p className="truncate text-ui text-text-primary">{member.name}</p>
+                    <p className="truncate text-label font-normal text-text-muted">{member.email}</p>
                     <div className="mt-3 flex items-center gap-2">
                       <Select
                         onValueChange={(role) => handleRoleChange(member, role)}
                         value={member.role}
                       >
-                        <SelectTrigger className="h-8 w-[130px] bg-block text-xs">
+                        <SelectTrigger className="h-8 w-[130px] bg-block text-label">
                           <SelectValue placeholder="Role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -184,9 +184,9 @@ export function AccessMembersPanel({ clientId, runtime }) {
         )}
 
         <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={handleAddMember}>
-          <p className="text-xs font-bold tracking-wide text-text-secondary uppercase">Add client user</p>
+          <p className="text-label text-text-secondary uppercase">Add client user</p>
           <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Name</span>
+            <span className="text-label text-text-secondary">Name</span>
             <Input
               aria-invalid={Boolean(memberNameIssue)}
               minLength={2}
@@ -198,7 +198,7 @@ export function AccessMembersPanel({ clientId, runtime }) {
             <FieldError>{memberNameIssue}</FieldError>
           </label>
           <label className="grid gap-1.5">
-            <span className="text-xs font-medium text-text-secondary">Email</span>
+            <span className="text-label text-text-secondary">Email</span>
             <Input
               aria-invalid={Boolean(memberEmailIssue)}
               inputMode="email"
@@ -224,7 +224,7 @@ export function AccessMembersPanel({ clientId, runtime }) {
             <Button disabled={Boolean(memberNameIssue || memberEmailIssue)} type="submit">Add member</Button>
           </div>
           {error ? (
-            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
               {error}
             </p>
           ) : null}

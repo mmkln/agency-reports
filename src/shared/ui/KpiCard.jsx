@@ -19,25 +19,25 @@ export function KpiCard({
   return (
     <Card id={inspectorId} className="transition-shadow hover:shadow-block">
       <CardContent className="flex flex-col justify-between">
-        <div className="mb-4 flex items-start justify-between">
+        <div className="mb-component flex items-start justify-between">
           <div>
-            <p className="mb-1 text-sm font-medium text-text-secondary">{label}</p>
-            <h3 className="m-0 text-3xl font-bold text-text-primary">{value}</h3>
+            <p className="mb-micro text-label text-text-secondary">{label}</p>
+            <h3 className="m-0 text-data text-text-primary">{value}</h3>
           </div>
-          <div className={`rounded-block p-3 ${bgColor}`}>
+          <div className={`rounded-block p-control ${bgColor}`}>
             <Icon className={color} name={iconName} size={24} />
           </div>
         </div>
         {trend ? (
-          <div className="mt-2 flex items-center">
-            <span className="flex items-center text-sm font-medium text-success-foreground">
-              <Icon className="mr-1" name="arrowUpRight" size={16} />
+          <div className="mt-item flex items-center">
+            <span className="flex items-center text-ui text-success-foreground">
+              <Icon className="mr-micro" name="arrowUpRight" size={16} />
               {trend}
             </span>
-            {trendLabel ? <span className="ml-2 text-sm text-text-muted">{trendLabel}</span> : null}
+            {trendLabel ? <span className="ml-item text-ui text-text-muted">{trendLabel}</span> : null}
           </div>
         ) : helperText ? (
-          <p className="mt-2 text-sm text-text-secondary">{helperText}</p>
+          <p className="mt-item text-ui text-text-secondary">{helperText}</p>
         ) : null}
       </CardContent>
     </Card>

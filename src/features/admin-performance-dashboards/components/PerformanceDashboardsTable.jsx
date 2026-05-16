@@ -146,7 +146,7 @@ export function PerformanceDashboardsTable({
     <>
       <Card className="border-control-border bg-block py-0 shadow-none">
         <Table className="min-w-[1180px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-xs font-semibold tracking-wide text-text-muted uppercase">
+          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
             <TableRow className="hover:bg-transparent">
               <TableHead className="px-6 py-3">Dashboard</TableHead>
               <TableHead className="px-6 py-3">Client</TableHead>
@@ -167,14 +167,14 @@ export function PerformanceDashboardsTable({
                   <TableCell className="px-6 py-4">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-text-primary">{period.title}</p>
-                      <p className="mt-1 max-w-xl truncate text-xs text-text-muted">
+                      <p className="mt-1 max-w-xl truncate text-label font-normal text-text-muted">
                         {heroMetric.label}: {heroMetric.value}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <p className="font-medium text-text-secondary">{period.client.name}</p>
-                    <p className="mt-0.5 text-xs text-text-muted">/{period.client.portalSlug}</p>
+                    <p className="mt-0.5 text-label font-normal text-text-muted">/{period.client.portalSlug}</p>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-text-secondary">
                     {formatPeriod(period)}

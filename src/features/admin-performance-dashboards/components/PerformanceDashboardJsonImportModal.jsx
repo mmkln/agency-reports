@@ -259,8 +259,8 @@ function IssueList({ issues, title, tone }) {
 
   return (
     <div className={`rounded-control border px-3 py-2 ${toneClassName}`}>
-      <p className="text-sm font-semibold">{title}</p>
-      <ul className="mt-2 grid gap-1 text-xs leading-5">
+      <p className="text-ui">{title}</p>
+      <ul className="mt-2 grid gap-1 text-label font-normal">
         {issues.map((issue, index) => (
           <li key={`${issue.path}-${index}`}>
             <span className="font-mono">{issue.path}</span>: {issue.message}
@@ -307,7 +307,7 @@ export function PerformanceDashboardJsonImportModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={submitImport}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">Import performance dashboard JSON</DialogTitle>
+              <DialogTitle className="text-heading text-text-primary">Import performance dashboard JSON</DialogTitle>
               <DialogDescription>
                 Paste a prepared dashboard period JSON. Valid imports are saved as draft only and must be reviewed before publishing.
               </DialogDescription>
@@ -317,7 +317,7 @@ export function PerformanceDashboardJsonImportModal({
           <OverlayBody className="min-h-0 overflow-y-auto bg-surface-subtle">
             <div className="grid gap-component">
               {!hasClients ? (
-                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
                   Create a client workspace before importing performance data.
                 </div>
               ) : null}
@@ -325,17 +325,17 @@ export function PerformanceDashboardJsonImportModal({
               <IssueList issues={importResult?.errors} title="Import blocked" />
               <IssueList issues={importResult?.warnings} title="Imported with warnings" tone="warning" />
 
-              <div className="flex items-start gap-3 rounded-control border border-action/20 bg-action-muted px-3 py-3 text-sm">
+              <div className="flex items-start gap-3 rounded-control border border-action/20 bg-action-muted px-3 py-3 text-ui">
                 <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-block text-action ring-1 ring-action/20">
                   <Icon name="code" size={15} />
                 </span>
                 <div className="min-w-0">
                   <p className="font-semibold text-text-primary">JSON contract reference</p>
-                  <p className="mt-1 leading-6 text-text-secondary">
+                  <p className="mt-1 text-body text-text-secondary">
                     Import accepts the UC-004 dashboard period contract, including `campaign_execution` and `agency_work`.
                     Valid imports always become drafts and still require review before publishing.
                   </p>
-                  <p className="mt-2 break-all font-mono text-xs text-text-muted">
+                  <p className="mt-2 break-all font-mono text-label font-normal text-text-muted">
                     docs/implementation/UC-004-json-import-contract.md
                   </p>
                 </div>
@@ -348,8 +348,8 @@ export function PerformanceDashboardJsonImportModal({
                       <Icon name="fileJson" size={16} />
                     </span>
                     <div>
-                      <h3 className="text-sm font-semibold text-text-primary">Import source</h3>
-                      <p className="mt-1 text-xs leading-5 text-text-muted">
+                      <h3 className="text-ui text-text-primary">Import source</h3>
+                      <p className="mt-1 text-label font-normal text-text-muted">
                         The selected client is applied to the imported dashboard, so the JSON cannot accidentally publish under a different workspace.
                       </p>
                     </div>
@@ -397,7 +397,7 @@ export function PerformanceDashboardJsonImportModal({
                       </Button>
                     </div>
                     <Textarea
-                      className="min-h-[28rem] font-mono text-xs leading-5"
+                      className="min-h-[28rem] font-mono text-label font-normal"
                       id="performance-import-json"
                       onChange={(event) => setRawJson(event.target.value)}
                       required

@@ -5,14 +5,22 @@ import { useAuth } from '../providers/auth/useAuth'
 import { AppShell } from '../../shared/layout'
 import { DemoRoleSwitcher } from '../components/DemoRoleSwitcher'
 import { canAccessRoute, filterRoutesForViewer } from '../routing/roleAccess'
-import { getPathFromLegacyHash } from '../routing/legacyHashRoutes'
-import { routeMetadata } from '../routing/routeMetadata'
+import { routeMetadata } from '../routing/routeDefinitions'
 import {
   getDemoRoleOption,
   getDemoRoleOptionByRole,
   readDemoRoleKey,
   writeDemoRoleKey,
 } from '../providers/session/demoRoleSwitch'
+
+const legacyHashRouteMap = Object.freeze({
+  '#client-dashboard': '/client/dashboard',
+  '#client-overview': '/client/overview',
+  '#client-performance': '/client/performance',
+  '#dashboard': '/client/dashboard',
+  '#performance': '/client/performance',
+  '#performance-dashboard': '/client/performance',
+})
 
 export function RootLayout() {
   const { onAuthChange, onLogin, runtime, viewer } = useAuth()
@@ -22,12 +30,21 @@ export function RootLayout() {
   const [demoRoleKey, setDemoRoleKey] = useState(() => readDemoRoleKey())
 
   useEffect(() => {
-    const nextPath = getPathFromLegacyHash(location.hash, viewer)
+    const hashRoute = legacyHashRouteMap[location.hash]
 
-    if (nextPath) {
-      navigate(nextPath, { replace: true })
+    if (!hashRoute || location.pathname !== '/') {
+      return
     }
-  }, [location.hash, navigate, viewer])
+
+    const nextParams = new URLSearchParams(searchParams)
+
+    if (runtime.defaultClientId && !nextParams.has('clientId')) {
+      nextParams.set('clientId', runtime.defaultClientId)
+    }
+
+    const queryString = nextParams.toString()
+    navigate(`${hashRoute}${queryString ? `?${queryString}` : ''}`, { replace: true })
+  }, [location.hash, location.pathname, navigate, runtime.defaultClientId, searchParams])
 
   const handleDemoRoleChange = (roleKey) => {
     const option = getDemoRoleOption(roleKey)

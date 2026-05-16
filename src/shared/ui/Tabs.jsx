@@ -7,7 +7,7 @@ export function Tabs({ id, items }) {
     <nav id={inspectorId} className="flex items-center overflow-x-auto" aria-label="Dashboard pages">
       {items.map((item) => (
         <a
-          className={`inline-flex min-h-11 items-center gap-2 rounded-full px-component text-sm font-medium whitespace-nowrap no-underline transition-colors duration-motion-fast ease-motion-standard first:ml-4 ${
+          className={`inline-flex min-h-target items-center gap-item rounded-full px-component text-ui whitespace-nowrap no-underline transition-colors duration-motion-fast ease-motion-standard first:ml-component ${
             item.active
               ? 'bg-control-selected text-text-primary'
               : 'text-text-secondary hover:bg-control-hover hover:text-text-primary'

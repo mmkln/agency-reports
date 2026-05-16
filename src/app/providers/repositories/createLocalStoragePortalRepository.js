@@ -55,13 +55,58 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
-function mergeSeedRecords(records, seedRecords) {
+function mergeSeedPerformanceDashboardPeriod(record, seedRecord) {
+  const existingContent = isPlainObject(record.content) ? record.content : {}
+  const seedContent = isPlainObject(seedRecord.content) ? seedRecord.content : {}
+  const existingCampaignExecution = isPlainObject(existingContent.campaign_execution)
+    ? existingContent.campaign_execution
+    : {}
+  const seedCampaignExecution = isPlainObject(seedContent.campaign_execution)
+    ? seedContent.campaign_execution
+    : null
+  const existingActivitySeries = Array.isArray(existingCampaignExecution.activity_series)
+    ? existingCampaignExecution.activity_series
+    : []
+
+  if (!seedCampaignExecution || existingActivitySeries.length >= seedCampaignExecution.activity_series?.length) {
+    return record
+  }
+
+  return {
+    ...record,
+    content: {
+      ...seedContent,
+      ...existingContent,
+      campaign_execution: {
+        ...seedCampaignExecution,
+        ...existingCampaignExecution,
+        activity_series: seedCampaignExecution.activity_series,
+      },
+    },
+  }
+}
+
+function mergeSeedRecord(record, seedRecord, tableName) {
+  if (tableName === 'performance_dashboard_periods') {
+    return mergeSeedPerformanceDashboardPeriod(record, seedRecord)
+  }
+
+  return record
+}
+
+function mergeSeedRecords(records, seedRecords, tableName) {
   const existingRecords = Array.isArray(records) ? records : []
   const seedRecordsList = Array.isArray(seedRecords) ? seedRecords : []
   const existingIds = new Set(existingRecords.map((record) => record?.id).filter(Boolean))
   const missingSeedRecords = seedRecordsList.filter((record) => !existingIds.has(record.id))
+  const seedRecordsById = new Map(seedRecordsList.map((record) => [record.id, record]))
+  const mergedExistingRecords = existingRecords.map((record) => {
+    const seedRecord = seedRecordsById.get(record?.id)
 
-  return [...existingRecords, ...clone(missingSeedRecords)]
+    return seedRecord ? mergeSeedRecord(record, seedRecord, tableName) : record
+  })
+
+  return [...mergedExistingRecords, ...clone(missingSeedRecords)]
 }
 
 function normalizeSnapshot(snapshot, seedData) {
@@ -81,7 +126,7 @@ function normalizeSnapshot(snapshot, seedData) {
       ? snapshot[tableName]
       : seedTableRecords
 
-    normalizedSnapshot[tableName] = mergeSeedRecords(tableRecords, seedTableRecords)
+    normalizedSnapshot[tableName] = mergeSeedRecords(tableRecords, seedTableRecords, tableName)
   }
 
   return normalizedSnapshot

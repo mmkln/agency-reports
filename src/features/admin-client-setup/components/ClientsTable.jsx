@@ -62,7 +62,7 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
     <>
       <Card className="border-control-border bg-block py-0 shadow-none">
         <Table className="min-w-[980px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-xs font-semibold tracking-wide text-text-muted uppercase">
+          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
             <TableRow className="hover:bg-transparent">
               <TableHead className="px-6 py-3">Client</TableHead>
               <TableHead className="px-6 py-3">Project Status</TableHead>
@@ -82,7 +82,7 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
                         <ClientAvatar client={client} />
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-text-primary">{client.name}</p>
-                          <p className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+                          <p className="mt-1 flex items-center gap-1 text-label font-normal text-text-muted">
                             <Icon name="arrowUpRight" size={13} />
                             <span className="truncate">/{client.portal_slug}</span>
                           </p>
@@ -94,7 +94,7 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
                     </TableCell>
                     <TableCell className="px-6 py-4">
                       <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
-                      <p className="mt-0.5 text-xs text-text-muted">{client.primary_contact_email}</p>
+                      <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-text-muted">{formatDate(client.created_at)}</TableCell>
                     <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">

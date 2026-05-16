@@ -35,9 +35,9 @@ function FormSection({ children, description, iconName, title }) {
             <Icon name={iconName} size={16} />
           </span>
           <div>
-            <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+            <h3 className="text-ui text-text-primary">{title}</h3>
             {description ? (
-              <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p>
+              <p className="mt-1 text-label font-normal text-text-muted">{description}</p>
             ) : null}
           </div>
         </div>
@@ -73,7 +73,7 @@ export function PerformanceDashboardPeriodModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={onSubmit}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">{title}</DialogTitle>
+              <DialogTitle className="text-heading text-text-primary">{title}</DialogTitle>
               <DialogDescription>
                 {description}
               </DialogDescription>
@@ -83,13 +83,13 @@ export function PerformanceDashboardPeriodModal({
           <OverlayBody className="min-h-0 overflow-y-auto bg-surface-subtle">
             <div className="grid gap-component">
               {!hasClients ? (
-                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
                   Create a client workspace before adding performance dashboards.
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
                   {error}
                 </div>
               ) : null}

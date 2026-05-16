@@ -19,7 +19,8 @@ src/
 │   └── routing/                 # React Router configuration
 │       ├── router.jsx           # Router definition with routes
 │       ├── ProtectedRoute.jsx   # Role-based access control wrapper
-│       └── PageWrapper.jsx      # Wrapper to inject props into pages
+│       ├── routeDefinitions.jsx # Route elements and navigation/access metadata
+│       └── RoutePages.jsx      # Route adapters to inject props into pages
 ├── domain/                       # Business logic
 │   ├── policies/                # Business rules and policies
 │   └── services/                # Domain services (auth, tracking, etc.)
@@ -48,7 +49,7 @@ src/
 │   ├── charts/                  # Chart components
 │   ├── data/                    # Data utilities and hooks
 │   ├── icons/                   # Icon system
-│   ├── layout/                  # Layout components (AppShell, TopNav)
+│   ├── layout/                  # Layout components (AppShell, AppSidebar)
 │   ├── notifications/           # Toast notification system
 │   ├── theme/                   # Theme provider
 │   └── ui/                      # UI components
@@ -61,7 +62,7 @@ src/
 
 ## Routing Architecture
 
-The application uses **React Router v7** with hash-based routing for GitHub Pages compatibility.
+The application uses **React Router v7** with browser routing for GitHub Pages compatibility.
 
 ### Router Configuration (`src/app/routing/router.jsx`)
 
@@ -84,9 +85,9 @@ The application uses **React Router v7** with hash-based routing for GitHub Page
 - Redirects unauthorized users to `/access-denied`
 - Redirects unauthenticated users to `/login`
 
-### Page Wrapper (`src/app/routing/PageWrapper.jsx`)
+### Route Page Adapters (`src/app/routing/RoutePages.jsx`)
 
-Pages expect `runtime`, `routeParams`, and `onAuthChange` props. The `createPageWrapper` utility:
+Pages expect `runtime`, `routeParams`, and `onAuthChange` props. The route adapters in `RoutePages`:
 - Extracts these from hooks (useAuth, useSearchParams)
 - Injects them as props for backward compatibility
 - Minimizes changes to existing page components
@@ -154,7 +155,7 @@ Reusable across the application:
 - **UI Components**: Button, Card, Badge, Tabs, etc. (shadcn/Tailwind)
 - **Charts**: Line, Bar, Donut charts
 - **Icons**: Centralized icon registry
-- **Layout**: AppShell, TopNav, PageHeader
+- **Layout**: AppShell, AppSidebar, PageHeader
 
 ### Feature Components (`src/features/`)
 
@@ -204,8 +205,8 @@ Reference: `docs/design-system.md`
 ### Adding a New Route
 
 1. Create page component in `src/pages/{role}/{feature}/`
-2. Add route metadata to `src/app/routing/router.jsx`
-3. Wrap with `createPageWrapper` if page needs runtime/routeParams
+2. Add the route element and metadata to `src/app/routing/routeDefinitions.jsx`
+3. Add or reuse a route adapter in `src/app/routing/RoutePages.jsx` if page needs runtime/routeParams
 4. Protect with `ProtectedRoute` if role-based access needed
 
 ### Adding a New Feature
@@ -248,12 +249,13 @@ Reference: `docs/design-system.md`
 - **Vitest**: Unit testing
 - **Playwright**: E2E testing
 
-## Migration Notes (Hash Routing → React Router)
+## Routing Migration Notes
 
-- Removed hash-based routing (`window.location.hash`)
-- Migrated to standard URL paths (`/client/overview` instead of `#client-overview`)
-- Preserved role-based access control via ProtectedRoute
-- Pages still work with old prop interface via PageWrapper
-- Session and auth logic unchanged
+- Browser routing is the only active routing mode.
+- Route elements and metadata live in `src/app/routing/routeDefinitions.jsx`.
+- Page route adapters live in `src/app/routing/RoutePages.jsx`.
+- Role-based access control is preserved via `ProtectedRoute` and `roleAccess`.
+- Session and auth logic unchanged.
 
 This ensures a clean, maintainable architecture that scales with the product while keeping code organized and easy to navigate.
+

@@ -8,8 +8,8 @@ Canonical system:
 - Detailed foundation rules are maintained in `src/index.css` and shared component files; review token definitions before changing primitives, overlays, motion, or app-structure patterns.
 
 Reference contexts:
-- `#landing` defines the public marketing and auth expression of the system.
-- `#crm-dashboard` defines the internal application and dashboard expression of the system.
+- `/` defines the public marketing and auth expression of the system.
+- `/legacy/crm-dashboard` defines the internal application and dashboard expression of the system.
 
 ## Core Principles
 
@@ -161,3 +161,4 @@ Tables and metrics:
 3. Use this document's tokens and component rules.
 4. If a new pattern repeats twice, move it into `src/shared/ui`.
 5. If a design decision changes the canon, update this document and `agents.md`.
+

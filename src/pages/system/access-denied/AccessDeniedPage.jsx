@@ -22,10 +22,10 @@ export function AccessDeniedPage({ runtime }) {
             <div className="mx-auto mt-10 flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 text-destructive">
               <Icon name="shieldCheck" size={36} />
             </div>
-            <h1 className="mt-6 text-3xl font-bold tracking-tight text-text-primary">
+            <h1 className="mt-6 text-display text-text-primary">
               Access denied
             </h1>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-text-muted">
+            <p className="mx-auto mt-3 max-w-md text-body text-text-muted">
               Your current role or client membership does not allow access to this workspace.
               Check the link or return to your portal home.
             </p>

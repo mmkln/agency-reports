@@ -123,7 +123,7 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
 
   if (dashboardsResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
         {dashboardsResource.error}
       </div>
     )

@@ -249,7 +249,7 @@ export function AdminPerformanceDashboardEditor({
       <section className="rounded-block border border-control-border bg-block shadow-card">
         <div className="flex flex-col gap-4 border-b border-separator px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
+            <div className="flex flex-wrap items-center gap-2 text-label font-normal text-text-muted">
               <Link className="font-medium text-action hover:underline" to="/admin/performance-dashboards">
                 Performance Dashboards
               </Link>
@@ -257,7 +257,7 @@ export function AdminPerformanceDashboardEditor({
               <span>{selectedClient?.name ?? 'Client'}</span>
             </div>
             <h1 className="mt-2 truncate text-heading text-text-primary">{form.title}</h1>
-            <p className="mt-1 text-sm text-text-muted">{formatPeriod(form)}</p>
+            <p className="mt-1 text-ui text-text-muted">{formatPeriod(form)}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge meta={PERFORMANCE_DASHBOARD_STATUS_META[form.status]} />
@@ -284,7 +284,7 @@ export function AdminPerformanceDashboardEditor({
             <IssueList issues={validation.errors} title="Blocking errors" tone="error" />
             <IssueList issues={validation.warnings} title="Warnings" tone="warning" />
             {validation.isValid && validation.warnings.length === 0 ? (
-              <div className="rounded-control border border-success/20 bg-success/10 px-3 py-2 text-xs font-medium text-success">
+              <div className="rounded-control border border-success/20 bg-success/10 px-3 py-2 text-label text-success">
                 Dashboard passes publish validation with no warnings.
               </div>
             ) : null}

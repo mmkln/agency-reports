@@ -104,24 +104,24 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
         <Card className="w-full max-w-form bg-material-vibrant shadow-premium backdrop-blur-2xl">
           <CardContent className="p-8">
-            <BrandLogo href={import.meta.env.BASE_URL} variant="static" />
+            <BrandLogo href="/" variant="static" />
 
             <div className="mt-10">
-              <p className="text-sm font-semibold text-brand">Client portal invite</p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-heading">Accept your invitation</h1>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
+              <p className="text-ui text-brand">Client portal invite</p>
+              <h1 className="mt-2 text-display text-text-primary">Accept your invitation</h1>
+              <p className="mt-2 text-body text-text-secondary">
                 Confirm your email and name to access your client status hub.
               </p>
             </div>
 
-            <div className={`mt-5 flex items-start gap-2 rounded-control border px-control py-control text-sm ${statusToneClasses[inviteStatusMeta.tone] ?? statusToneClasses.amber}`}>
+            <div className={`mt-5 flex items-start gap-2 rounded-control border px-control py-control text-ui ${statusToneClasses[inviteStatusMeta.tone] ?? statusToneClasses.amber}`}>
               <Icon className="mt-0.5 shrink-0" name={inviteStatusMeta.icon} size={15} />
               {getInviteStateMessage(invitationContext, inviteStatus)}
             </div>
 
             <form className="mt-8 grid gap-5" onSubmit={handleSubmit}>
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-text-secondary">Name</span>
+                <span className="text-ui text-text-secondary">Name</span>
                 <Input
                   autoComplete="name"
                   minLength={2}
@@ -138,7 +138,7 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-text-secondary">Email address</span>
+                <span className="text-ui text-text-secondary">Email address</span>
                 <Input
                   autoComplete="email"
                   name="email"
@@ -159,12 +159,12 @@ export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
             </form>
 
             {error ? (
-              <p className="mt-4 rounded-control bg-destructive/10 px-control py-item text-sm text-destructive">
+              <p className="mt-4 rounded-control bg-destructive/10 px-control py-item text-ui text-destructive">
                 {error}
               </p>
             ) : null}
 
-            <p className="mt-6 text-center text-sm text-text-secondary">
+            <p className="mt-6 text-center text-ui text-text-secondary">
               Already have access?{' '}
               <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/login">
                 Sign in

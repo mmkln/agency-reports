@@ -207,6 +207,52 @@ Feedback wrappers
 - Keep shadcn/Radix primitives in `src/components/ui` as the low-level layer.
 - Do not import directly from shadcn in a page when a project wrapper already exists.
 
+## Component Ownership Gate
+
+Before adding or moving a component, choose the lowest correct ownership layer:
+
+```text
+pages
+  Route shell only: route params, runtime wiring, top-level composition.
+
+widgets
+  Reusable screen sections that combine entities/features for presentation.
+
+features
+  User workflows, forms, modals, imports, exports, editors, mutations, and workflow hooks.
+
+entities/*/ui
+  Domain-object presentation such as status badges, meta rows, labels, icons, and read-only object summaries.
+
+shared/ui
+  Product-agnostic primitives and generic structural wrappers only.
+```
+
+Root feature components should stay small. Prefer this structure for complex editors and workflow-heavy screens:
+
+```text
+FeatureRoot.jsx
+  uses useFeatureWorkflow()
+  renders header/actions/dialogs
+  renders FeatureSections
+
+useFeatureWorkflow.js
+  load, autosave, save, publish, restore, delete confirmation state
+
+FeatureSections.jsx
+  layout and callback wiring for the visible sections
+
+SectionName.jsx
+  one editor/list/detail area
+
+LocalPrimitive.jsx
+  feature-specific card/row/header used only inside this feature
+```
+
+Pages and app code should import feature roots through `features/<feature-name>`. Do not import `features/<feature-name>/components/*` from pages; those files are internal unless the feature root explicitly exports them as public API.
+
+Use `docs/design/component-implementation-audit.md` as the standing audit checklist before large UI refactors.
+
 ## Review Checklist
 
 Before finishing a structural UI change, verify:

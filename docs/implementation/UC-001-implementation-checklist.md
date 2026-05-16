@@ -127,7 +127,7 @@ Route:
 
 ```text
 /client/overview
-current temporary hash route: #client-overview
+current browser route: /client/overview
 ```
 
 Required UI sections:
@@ -324,7 +324,7 @@ Test types:
 - [x] Unit tests for policies.
 - [x] Unit tests for `clientOverviewService`.
 - [x] Unit tests for client dashboard/report boundary services.
-- [x] Browser smoke test for `#client-overview`.
+- [x] Browser smoke test for `/client/overview`.
 - [x] Manual/browser QA using a second seeded client id.
 
 **Acceptance check:**
@@ -411,3 +411,4 @@ Keep these out of the UC-001 implementation:
 6. Complete Stage 8 dashboard/report overview boundaries.
 7. Run Stage 9 security QA.
 8. Confirm Stage 11 final acceptance.
+

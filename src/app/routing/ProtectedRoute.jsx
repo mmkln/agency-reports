@@ -19,11 +19,11 @@ export function ProtectedRoute({ children, allowedRoles }) {
   }, [viewer, allowedRoles, navigate])
 
   if (!viewer) {
-    return <div className="p-6 text-sm text-text-muted">Redirecting to sign in...</div>
+    return <div className="p-6 text-ui text-text-muted">Redirecting to sign in...</div>
   }
 
   if (!canAccessRoute(viewer, { allowedRoles })) {
-    return <div className="p-6 text-sm text-text-muted">Checking permissions...</div>
+    return <div className="p-6 text-ui text-text-muted">Checking permissions...</div>
   }
 
   return children

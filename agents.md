@@ -22,6 +22,7 @@
 
 ## Architecture
 
+- Before changing code under `src`, read the nearest layer `AGENTS.md` file. Layer-local instructions define ownership and import boundaries for `app`, `pages`, `widgets`, `features`, `entities`, `shared`, and primitives.
 - Keep domain behavior in services and policies; page components should orchestrate data and compose UI.
 - Access persisted data through repository adapters, not direct browser storage calls from pages, widgets, or domain code.
 - Route pages should prefer `runtime.dataClient.read/write` around domain services for API-like loading/error behavior; keep direct repository access inside adapters and domain service boundaries.
@@ -35,9 +36,17 @@
 
 ## UI Composition
 
+- Before adding or changing a component, decide and state its ownership layer: `page`, `widget`, `feature`, `entity/ui`, or `shared/ui`. Do not implement first and choose a location afterward.
+- Use the component audit checklist in `docs/design/component-implementation-audit.md` before large UI refactors or when touching files already identified as structural hotspots.
+- Treat pages as route shells. If a page starts owning local sections, field rendering, mutation workflows, or more than a small amount of UI state, extract to widgets, features, entity UI, or feature hooks before adding new behavior.
+- Keep feature public APIs explicit. Pages should import from `features/<feature-name>`; avoid importing `features/<feature-name>/components/*` from pages or app code.
+- A feature root component should compose workflow hooks, headers, dialogs, and section components. Load/autosave/mutation state belongs in feature hooks; dense section markup belongs in section files.
 - Reuse existing shared layout, UI, chart, icon, and primitive components before creating page-local equivalents.
 - Prefer shadcn primitives from `src/components/ui` for low-level controls and compose business UI around them.
 - Do not build parallel base components when an existing primitive can express the same interaction.
+- For visible controls, use project primitives first: `Button`, `Input`, `Textarea`, `RadixSelect`/select wrappers, `Checkbox`, `Switch`, `SearchField`, `Dialog`, `Sheet`, `Popover`, `DropdownMenu`, `Tabs`, and `Badge`. Raw lowercase `<button>`, `<input>`, `<textarea>`, and `<select>` are acceptable mainly inside primitives, hidden file inputs, or rare accessibility-specific cases.
+- Promote a repeated pattern to `shared/ui` only when it is generic and appears in at least two active product features. Keep domain-specific variants in `features` or `entities/*/ui`.
+- If a component file exceeds roughly 250-300 lines or contains more than 4-5 local React components, stop and split it before adding more behavior.
 - Treat Apple/HIG-style references as hierarchy and restraint guidance, not as a reason to copy platform chrome literally or redesign the information architecture prematurely.
 - Avoid borders when spacing, background, typography, or state color can communicate structure clearly; too many borders make dense admin UI feel overloaded.
 - Keep primitive defaults aligned through shared tokens and component defaults instead of repeated page-level corrective classes.
@@ -140,6 +149,9 @@
 
 ## Implementation Hygiene
 
+- During component audits, report counts and hotspots separately from fixes. Do not claim the whole component system is clean just because lint/build pass.
+- After component structure refactors, verify import boundaries, run `npx eslint src`, run `npm test` when domain/workflow behavior moved, and run `npm run build`.
+- When introducing Tailwind classes in active product UI, prefer semantic project tokens over raw palette, numeric spacing, arbitrary values, border, radius, shadow, or typography utilities. If raw utilities are necessary, keep them local and explain why the existing token/primitive does not fit.
 - Always run shell commands with the resolved project `workdir`, and use absolute paths for `apply_patch` when the environment cwd differs from the active repository, so edits never land in an old or adjacent workspace.
 - Keep Tailwind and styling aligned with the project's current setup; do not introduce legacy configuration or global CSS patterns without a concrete need.
 - For completed client-facing workflows, add or update browser/e2e coverage for role transitions, publish boundaries, and visibility guards instead of relying only on unit tests.

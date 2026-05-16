@@ -75,11 +75,11 @@ function ClientRequestCard({ action, onAnswer }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold text-text-primary">{action.title}</h2>
+            <h2 className="text-ui text-text-primary">{action.title}</h2>
             <StatusBadge meta={action.priorityMeta} />
             <StatusBadge meta={action.statusMeta} />
           </div>
-          <p className="mt-2 text-sm text-text-muted">Due {formatDate(action.dueDate)}</p>
+          <p className="mt-2 text-ui text-text-muted">Due {formatDate(action.dueDate)}</p>
         </div>
         {action.relatedLink ? (
           <Button asChild size="sm" variant="outline">
@@ -92,14 +92,14 @@ function ClientRequestCard({ action, onAnswer }) {
       </div>
 
       {action.description ? (
-        <p className="mt-4 max-w-readable text-sm leading-6 text-text-secondary">{action.description}</p>
+        <p className="mt-4 max-w-readable text-body text-text-secondary">{action.description}</p>
       ) : null}
 
       {action.clientResponse ? (
-        <div className="mt-4 rounded-control border border-action/20 bg-action-muted px-3 py-2 text-sm text-action">
+        <div className="mt-4 rounded-control border border-action/20 bg-action-muted px-3 py-2 text-ui text-action">
           <p className="font-semibold">Your response</p>
-          <p className="mt-1 leading-5">{action.clientResponse}</p>
-          {action.respondedAt ? <p className="mt-1 text-xs">Sent {formatDate(action.respondedAt)}</p> : null}
+          <p className="mt-1 text-ui">{action.clientResponse}</p>
+          {action.respondedAt ? <p className="mt-1 text-label">Sent {formatDate(action.respondedAt)}</p> : null}
         </div>
       ) : null}
 
@@ -125,7 +125,7 @@ function ClientRequestCard({ action, onAnswer }) {
             </Button>
             <Button type="submit">Send response</Button>
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p className="text-ui text-destructive">{error}</p> : null}
         </form>
       ) : null}
     </article>

@@ -16,7 +16,7 @@ function SelectGroup({
   return (
     <SelectPrimitive.Group
       data-slot="select-group"
-      className={cn("scroll-my-1 p-1", className)}
+      className={cn("scroll-my-micro p-micro", className)}
       {...props} />
   );
 }
@@ -38,7 +38,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full min-w-0 max-w-full items-center justify-between gap-item rounded-control border border-control-border bg-control py-2 pr-control pl-component text-ui text-text-primary whitespace-nowrap shadow-none transition-colors duration-motion-fast ease-motion-standard outline-none select-none hover:bg-control-hover focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:bg-control-selected disabled:text-text-muted disabled:opacity-70 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/25 data-placeholder:text-text-placeholder data-[size=default]:h-target data-[size=sm]:h-control-small *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-tag [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-full min-w-0 max-w-full items-center justify-between gap-item rounded-control border border-control-border bg-control py-item pr-control pl-component text-ui text-text-primary whitespace-nowrap shadow-none transition-colors duration-motion-fast ease-motion-standard outline-none select-none hover:bg-control-hover focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:bg-control-selected disabled:text-text-muted disabled:opacity-70 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/25 data-placeholder:text-text-placeholder data-[size=default]:h-target data-[size=sm]:h-control-small *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-tag [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}>

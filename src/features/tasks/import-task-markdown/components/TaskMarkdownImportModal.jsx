@@ -54,9 +54,9 @@ function WarningList({ warnings }) {
   }
 
   return (
-    <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+    <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
       <p className="font-semibold">Preview warnings</p>
-      <ul className="mt-2 grid gap-1 text-xs leading-5">
+      <ul className="mt-2 grid gap-1 text-label font-normal">
         {warnings.map((warning, index) => (
           <li key={`${warning.message}-${index}`}>
             {warning.line ? <span className="font-mono">Line {warning.line}</span> : 'Import'}: {warning.message}
@@ -71,7 +71,7 @@ function PlanCount({ count, label }) {
   return (
     <div className="rounded-control bg-control px-3 py-2">
       <dt className="text-label text-text-muted">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold text-text-primary">{count}</dd>
+      <dd className="mt-1 text-heading text-text-primary">{count}</dd>
     </div>
   )
 }
@@ -79,7 +79,7 @@ function PlanCount({ count, label }) {
 function ImportPlanPreview({ plan }) {
   if (!plan) {
     return (
-      <div className="rounded-control bg-control px-3 py-3 text-sm text-text-secondary">
+      <div className="rounded-control bg-control px-3 py-3 text-ui text-text-secondary">
         Generate a preview before creating tasks.
       </div>
     )
@@ -88,7 +88,7 @@ function ImportPlanPreview({ plan }) {
   return (
     <section className="grid gap-component rounded-block bg-block p-card">
       <div>
-        <h3 className="text-sm font-semibold text-text-primary">Import preview</h3>
+        <h3 className="text-ui text-text-primary">Import preview</h3>
         <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <PlanCount count={plan.counts.create} label="Create" />
           <PlanCount count={plan.counts.update} label="Update" />
@@ -100,12 +100,12 @@ function ImportPlanPreview({ plan }) {
       <div className="max-h-72 overflow-y-auto rounded-control bg-surface-subtle">
         {plan.items.map((item, index) => (
           <div className="flex items-start gap-3 border-t border-separator px-3 py-2 first:border-t-0" key={`${item.type}-${item.label}-${index}`}>
-            <span className={`mt-0.5 inline-flex h-control-mini min-w-16 items-center justify-center rounded-full px-2 text-[11px] font-semibold uppercase ${ACTION_TONE[item.action]}`}>
+            <span className={`mt-0.5 inline-flex h-control-mini min-w-16 items-center justify-center rounded-full px-2 text-label uppercase ${ACTION_TONE[item.action]}`}>
               {item.action}
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-text-primary">{item.label}</p>
-              <p className="mt-1 text-xs leading-5 text-text-muted">
+              <p className="text-ui text-text-primary">{item.label}</p>
+              <p className="mt-1 text-label font-normal text-text-muted">
                 {item.sourceColumn ? `${item.sourceColumn}: ` : null}{item.detail}
               </p>
             </div>
@@ -193,7 +193,7 @@ export function TaskMarkdownImportModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={previewImport}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">Import task Markdown</DialogTitle>
+              <DialogTitle className="text-heading text-text-primary">Import task Markdown</DialogTitle>
               <DialogDescription>
                 Paste or upload a Markdown checklist, preview the task changes, then create the new tasks.
               </DialogDescription>
@@ -204,7 +204,7 @@ export function TaskMarkdownImportModal({
             <div className="grid gap-component lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.8fr)]">
               <section className="grid gap-component rounded-block bg-block p-card">
                 {!hasClients ? (
-                  <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                  <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
                     Create or assign a client workspace before importing tasks.
                   </div>
                 ) : null}
@@ -282,7 +282,7 @@ export function TaskMarkdownImportModal({
                     </div>
                   </div>
                   <Textarea
-                    className="min-h-[28rem] font-mono text-xs leading-5"
+                    className="min-h-[28rem] font-mono text-label font-normal"
                     id="task-import-markdown"
                     onChange={(event) => {
                       setRawMarkdown(event.target.value)
@@ -297,7 +297,7 @@ export function TaskMarkdownImportModal({
 
               <div className="grid content-start gap-component">
                 {importError ? (
-                  <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
                     {importError}
                   </div>
                 ) : null}
@@ -308,7 +308,7 @@ export function TaskMarkdownImportModal({
           </OverlayBody>
 
           <OverlayFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-h-5 text-sm text-text-muted">{saveState}</div>
+            <div className="min-h-5 text-ui text-text-muted">{saveState}</div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button onClick={onClose} type="button" variant="outline">
                 Cancel

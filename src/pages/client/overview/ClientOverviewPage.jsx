@@ -86,7 +86,7 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
 
   if (overviewResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
         {overviewResource.error}
       </div>
     )

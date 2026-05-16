@@ -13,15 +13,15 @@ export function GoalCard({ barColor, color, icon, id, label, progress, suffix, v
 
   return (
     <Card as="article" id={inspectorId} size="sm">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
+      <CardContent className="p-component">
+        <div className="flex items-start justify-between gap-component">
           <Icon className={color} name={icon} size={20} />
-          <span className="text-xs leading-5 text-text-secondary">{progress}% Complete</span>
+          <span className="text-label text-text-secondary">{progress}% Complete</span>
         </div>
-        <p className="mt-3 text-sm leading-5 text-text-secondary">{label}</p>
-        <div className="mt-1 flex items-baseline gap-1">
-          <strong className="text-2xl leading-8 text-text-primary">{value}</strong>
-          <span className="text-sm font-semibold text-text-muted">{suffix}</span>
+        <p className="mt-control text-ui text-text-secondary">{label}</p>
+        <div className="mt-micro flex items-baseline gap-micro">
+          <strong className="text-data text-text-primary">{value}</strong>
+          <span className="text-label text-text-muted">{suffix}</span>
         </div>
         <ProgressBar label={`${label} progress`} showLabel={false} tone={tone} value={Math.min(progress, 100)} />
       </CardContent>

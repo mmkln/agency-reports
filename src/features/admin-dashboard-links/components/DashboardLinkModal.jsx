@@ -51,7 +51,7 @@ export function DashboardLinkModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={onSubmit}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">{title}</DialogTitle>
+              <DialogTitle className="text-heading text-text-primary">{title}</DialogTitle>
               <DialogDescription>
                 Store the external dashboard link. The portal embeds or opens it, but does not calculate analytics.
               </DialogDescription>
@@ -61,13 +61,13 @@ export function DashboardLinkModal({
           <OverlayBody className="min-h-0 overflow-y-auto">
             <div className="grid gap-component">
               {!hasClients ? (
-                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
                   Create a client workspace before adding dashboard links.
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
                   {error}
                 </div>
               ) : null}
@@ -152,7 +152,7 @@ export function DashboardLinkModal({
                 type="url"
                 value={form.embedUrl}
               />
-              <p className="text-xs leading-5 text-text-muted">
+              <p className="text-label font-normal text-text-muted">
                 Used for the iframe. If missing, the client will only see the full dashboard link.
               </p>
             </div>
@@ -189,7 +189,7 @@ export function DashboardLinkModal({
             </div>
 
             <div className="grid gap-3 rounded-control bg-surface-subtle p-3">
-              <label className="flex items-start gap-3 text-sm text-text-secondary">
+              <label className="flex items-start gap-3 text-ui text-text-secondary">
                 <Checkbox
                   checked={form.visibility === VISIBILITY.CLIENT_VISIBLE}
                   onCheckedChange={(checked) => onUpdateField(
@@ -199,19 +199,19 @@ export function DashboardLinkModal({
                 />
                 <span>
                   <span className="block font-medium text-text-primary">Client visible</span>
-                  <span className="block text-xs leading-5 text-text-muted">
+                  <span className="block text-label font-normal text-text-muted">
                     Draft and archived dashboards remain hidden from clients even when this is enabled.
                   </span>
                 </span>
               </label>
-              <label className="flex items-start gap-3 text-sm text-text-secondary">
+              <label className="flex items-start gap-3 text-ui text-text-secondary">
                 <Checkbox
                   checked={form.showOnOverview}
                   onCheckedChange={(checked) => onUpdateField('showOnOverview', Boolean(checked))}
                 />
                 <span>
                   <span className="block font-medium text-text-primary">Show on client overview</span>
-                  <span className="block text-xs leading-5 text-text-muted">
+                  <span className="block text-label font-normal text-text-muted">
                     This becomes the primary dashboard block for the client status hub.
                   </span>
                 </span>

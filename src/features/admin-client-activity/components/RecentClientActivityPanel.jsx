@@ -99,10 +99,10 @@ export function RecentClientActivityPanel({ clientId, runtime }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold text-text-primary">{meta.label}</p>
-                      <span className="shrink-0 text-xs text-text-muted">{formatActivityTime(event.createdAt)}</span>
+                      <p className="text-ui text-text-primary">{meta.label}</p>
+                      <span className="shrink-0 text-label font-normal text-text-muted">{formatActivityTime(event.createdAt)}</span>
                     </div>
-                    <p className="mt-1 truncate text-xs text-text-muted">
+                    <p className="mt-1 truncate text-label font-normal text-text-muted">
                       {event.actorName} | {getActivityDetail(event)}
                     </p>
                   </div>

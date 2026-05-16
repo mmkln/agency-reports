@@ -97,7 +97,7 @@ function ThemeModeControl() {
     <div className="px-1 py-1">
       <DropdownMenuLabel className="px-control py-tag">
         <span className="block text-label text-text-secondary">Appearance</span>
-        <span className="mt-0.5 block text-xs font-normal text-text-muted">
+        <span className="mt-0.5 block text-label font-normal text-text-muted">
           Current: {resolvedTheme === 'dark' ? 'dark' : 'light'}
         </span>
       </DropdownMenuLabel>
@@ -160,7 +160,7 @@ function NotificationsMenu() {
             <span className="relative flex size-control-small items-center justify-center">
               <Icon className="text-current" name="bell" size={18} />
               {unreadCount > 0 ? (
-              <span className="absolute right-0 top-0 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-link px-1 text-[9px] font-semibold leading-none text-action-foreground ring-2 ring-sidebar">
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-link px-micro text-indicator tabular-nums text-action-foreground ring-2 ring-sidebar">
                   {unreadCount}
                 </span>
               ) : null}
@@ -171,8 +171,8 @@ function NotificationsMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-80 p-2" side="right">
         <DropdownMenuLabel className="flex items-center justify-between px-2 py-2">
-          <span className="text-sm font-semibold text-text-primary">Notifications</span>
-          <span className="rounded-full bg-action-muted px-2 py-0.5 text-xs font-medium text-action">
+          <span className="text-ui text-text-primary">Notifications</span>
+          <span className="rounded-full bg-action-muted px-2 py-0.5 text-label text-action">
             {unreadCount} new
           </span>
         </DropdownMenuLabel>
@@ -186,16 +186,16 @@ function NotificationsMenu() {
               <span className={`mt-1 h-2 w-2 rounded-full ${notification.isUnread ? 'bg-link' : 'bg-fill-secondary'}`} />
               <span className="min-w-0">
                 <span className="flex items-start justify-between gap-3">
-                  <span className="text-sm font-semibold leading-5 text-text-primary">{notification.title}</span>
-                  <span className="shrink-0 text-xs text-text-quaternary">{notification.time}</span>
+                  <span className="text-ui text-text-primary">{notification.title}</span>
+                  <span className="shrink-0 text-label font-normal text-text-quaternary">{notification.time}</span>
                 </span>
-                <span className="mt-0.5 block text-xs leading-5 text-text-secondary">{notification.body}</span>
+                <span className="mt-0.5 block text-label font-normal text-text-secondary">{notification.body}</span>
               </span>
             </div>
           ))}
         </div>
         <DropdownMenuSeparator />
-        <div className="px-2 py-1.5 text-xs text-text-secondary">
+        <div className="px-2 py-1.5 text-label font-normal text-text-secondary">
           Demo notifications only. Live alerts will connect to workspace activity later.
         </div>
       </DropdownMenuContent>
@@ -221,15 +221,15 @@ function AccountMenu({ activeRole, hasUnsavedChanges, onAuthChange, viewer }) {
           </span>
           <span className={cn(sidebarLabelClass, 'leading-tight')}>
             <span className="block truncate text-label text-text-primary">{viewer.name}</span>
-            <span className="mt-0.5 block truncate text-xs text-text-muted">{activeRole.label}</span>
+            <span className="mt-0.5 block truncate text-label font-normal text-text-muted">{activeRole.label}</span>
           </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56" side="right">
         <DropdownMenuLabel>
-          <span className="block text-sm font-semibold text-text-primary">{viewer.name}</span>
-          <span className="mt-0.5 block text-xs font-normal text-text-secondary">{viewer.email}</span>
-          <span className="mt-2 inline-flex rounded-full bg-control px-2 py-0.5 text-xs font-semibold text-text-secondary">
+          <span className="block text-ui text-text-primary">{viewer.name}</span>
+          <span className="mt-0.5 block text-label font-normal text-text-secondary">{viewer.email}</span>
+          <span className="mt-2 inline-flex rounded-full bg-control px-2 py-0.5 text-label text-text-secondary">
             {activeRole.label}
           </span>
         </DropdownMenuLabel>
@@ -277,7 +277,7 @@ export function AppSidebar({
       <div className="relative h-control-xl">
         <BrandLogo
           className="relative h-full min-w-0 gap-0 [&>span:first-child]:absolute [&>span:first-child]:left-[calc((var(--spacing-sidebar-collapsed)-var(--spacing-control-small))/2)] [&>span:first-child]:top-1/2 [&>span:first-child]:-translate-y-1/2 [&>span:last-child]:ml-[calc(var(--spacing-sidebar-collapsed)-var(--spacing-item))] [&>span:last-child]:whitespace-nowrap [&>span:last-child]:opacity-0 [&>span:last-child]:transition-opacity [&>span:last-child]:duration-motion-fast [&>span:last-child]:ease-motion-standard sm:group-hover/app-sidebar:[&>span:last-child]:opacity-100 sm:group-focus-within/app-sidebar:[&>span:last-child]:opacity-100"
-          href={import.meta.env.BASE_URL}
+          href="/"
           size="sm"
           variant="static"
         />

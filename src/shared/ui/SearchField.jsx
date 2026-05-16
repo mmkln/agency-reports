@@ -40,7 +40,7 @@ export function SearchField({
       <Icon className="pointer-events-none text-text-secondary" name="search" size={15} />
       <Input
         className={cn(
-          'h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 text-sm shadow-none hover:bg-transparent focus-visible:ring-0',
+          'h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 text-ui shadow-none hover:bg-transparent focus-visible:ring-0',
           inputClassName,
         )}
         id={resolvedInputId}

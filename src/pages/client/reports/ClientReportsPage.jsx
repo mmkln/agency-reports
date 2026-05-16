@@ -146,8 +146,8 @@ function PreviewOnlyNotice({ report }) {
           <Icon name="eye" size={18} />
         </span>
         <div>
-          <h2 className="text-sm font-semibold text-text-primary">Preview only</h2>
-          <p className="mt-1 text-sm leading-6 text-text-secondary">
+          <h2 className="text-ui text-text-primary">Preview only</h2>
+          <p className="mt-1 text-body text-text-secondary">
             Preview only. This report is not visible to the client. Publish it when the client-facing
             narrative is ready.
           </p>
@@ -164,8 +164,8 @@ function ReportSection({ children, title }) {
 
   return (
     <section className="rounded-block border border-control-border bg-block-subtle p-4">
-      <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-text-secondary">{children}</p>
+      <h3 className="text-ui text-text-primary">{title}</h3>
+      <p className="mt-2 whitespace-pre-line text-body text-text-secondary">{children}</p>
     </section>
   )
 }
@@ -176,8 +176,8 @@ function ReportExecutiveSummary({ report }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-label text-action">Executive summary</p>
-          <h3 className="mt-1 text-lg font-semibold text-text-primary">{report.title}</h3>
-          <p className="mt-1 text-sm text-text-muted">{formatPeriod(report)}</p>
+          <h3 className="mt-1 text-heading text-text-primary">{report.title}</h3>
+          <p className="mt-1 text-ui text-text-muted">{formatPeriod(report)}</p>
         </div>
         {report.publishedAt ? (
           <Badge className="w-fit border-control-border bg-block text-text-secondary" variant="outline">
@@ -186,11 +186,11 @@ function ReportExecutiveSummary({ report }) {
         ) : null}
       </div>
       {report.summary ? (
-        <p className="mt-4 max-w-readable whitespace-pre-line text-sm leading-6 text-text-secondary">
+        <p className="mt-4 max-w-readable whitespace-pre-line text-body text-text-secondary">
           {report.summary}
         </p>
       ) : (
-        <p className="mt-4 rounded-control bg-block px-3 py-2 text-sm text-text-muted">
+        <p className="mt-4 rounded-control bg-block px-3 py-2 text-ui text-text-muted">
           No executive summary was added for this report.
         </p>
       )}
@@ -208,8 +208,8 @@ function ReportContentGroup({ children, description, title }) {
   return (
     <section className="rounded-block border border-control-border bg-block p-4">
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-text-primary">{title}</h3>
-        <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p>
+        <h3 className="text-ui text-text-primary">{title}</h3>
+        <p className="mt-1 text-label font-normal text-text-muted">{description}</p>
       </div>
       <div className="grid gap-3">
         {renderedChildren}
@@ -224,8 +224,8 @@ function ReportLinkActions({ report }) {
       <div className="rounded-control border border-control-border bg-block-subtle p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-text-primary">Dashboard</p>
-            <p className="mt-1 text-xs leading-5 text-text-muted">
+            <p className="text-ui text-text-primary">Dashboard</p>
+            <p className="mt-1 text-label font-normal text-text-muted">
               Marketing numbers that support this summary.
             </p>
           </div>
@@ -238,7 +238,7 @@ function ReportLinkActions({ report }) {
             </a>
           </Button>
         ) : (
-          <p className="mt-4 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+          <p className="mt-4 rounded-control bg-control px-3 py-2 text-label font-normal text-text-muted">
             Dashboard link is not available for this report.
           </p>
         )}
@@ -247,8 +247,8 @@ function ReportLinkActions({ report }) {
       <div className="rounded-control border border-control-border bg-block-subtle p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-text-primary">Full report / PDF</p>
-            <p className="mt-1 text-xs leading-5 text-text-muted">
+            <p className="text-ui text-text-primary">Full report / PDF</p>
+            <p className="mt-1 text-label font-normal text-text-muted">
               Formal report file, when the agency provides one.
             </p>
           </div>
@@ -261,7 +261,7 @@ function ReportLinkActions({ report }) {
             </a>
           </Button>
         ) : (
-          <p className="mt-4 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+          <p className="mt-4 rounded-control bg-control px-3 py-2 text-label font-normal text-text-muted">
             PDF version is not available yet. Read the summary inside the portal.
           </p>
         )}
@@ -329,7 +329,7 @@ function LatestReportSummary({ clientId, report, selectedReport }) {
       <CardHeader className="border-b border-separator bg-surface-subtle">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Latest monthly summary</CardTitle>
+            <CardTitle className="text-ui">Latest monthly summary</CardTitle>
             <CardDescription className="mt-1">{formatPeriod(report)}</CardDescription>
           </div>
           <StatusBadge meta={report.statusMeta} />
@@ -338,9 +338,9 @@ function LatestReportSummary({ clientId, report, selectedReport }) {
       <CardContent className="py-4">
         <h3 className="font-semibold text-text-primary">{report.title}</h3>
         {report.summary ? (
-          <p className="mt-2 line-clamp-4 text-sm leading-6 text-text-secondary">{report.summary}</p>
+          <p className="mt-2 line-clamp-4 text-body text-text-secondary">{report.summary}</p>
         ) : (
-          <p className="mt-2 text-sm text-text-muted">No executive summary was added.</p>
+          <p className="mt-2 text-ui text-text-muted">No executive summary was added.</p>
         )}
         <Separator className="my-4" />
         <div className="grid gap-2">
@@ -398,8 +398,8 @@ function ReportArchiveItem({ clientId, isSelected, report }) {
   return (
     <article
       className={isSelected
-        ? 'rounded-block border border-brand bg-action-muted p-4 text-sm shadow-none'
-        : 'rounded-block border border-control-border bg-block p-4 text-sm transition-colors hover:bg-surface-subtle'}
+        ? 'rounded-block border border-brand bg-action-muted p-4 text-ui shadow-none'
+        : 'rounded-block border border-control-border bg-block p-4 text-ui transition-colors hover:bg-surface-subtle'}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -410,15 +410,15 @@ function ReportArchiveItem({ clientId, isSelected, report }) {
           >
             {report.title}
           </Link>
-          <p className="mt-1 text-xs text-text-muted">{formatPeriod(report)}</p>
+          <p className="mt-1 text-label font-normal text-text-muted">{formatPeriod(report)}</p>
         </div>
         <StatusBadge meta={report.statusMeta} />
       </div>
 
       {report.summary ? (
-        <p className="mt-3 line-clamp-3 text-xs leading-5 text-text-secondary">{report.summary}</p>
+        <p className="mt-3 line-clamp-3 text-label font-normal text-text-secondary">{report.summary}</p>
       ) : (
-        <p className="mt-3 rounded-control bg-control px-3 py-2 text-xs text-text-muted">
+        <p className="mt-3 rounded-control bg-control px-3 py-2 text-label font-normal text-text-muted">
           No summary preview available.
         </p>
       )}
@@ -515,7 +515,7 @@ function ReportArchiveFilters({
         </Select>
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
+      <div className="flex items-center justify-between gap-3 text-label font-normal text-text-muted">
         <span>{resultCount} of {totalCount}</span>
         <Button disabled={!hasActiveFilters} onClick={onReset} size="sm" type="button" variant="ghost">
           Reset
@@ -541,7 +541,7 @@ function ReportArchiveList({
       <CardHeader className="border-b border-separator bg-surface-subtle">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Report archive</CardTitle>
+            <CardTitle className="text-ui">Report archive</CardTitle>
             <CardDescription className="mt-1">Newest reporting periods first.</CardDescription>
           </div>
           <Badge className="border-control-border bg-block text-text-secondary" variant="outline">

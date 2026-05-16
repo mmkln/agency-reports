@@ -16,7 +16,7 @@ function HeaderContent({
     : null
   const titleClassName = titleScale === 'display'
     ? 'text-display text-text-primary'
-    : 'm-0 text-heading text-text-primary transition-all sm:truncate'
+    : 'm-0 text-heading text-text-primary transition-colors sm:truncate'
 
   return (
     <>

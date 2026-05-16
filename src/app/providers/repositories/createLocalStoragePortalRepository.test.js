@@ -122,6 +122,81 @@ describe('createLocalStoragePortalRepository', () => {
     ])
   })
 
+  it('updates stale seeded performance dashboard campaign execution data without replacing local fields', () => {
+    const periodId = '44444444-4444-4444-8444-444444444444'
+    const storage = createStorage({
+      [PORTAL_STORAGE_KEY]: JSON.stringify({
+        __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
+        clients: [],
+        client_invitations: [],
+        client_memberships: [],
+        dashboard_links: [],
+        needed_from_client: [],
+        performance_dashboard_periods: [
+          {
+            client_id: '11111111-1111-4111-8111-111111111111',
+            content: {
+              campaign_execution: {
+                activity_series: [
+                  {
+                    label: '06-01',
+                    sms: 14,
+                  },
+                ],
+                title: 'Old local title',
+              },
+              custom_note: 'Keep this local note',
+            },
+            id: periodId,
+            title: 'Locally edited title',
+          },
+        ],
+        profiles: [],
+        projects: [],
+        reports: [],
+        tasks: [],
+        updates: [],
+      }),
+    })
+    const repository = createLocalStoragePortalRepository({
+      seedData: {
+        ...seedData,
+        performance_dashboard_periods: [
+          {
+            client_id: '11111111-1111-4111-8111-111111111111',
+            content: {
+              campaign_execution: {
+                activity_series: [
+                  {
+                    label: '06-01',
+                    sms: 14,
+                  },
+                  {
+                    label: '06-02',
+                    sms: 14,
+                  },
+                ],
+                assumptions: ['Seed assumption'],
+                title: 'Seed chart title',
+              },
+            },
+            id: periodId,
+            title: 'Seed title',
+          },
+        ],
+      },
+      storage,
+    })
+
+    const period = repository.performanceDashboardPeriods.findById(periodId)
+
+    expect(period.title).toBe('Locally edited title')
+    expect(period.content.custom_note).toBe('Keep this local note')
+    expect(period.content.campaign_execution.title).toBe('Old local title')
+    expect(period.content.campaign_execution.assumptions).toEqual(['Seed assumption'])
+    expect(period.content.campaign_execution.activity_series).toHaveLength(2)
+  })
+
   it('persists performance dashboard periods through the local repository adapter', () => {
     const storage = createStorage()
     const repository = createLocalStoragePortalRepository({ seedData, storage })

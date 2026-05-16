@@ -1,4 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy, Suspense } from 'react'
 import { USER_ROLES } from '../../entities/profile'
+import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
+import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
 import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPageHeader'
@@ -9,14 +13,50 @@ import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOver
 import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
+import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
+import { AuthLayout } from '../layout/AuthLayout'
+import { ProtectedRoute } from './ProtectedRoute'
+import {
+  AdminClientAccessPageRoute,
+  AdminClientActivityPageRoute,
+  AdminClientOverviewPageRoute,
+  AdminClientPreviewPageRoute,
+  AdminClientRequestsPageRoute,
+  AdminClientsPageRoute,
+  AdminDashboardLinksPageRoute,
+  AdminPerformanceDashboardEditorPageRoute,
+  AdminPerformanceDashboardsPageRoute,
+  AdminReportsPageRoute,
+  AdminTasksPageRoute,
+  ClientDashboardPageRoute,
+  ClientOverviewPageRoute,
+  ClientPerformancePageRoute,
+  ClientReportsPageRoute,
+  ClientRequestsPageRoute,
+  TeamTasksPageRoute,
+} from './RoutePages'
 
-export const routeMetadata = [
+function lazyNamed(loader, exportName) {
+  return lazy(() => loader().then((module) => ({ default: module[exportName] })))
+}
+
+const BuildBoardPage = lazyNamed(() => import('../../pages/legacy/build-board/BuildBoardPage'), 'BuildBoardPage')
+const CrmDashboardPage = lazyNamed(() => import('../../pages/legacy/crm-dashboard/CrmDashboardPage'), 'CrmDashboardPage')
+const DailyActivitiesPage = lazyNamed(() => import('../../pages/legacy/daily-activities/DailyActivitiesPage'), 'DailyActivitiesPage')
+const LandingPage = lazyNamed(() => import('../../pages/legacy/landing/LandingPage'), 'LandingPage')
+const MarketingProcessPage = lazyNamed(() => import('../../pages/legacy/marketing-process/MarketingProcessPage'), 'MarketingProcessPage')
+const MarketingReportsPage = lazyNamed(() => import('../../pages/legacy/marketing-reports/MarketingReportsPage'), 'MarketingReportsPage')
+
+const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
+
+export const routeDefinitions = [
   {
     path: '/',
     id: 'landing',
     label: 'Landing',
     layout: 'public',
     showInNav: false,
+    element: <LandingPage />,
   },
   {
     path: '/accept-invite',
@@ -24,6 +64,7 @@ export const routeMetadata = [
     label: 'Accept Invite',
     layout: 'auth',
     showInNav: false,
+    element: <AcceptInvitePage />,
   },
   {
     path: '/login',
@@ -31,6 +72,7 @@ export const routeMetadata = [
     label: 'Login',
     layout: 'auth',
     showInNav: false,
+    element: <LoginPage />,
   },
   {
     path: '/access-denied',
@@ -38,6 +80,7 @@ export const routeMetadata = [
     label: 'Access Denied',
     layout: 'auth',
     showInNav: false,
+    element: <AccessDeniedPage />,
   },
   {
     path: '/client/overview',
@@ -47,6 +90,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientOverviewPageHeader,
     iconName: 'layoutDashboard',
+    element: <ClientOverviewPageRoute />,
   },
   {
     path: '/client/dashboard',
@@ -57,6 +101,7 @@ export const routeMetadata = [
     header: ClientDashboardPageHeader,
     showInNav: false,
     iconName: 'layoutDashboard',
+    element: <ClientDashboardPageRoute />,
   },
   {
     path: '/client/performance',
@@ -66,6 +111,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientPerformancePageHeader,
     iconName: 'barChart',
+    element: <ClientPerformancePageRoute />,
   },
   {
     path: '/client/requests',
@@ -75,6 +121,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     showInNav: true,
     iconName: 'messageSquare',
+    element: <ClientRequestsPageRoute />,
   },
   {
     path: '/client/reports',
@@ -85,6 +132,7 @@ export const routeMetadata = [
     header: ClientReportsPageHeader,
     showInNav: false,
     iconName: 'fileText',
+    element: <ClientReportsPageRoute />,
   },
   {
     path: '/admin/clients',
@@ -94,6 +142,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminClientsPageHeader,
     iconName: 'users',
+    element: <AdminClientsPageRoute />,
   },
   {
     path: '/admin/tasks',
@@ -103,6 +152,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    element: <AdminTasksPageRoute />,
   },
   {
     path: '/admin/dashboard-links',
@@ -112,6 +162,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminDashboardLinksPageHeader,
     iconName: 'layoutDashboard',
+    element: <AdminDashboardLinksPageRoute />,
   },
   {
     path: '/admin/performance-dashboards',
@@ -121,6 +172,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminPerformanceDashboardsPageHeader,
     iconName: 'barChart',
+    element: <AdminPerformanceDashboardsPageRoute />,
   },
   {
     path: '/admin/performance-dashboard-editor',
@@ -131,6 +183,7 @@ export const routeMetadata = [
     header: AdminPerformanceDashboardEditorPageHeader,
     showInNav: false,
     iconName: 'barChart',
+    element: <AdminPerformanceDashboardEditorPageRoute />,
   },
   {
     path: '/admin/reports',
@@ -140,6 +193,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminReportsPageHeader,
     iconName: 'fileText',
+    element: <AdminReportsPageRoute />,
   },
   {
     path: '/admin/client-preview',
@@ -150,6 +204,7 @@ export const routeMetadata = [
     header: ClientOverviewPageHeader,
     showInNav: false,
     iconName: 'layoutDashboard',
+    element: <AdminClientPreviewPageRoute />,
   },
   {
     path: '/admin/client-dashboard-preview',
@@ -160,6 +215,7 @@ export const routeMetadata = [
     header: ClientDashboardPageHeader,
     showInNav: false,
     iconName: 'layoutDashboard',
+    element: <ClientDashboardPageRoute />,
   },
   {
     path: '/admin/client-performance-preview',
@@ -170,6 +226,7 @@ export const routeMetadata = [
     header: ClientPerformancePageHeader,
     showInNav: false,
     iconName: 'barChart',
+    element: <ClientPerformancePageRoute />,
   },
   {
     path: '/admin/client-report-preview',
@@ -180,6 +237,7 @@ export const routeMetadata = [
     header: ClientReportsPageHeader,
     showInNav: false,
     iconName: 'fileText',
+    element: <ClientReportsPageRoute />,
   },
   {
     path: '/admin/client-access',
@@ -191,6 +249,7 @@ export const routeMetadata = [
     fullBleedContent: true,
     hidePageHeader: true,
     iconName: 'users',
+    element: <AdminClientAccessPageRoute />,
   },
   {
     path: '/admin/client-activity',
@@ -202,6 +261,7 @@ export const routeMetadata = [
     fullBleedContent: true,
     hidePageHeader: true,
     iconName: 'clock',
+    element: <AdminClientActivityPageRoute />,
   },
   {
     path: '/admin/client-requests',
@@ -213,6 +273,7 @@ export const routeMetadata = [
     fullBleedContent: true,
     hidePageHeader: true,
     iconName: 'messageSquare',
+    element: <AdminClientRequestsPageRoute />,
   },
   {
     path: '/admin/client-overview',
@@ -224,6 +285,7 @@ export const routeMetadata = [
     fullBleedContent: true,
     hidePageHeader: true,
     iconName: 'fileText',
+    element: <AdminClientOverviewPageRoute />,
   },
   {
     path: '/team/tasks',
@@ -233,6 +295,7 @@ export const routeMetadata = [
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    element: <TeamTasksPageRoute />,
   },
   {
     path: '/legacy/build-board',
@@ -240,6 +303,7 @@ export const routeMetadata = [
     label: 'Legacy Buildout',
     pageTitle: 'Legacy Buildout',
     showInNav: false,
+    element: <BuildBoardPage />,
   },
   {
     path: '/legacy/crm-dashboard',
@@ -247,6 +311,7 @@ export const routeMetadata = [
     label: 'Legacy CRM Dashboard',
     pageTitle: 'Legacy CRM Dashboard',
     showInNav: false,
+    element: <CrmDashboardPage />,
   },
   {
     path: '/legacy/marketing-process',
@@ -254,6 +319,7 @@ export const routeMetadata = [
     label: 'Legacy Marketing Processes',
     pageTitle: 'Legacy Marketing Processes',
     showInNav: false,
+    element: <MarketingProcessPage />,
   },
   {
     path: '/legacy/daily-activities',
@@ -261,6 +327,7 @@ export const routeMetadata = [
     label: 'Legacy Daily Activities',
     pageTitle: 'Legacy Daily Activities',
     showInNav: false,
+    element: <DailyActivitiesPage />,
   },
   {
     path: '/legacy/marketing-reports',
@@ -268,5 +335,48 @@ export const routeMetadata = [
     label: 'Legacy Marketing Reports',
     pageTitle: 'Legacy Marketing Reports',
     showInNav: false,
+    element: <MarketingReportsPage />,
   },
 ]
+
+export const routeMetadata = routeDefinitions.map((route) => {
+  const metadata = { ...route }
+  delete metadata.element
+
+  return metadata
+})
+
+function getRoutePath(path) {
+  return path === '/' ? undefined : path.replace(/^\//, '')
+}
+
+function buildRouteElement(route) {
+  const routeElement = route.layout === 'auth'
+    ? <AuthLayout>{route.element}</AuthLayout>
+    : <Suspense fallback={<LoadingFallback />}>{route.element}</Suspense>
+
+  if (!route.allowedRoles?.length) {
+    return routeElement
+  }
+
+  return (
+    <ProtectedRoute allowedRoles={route.allowedRoles}>
+      {routeElement}
+    </ProtectedRoute>
+  )
+}
+
+export function createRouteChildren() {
+  return routeDefinitions.map((route) => {
+    const element = buildRouteElement(route)
+
+    if (route.path === '/') {
+      return { index: true, element }
+    }
+
+    return {
+      path: getRoutePath(route.path),
+      element,
+    }
+  })
+}

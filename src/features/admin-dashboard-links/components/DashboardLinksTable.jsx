@@ -58,7 +58,7 @@ export function DashboardLinksTable({
     <>
       <Card className="border-control-border bg-block py-0 shadow-none">
         <Table className="min-w-[1080px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-xs font-semibold tracking-wide text-text-muted uppercase">
+          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
             <TableRow className="hover:bg-transparent">
               <TableHead className="px-6 py-3">Dashboard</TableHead>
               <TableHead className="px-6 py-3">Client</TableHead>
@@ -80,19 +80,19 @@ export function DashboardLinksTable({
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-semibold text-text-primary">{dashboardLink.name}</p>
                         {dashboardLink.showOnOverview ? (
-                          <span className="rounded-full bg-action-muted px-2 py-0.5 text-xs font-medium text-action">
+                          <span className="rounded-full bg-action-muted px-2 py-0.5 text-label text-action">
                             Overview
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 max-w-md truncate text-xs text-text-muted">
+                      <p className="mt-1 max-w-md truncate text-label font-normal text-text-muted">
                         {dashboardLink.publicUrl || dashboardLink.embedUrl || 'No URL saved yet'}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <p className="font-medium text-text-secondary">{dashboardLink.client.name}</p>
-                    <p className="mt-0.5 text-xs text-text-muted">/{dashboardLink.client.portalSlug}</p>
+                    <p className="mt-0.5 text-label font-normal text-text-muted">/{dashboardLink.client.portalSlug}</p>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-text-secondary">
                     {dashboardLink.providerMeta.label}

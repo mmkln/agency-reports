@@ -37,7 +37,6 @@ Route:
 
 ```text
 /admin/client-requests?clientId=...
-#admin-client-requests?clientId=...
 ```
 
 Implemented:
@@ -62,7 +61,6 @@ Route:
 
 ```text
 /client/requests?clientId=...
-#client-requests?clientId=...
 ```
 
 Implemented:
@@ -292,3 +290,4 @@ agency_team may update assigned/request-related context, but should not publish 
 UC-005 is accepted as complete for the frontend/localStorage MVP.
 
 The use case is ready to serve as the baseline for backend implementation.
+

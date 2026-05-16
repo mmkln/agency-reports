@@ -5,8 +5,8 @@ export function StatCard({ id, label, value }) {
 
   return (
     <div id={inspectorId} className="min-w-0 rounded-control bg-material-thin px-component py-card">
-      <span className="mb-1.5 block text-[13px] leading-4 text-text-secondary">{label}</span>
-      <strong className="block text-2xl leading-7 font-extrabold text-text-primary">{value}</strong>
+      <span className="mb-1.5 block text-label font-normal text-text-secondary">{label}</span>
+      <strong className="block text-data text-text-primary">{value}</strong>
     </div>
   )
 }

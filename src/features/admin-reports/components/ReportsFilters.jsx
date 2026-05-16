@@ -25,7 +25,7 @@ function FilterField({ children, label }) {
   )
 }
 
-const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-sm'
+const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-ui'
 
 export function ReportsFilters({
   clients,
@@ -76,7 +76,7 @@ export function ReportsFilters({
           >
             <span>Filters</span>
             {activeFilterCount > 0 ? (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+              <span className="flex min-h-control-mini min-w-control-mini items-center justify-center rounded-full bg-primary px-tag text-label text-primary-foreground">
                 {activeFilterCount}
               </span>
             ) : (
@@ -87,7 +87,7 @@ export function ReportsFilters({
         <PopoverContent align="end" className="w-popover p-card">
           <div className="grid gap-component">
             <div className="flex items-center justify-between gap-component">
-              <p className="text-sm font-semibold text-text-primary">Filters</p>
+              <p className="text-ui text-text-primary">Filters</p>
               {hasActiveFilters ? (
                 <Button onClick={onReset} size="xs" type="button" variant="ghost">
                   Clear

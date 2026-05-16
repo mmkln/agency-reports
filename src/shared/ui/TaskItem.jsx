@@ -25,11 +25,11 @@ export function TaskItem({ completed = false, id, meta, priority, title }) {
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <h3 className={`m-0 text-base font-medium text-text-primary ${completed ? 'text-text-muted line-through decoration-text-muted' : ''}`}>
+            <h3 className={`m-0 text-ui text-text-primary ${completed ? 'text-text-muted line-through decoration-text-muted' : ''}`}>
               {title}
             </h3>
             {meta ? (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-text-secondary">
+              <p className="mt-1 flex items-center gap-1.5 text-ui text-text-secondary">
                 <Icon name="clock" size={14} />
                 {meta}
               </p>

@@ -23,6 +23,7 @@ The scale follows Apple Dynamic Type defaults for iOS where practical, adapted t
 | `text-body` | Body | 17px | 22px | 400 | Main descriptions, paragraphs, table body copy. |
 | `text-ui` | Subhead/Callout blend | 15px | 20px | 500 | Buttons, menus, compact controls, table row labels. |
 | `text-label` | Footnote emphasized | 13px | 18px | 600 | Field labels, table headers, badges, metadata. |
+| `text-indicator` | Caption 2 emphasized | 10px | 12px | 700 | Tiny numeric overlays such as notification count badges. Do not use for normal labels. |
 | `text-data` | Title 1 emphasized | 28px | 34px | 700 | Key metrics and prominent numeric values. |
 
 ## Rules

@@ -16,7 +16,7 @@ import {
 export function FormField({ children, error, label }) {
   return (
     <div className="grid gap-1.5">
-      <Label className="text-xs font-semibold text-text-secondary">{label}</Label>
+      <Label className="text-label text-text-secondary">{label}</Label>
       {children}
       <FieldError>{error}</FieldError>
     </div>
@@ -37,8 +37,8 @@ export function EditorSectionHeader({ action, description, title }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-        {description ? <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p> : null}
+        <h3 className="text-ui text-text-primary">{title}</h3>
+        {description ? <p className="mt-1 text-label font-normal text-text-muted">{description}</p> : null}
       </div>
       {action}
     </div>
@@ -56,8 +56,8 @@ export function IssueList({ issues, title, tone }) {
 
   return (
     <div className={`rounded-control border px-3 py-2 ${toneClassName}`}>
-      <p className="text-xs font-semibold">{title}</p>
-      <ul className="mt-2 grid gap-1 text-xs">
+      <p className="text-label">{title}</p>
+      <ul className="mt-2 grid gap-1 text-label">
         {issues.map((issue) => (
           <li key={`${issue.path}-${issue.message}`}>
             <span className="font-mono">{issue.path}</span>: {issue.message}
@@ -72,7 +72,7 @@ export function MetricEditor({ metric, onRemove, onUpdate, title }) {
   return (
     <div className="rounded-control border border-control-border bg-surface-subtle p-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold text-text-muted">{title}</p>
+        <p className="text-label text-text-muted">{title}</p>
         {onRemove ? (
           <Button onClick={onRemove} size="sm" type="button" variant="ghost">
             Remove

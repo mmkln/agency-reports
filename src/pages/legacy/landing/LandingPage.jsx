@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../../../shared/icons'
+import { getAppHref } from '../../../shared/routing'
 import { BrandLogo } from '../../../shared/ui'
 
 const navItems = ['Products', 'Solutions', 'Pricing', 'About us']
@@ -28,6 +29,8 @@ const features = [
 export function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const landingHref = getAppHref('/')
+  const loginHref = getAppHref('/login')
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -51,7 +54,7 @@ export function LandingPage() {
             {navItems.map((item) => (
               <a
                 className="text-sm font-semibold text-slate-700 no-underline transition-colors hover:text-brand"
-                href="#landing"
+                href={landingHref}
                 key={item}
               >
                 {item}
@@ -62,13 +65,13 @@ export function LandingPage() {
           <div className="hidden items-center gap-4 md:flex">
             <a
               className="rounded-xl px-5 py-2.5 text-sm font-bold text-brand no-underline transition-all hover:bg-indigo-50"
-              href="#login"
+              href={loginHref}
             >
               Log in
             </a>
             <a
               className="rounded-xl bg-brand px-6 py-2.5 text-sm font-bold text-white no-underline shadow-md shadow-indigo-100 transition-all hover:bg-brand-hover"
-              href="#login"
+              href={loginHref}
             >
               Start free
             </a>
@@ -90,7 +93,7 @@ export function LandingPage() {
               {navItems.map((item) => (
                 <a
                   className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 no-underline hover:bg-indigo-50 hover:text-brand"
-                  href="#landing"
+                  href={landingHref}
                   key={item}
                 >
                   {item}
@@ -98,7 +101,7 @@ export function LandingPage() {
               ))}
               <a
                 className="mt-2 rounded-xl bg-brand px-3 py-2 text-center text-sm font-bold text-white no-underline"
-                href="#login"
+                href={loginHref}
               >
                 Start free
               </a>
@@ -130,7 +133,7 @@ export function LandingPage() {
             <div className="flex flex-col gap-4 pt-4 sm:flex-row">
               <a
                 className="group flex items-center justify-center gap-2 rounded-2xl bg-brand px-8 py-4 font-bold text-white no-underline transition-all hover:bg-brand-hover hover:shadow-xl hover:shadow-indigo-200"
-                href="#login"
+                href={loginHref}
               >
                 Book a demo
                 <Icon className="transition-transform group-hover:translate-x-1" name="arrowRight" size={18} />
@@ -225,7 +228,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-start justify-between gap-12 md:flex-row">
             <div className="space-y-6">
-              <BrandLogo href="#landing" light />
+              <BrandLogo href="/" light />
               <p className="max-w-xs text-sm text-gray-400">
                 We make dental operations simpler, so teams can focus on better patient care.
               </p>
@@ -236,7 +239,7 @@ export function LandingPage() {
                 <ul className="m-0 grid list-none gap-2 p-0 text-sm text-gray-400">
                   {['Features', 'Integrations', 'Reviews'].map((item) => (
                     <li key={item}>
-                      <a className="text-gray-400 no-underline transition-colors hover:text-white" href="#landing">
+                      <a className="text-gray-400 no-underline transition-colors hover:text-white" href={landingHref}>
                         {item}
                       </a>
                     </li>
@@ -248,7 +251,7 @@ export function LandingPage() {
                 <ul className="m-0 grid list-none gap-2 p-0 text-sm text-gray-400">
                   {['Documentation', 'Help center', 'Contact'].map((item) => (
                     <li key={item}>
-                      <a className="text-gray-400 no-underline transition-colors hover:text-white" href="#landing">
+                      <a className="text-gray-400 no-underline transition-colors hover:text-white" href={landingHref}>
                         {item}
                       </a>
                     </li>
@@ -260,8 +263,8 @@ export function LandingPage() {
           <div className="mt-16 flex justify-between border-t border-gray-800 pt-8 text-sm text-gray-500 max-[640px]:flex-col max-[640px]:gap-4">
             <span>Copyright 2024 DentalFlow Inc. All rights reserved.</span>
             <div className="flex gap-6">
-              <a className="text-gray-500 no-underline hover:text-white" href="#landing">Privacy</a>
-              <a className="text-gray-500 no-underline hover:text-white" href="#landing">Terms</a>
+              <a className="text-gray-500 no-underline hover:text-white" href={landingHref}>Privacy</a>
+              <a className="text-gray-500 no-underline hover:text-white" href={landingHref}>Terms</a>
             </div>
           </div>
         </div>

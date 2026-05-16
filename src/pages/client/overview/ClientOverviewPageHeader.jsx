@@ -17,13 +17,13 @@ function ProjectStatusAction({ client }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-text-muted">Project status:</span>
+      <span className="text-ui text-text-muted">Project status:</span>
       {client.statusMeta.icon ? (
         <Icon className={textClass} name={client.statusMeta.icon} size={14} />
       ) : (
         <span className={`h-2 w-2 rounded-full ${dotClass}`} />
       )}
-      <span className={`text-sm font-medium ${textClass}`}>
+      <span className={`text-ui ${textClass}`}>
         {client.statusMeta.label}
       </span>
     </div>

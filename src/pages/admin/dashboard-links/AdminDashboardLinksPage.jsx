@@ -106,7 +106,7 @@ export function AdminDashboardLinksPage({ routeParams = {}, runtime }) {
 
   if (dashboardLinksResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
         {dashboardLinksResource.error}
       </div>
     )

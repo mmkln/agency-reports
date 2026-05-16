@@ -30,7 +30,7 @@ export function Button({
 
   return (
     <ShadcnButton id={inspectorId} size={shadcnSize} variant={shadcnVariant} {...props}>
-      {icon ? <span className="inline-flex text-[0.95em]" aria-hidden="true">{icon}</span> : null}
+      {icon ? <span className="inline-flex" aria-hidden="true">{icon}</span> : null}
       {children}
     </ShadcnButton>
   )

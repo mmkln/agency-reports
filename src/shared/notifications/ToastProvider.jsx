@@ -44,7 +44,7 @@ function ToastItem({ toast, onDismiss }) {
   return (
     <ToastPrimitive.Root
       className={cn(
-        'grid w-[calc(100vw-2rem)] max-w-sm grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-control border bg-block p-4 shadow-premium outline-none',
+        'grid w-[calc(100vw-2rem)] max-w-sm grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-control rounded-control border bg-block p-component shadow-premium outline-none',
         'data-open:animate-in data-open:slide-in-from-right-4 data-open:fade-in-0 data-closed:animate-out data-closed:slide-out-to-right-4 data-closed:fade-out-0',
         config.rootClassName,
       )}
@@ -60,11 +60,11 @@ function ToastItem({ toast, onDismiss }) {
         <Icon className="size-4" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <ToastPrimitive.Title className="text-sm font-semibold leading-5 text-text-primary">
+        <ToastPrimitive.Title className="text-ui text-text-primary">
           {toast.title}
         </ToastPrimitive.Title>
         {toast.description ? (
-          <ToastPrimitive.Description className="mt-1 text-sm leading-5 text-text-muted">
+          <ToastPrimitive.Description className="mt-micro text-ui text-text-muted">
             {toast.description}
           </ToastPrimitive.Description>
         ) : null}
@@ -124,7 +124,7 @@ export function ToastProvider({ children }) {
         {toasts.map((toast) => (
           <ToastItem key={toast.id} onDismiss={dismiss} toast={toast} />
         ))}
-        <ToastPrimitive.Viewport className="fixed right-4 bottom-4 z-[100] grid max-h-[calc(100vh-2rem)] gap-3 outline-none" />
+        <ToastPrimitive.Viewport className="fixed right-component bottom-component z-[100] grid max-h-[calc(100vh-2rem)] gap-control outline-none" />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>
   )

@@ -36,7 +36,7 @@ function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter">
       <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-sm text-destructive">
+        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
         </CardContent>
       </Card>

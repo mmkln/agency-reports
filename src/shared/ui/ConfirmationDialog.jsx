@@ -44,18 +44,18 @@ export function ConfirmationDialog({
             'duration-motion-medium ease-motion-emphasized data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:duration-motion-fast data-closed:ease-motion-exit data-closed:fade-out-0 data-closed:zoom-out-95',
           )}
         >
-          <div className="grid gap-2 p-5 pr-12">
-            <DialogPrimitive.Title className="text-base font-semibold leading-6 text-text-primary">
+          <div className="grid gap-item p-card pr-12">
+            <DialogPrimitive.Title className="text-heading text-text-primary">
               {title}
             </DialogPrimitive.Title>
             {description ? (
-              <DialogPrimitive.Description className="text-sm leading-6 text-text-secondary">
+              <DialogPrimitive.Description className="text-ui text-text-secondary">
                 {description}
               </DialogPrimitive.Description>
             ) : null}
           </div>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-island-border bg-material-chrome px-5 py-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-item border-t border-island-border bg-material-chrome px-card py-component sm:flex-row sm:justify-end">
             <DialogPrimitive.Close asChild>
               <Button disabled={isConfirming} type="button" variant="outline">
                 {cancelLabel}

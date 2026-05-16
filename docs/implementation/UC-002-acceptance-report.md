@@ -14,11 +14,11 @@ The implementation intentionally does not build native analytics connectors, cus
 
 | Route | Purpose |
 | --- | --- |
-| `#admin-dashboard-links` | Admin list for dashboard links across client workspaces |
-| `#admin-dashboard-links?newDashboard=true` | Admin modal for adding a dashboard link |
-| `#admin-client-dashboard-preview?clientId=...&dashboardId=...` | Admin preview of a client dashboard, including draft dashboards |
-| `#client-dashboard?clientId=...&dashboardId=...` | Client-facing embedded dashboard page |
-| `#client-overview` | Client overview dashboard block entry point |
+| `/admin/dashboard-links` | Admin list for dashboard links across client workspaces |
+| `/admin/dashboard-links?newDashboard=true` | Admin modal for adding a dashboard link |
+| `/admin/client-dashboard-preview?clientId=...&dashboardId=...` | Admin preview of a client dashboard, including draft dashboards |
+| `/client/dashboard?clientId=...&dashboardId=...` | Client-facing embedded dashboard page |
+| `/client/overview` | Client overview dashboard block entry point |
 
 ## Main Implementation Files
 
@@ -30,7 +30,7 @@ The implementation intentionally does not build native analytics connectors, cus
 | Admin UI | `src/pages/admin/dashboard-links/*`, `src/features/admin-dashboard-links/*` |
 | Client UI | `src/pages/client/dashboard/*`, `src/widgets/dashboard-embed/*` |
 | Overview integration | `src/widgets/client-overview/ClientOverviewBlocks.jsx`, `src/domain/services/clientOverviewService.js` |
-| Routing | `src/app/routing/routeRegistry.js`, `src/app/routing/router.jsx`, `src/app/routing/legacyHashRoutes.js` |
+| Routing | `src/app/routing/routeDefinitions.jsx`, `src/app/routing/router.jsx` |
 
 ## Acceptance Mapping
 
@@ -98,3 +98,4 @@ Playwright browser smoke covers:
 The current persistence layer is still localStorage through repository adapters. Backend migration should preserve the current domain service contracts.
 
 External iframe blocking cannot be fully simulated by the portal. The MVP handles controllable cases: missing embed URL, unavailable dashboard status, and full-dashboard fallback link.
+

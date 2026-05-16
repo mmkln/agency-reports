@@ -18,7 +18,7 @@ export function Badge({ children, className = '', icon, id, tone, variant = 'out
   return (
     <ShadcnBadge
       id={inspectorId}
-      className={cn('h-6 gap-1.5 px-2.5 py-0 text-xs font-medium leading-none', toneClass, className)}
+      className={cn('min-h-control-mini gap-tag px-control py-0 text-label leading-none', toneClass, className)}
       variant={variant}
       {...props}
     >

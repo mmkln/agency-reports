@@ -14,9 +14,9 @@ export function ProgressBar({ id, label, showLabel = true, value, tone = 'blue' 
   }[tone]
 
   return (
-    <div className="grid gap-2" aria-label={label} id={inspectorId}>
+    <div className="grid gap-item" aria-label={label} id={inspectorId}>
       {showLabel ? (
-        <div className="flex items-center justify-between gap-3 text-sm font-medium text-text-secondary">
+        <div className="flex items-center justify-between gap-control text-ui text-text-secondary">
           <span>{label}</span>
           <strong className="font-semibold text-text-primary">{normalizedValue}%</strong>
         </div>

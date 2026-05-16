@@ -39,9 +39,9 @@ function ReportFormSection({ children, description, iconName, title }) {
             </span>
           ) : null}
           <div>
-            <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+            <h3 className="text-ui text-text-primary">{title}</h3>
             {description ? (
-              <p className="mt-1 text-xs leading-5 text-text-muted">{description}</p>
+              <p className="mt-1 text-label font-normal text-text-muted">{description}</p>
             ) : null}
           </div>
         </div>
@@ -61,8 +61,8 @@ function StatusGuidance({ status }) {
       <div className="flex items-start gap-2">
         <Icon className="mt-0.5 text-text-quaternary" name={statusMeta.icon ?? 'circle'} size={15} />
         <div>
-          <p className="text-xs font-semibold text-text-primary">{statusMeta.label}</p>
-          <p className="mt-0.5 text-xs leading-5 text-text-muted">
+          <p className="text-label text-text-primary">{statusMeta.label}</p>
+          <p className="mt-0.5 text-label font-normal text-text-muted">
             {REPORT_STATUS_DESCRIPTIONS[status] ?? 'Report visibility follows its status.'}
           </p>
         </div>
@@ -94,7 +94,7 @@ export function ReportModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={onSubmit}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">{title}</DialogTitle>
+              <DialogTitle className="text-heading text-text-primary">{title}</DialogTitle>
               <DialogDescription>
                 Write the client-facing narrative for a reporting period. Draft and ready reports stay hidden.
               </DialogDescription>
@@ -104,13 +104,13 @@ export function ReportModal({
           <OverlayBody className="min-h-0 overflow-y-auto bg-surface-subtle">
             <div className="grid gap-component">
               {!hasClients ? (
-                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
                   Create a client workspace before adding monthly reports.
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
                   {error}
                 </div>
               ) : null}

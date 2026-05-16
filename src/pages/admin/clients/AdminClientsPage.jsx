@@ -7,8 +7,9 @@ import {
   ClientsTableSkeleton,
   CreateClientModal,
   EmptyClientsState,
-} from '../../../features/admin-client-setup/components'
-import { useCreateClientForm, useEditClientForm } from '../../../features/admin-client-setup/model'
+  useCreateClientForm,
+  useEditClientForm,
+} from '../../../features/admin-client-setup'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 
@@ -77,7 +78,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
       {clientsResource.status === 'loading' ? (
         <ClientsTableSkeleton />
       ) : clientsResource.status === 'error' ? (
-        <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
           {clientsResource.error}
         </div>
       ) : clients.length > 0 ? (

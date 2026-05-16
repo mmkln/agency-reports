@@ -1,4 +1,5 @@
 export { DonutChart } from './DonutChart'
+export { ComposedStackedBarLineChart } from './ComposedStackedBarLineChart'
 export { GroupedBarChart } from './GroupedBarChart'
 export { LineChart } from './LineChart'
 export { StackedBarLineChart } from './StackedBarLineChart'

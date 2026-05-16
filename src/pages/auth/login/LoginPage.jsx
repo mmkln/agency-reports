@@ -30,7 +30,7 @@ function SignInButton({ onClick, profile }) {
       type="button"
     >
       <span className="block font-semibold text-text-primary">{profile.name}</span>
-      <span className="block text-xs text-text-secondary">{getRoleLabel(profile.role)}</span>
+      <span className="block text-label font-normal text-text-secondary">{getRoleLabel(profile.role)}</span>
     </button>
   )
 }
@@ -76,19 +76,19 @@ export function LoginPage({ onAuthChange, runtime }) {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
         <Card className="w-full max-w-form bg-material-vibrant shadow-premium backdrop-blur-2xl">
           <CardContent className="p-8">
-            <BrandLogo href={import.meta.env.BASE_URL} variant="static" />
+            <BrandLogo href="/" variant="static" />
 
             <div className="mt-10">
-              <p className="text-sm font-semibold text-brand">Welcome back</p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-heading">Sign in to your account</h1>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">
+              <p className="text-ui text-brand">Welcome back</p>
+              <h1 className="mt-2 text-display text-text-primary">Sign in to your account</h1>
+              <p className="mt-2 text-body text-text-secondary">
                 Use your agency email to continue to the client portal workspace.
               </p>
             </div>
 
             <form className="mt-8 grid gap-5" onSubmit={handleSubmit}>
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-text-secondary">Email address</span>
+                <span className="text-ui text-text-secondary">Email address</span>
                 <Input
                   autoComplete="email"
                   name="email"
@@ -103,7 +103,7 @@ export function LoginPage({ onAuthChange, runtime }) {
               </label>
 
               <label className="grid gap-2">
-                <span className="text-sm font-medium text-text-secondary">Password</span>
+                <span className="text-ui text-text-secondary">Password</span>
                 <Input
                   autoComplete="current-password"
                   minLength={6}
@@ -116,7 +116,7 @@ export function LoginPage({ onAuthChange, runtime }) {
                   type="password"
                   value={password}
                 />
-                <span className="text-xs text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
+                <span className="text-label font-normal text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
               </label>
 
               <Button className="w-full" size="lg" type="submit">
@@ -125,13 +125,13 @@ export function LoginPage({ onAuthChange, runtime }) {
             </form>
 
             {error ? (
-              <p className="mt-4 rounded-control bg-destructive/10 px-control py-item text-sm text-destructive">
+              <p className="mt-4 rounded-control bg-destructive/10 px-control py-item text-ui text-destructive">
                 {error}
               </p>
             ) : null}
 
             <div className="mt-6 grid gap-2">
-              <p className="text-xs font-semibold uppercase text-text-muted">Demo users</p>
+              <p className="text-label uppercase text-text-muted">Demo users</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {loginProfiles.map((profile) => (
                   <SignInButton key={profile.id} onClick={signIn} profile={profile} />
@@ -139,7 +139,7 @@ export function LoginPage({ onAuthChange, runtime }) {
               </div>
             </div>
 
-            <p className="mt-6 text-center text-sm text-text-secondary">
+            <p className="mt-6 text-center text-ui text-text-secondary">
               Have an invitation?{' '}
               <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
                 Accept invite

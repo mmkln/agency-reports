@@ -16,6 +16,7 @@ Before changing UI components, layouts, copy, tables, metrics, charts, or page s
 - [Blocks, Islands, And Sidebars](./blocks-islands-sidebars.md): Apple 2025-2026 content blocks, transient functional islands, standard sidebars, spacing, and token mapping.
 - [Apple Alignment](./apple-alignment.md): known mismatches found in the previous UI token system and the current resolution.
 - [UI Component Audit](./ui-component-audit.md): current component-level mismatches against the Apple-aligned tokens and structure rules.
+- [Component Implementation Audit](./component-implementation-audit.md): current component inventory, structural hotspots, primitive/token drift, and future component checklist.
 - [React Project Adoption](./react-project-adoption.md): how to move this design system into other React projects without direct-copy drift.
 
 ## Research References

@@ -39,15 +39,15 @@ export function PhaseCard({ accent = 'blue', duration, iconName, id, items, phas
         <div className="flex items-start gap-3">
           {iconName ? <Icon className={`mt-1 ${accentClass.text}`} name={iconName} size={30} /> : null}
           <div>
-            <h3 className="m-0 text-xl font-bold text-text-primary">
+            <h3 className="m-0 text-heading text-text-primary">
               {phase}: {title}
             </h3>
-            {duration ? <p className="mt-1 text-sm text-text-secondary">Duration: {duration}</p> : null}
+            {duration ? <p className="mt-1 text-ui text-text-secondary">Duration: {duration}</p> : null}
           </div>
         </div>
         <div className="text-right max-[640px]:text-left">
-          <p className="m-0 text-sm text-text-secondary">Progress</p>
-          <strong className="block text-2xl font-bold text-text-primary">{progress}%</strong>
+          <p className="m-0 text-ui text-text-secondary">Progress</p>
+          <strong className="block text-data tabular-nums text-text-primary">{progress}%</strong>
           {status ? <span className="sr-only">{status}</span> : null}
         </div>
       </div>

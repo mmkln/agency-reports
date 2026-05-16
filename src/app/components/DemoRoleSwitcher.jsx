@@ -14,7 +14,7 @@ export function DemoRoleSwitcher({ activeRoleKey, onRoleChange }) {
       aria-label="Demo role switcher"
       className="fixed right-4 bottom-4 z-[80] w-[220px] rounded-lg border border-island-border bg-material-regular p-2 shadow-material backdrop-blur"
     >
-      <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-muted">
+      <div className="mb-1 px-2 text-label uppercase text-text-muted">
         Demo role
       </div>
       <div className="grid gap-1">
@@ -26,7 +26,7 @@ export function DemoRoleSwitcher({ activeRoleKey, onRoleChange }) {
             <button
               aria-pressed={isActive}
               className={[
-                'flex min-h-10 w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition',
+                'flex min-h-10 w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-ui transition',
                 isActive
                   ? 'bg-control-selected text-text-primary shadow-sm'
                   : 'text-text-secondary hover:bg-control-hover hover:text-text-primary',

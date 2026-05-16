@@ -34,7 +34,7 @@ Reports are persisted through the current repository adapter. In this project st
 | Domain tests | `src/domain/services/adminReportService.test.js`, `src/domain/services/clientReportsService.test.js`, `src/domain/services/clientOverviewService.test.js`, `src/domain/policies/visibilityPolicy.test.js` |
 | Admin UI | `src/pages/admin/reports/*`, `src/features/admin-reports/*` |
 | Client UI | `src/pages/client/reports/*`, `src/widgets/client-overview/ClientOverviewBlocks.jsx` |
-| Routing | `src/app/routing/routeRegistry.js`, `src/app/routing/router.jsx`, `src/app/routing/legacyHashRoutes.js` |
+| Routing | `src/app/routing/routeDefinitions.jsx`, `src/app/routing/router.jsx` |
 | Browser tests | `e2e/uc003.spec.js` |
 
 ## Acceptance Mapping
@@ -119,3 +119,4 @@ Backend migration should preserve the current domain contracts:
 ## Residual Risk
 
 The main remaining risk is operational, not architectural: an agency admin can still publish weak or incomplete report content. The MVP response is a fixed, plain-language report template plus preview-before-publish behavior. A later version can add stricter editorial checks, review workflow, or version history if product usage proves it is needed.
+

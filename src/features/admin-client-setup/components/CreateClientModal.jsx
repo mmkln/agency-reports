@@ -51,9 +51,9 @@ function FormField({ children, error, hint, label, required = false }) {
       </Label>
       {children}
       {error ? (
-        <span className="text-xs font-medium text-destructive" role="alert">{error}</span>
+        <span className="text-label text-destructive" role="alert">{error}</span>
       ) : hint ? (
-        <span className="text-xs text-text-muted">{hint}</span>
+        <span className="text-label font-normal text-text-muted">{hint}</span>
       ) : null}
     </div>
   )
@@ -84,7 +84,7 @@ function PortalSlugInput({ hint = 'Auto-generated from client name. You can edit
           ? 'border-destructive/30 focus-within:border-destructive focus-within:ring-destructive/20'
           : 'border-control-border focus-within:border-action focus-within:ring-action/20'
       }`}>
-        <span className="flex items-center border-r border-control-border bg-surface-subtle px-3 text-sm text-text-muted">
+        <span className="flex items-center border-r border-control-border bg-surface-subtle px-3 text-ui text-text-muted">
           agency.com/
         </span>
         <Input
@@ -211,8 +211,8 @@ function LogoInput({ form, onFieldChange }) {
           </span>
 
           <div className="grid min-w-0 content-start gap-item">
-            <p className="text-sm font-medium text-text-primary">{getLogoPreviewLabel(form)}</p>
-            <p className="text-xs text-text-muted">Paste a logo URL or upload an image from this device.</p>
+            <p className="text-ui text-text-primary">{getLogoPreviewLabel(form)}</p>
+            <p className="text-label font-normal text-text-muted">Paste a logo URL or upload an image from this device.</p>
           </div>
         </div>
 
@@ -253,7 +253,7 @@ function LogoInput({ form, onFieldChange }) {
         ) : null}
 
         {uploadError ? (
-          <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
             {uploadError}
           </p>
         ) : null}
@@ -288,7 +288,7 @@ export function CreateClientModal({
         <form className="grid max-h-overlay min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]" onSubmit={onSubmit}>
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-text-primary">
+              <DialogTitle className="text-heading text-text-primary">
                 {isEditMode ? 'Edit Client' : 'Create Client'}
               </DialogTitle>
               <DialogDescription>
@@ -357,13 +357,13 @@ export function CreateClientModal({
             </div>
 
             {error ? (
-              <p className="mt-5 rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p className="mt-5 rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
                 {error}
               </p>
             ) : null}
 
             {!isEditMode && lastCreatedClient ? (
-              <div className="mt-5 rounded-control border border-control-border bg-surface-subtle px-3 py-3 text-sm text-text-secondary">
+              <div className="mt-5 rounded-control border border-control-border bg-surface-subtle px-3 py-3 text-ui text-text-secondary">
                 <p className="font-semibold text-text-primary">{lastCreatedClient.client.name} was created.</p>
                 <p className="mt-1">
                   Configure the client overview in the editor. The local invite is ready for{' '}

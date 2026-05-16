@@ -11,10 +11,9 @@ import {
   SelectValue,
   Switch,
 } from '@/shared/ui'
-
-import { TASK_STATUSES, TASK_STATUS_META } from '../../../entities/task'
-import { VISIBILITY } from '../../../entities/update'
-import { Icon } from '../../../shared/icons'
+import { Icon } from '@/shared/icons'
+import { TASK_STATUSES, TASK_STATUS_META } from '@/entities/task'
+import { VISIBILITY } from '@/entities/update'
 
 function ScopeToggle({ filters, onChange }) {
   const isMine = filters.scope === 'mine'
@@ -42,9 +41,9 @@ function FilterField({ children, label }) {
   )
 }
 
-const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-sm'
+const filterSelectTriggerClass = 'h-control-small border-transparent bg-control text-ui'
 
-export function TaskFilters({ filters, onChange, taskData }) {
+export function TeamTaskFilters({ filters, onChange, taskData }) {
   const projectOptions = taskData.projects
     .filter((project) => filters.clientId === 'all' || project.client_id === filters.clientId)
   const activeFilterCount = [
@@ -92,7 +91,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
           >
             <span>Filters</span>
             {activeFilterCount > 0 ? (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold leading-none text-primary-foreground">
+              <span className="flex min-h-control-mini min-w-control-mini items-center justify-center rounded-full bg-primary px-tag text-label text-primary-foreground">
                 {activeFilterCount}
               </span>
             ) : (
@@ -103,7 +102,7 @@ export function TaskFilters({ filters, onChange, taskData }) {
         <PopoverContent align="end" className="w-popover p-card">
           <div className="grid gap-component">
             <div className="flex items-center justify-between gap-component">
-              <p className="text-sm font-semibold text-text-primary">Filters</p>
+              <p className="text-ui text-text-primary">Filters</p>
               {activeFilterCount > 0 ? (
                 <Button onClick={clearFilters} size="xs" type="button" variant="ghost">
                   Clear
