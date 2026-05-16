@@ -23,12 +23,19 @@ import {
   Textarea,
 } from '@/shared/ui'
 
-import { NEEDED_ACTION_STATUSES, NEEDED_ACTION_STATUS_META } from '../../../entities/needed-from-client'
+import {
+  NEEDED_ACTION_PRIORITIES,
+  NEEDED_ACTION_PRIORITY_META,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_STATUS_META,
+} from '../../../entities/needed-from-client'
 import {
   cancelNeededAction,
   createNeededAction,
   listNeededActionsWorkspace,
+  reopenNeededAction,
   resolveNeededAction,
+  updateNeededAction,
 } from '../../../domain/services/neededFromClientService'
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
@@ -52,8 +59,24 @@ function createInitialRequestDraft(clientId = '') {
     clientId,
     description: '',
     dueDate: '',
+    internalNotes: '',
+    ownerName: '',
+    priority: NEEDED_ACTION_PRIORITIES.MEDIUM,
     relatedLink: '',
     title: '',
+  }
+}
+
+function createRequestDraftFromAction(action) {
+  return {
+    clientId: action.clientId,
+    description: action.description ?? '',
+    dueDate: action.dueDate ?? '',
+    internalNotes: action.internalNotes ?? '',
+    ownerName: action.ownerName ?? '',
+    priority: action.priority ?? NEEDED_ACTION_PRIORITIES.MEDIUM,
+    relatedLink: action.relatedLink ?? '',
+    title: action.title ?? '',
   }
 }
 
@@ -88,6 +111,7 @@ function RequestDialog({
   client,
   clients,
   draft,
+  editingAction,
   error,
   isOpen,
   onChange,
@@ -100,7 +124,7 @@ function RequestDialog({
       <DialogContent className="max-w-modal-lg">
         <form onSubmit={onSubmit}>
           <DialogHeader>
-            <DialogTitle>New client request</DialogTitle>
+            <DialogTitle>{editingAction ? 'Edit client request' : 'New client request'}</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 px-5 py-4">
@@ -143,7 +167,7 @@ function RequestDialog({
               />
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="grid gap-2">
                 <Label htmlFor="request-due-date">Due date</Label>
                 <Input
@@ -152,6 +176,22 @@ function RequestDialog({
                   type="date"
                   value={draft.dueDate}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="request-priority">Priority</Label>
+                <Select
+                  onValueChange={(value) => onChange({ ...draft, priority: value })}
+                  value={draft.priority}
+                >
+                  <SelectTrigger id="request-priority">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(NEEDED_ACTION_PRIORITIES).map((priority) => (
+                      <SelectItem key={priority} value={priority}>{NEEDED_ACTION_PRIORITY_META[priority].label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="request-link">Related link</Label>
@@ -164,13 +204,35 @@ function RequestDialog({
               </div>
             </div>
 
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="request-owner">Owner</Label>
+                <Input
+                  id="request-owner"
+                  onChange={(event) => onChange({ ...draft, ownerName: event.target.value })}
+                  placeholder="Sarah Johnson"
+                  value={draft.ownerName}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="request-internal-notes">Internal notes</Label>
+                <Textarea
+                  className="resize-none"
+                  id="request-internal-notes"
+                  onChange={(event) => onChange({ ...draft, internalNotes: event.target.value })}
+                  placeholder="Internal context. Never shown to the client."
+                  value={draft.internalNotes}
+                />
+              </div>
+            </div>
+
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
 
           <DialogFooter>
             <Button onClick={onClose} type="button" variant="outline">Cancel</Button>
             <Button disabled={!client || Boolean(saveState)} type="submit">
-              {saveState || 'Create request'}
+              {saveState || (editingAction ? 'Save changes' : 'Create request')}
             </Button>
           </DialogFooter>
         </form>
@@ -179,14 +241,16 @@ function RequestDialog({
   )
 }
 
-function RequestCard({ action, onCancel, onResolve }) {
+function RequestCard({ action, onCancel, onEdit, onReopen, onResolve }) {
   const meta = NEEDED_ACTION_STATUS_META[action.status]
+  const priorityMeta = NEEDED_ACTION_PRIORITY_META[action.priority] ?? NEEDED_ACTION_PRIORITY_META[NEEDED_ACTION_PRIORITIES.MEDIUM]
   const canResolve = [
     NEEDED_ACTION_STATUSES.PENDING,
     NEEDED_ACTION_STATUSES.ANSWERED,
   ].includes(action.status)
   const canCancel = action.status !== NEEDED_ACTION_STATUSES.CANCELLED
     && action.status !== NEEDED_ACTION_STATUSES.RESOLVED
+  const canReopen = action.status !== NEEDED_ACTION_STATUSES.PENDING
 
   return (
     <Card className="bg-block py-0 shadow-none" data-testid={`request-card-${action.id}`}>
@@ -196,11 +260,18 @@ function RequestCard({ action, onCancel, onResolve }) {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-semibold text-text-primary">{action.title}</h2>
               <StatusBadge meta={meta} />
+              <StatusBadge meta={priorityMeta} />
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
               <span>{formatDate(action.dueDate)}</span>
               <span aria-hidden="true">-</span>
               <span>{action.clientName}</span>
+              {action.ownerName ? (
+                <>
+                  <span aria-hidden="true">-</span>
+                  <span>Owner: {action.ownerName}</span>
+                </>
+              ) : null}
             </div>
             {action.description ? (
               <p className="mt-3 max-w-readable text-sm leading-6 text-text-secondary">{action.description}</p>
@@ -209,6 +280,12 @@ function RequestCard({ action, onCancel, onResolve }) {
               <div className="mt-3 rounded-control bg-action-muted px-3 py-2 text-sm text-action">
                 <p className="font-medium">Client response</p>
                 <p className="mt-1 leading-5">{action.clientResponse}</p>
+              </div>
+            ) : null}
+            {action.internalNotes ? (
+              <div className="mt-3 rounded-control border border-warning/20 bg-warning/10 px-3 py-2 text-sm text-text-secondary">
+                <p className="font-medium text-text-primary">Internal notes</p>
+                <p className="mt-1 leading-5">{action.internalNotes}</p>
               </div>
             ) : null}
             {action.relatedLink ? (
@@ -225,9 +302,17 @@ function RequestCard({ action, onCancel, onResolve }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Button onClick={() => onEdit(action)} size="sm" type="button" variant="ghost">
+              Edit
+            </Button>
             {canResolve ? (
               <Button onClick={() => onResolve(action)} size="sm" type="button" variant="ghost">
                 Resolve
+              </Button>
+            ) : null}
+            {canReopen ? (
+              <Button onClick={() => onReopen(action)} size="sm" type="button" variant="ghost">
+                Reopen
               </Button>
             ) : null}
             {canCancel ? (
@@ -250,6 +335,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   const [requestDraft, setRequestDraft] = useState(() => createInitialRequestDraft(routeClientId))
   const [requestError, setRequestError] = useState('')
   const [requestSaveState, setRequestSaveState] = useState('')
+  const [editingAction, setEditingAction] = useState(null)
   const [pendingCancel, setPendingCancel] = useState(null)
   const requestsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-client-requests:${routeClientId ?? ''}`,
@@ -276,7 +362,16 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   ].includes(action.status)).length
 
   function openCreateDialog() {
+    setEditingAction(null)
     setRequestDraft(createInitialRequestDraft(client?.id ?? routeClientId))
+    setRequestError('')
+    setRequestSaveState('')
+    setIsCreateOpen(true)
+  }
+
+  function openEditDialog(action) {
+    setEditingAction(action)
+    setRequestDraft(createRequestDraftFromAction(action))
     setRequestError('')
     setRequestSaveState('')
     setIsCreateOpen(true)
@@ -284,6 +379,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
 
   function closeCreateDialog() {
     setIsCreateOpen(false)
+    setEditingAction(null)
     setRequestError('')
     setRequestSaveState('')
   }
@@ -295,24 +391,49 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   function submitRequest(event) {
     event.preventDefault()
     setRequestError('')
-    setRequestSaveState('Creating...')
+    setRequestSaveState(editingAction ? 'Saving...' : 'Creating...')
 
-    runtime.dataClient.write((repositories) => createNeededAction({
-      idGenerator: createUuid,
-      input: requestDraft,
-      repositories,
-      viewer: runtime.viewer,
-    }))
-      .then((createdAction) => {
+    const operation = editingAction
+      ? (repositories) => updateNeededAction({
+          actionId: editingAction.id,
+          input: requestDraft,
+          repositories,
+          viewer: runtime.viewer,
+        })
+      : (repositories) => createNeededAction({
+          idGenerator: createUuid,
+          input: requestDraft,
+          repositories,
+          viewer: runtime.viewer,
+        })
+
+    runtime.dataClient.write(operation)
+      .then((savedAction) => {
         setRequestSaveState('')
+        setEditingAction(null)
         setIsCreateOpen(false)
         reloadRequests()
-        toast.success('Request created', `${createdAction.title} was added.`)
+        toast.success(editingAction ? 'Request updated' : 'Request created', `${savedAction.title} was saved.`)
       })
       .catch((caughtError) => {
         setRequestError(caughtError.message)
         setRequestSaveState('')
         toast.error('Request was not created', caughtError.message)
+      })
+  }
+
+  function reopenRequest(action) {
+    void runtime.dataClient.write((repositories) => reopenNeededAction({
+      actionId: action.id,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then(() => {
+        reloadRequests()
+        toast.success('Request reopened', `${action.title} is pending again.`)
+      })
+      .catch((caughtError) => {
+        toast.error('Request was not reopened', caughtError.message)
       })
   }
 
@@ -419,6 +540,8 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
                   action={action}
                   key={action.id}
                   onCancel={setPendingCancel}
+                  onEdit={openEditDialog}
+                  onReopen={reopenRequest}
                   onResolve={resolveRequest}
                 />
               ))}
@@ -437,6 +560,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
         client={client}
         clients={clients}
         draft={requestDraft}
+        editingAction={editingAction}
         error={requestError}
         isOpen={isCreateOpen}
         onChange={setRequestDraft}

@@ -280,11 +280,6 @@ export function updateNeededAction({
   assertAgencyAdmin(viewer)
 
   const action = getAction({ actionId, repositories, viewer })
-  getAdminClient({
-    clientId: action.client_id,
-    repositories,
-    viewer,
-  })
 
   const timestamp = now()
   const updatedAction = {

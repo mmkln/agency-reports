@@ -3,6 +3,11 @@ import {
   PERFORMANCE_DATA_CONFIDENCE_META,
   PERFORMANCE_DATA_MODE_META,
 } from '../../entities/performance-dashboard'
+import {
+  NEEDED_ACTION_PRIORITY_META,
+  NEEDED_ACTION_STATUS_META,
+  normalizeNeededAction,
+} from '../../entities/needed-from-client'
 import { REPORT_STATUS_META } from '../../entities/report'
 import { TASK_STATUSES, TASK_STATUS_META } from '../../entities/task'
 import { USER_ROLES } from '../../entities/profile'
@@ -121,13 +126,18 @@ function mapReport(report) {
 }
 
 function mapNeededAction(action) {
+  const normalizedAction = normalizeNeededAction(action)
+
   return {
-    description: action.description ?? '',
-    dueDate: action.due_date ?? '',
-    id: action.id,
-    relatedLink: action.related_link ?? '',
-    status: action.status,
-    title: action.title,
+    description: normalizedAction.description,
+    dueDate: normalizedAction.due_date,
+    id: normalizedAction.id,
+    priority: normalizedAction.priority,
+    priorityMeta: getStatusMeta(normalizedAction.priority, NEEDED_ACTION_PRIORITY_META),
+    relatedLink: normalizedAction.related_link,
+    status: normalizedAction.status,
+    statusMeta: getStatusMeta(normalizedAction.status, NEEDED_ACTION_STATUS_META),
+    title: normalizedAction.title,
   }
 }
 

@@ -319,7 +319,10 @@ export function NeededFromClientBlock({ actions, onAnswerAction }) {
                 Due: {formatDate(action.dueDate) || 'No due date'}{action.isOverdue ? ' · Overdue' : ''}
               </p>
             </div>
-            <StatusBadge meta={action.statusMeta} />
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              <StatusBadge meta={action.priorityMeta} />
+              <StatusBadge meta={action.statusMeta} />
+            </div>
           </div>
           {action.description ? <p className="mt-3 text-sm leading-6 text-text-secondary">{action.description}</p> : null}
           <NeededActionResponse action={action} onAnswerAction={onAnswerAction} />

@@ -201,33 +201,33 @@ Until backend integration exists:
 
 ### Tasks
 
-- [ ] Add route:
-  - [ ] `#admin-client-requests?clientId=...`
-- [ ] Register route metadata with `showInNav: false`.
-- [ ] Add route tab to `AdminClientWorkspaceHeader`.
-- [ ] Build `AdminClientRequestsPage`.
-- [ ] Use canonical `PageHeader` / client workspace header patterns.
+- [x] Add route:
+  - [x] `#admin-client-requests?clientId=...`
+- [x] Register route metadata with `showInNav: false`.
+- [x] Add route tab to `AdminClientWorkspaceHeader`.
+- [x] Build `AdminClientRequestsPage`.
+- [x] Use canonical `PageHeader` / client workspace header patterns.
 - [ ] Build request filters:
   - [ ] all
   - [ ] pending
   - [ ] answered
   - [ ] resolved
   - [ ] cancelled
-- [ ] Build requests list:
-  - [ ] title
-  - [ ] status
-  - [ ] priority
-  - [ ] due date
-  - [ ] owner
+- [x] Build requests list:
+  - [x] title
+  - [x] status
+  - [x] priority
+  - [x] due date
+  - [x] owner
   - [ ] updated time
-- [ ] Build create/edit modal:
-  - [ ] title
-  - [ ] description
-  - [ ] due date
-  - [ ] related link
-  - [ ] priority
-  - [ ] owner
-  - [ ] internal notes
+- [x] Build create/edit modal:
+  - [x] title
+  - [x] description
+  - [x] due date
+  - [x] related link
+  - [x] priority
+  - [x] owner
+  - [x] internal notes
 - [ ] Build detail modal:
   - [ ] request title as modal title
   - [ ] compact metadata
@@ -235,12 +235,12 @@ Until backend integration exists:
   - [ ] client response panel
   - [ ] internal notes panel
   - [ ] lifecycle actions in footer/overflow
-- [ ] Add actions:
-  - [ ] save draft/update
-  - [ ] mark resolved
-  - [ ] cancel
-  - [ ] reopen
-- [ ] Add empty state.
+- [x] Add actions:
+  - [x] save draft/update
+  - [x] mark resolved
+  - [x] cancel
+  - [x] reopen
+- [x] Add empty state.
 - [ ] Add loading/error states through runtime data client.
 
 ### Completion Criteria

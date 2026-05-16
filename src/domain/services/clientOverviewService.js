@@ -1,6 +1,10 @@
 import { CLIENT_STATUS_META } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
-import { NEEDED_ACTION_STATUS_META } from '../../entities/needed-from-client'
+import {
+  NEEDED_ACTION_PRIORITY_META,
+  NEEDED_ACTION_STATUS_META,
+  normalizeNeededAction,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META } from '../../entities/task'
 import { canAccessClient } from '../policies/accessPolicy'
@@ -37,23 +41,26 @@ function mapTask(task, project) {
 }
 
 function mapNeededAction(action) {
-  const dueTime = action.due_date ? new Date(action.due_date).getTime() : null
+  const normalizedAction = normalizeNeededAction(action)
+  const dueTime = normalizedAction.due_date ? new Date(normalizedAction.due_date).getTime() : null
   const now = new Date().getTime()
 
   return {
-    clientResponse: action.client_response,
-    description: action.description,
-    dueDate: action.due_date,
-    id: action.id,
-    isOverdue: action.status === 'pending' && Boolean(dueTime) && dueTime < now,
-    relatedLink: action.related_link,
-    responseHistory: Array.isArray(action.response_history) ? action.response_history : [],
-    respondedAt: action.responded_at,
-    respondedBy: action.responded_by,
-    resolvedAt: action.resolved_at,
-    status: action.status,
-    statusMeta: getStatusMeta(action.status, NEEDED_ACTION_STATUS_META),
-    title: action.title,
+    clientResponse: normalizedAction.client_response,
+    description: normalizedAction.description,
+    dueDate: normalizedAction.due_date,
+    id: normalizedAction.id,
+    isOverdue: normalizedAction.status === 'pending' && Boolean(dueTime) && dueTime < now,
+    priority: normalizedAction.priority,
+    priorityMeta: getStatusMeta(normalizedAction.priority, NEEDED_ACTION_PRIORITY_META),
+    relatedLink: normalizedAction.related_link,
+    responseHistory: normalizedAction.response_history,
+    respondedAt: normalizedAction.client_responded_at,
+    respondedBy: normalizedAction.client_responded_by,
+    resolvedAt: normalizedAction.resolved_at,
+    status: normalizedAction.status,
+    statusMeta: getStatusMeta(normalizedAction.status, NEEDED_ACTION_STATUS_META),
+    title: normalizedAction.title,
   }
 }
 
