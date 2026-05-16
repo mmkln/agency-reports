@@ -620,12 +620,12 @@ function CampaignExecutionSection({ campaign }) {
   const totals = getCampaignTotals(chartData)
 
   return (
-    <Panel>
+    <Panel className="min-w-0">
       <PanelHeader
         subtitle="A client-readable view of campaign volume, staged outreach, and expected booking lift."
         title="Campaign Execution"
       />
-      <PanelBody className="grid gap-6">
+      <PanelBody className="grid min-w-0 gap-6">
         <CampaignPlanSummary campaign={campaign} totals={totals} />
 
         {campaign.kpis?.length ? (
@@ -639,7 +639,7 @@ function CampaignExecutionSection({ campaign }) {
         <CampaignTracks tracks={campaign.tracks} />
 
         {chartData.length ? (
-          <div className="rounded-block border border-control-border bg-block p-5">
+          <div className="min-w-0 rounded-block border border-control-border bg-block p-5">
             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-text-primary">Touch volume and booking projection</h3>
@@ -649,7 +649,7 @@ function CampaignExecutionSection({ campaign }) {
               </div>
               <CampaignChartLegend bars={bars} line={line} />
             </div>
-            <div className="overflow-x-auto pb-2">
+            <div className="w-full max-w-full overflow-x-auto pb-2">
               <StackedBarLineChart
                 ariaLabel="Campaign touchpoints and cumulative bookings"
                 bars={bars}
