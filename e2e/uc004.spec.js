@@ -135,6 +135,9 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByText('Last updated').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'What Changed' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Next Actions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
+  await expect(page.getByText('Projected bookings')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Campaign touchpoints and cumulative bookings' })).toBeVisible()
 
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
   await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
