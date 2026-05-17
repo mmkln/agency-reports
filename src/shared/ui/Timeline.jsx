@@ -25,7 +25,12 @@ export function Timeline({
     <ol
       aria-label={ariaLabel}
       id={inspectorId}
-      className={cn('grid gap-card [&>li:last-child_[data-slot=timeline-rail]]:hidden', className)}
+      className={cn(
+        'grid gap-card',
+        '[&>li:first-child_[data-slot=timeline-rail-before]]:hidden',
+        '[&>li:last-child_[data-slot=timeline-rail-after]]:hidden',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -54,15 +59,20 @@ export function TimelineItem({
   return (
     <li
       id={inspectorId}
-      className={cn('grid grid-cols-[104px_minmax(0,1fr)] gap-control sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-component', className)}
+      className={cn('relative grid grid-cols-[104px_minmax(0,1fr)] gap-control sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-component', className)}
     >
+      <span
+        aria-hidden="true"
+        className="absolute top-[calc(var(--spacing-card)*-1)] bottom-[calc(100%-var(--spacing-component)-var(--spacing-control))] left-[calc(var(--spacing-control-small)/2)] w-px bg-separator"
+        data-slot="timeline-rail-before"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute bottom-[calc(var(--spacing-card)*-1)] top-[calc(var(--spacing-component)+var(--spacing-control))] left-[calc(var(--spacing-control-small)/2)] w-px bg-separator"
+        data-slot="timeline-rail-after"
+      />
       <div className="relative flex items-start gap-item">
         <div className="relative flex w-control-small shrink-0 justify-center">
-          <span
-            aria-hidden="true"
-            className="absolute bottom-[calc(var(--spacing-card)*-1)] top-[calc(var(--spacing-component)+var(--spacing-control-small))] w-px bg-separator"
-            data-slot="timeline-rail"
-          />
           <span className={cn('relative z-10 mt-component flex size-control-small items-center justify-center rounded-full ring-4 ring-background', markerToneClass)}>
             {icon ?? (iconName ? <Icon name={iconName} size={15} /> : null)}
           </span>
@@ -70,7 +80,7 @@ export function TimelineItem({
         {date ? <time className="mt-[calc(var(--spacing-component)+var(--spacing-tag))] min-w-0 text-label font-normal text-text-muted">{date}</time> : null}
       </div>
 
-      <article className="rounded-block bg-block px-card py-component shadow-block">
+      <article className="rounded-block bg-block px-card py-component shadow-none">
         <div className="flex flex-col gap-control sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             {title ? <TitleComp className="text-ui font-semibold text-text-primary">{title}</TitleComp> : null}
