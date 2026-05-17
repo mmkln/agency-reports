@@ -82,23 +82,23 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 3 - Clinic Overview
 
-- [ ] Update clinic Overview read model.
+- [x] Update clinic Overview read model.
 - [ ] Add overview KPI preview:
-  - [ ] new patient inquiries
-  - [ ] booked appointments
-  - [ ] cost per booked appointment
-  - [ ] missed calls
-  - [ ] reviews gained
-  - [ ] top service line
-  - [ ] top location
-  - [ ] compliance issues
-  - [ ] clinic actions needed
-- [ ] Reduce `Projects` prominence for clinic clients.
-- [ ] Add booking leakage preview.
-- [ ] Add reputation preview.
-- [ ] Add compliance risk preview.
-- [ ] Ensure Overview links to owning clinic destinations instead of embedding full workflows.
-- [ ] Add client-safe empty/unavailable states.
+  - [x] new patient inquiries
+  - [x] booked appointments
+  - [x] cost per booked appointment
+  - [x] missed calls
+  - [x] reviews gained
+  - [x] top service line
+  - [x] top location
+  - [x] compliance issues
+  - [x] clinic actions needed
+- [x] Reduce `Projects` prominence for clinic clients.
+- [x] Add booking leakage preview.
+- [x] Add reputation preview.
+- [x] Add compliance risk preview.
+- [x] Ensure Overview links to owning clinic destinations instead of embedding full workflows.
+- [x] Add client-safe empty/unavailable states.
 
 ## Phase 4 - Patient Acquisition
 
@@ -342,7 +342,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 ## Definition Of Done
 
 - [ ] Clinic clients see patient acquisition and booking performance before generic project status.
-- [ ] Clinic Overview answers new inquiries, bookings, missed calls, reputation, compliance, and actions needed.
+- [x] Clinic Overview answers new inquiries, bookings, missed calls, reputation, compliance, and actions needed.
 - [ ] Calls & Bookings is first-class.
 - [ ] Campaigns / Service Lines is first-class.
 - [x] Reputation is first-class.

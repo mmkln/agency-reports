@@ -1,4 +1,4 @@
-import { CLIENT_STATUS_META } from '../../entities/client'
+import { CLIENT_STATUS_META, CLIENT_TYPES } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../entities/client-work-item'
@@ -11,6 +11,12 @@ import {
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
+import {
+  getClientCallsBookingsPage,
+  getClientComplianceApprovalsPage,
+  getClientPatientAcquisitionPage,
+  getClientReputationPage,
+} from './clinicClientService'
 import { getClientPerformanceOverviewPreview } from './clientPerformanceDashboardService'
 import { listPublishedClientWorkItems } from './clientWorkItemService'
 import {
@@ -170,6 +176,64 @@ function getFilesLinksPreview({ clientId, repositories, viewer }) {
   return result.fileLinks.slice(0, 4)
 }
 
+function getReadyClinicPage(loader, input) {
+  const page = loader(input)
+
+  return page.status === 'ready' ? page : null
+}
+
+function getClinicOverviewPreview({ clientId, neededActions, repositories, viewer }) {
+  const input = { clientId, repositories, viewer }
+  const acquisition = getReadyClinicPage(getClientPatientAcquisitionPage, input)
+  const callsBookings = getReadyClinicPage(getClientCallsBookingsPage, input)
+  const reputation = getReadyClinicPage(getClientReputationPage, input)
+  const compliance = getReadyClinicPage(getClientComplianceApprovalsPage, input)
+  const topSnapshot = acquisition?.snapshots
+    ?.slice()
+    .sort((left, right) => right.bookedAppointments - left.bookedAppointments)[0] ?? null
+
+  return {
+    actionNeededCount: neededActions.filter((action) => action.status === 'pending').length,
+    booking: callsBookings
+      ? {
+          followUpNeededCount: callsBookings.totals.followUpNeededCount,
+          href: `/client/calls-bookings?clientId=${clientId}`,
+          missedCalls: callsBookings.totals.missedCalls,
+          missedRate: callsBookings.totals.missedRate,
+          noResponseLeads: callsBookings.totals.noResponseLeads,
+        }
+      : null,
+    compliance: compliance
+      ? {
+          href: `/client/compliance-approvals?clientId=${clientId}`,
+          limitedAds: compliance.totals.limitedAds,
+          openIssues: compliance.totals.openIssues,
+          pendingApprovals: compliance.totals.pendingApprovals,
+          riskFlaggedReviews: compliance.totals.riskFlaggedReviews,
+        }
+      : null,
+    patientAcquisition: acquisition
+      ? {
+          bookedAppointments: acquisition.totals.bookedAppointments,
+          costPerBookedAppointment: acquisition.totals.costPerBookedAppointment,
+          href: `/client/patient-acquisition?clientId=${clientId}`,
+          inquiries: acquisition.totals.inquiries,
+          topLocation: topSnapshot?.location?.name ?? null,
+          topServiceLine: topSnapshot?.serviceLine?.name ?? null,
+        }
+      : null,
+    reputation: reputation
+      ? {
+          googleRating: reputation.totals.googleRating,
+          href: `/client/reputation?clientId=${clientId}`,
+          reviewsGained: reputation.totals.reviewsGained,
+          unansweredReviews: reputation.totals.unansweredReviews,
+        }
+      : null,
+    serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
+  }
+}
+
 export function getClientOverviewPage({ clientId, repositories, source = 'published', viewer }) {
   const client = repositories.clients.findById(clientId)
 
@@ -236,6 +300,14 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     repositories,
     viewer,
   })
+  const clinicOverview = client.type === CLIENT_TYPES.CLINIC
+    ? getClinicOverviewPreview({
+        clientId,
+        neededActions,
+        repositories,
+        viewer,
+      })
+    : null
   const currentFocus = collections.currentFocus
   const isEmpty = currentFocus.length === 0
     && projects.length === 0
@@ -257,7 +329,9 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
       primaryContactName: client.primary_contact_name,
       status: collections.clientStatus,
       statusMeta: getStatusMeta(collections.clientStatus, CLIENT_STATUS_META),
+      type: client.type ?? CLIENT_TYPES.GENERIC,
     },
+    clinicOverview,
     currentFocus,
     dashboard: dashboard
       ? {
@@ -298,6 +372,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     performancePreview,
     progressSummary: projects,
     status: 'ready',
+    template: clinicOverview ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC,
   }
 }
 
