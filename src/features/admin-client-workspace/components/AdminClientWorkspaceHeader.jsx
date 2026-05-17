@@ -38,6 +38,13 @@ const tabs = [
     route: '/admin/clinic-reputation',
   },
   {
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    id: 'clinic-compliance',
+    iconName: 'shieldCheck',
+    label: 'Compliance',
+    route: '/admin/clinic-compliance',
+  },
+  {
     id: 'projects',
     iconName: 'checkCircle2',
     label: 'Projects',

@@ -1,0 +1,1 @@
+export { AdminClinicCompliancePage } from './AdminClinicCompliancePage'

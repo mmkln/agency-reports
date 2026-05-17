@@ -50,6 +50,7 @@ import { AdminClientUpdatesPage } from '../../pages/admin/client-updates'
 import { AdminClientWorkReviewPage } from '../../pages/admin/client-work-review/AdminClientWorkReviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AdminClinicCompliancePage } from '../../pages/admin/clinic-compliance'
 import { AdminClinicMetricsPage } from '../../pages/admin/clinic-metrics'
 import { AdminClinicReputationPage } from '../../pages/admin/clinic-reputation'
 import { AdminClinicSetupPage } from '../../pages/admin/clinic-setup'
@@ -138,6 +139,7 @@ export const AdminClientUpdatesPageRoute = withPageProps(AdminClientUpdatesPage,
 export const AdminClientWorkReviewPageRoute = withPageProps(AdminClientWorkReviewPage, undefined)
 export const AdminClientPreviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
 export const AdminClientOverviewPageRoute = withPageProps(AdminClientOverviewPage, undefined)
+export const AdminClinicCompliancePageRoute = withPageProps(AdminClinicCompliancePage, undefined)
 export const AdminClinicMetricsPageRoute = withPageProps(AdminClinicMetricsPage, undefined)
 export const AdminClinicReputationPageRoute = withPageProps(AdminClinicReputationPage, undefined)
 export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)

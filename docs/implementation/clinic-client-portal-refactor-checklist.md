@@ -290,8 +290,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add admin clinic metrics workspace route.
 - [x] Add reputation snapshot entry/import workflow.
 - [x] Add admin clinic reputation workspace route.
-- [ ] Add compliance review management.
-- [ ] Add medical approval request management.
+- [x] Add compliance review management.
+- [x] Add medical approval request management.
+- [x] Add admin clinic compliance workspace route.
 - [ ] Add preview-as-clinic-client actions.
 
 ## Phase 12 - Integrations Readiness
@@ -329,6 +330,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add domain tests for service line/location filtering.
 - [x] Add domain tests for admin clinic metrics permissions and aggregate-only saves.
 - [x] Add domain tests for admin clinic reputation permissions and aggregate-only saves.
+- [x] Add domain tests for admin clinic compliance permissions, refs, history, and aggregate-only saves.
 - [x] Add domain tests for reputation visibility.
 - [x] Add domain tests for compliance approval read model and approval history.
 - [ ] Add domain tests for compliance approval transitions.
