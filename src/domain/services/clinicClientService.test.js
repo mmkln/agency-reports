@@ -27,6 +27,7 @@ import {
 } from './clinicClientService'
 
 const IDS = Object.freeze({
+  ACTION: '01010101-0101-4101-8101-010101010101',
   AGENCY: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   CLIENT_A: '11111111-1111-4111-8111-111111111111',
   CLIENT_B: '22222222-2222-4222-8222-222222222222',
@@ -873,6 +874,45 @@ describe('clinicClientService', () => {
       periodLabel: 'May 2026',
       reviewRequestStatus: 'Active',
     })
+  })
+
+  it('links open reputation actions to visible reputation snapshots', () => {
+    const page = getClientReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        neededFromClient: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+            due_date: '2026-05-20',
+            id: IDS.ACTION,
+            related_reputation_snapshot_id: IDS.REPUTATION,
+            status: NEEDED_ACTION_STATUSES.PENDING,
+            title: 'Respond to negative review',
+            type: NEEDED_ACTION_TYPES.FEEDBACK,
+          },
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+            id: '02020202-0202-4202-8202-020202020202',
+            related_reputation_snapshot_id: IDS.REPUTATION,
+            status: NEEDED_ACTION_STATUSES.RESOLVED,
+            title: 'Resolved review response',
+            type: NEEDED_ACTION_TYPES.APPROVAL,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.snapshots[0].relatedActions).toEqual([
+      expect.objectContaining({
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+        dueDate: '2026-05-20',
+        id: IDS.ACTION,
+        title: 'Respond to negative review',
+      }),
+    ])
   })
 
   it('hides draft reputation snapshots from client users', () => {

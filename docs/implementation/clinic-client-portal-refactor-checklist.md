@@ -195,7 +195,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] Google Business Profile updates
   - [x] provider profile completeness
   - [x] local visibility notes
-- [ ] Add Action Needed links for review responses and negative review handling.
+- [x] Add Action Needed links for review responses and negative review handling.
 - [x] Add tests for client-safe reputation data.
 
 ## Phase 8 - Compliance & Approvals

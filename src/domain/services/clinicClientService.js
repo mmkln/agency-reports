@@ -640,6 +640,46 @@ function summarizeReputationSnapshots(snapshots) {
   }
 }
 
+function listOpenReputationActions({ clientId, repositories, snapshotIds, viewer }) {
+  if (!repositories.neededFromClient) {
+    return []
+  }
+
+  const actionsResult = listClientNeededActions({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (actionsResult.status === 'error') {
+    return []
+  }
+
+  return actionsResult.actions.filter((action) => (
+    action.relatedReputationSnapshotId
+      && snapshotIds.has(action.relatedReputationSnapshotId)
+      && ![
+        NEEDED_ACTION_STATUSES.CANCELLED,
+        NEEDED_ACTION_STATUSES.RESOLVED,
+      ].includes(action.status)
+  ))
+}
+
+function attachReputationActions({ actions, snapshots }) {
+  const actionsBySnapshotId = new Map()
+
+  actions.forEach((action) => {
+    const snapshotActions = actionsBySnapshotId.get(action.relatedReputationSnapshotId) ?? []
+    snapshotActions.push(action)
+    actionsBySnapshotId.set(action.relatedReputationSnapshotId, snapshotActions)
+  })
+
+  return snapshots.map((snapshot) => ({
+    ...snapshot,
+    relatedActions: actionsBySnapshotId.get(snapshot.id) ?? [],
+  }))
+}
+
 function mapComplianceReview(review, { locationsById, serviceLinesById }) {
   const normalizedReview = normalizeComplianceReview(review)
 
@@ -1002,12 +1042,22 @@ export function getClientReputationPage(input) {
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
       || (left.location?.name ?? '').localeCompare(right.location?.name ?? '')
     ))
+  const openReputationActions = listOpenReputationActions({
+    clientId: input.clientId,
+    repositories: input.repositories,
+    snapshotIds: new Set(snapshots.map((snapshot) => snapshot.id)),
+    viewer: input.viewer,
+  })
+  const snapshotsWithActions = attachReputationActions({
+    actions: openReputationActions,
+    snapshots,
+  })
 
   return {
     client: foundationPage.client,
-    isEmpty: snapshots.length === 0,
-    latestSnapshot: snapshots[0] ?? null,
-    latestUpdatedAt: snapshots
+    isEmpty: snapshotsWithActions.length === 0,
+    latestSnapshot: snapshotsWithActions[0] ?? null,
+    latestUpdatedAt: snapshotsWithActions
       .map((snapshot) => snapshot.lastUpdatedAt)
       .filter(Boolean)
       .sort()
@@ -1015,10 +1065,10 @@ export function getClientReputationPage(input) {
     locations: foundationPage.locations,
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
-    snapshots,
+    snapshots: snapshotsWithActions,
     source: foundationPage.source,
     status: 'ready',
-    totals: summarizeReputationSnapshots(snapshots),
+    totals: summarizeReputationSnapshots(snapshotsWithActions),
   }
 }
 

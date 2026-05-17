@@ -1,5 +1,8 @@
+import { Link } from 'react-router-dom'
+
 import {
   Badge,
+  Button,
   EmptyState,
   Panel,
   PanelBody,
@@ -34,7 +37,7 @@ function SummaryMetric({ helper, label, value }) {
   )
 }
 
-function SnapshotCard({ snapshot }) {
+function SnapshotCard({ clientId, snapshot }) {
   return (
     <article className="rounded-block bg-block p-block shadow-block">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -76,6 +79,26 @@ function SnapshotCard({ snapshot }) {
 
       {snapshot.insight ? (
         <p className="mt-5 text-body text-text-secondary">{snapshot.insight}</p>
+      ) : null}
+
+      {snapshot.relatedActions?.length ? (
+        <div className="mt-5 grid gap-tag">
+          {snapshot.relatedActions.map((action) => (
+            <div className="flex flex-col gap-3 rounded-control bg-surface-subtle p-3 sm:flex-row sm:items-center sm:justify-between" key={action.id}>
+              <div className="min-w-0">
+                <p className="text-ui text-text-primary">{action.title}</p>
+                <p className="text-label font-normal text-text-muted">
+                  {action.dueDate ? `Due ${new Date(action.dueDate).toLocaleDateString()}` : 'No due date'}
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/client/action-needed?clientId=${clientId}`}>
+                  Open action
+                </Link>
+              </Button>
+            </div>
+          ))}
+        </div>
       ) : null}
     </article>
   )
@@ -228,7 +251,7 @@ export function ClientReputationView({ page }) {
         <PanelHeader title="Reputation Snapshots" />
         <PanelBody className="grid gap-card">
           {page.snapshots.map((snapshot) => (
-            <SnapshotCard key={snapshot.id} snapshot={snapshot} />
+            <SnapshotCard clientId={page.client.id} key={snapshot.id} snapshot={snapshot} />
           ))}
         </PanelBody>
       </Panel>
