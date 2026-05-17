@@ -306,12 +306,17 @@ function ReportPreviewNotice({ report }) {
   }
 
   return (
-    <Panel className="border-warning/30 bg-warning/10">
-      <PanelBody className="py-4">
-        <h2 className="text-ui text-text-primary">Preview only</h2>
-        <p className="mt-1 text-body text-text-secondary">
-          Preview only. This report is not visible to the client. Publish it when the client-facing narrative is ready.
-        </p>
+    <Panel className="bg-warning-muted">
+      <PanelBody className="flex items-start gap-control py-4">
+        <span className="flex size-control-small shrink-0 items-center justify-center rounded-control bg-block text-warning-foreground">
+          <Icon name="triangleAlert" size={16} />
+        </span>
+        <div>
+          <h2 className="text-ui text-text-primary">Preview only</h2>
+          <p className="mt-1 text-body text-text-secondary">
+            Preview only. This report is not visible to the client. Publish it when the client-facing narrative is ready.
+          </p>
+        </div>
       </PanelBody>
     </Panel>
   )
@@ -326,7 +331,7 @@ function ReportReader({ report }) {
         title={report.title}
       />
       <PanelBody className="grid gap-4">
-        <section className="rounded-block border border-brand/20 bg-action-muted p-5">
+        <section className="rounded-block bg-action-muted p-5">
           <p className="text-label text-action">Executive summary</p>
           <h3 className="mt-1 text-heading text-text-primary">{report.title}</h3>
           <p className="mt-1 text-ui text-text-muted">{formatPeriod(report)}</p>

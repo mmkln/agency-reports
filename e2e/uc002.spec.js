@@ -117,11 +117,14 @@ test('unavailable dashboard shows a controlled client fallback', async ({ page }
 
   await signInAsClient(page)
   await page.goto(
-    `/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`,
+    `/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}#source-dashboard`,
     { waitUntil: 'domcontentloaded' },
   )
 
-  await expect(page.getByRole('heading', { name: 'Dashboard is temporarily unavailable' })).toBeVisible()
-  await expect(page.getByText('Marketing dashboard is being prepared.')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open full dashboard' }).first()).toBeVisible()
+  const sourceDashboard = page.locator('#source-dashboard')
+
+  await expect(sourceDashboard.getByRole('heading', { name: 'External dashboard detail' })).toBeVisible()
+  await expect(sourceDashboard.getByRole('heading', { name: 'Dashboard is temporarily unavailable' })).toBeVisible()
+  await expect(sourceDashboard.getByText('Marketing dashboard is being prepared.')).toBeVisible()
+  await expect(sourceDashboard.getByRole('link', { name: 'Open full dashboard' }).first()).toBeVisible()
 })

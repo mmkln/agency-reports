@@ -86,8 +86,14 @@ export function ClientRequestTriageDialog({
                 id="client-request-response"
                 onChange={(event) => onChange({ ...draft, agencyResponse: event.target.value })}
                 placeholder="What should the client know about this request?"
+                required={draft.status === CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT}
                 value={draft.agencyResponse}
               />
+              {draft.status === CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT ? (
+                <p className="text-label font-normal text-text-muted">
+                  This response will also create a linked Action Needed clarification for the client.
+                </p>
+              ) : null}
             </div>
 
             {error ? <p className="text-ui text-destructive">{error}</p> : null}

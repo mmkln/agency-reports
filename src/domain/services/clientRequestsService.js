@@ -5,8 +5,14 @@ import {
   CLIENT_REQUEST_TYPE_META,
   normalizeClientRequest,
 } from '../../entities/client-request'
+import {
+  NEEDED_ACTION_PRIORITIES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { createNeededAction } from './neededFromClientService'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -122,6 +128,7 @@ function mapClientRequest(request) {
     id: normalizedRequest.id,
     projectId: normalizedRequest.project_id,
     referenceLink: normalizedRequest.reference_link,
+    relatedNeededActionId: normalizedRequest.related_needed_action_id,
     requestType: normalizedRequest.request_type,
     requestTypeMeta: getTypeMeta(normalizedRequest.request_type),
     responseHistory: normalizedRequest.response_history,
@@ -168,6 +175,71 @@ function filterAdminRequestsByClient(requests, clientId) {
   }
 
   return requests.filter((request) => request.clientId === normalizedClientId)
+}
+
+function isOpenNeededAction(action) {
+  return ![
+    NEEDED_ACTION_STATUSES.CANCELLED,
+    NEEDED_ACTION_STATUSES.RESOLVED,
+  ].includes(action.status)
+}
+
+function findOpenClarificationAction({ repositories, request }) {
+  const relatedActionId = normalizeClientRequest(request).related_needed_action_id
+  const relatedAction = relatedActionId
+    ? repositories.neededFromClient?.findById(relatedActionId)
+    : null
+
+  if (relatedAction && isOpenNeededAction(relatedAction)) {
+    return relatedAction
+  }
+
+  return repositories.neededFromClient
+    ?.listByClientId(request.client_id)
+    .find((action) => action.related_request_id === request.id && isOpenNeededAction(action))
+    ?? null
+}
+
+function createRequestClarificationAction({
+  activityIdGenerator,
+  agencyResponse,
+  idGenerator,
+  now,
+  repositories,
+  request,
+  viewer,
+}) {
+  const existingAction = findOpenClarificationAction({
+    repositories,
+    request,
+  })
+
+  if (existingAction) {
+    return existingAction
+  }
+
+  if (!idGenerator) {
+    throw new Error('idGenerator is required to create a client clarification action.')
+  }
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: {
+      clientId: request.client_id,
+      description: agencyResponse,
+      impactIfDelayed: 'This request will stay paused until we receive your response.',
+      ownerName: request.submitted_by_name,
+      priority: NEEDED_ACTION_PRIORITIES.MEDIUM,
+      relatedRequestId: request.id,
+      title: `Clarification needed: ${request.title}`,
+      type: NEEDED_ACTION_TYPES.FEEDBACK,
+      whyNeeded: agencyResponse,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 }
 
 export function getClientRequestsPage({
@@ -244,6 +316,7 @@ export function createClientRequest({
     id: createClientRequestId(idGenerator),
     project_id: normalizeText(input.projectId),
     reference_link: normalizeOptionalUrl(input.referenceLink, 'Reference link'),
+    related_needed_action_id: '',
     request_type: Object.values(CLIENT_REQUEST_TYPES).includes(input.requestType)
       ? input.requestType
       : CLIENT_REQUEST_TYPES.NEW_WORK,
@@ -318,6 +391,8 @@ export function listAdminClientRequestsWorkspace({
 }
 
 export function updateClientRequestTriage({
+  activityIdGenerator,
+  idGenerator,
   input = {},
   now = () => new Date().toISOString(),
   repositories,
@@ -336,14 +411,28 @@ export function updateClientRequestTriage({
     ? input.status
     : normalizeClientRequest(request).status
   const timestamp = now()
+  const agencyResponse = normalizeText(input.agencyResponse)
+  const clarificationAction = nextStatus === CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT
+    ? createRequestClarificationAction({
+      activityIdGenerator,
+      agencyResponse: requireText(agencyResponse, 'Agency response'),
+      idGenerator,
+      now: () => timestamp,
+      repositories,
+      request,
+      viewer,
+    })
+    : null
   const updatedRequest = {
     ...request,
-    agency_response: normalizeText(input.agencyResponse),
+    agency_response: agencyResponse,
+    related_needed_action_id: clarificationAction?.id ?? normalizeClientRequest(request).related_needed_action_id,
     response_history: [
       ...normalizeClientRequest(request).response_history,
       createHistoryEvent({
         metadata: {
-          agency_response: normalizeText(input.agencyResponse),
+          agency_response: agencyResponse,
+          related_needed_action_id: clarificationAction?.id ?? null,
           status: nextStatus,
         },
         now: () => timestamp,

@@ -9,6 +9,10 @@ import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
 import { filterRequests } from '../../widgets/admin-client-submitted-requests'
 
+function createUuid() {
+  return crypto.randomUUID()
+}
+
 function createTriageDraft(request = {}) {
   return {
     agencyResponse: request.agencyResponse ?? '',
@@ -88,6 +92,8 @@ export function useAdminClientSubmittedRequestsWorkflow({
     setTriageSaveState('Saving...')
 
     void runtime.dataClient.write((repositories) => updateClientRequestTriage({
+      activityIdGenerator: createUuid,
+      idGenerator: createUuid,
       input: triageDraft,
       repositories,
       requestId: selectedRequest.id,

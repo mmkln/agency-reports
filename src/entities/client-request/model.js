@@ -119,6 +119,7 @@ export function normalizeClientRequest(request = {}) {
     id: normalizeText(request.id),
     project_id: normalizeText(request.project_id),
     reference_link: normalizeText(request.reference_link),
+    related_needed_action_id: normalizeText(request.related_needed_action_id),
     request_type: normalizeType(request.request_type),
     response_history: Array.isArray(request.response_history) ? request.response_history : [],
     status: normalizeStatus(request.status),

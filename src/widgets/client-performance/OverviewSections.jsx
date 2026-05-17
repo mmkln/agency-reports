@@ -60,9 +60,9 @@ export function MetricCard({ metric }) {
 
 export function ExecutiveSummaryHero({ dashboard, executiveSummary, heroMetric }) {
   return (
-    <Panel className="border-action/20 bg-action-muted">
+    <Panel className="bg-action-muted">
       <PanelBody className="grid gap-6 p-6 lg:grid-cols-[0.9fr_1.35fr]">
-        <div className="rounded-block border border-action/20 bg-block p-5 shadow-none">
+        <div className="rounded-block bg-block p-5 shadow-block">
           <p className="text-label text-action">{heroMetric?.label || 'Hero metric'}</p>
           <strong className="mt-3 block text-display text-text-primary">{formatMetricValue(heroMetric)}</strong>
           <div className="mt-4 flex flex-wrap gap-tag">
@@ -108,13 +108,13 @@ export function ExecutiveSummaryHero({ dashboard, executiveSummary, heroMetric }
 
 function SummaryPoint({ label, tone, value }) {
   const toneClass = {
-    amber: 'border-warning/20 bg-warning/10',
-    blue: 'border-action/20 bg-block',
-    green: 'border-success/20 bg-success/10',
+    amber: 'bg-warning-muted',
+    blue: 'bg-block',
+    green: 'bg-success-muted',
   }[tone]
 
   return (
-    <div className={`rounded-control border p-4 ${toneClass}`}>
+    <div className={`rounded-control p-4 ${toneClass}`}>
       <p className="text-label text-text-muted">{label}</p>
       <p className="mt-2 text-body text-text-primary">{value}</p>
     </div>
@@ -146,7 +146,7 @@ export function StaleDataWarning({ freshness }) {
   }
 
   return (
-    <section className="flex items-start gap-3 rounded-block border border-warning/25 bg-warning/10 px-4 py-3">
+    <section className="flex items-start gap-3 rounded-block bg-warning-muted px-4 py-3">
       <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-warning/15 text-warning-foreground">
         <Icon name="triangleAlert" size={16} />
       </span>

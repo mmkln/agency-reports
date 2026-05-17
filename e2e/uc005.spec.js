@@ -96,3 +96,42 @@ test('UC-005 request lifecycle stays client-safe from create to resolve', async 
   const resolvedRequestCard = page.locator('[data-testid^="request-card-"]').filter({ hasText: title })
   await expect(resolvedRequestCard.getByText('Resolved')).toBeVisible()
 })
+
+test('client-submitted request clarification creates linked Action Needed item', async ({ page }) => {
+  const title = `Clarify service request ${Date.now()}`
+  const agencyResponse = `Please confirm the target offer before we scope this request ${Date.now()}.`
+
+  await signInAsClient(page)
+  await page.goto(`/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'New request' }).click()
+  await expect(page.getByRole('dialog', { name: 'New request' })).toBeVisible()
+  await page.getByLabel('Title').fill(title)
+  await page.getByLabel('Details').fill('Please prepare a new campaign request after we confirm the offer.')
+  await page.getByRole('button', { name: 'Submit request' }).click()
+  await expect(page.locator('article').filter({ hasText: title })).toBeVisible()
+
+  await signInAsAdmin(page)
+  await page.goto(`/admin/client-submitted-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+  const adminRequestCard = page.locator('article').filter({ hasText: title }).first()
+  await expect(adminRequestCard).toBeVisible()
+  await adminRequestCard.getByRole('button', { name: 'Review' }).click()
+  const triageDialog = page.getByRole('dialog', { name: title })
+  await expect(triageDialog).toBeVisible()
+  await triageDialog.getByRole('combobox', { name: 'Status' }).click()
+  await page.getByRole('option', { name: 'Waiting on you' }).click()
+  await triageDialog.getByLabel('Agency response').fill(agencyResponse)
+  await triageDialog.getByRole('button', { name: 'Save triage' }).click()
+  await expect(page.getByText(agencyResponse)).toBeVisible()
+
+  await signInAsClient(page)
+  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+  const actionCard = page.locator('article').filter({ hasText: `Clarification needed: ${title}` }).first()
+  await expect(actionCard).toBeVisible()
+  await expect(actionCard.getByText(agencyResponse)).toBeVisible()
+
+  await page.goto(`/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+  const clientRequestCard = page.locator('article').filter({ hasText: title }).first()
+  await expect(clientRequestCard).toBeVisible()
+  await expect(clientRequestCard.getByText('Waiting on you')).toBeVisible()
+  await expect(clientRequestCard.getByText(agencyResponse)).toBeVisible()
+})

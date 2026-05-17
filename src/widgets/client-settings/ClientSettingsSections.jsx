@@ -16,6 +16,7 @@ export function ProfileSettingsSection({ membership, profile }) {
   return (
     <Panel>
       <PanelHeader
+        divided
         subtitle="Your portal identity and client access role."
         title="Profile"
       />
@@ -46,6 +47,7 @@ export function CompanySettingsSection({ client }) {
   return (
     <Panel>
       <PanelHeader
+        divided
         subtitle="The client workspace connected to your account."
         title="Company"
       />

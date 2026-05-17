@@ -206,7 +206,7 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] completed
   - [x] archived
 - [x] Ensure client-created requests require agency review before becoming internal work.
-- [ ] Link request clarification needs to Action Needed where appropriate.
+- [x] Link request clarification needs to Action Needed where appropriate.
 - [x] Update admin request management to support triage.
 - [x] Update client request UI copy so it does not read like agency task management.
 - [x] Add request workflow tests.
@@ -274,7 +274,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Add e2e coverage for Reports & Dashboards.
 - [x] Add e2e coverage for draft report/dashboard protection.
 - [x] Add e2e coverage for Files & Links if implemented.
-- [ ] Add e2e coverage for Requests submission/triage if implemented.
+- [x] Add e2e coverage for Requests submission/triage if implemented.
 - [x] Add e2e coverage for Updates if implemented.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
@@ -318,7 +318,7 @@ Implemented domain coverage so far:
 - [x] Projects owns visible workstreams.
 - [x] Reports & Dashboards owns current performance, source dashboard, and report archive.
 - [x] Files & Links owns deliverables/resources.
-- [ ] Requests owns client-initiated asks.
+- [x] Requests owns client-initiated asks.
 - [ ] Updates owns curated history.
 - [ ] Settings owns client account controls.
 - [x] No client route exposes internal notes, draft reports, WIP dashboards, internal task noise, workload, time spent, or profitability.

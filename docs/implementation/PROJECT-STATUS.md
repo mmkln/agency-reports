@@ -45,11 +45,11 @@ npx playwright test
 npm run build
 ```
 
-Current baseline from the latest full run:
+Current baseline from the latest verification run:
 
 ```text
-Unit tests: 226 passed
-Full e2e: 29 passed
+Unit tests: 228 passed
+Full e2e: 29/30 passed on the latest parallel run; the failed navigation-abort case passed when rerun individually.
 Build: passed
 ```
 
