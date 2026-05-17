@@ -44,6 +44,8 @@ export function ClientActionNeededPage({ routeParams = {}, runtime }) {
       counts: {
         all: 0,
         answered: 0,
+        approved: 0,
+        changesRequested: 0,
         completed: 0,
         dueSoon: 0,
         open: 0,
@@ -58,12 +60,13 @@ export function ClientActionNeededPage({ routeParams = {}, runtime }) {
   })
   const page = actionNeededResource.data
 
-  function answerAction(action, message) {
+  function answerAction(action, message, options = {}) {
     void runtime.dataClient.write((repositories) => {
       const answeredAction = answerNeededAction({
         actionId: action.id,
         message,
         repositories,
+        responseStatus: options.responseStatus,
         viewer: runtime.viewer,
       })
 

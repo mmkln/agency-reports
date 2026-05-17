@@ -9,7 +9,7 @@ const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -30,7 +30,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -130,15 +130,17 @@ test('client can answer a needed action and admin can mark it resolved', async (
   const responseText = `Approved in e2e ${Date.now()}`
 
   await signInAsClient(page)
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
 
   const neededAction = page.locator('article').filter({ hasText: 'Confirm final offer details' }).first()
   await expect(neededAction).toBeVisible()
-  await neededAction.getByRole('button', { name: 'Mark as answered' }).click()
-  await neededAction.getByPlaceholder('Add a short note for the agency...').fill(responseText)
-  await neededAction.getByRole('button', { name: 'Send response' }).click()
+  await neededAction.getByRole('button', { name: 'View details' }).click()
+  const actionDialog = page.getByRole('dialog', { name: 'Confirm final offer details' })
+  await actionDialog.getByPlaceholder('Write a short response for the agency...').fill(responseText)
+  await actionDialog.getByRole('button', { name: 'Send response' }).click()
 
-  await expect(neededAction.getByText('Your response:')).toBeVisible()
+  await page.getByRole('button', { name: /Answered/ }).click()
+  await expect(neededAction.getByText('Your response')).toBeVisible()
   await expect(neededAction.getByText(responseText)).toBeVisible()
 
   await signInAsAdmin(page)

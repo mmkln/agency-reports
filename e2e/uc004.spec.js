@@ -9,7 +9,7 @@ const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -30,7 +30,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -142,19 +142,19 @@ test('agency admin creates a draft performance dashboard and enters structured d
 
 test('client can view published performance dashboard but cannot view draft or another client dashboard', async ({ page }) => {
   await signInAsClient(page)
-  await expect(page.getByText('Performance snapshot')).toBeVisible()
+  await expect(page.getByText('Reports & Dashboards').first()).toBeVisible()
   await expect(page.getByText('Qualified Leads').first()).toBeVisible()
-  await expect(page.getByRole('link', { name: 'View Performance Dashboard' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'View results' })).toHaveAttribute(
     'href',
-    new RegExp(`/client/performance\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`),
+    new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`),
   )
 
-  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'April 2026 Performance Dashboard' }).first()).toBeVisible()
   await expect(page.getByText('Qualified Leads').first()).toBeVisible()
   await expect(page.getByText('Last updated').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'What Changed' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Next Actions' })).toBeVisible()
+  await expect(page.getByRole('heading', { exact: true, name: 'Next Actions' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'What We Did' })).toBeVisible()
   await expect(page.getByText('Weekly progress update')).toBeVisible()
   await expect(page.getByText('Connect GA4 conversion event')).toBeVisible()
@@ -167,11 +167,11 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByRole('heading', { name: 'March 2026 Performance Dashboard' }).first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Data may be stale' })).toBeVisible()
 
-  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
-  await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
+  await expect(page.getByText('Current performance is being prepared')).toBeVisible()
   await expect(page.getByText('May 2026 Draft Performance')).toHaveCount(0)
 
-  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
 })
@@ -242,8 +242,8 @@ test('client performance page shows a clear fallback when no dashboard is publis
   })
 
   await page.goto(`/admin/client-performance-preview?clientId=${clientId}`)
-  await expect(page.getByText('Performance dashboard is being prepared')).toBeVisible()
-  await expect(page.getByText('Published analytics will appear here once reviewed.')).toBeVisible()
+  await expect(page.getByText('Current performance is being prepared')).toBeVisible()
+  await expect(page.getByText('Published outcome metrics, goals, trends, and interpretation will appear here after agency review.')).toBeVisible()
 })
 
 test('agency admin imports campaign execution JSON and publishes it for the client', async ({ page }) => {
@@ -279,7 +279,7 @@ test('agency admin imports campaign execution JSON and publishes it for the clie
   expect(importedPeriod.content.campaign_execution.activity_series.length).toBeGreaterThan(0)
 
   await signInAsClient(page)
-  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${importedPeriod.id}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${importedPeriod.id}`)
   await expect(page.getByRole('heading', { name: 'Patient Reactivation Campaign Plan' })).toBeVisible()
   await expect(page.getByText('Estimated', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('SMS sent')).toBeVisible()

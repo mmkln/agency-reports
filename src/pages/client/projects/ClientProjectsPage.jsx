@@ -10,9 +10,10 @@ import {
 export function ClientProjectsPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-projects:${clientId}:${routeParams.projectId ?? ''}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-projects:${clientId}:${routeParams.projectId ?? ''}:${routeParams.filter ?? ''}`,
     load: () => runtime.dataClient.read((repositories) => getClientProjectsPage({
       clientId,
+      filter: routeParams.filter,
       projectId: routeParams.projectId,
       repositories,
       viewer: runtime.viewer,
@@ -36,6 +37,8 @@ export function ClientProjectsPage({ routeParams = {}, runtime }) {
     <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
       <ProjectsListSection
         clientId={clientId}
+        counts={page.counts}
+        filter={page.filter}
         projects={page.projects}
         selectedProject={page.selectedProject}
       />

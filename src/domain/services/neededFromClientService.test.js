@@ -582,6 +582,74 @@ describe('neededFromClientService', () => {
     ])
   })
 
+  it('lets a client user approve or request changes on approval actions', () => {
+    const repositories = {
+      neededFromClient: createRepository({
+        client_id: IDS.CLIENT,
+        id: IDS.ACTION,
+        status: NEEDED_ACTION_STATUSES.PENDING,
+        title: 'Approve creatives',
+        type: NEEDED_ACTION_TYPES.APPROVAL,
+      }),
+    }
+
+    const approvedAction = answerNeededAction({
+      actionId: IDS.ACTION,
+      message: 'Approved for launch.',
+      repositories,
+      responseStatus: NEEDED_ACTION_STATUSES.APPROVED,
+      viewer: createClientViewer(),
+    })
+
+    expect(approvedAction).toMatchObject({
+      client_response: 'Approved for launch.',
+      status: NEEDED_ACTION_STATUSES.APPROVED,
+    })
+
+    const changesRepositories = {
+      neededFromClient: createRepository({
+        client_id: IDS.CLIENT,
+        id: IDS.ACTION,
+        status: NEEDED_ACTION_STATUSES.PENDING,
+        title: 'Review landing page',
+        type: NEEDED_ACTION_TYPES.APPROVAL,
+      }),
+    }
+
+    const changesAction = answerNeededAction({
+      actionId: IDS.ACTION,
+      message: 'Please update the hero copy first.',
+      repositories: changesRepositories,
+      responseStatus: NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+      viewer: createClientViewer(),
+    })
+
+    expect(changesAction).toMatchObject({
+      client_response: 'Please update the hero copy first.',
+      status: NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+    })
+  })
+
+  it('rejects approval decisions on non-approval actions', () => {
+    const repositories = {
+      neededFromClient: createRepository({
+        client_id: IDS.CLIENT,
+        id: IDS.ACTION,
+        status: NEEDED_ACTION_STATUSES.PENDING,
+        title: 'Send access',
+        type: NEEDED_ACTION_TYPES.ACCESS,
+      }),
+    }
+
+    expect(() => answerNeededAction({
+      actionId: IDS.ACTION,
+      message: 'Approved.',
+      repositories,
+      responseStatus: NEEDED_ACTION_STATUSES.APPROVED,
+      viewer: createClientViewer(),
+    })).toThrow('Approval decisions are only available for approval actions.')
+  })
+
   it('keeps linked internal task status unchanged when the client responds', () => {
     const repositories = createWorkflowRepositories({
       neededFromClient: createEntityRepository([

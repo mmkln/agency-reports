@@ -12,7 +12,7 @@ const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -29,7 +29,7 @@ async function signInAsClient(page) {
   await page.evaluate((authKey) => {
     window.localStorage.removeItem(authKey)
   }, AUTH_SESSION_STORAGE_KEY)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await page.locator('input[name="email"]').fill(CLIENT_EMAIL)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
@@ -174,8 +174,8 @@ test('client mature routes hide internal and draft records from persisted data',
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
   await expect(page.getByRole('heading', { name: 'Business-value analytics' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Marketing Performance Dashboard' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Marketing Performance Dashboard' }).first()).toBeVisible()
   await expect(page.getByText('May 2026 Performance Draft')).toHaveCount(0)
   await expect(page.getByText('E2E Draft Performance Period')).toHaveCount(0)
   await expect(page.getByText('E2E Draft Source Dashboard')).toHaveCount(0)

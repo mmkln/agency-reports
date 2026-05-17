@@ -93,7 +93,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Ensure draft/unpublished dashboards are hidden.
 - [x] Ensure stale/low-confidence data is visibly labeled.
 - [x] Update Overview CTA to point to Reports & Dashboards.
-- [ ] Update admin preview links for performance/dashboard/report surfaces.
+- [x] Update admin preview links for performance/dashboard/report surfaces.
 
 ## Phase 4 - Action Needed
 
@@ -102,7 +102,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Build `ActionNeededTabs`.
 - [x] Build `ActionNeededList`.
 - [x] Build `ActionNeededCard`.
-- [ ] Build action detail panel or dialog.
+- [x] Build action detail panel or dialog.
 - [x] Support action types:
   - [x] approval
   - [x] feedback
@@ -115,8 +115,8 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] due soon
   - [x] overdue
   - [x] answered
-  - [ ] approved
-  - [ ] changes requested
+  - [x] approved
+  - [x] changes requested
   - [x] completed
   - [x] cancelled
 - [x] Map existing `needed_from_client` records into the Action Needed read model.
@@ -124,7 +124,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Ensure client action responses do not directly mutate internal agency task status.
 - [x] Keep Overview as an urgent-action preview only.
 - [x] Keep Reports & Dashboards action references contextual only.
-- [ ] Add action lifecycle tests.
+- [x] Add action lifecycle tests.
 
 ## Phase 5 - Projects / Work
 
@@ -134,19 +134,19 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Define `ClientVisibleWorkItem` mapping from existing projects/tasks.
 - [x] Build project list cards.
 - [ ] Build simple filters:
-  - [ ] Active
-  - [ ] Waiting on me
-  - [ ] Completed
-  - [ ] Archived
+  - [x] Active
+  - [x] Waiting on me
+  - [x] Completed
+  - [x] Archived
 - [x] Build project detail header.
 - [x] Build project client-safe summary section.
-- [ ] Build milestones/timeline section.
+- [x] Build milestones/timeline section.
 - [x] Build active client-visible work section.
 - [x] Build project-specific waiting-on-you section.
-- [ ] Build client-relevant blockers section.
+- [x] Build client-relevant blockers section.
 - [x] Build deliverables section.
-- [ ] Build related reports/dashboard links section.
-- [ ] Build project updates section.
+- [x] Build related reports/dashboard links section.
+- [x] Build project updates section.
 - [x] Ensure internal notes, assignee discussion, workload, time spent, profitability, and internal QA never render.
 - [x] Update Overview active work preview to link to Projects or Project Detail.
 
@@ -269,8 +269,8 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Add or update tests for updates visibility if implemented.
 - [x] Add or update tests for files/links visibility if implemented.
 - [x] Add e2e coverage for mature client navigation.
-- [ ] Add e2e coverage for Action Needed response flow.
-- [ ] Add e2e coverage for Projects and Project Detail.
+- [x] Add e2e coverage for Action Needed response flow.
+- [x] Add e2e coverage for Projects and Project Detail.
 - [x] Add e2e coverage for Reports & Dashboards.
 - [x] Add e2e coverage for draft report/dashboard protection.
 - [x] Add e2e coverage for Files & Links if implemented.
@@ -296,8 +296,13 @@ Implemented domain coverage so far:
 - [x] Mature client navigation route metadata and browser sidebar exclude legacy Dashboard, Performance, and Reports destinations.
 - [x] Client users are blocked from admin Client Control Center workspace routes.
 - [x] Browser visibility guard covers internal files/links, internal updates, draft reports, draft source dashboards, and draft performance periods on mature client routes.
+- [x] Dashboard, performance, and report preview routes now render the mature Reports & Dashboards destination instead of separate legacy client pages.
 - [x] Client-initiated requests remain separate from agency Action Needed records and do not create internal tasks directly.
 - [x] Admin request triage updates client-submitted request status and agency response with audit history.
+- [x] Action Needed detail dialog supports client response, approval, request-changes decisions, response history, why-needed, impact, and related links.
+- [x] Action Needed approval e2e verifies client approval updates the needed action without mutating linked internal task status.
+- [x] Projects read model supports client-facing filters, timeline milestones, client-relevant blockers, related results links, project files, and curated project updates.
+- [x] Projects e2e verifies project detail content and hidden internal updates.
 - [x] Settings isolation and membership-derived access/profile data.
 - [x] Mature client route pages use `runtime.dataClient.read` around domain read models instead of direct repository access.
 - [x] Mature dynamic client route headers use `runtime.dataClient.read` around domain read models instead of direct repository access.
@@ -308,8 +313,8 @@ Implemented domain coverage so far:
 
 - [ ] Client navigation matches the Client Control Center IA.
 - [x] Overview is a compact control home.
-- [ ] Action Needed owns client obligations.
-- [ ] Projects owns visible workstreams.
+- [x] Action Needed owns client obligations.
+- [x] Projects owns visible workstreams.
 - [ ] Reports & Dashboards owns current performance, source dashboard, and report archive.
 - [ ] Files & Links owns deliverables/resources.
 - [ ] Requests owns client-initiated asks.

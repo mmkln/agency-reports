@@ -8,8 +8,11 @@ import {
   CLIENT_FILE_LINK_STATUSES,
   CLIENT_FILE_LINK_TYPES,
 } from '../../entities/client-file-link'
+import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
+import { REPORT_STATUSES } from '../../entities/report'
+import { CLIENT_UPDATE_TYPES, VISIBILITY } from '../../entities/update'
 import { getClientProjectsPage } from './clientProjectsService'
 
 const IDS = Object.freeze({
@@ -103,13 +106,27 @@ function createRepositories(overrides = {}) {
         title: 'Draft SEO work',
       },
     ]),
+    dashboardLinks: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: 'abababab-abab-4bab-8bab-abababababab',
+        name: 'Campaign dashboard',
+        provider: DASHBOARD_PROVIDERS.LOOKER_STUDIO,
+        public_url: 'https://example.com/dashboard',
+        show_on_overview: true,
+        status: DASHBOARD_LINK_STATUSES.ACTIVE,
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+    ]),
     neededFromClient: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
+        impact_if_delayed: 'Creative launch may move.',
         id: '88888888-8888-4888-8888-888888888888',
         related_work_item_id: IDS.WORK_A,
         status: NEEDED_ACTION_STATUSES.PENDING,
         title: 'Approve creative direction',
+        why_needed: 'Production is waiting for approval.',
       },
     ]),
     projects: createEntityRepository([
@@ -124,6 +141,40 @@ function createRepositories(overrides = {}) {
         client_id: IDS.CLIENT_A,
         id: IDS.PROJECT_B,
         name: 'SEO Cleanup',
+      },
+    ]),
+    reports: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
+        period_end: '2026-05-31',
+        period_start: '2026-05-01',
+        published_at: '2026-06-01T09:00:00.000Z',
+        status: REPORT_STATUSES.PUBLISHED,
+        summary: 'May campaign report.',
+        title: 'May Campaign Report',
+      },
+    ]),
+    updates: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        created_at: '2026-05-18T09:00:00.000Z',
+        id: 'efefefef-efef-4fef-8fef-efefefefefef',
+        project_id: IDS.PROJECT_A,
+        published_at: '2026-05-18T09:00:00.000Z',
+        title: 'Creative review update',
+        type: CLIENT_UPDATE_TYPES.MILESTONE_UPDATE,
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+        what_changed: 'Creative review moved to client approval.',
+        what_next: 'Agency will launch after approval.',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: 'fafafafa-fafa-4afa-8afa-fafafafafafa',
+        project_id: IDS.PROJECT_A,
+        title: 'Internal project update',
+        type: CLIENT_UPDATE_TYPES.ISSUE_UPDATE,
+        visibility: VISIBILITY.INTERNAL,
       },
     ]),
     ...overrides,
@@ -164,13 +215,61 @@ describe('getClientProjectsPage', () => {
           title: 'Creative folder',
         }),
       ],
+      blockers: [
+        expect.objectContaining({
+          title: 'Approve creative direction',
+        }),
+      ],
+      clientState: 'waiting_on_me',
       id: IDS.PROJECT_A,
       name: 'May Campaign',
       progressPercent: 50,
+      relatedResultLinks: [
+        expect.objectContaining({
+          label: 'Campaign dashboard',
+        }),
+        expect.objectContaining({
+          label: 'May Campaign Report',
+        }),
+      ],
       status: CLIENT_WORK_ITEM_STATUSES.WAITING_CLIENT,
       targetDate: '2026-05-27',
+      updates: [
+        expect.objectContaining({
+          title: 'Creative review update',
+        }),
+      ],
     })
     expect(JSON.stringify(page)).not.toContain('Draft SEO work')
+    expect(JSON.stringify(page)).not.toContain('Internal project update')
+  })
+
+  it('filters projects by client-facing state', () => {
+    const completedPage = getClientProjectsPage({
+      clientId: IDS.CLIENT_A,
+      filter: 'completed',
+      repositories: createRepositories({
+        clientWorkItems: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.WORK_A,
+            project_id: IDS.PROJECT_A,
+            publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+            status: CLIENT_WORK_ITEM_STATUSES.DELIVERED,
+            title: 'Delivered work',
+          },
+        ]),
+        neededFromClient: createEntityRepository([]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(completedPage.filter).toBe('completed')
+    expect(completedPage.counts).toMatchObject({
+      completed: 1,
+      waitingOnMe: 0,
+    })
+    expect(completedPage.projects.map((project) => project.clientState)).toEqual(['completed'])
   })
 
   it('selects a requested project or returns a controlled not-found reason', () => {

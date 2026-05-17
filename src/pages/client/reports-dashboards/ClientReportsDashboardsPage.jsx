@@ -7,6 +7,7 @@ import {
   CurrentPerformanceSection,
   ReportArchiveSection,
   ResultsHeader,
+  SelectedReportSection,
   SourceDashboardSection,
 } from '../../../widgets/client-reports-dashboards'
 
@@ -45,6 +46,7 @@ export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
       <ResultsHeader page={page} />
       <CurrentPerformanceSection mode={mode} performancePage={page.performancePage} />
       <SourceDashboardSection clientId={clientId} dashboardPage={page.dashboardPage} />
+      <SelectedReportSection clientId={clientId} reportsPage={page.reportsPage} />
       <ReportArchiveSection clientId={clientId} reportsPage={page.reportsPage} />
     </div>
   )

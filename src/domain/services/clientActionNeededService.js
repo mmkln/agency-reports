@@ -32,37 +32,52 @@ function isDueSoon(action, now) {
 }
 
 function getActionType(action) {
-  const searchableText = `${action.title} ${action.description}`.toLowerCase()
-
-  if (searchableText.includes('approve') || searchableText.includes('approval')) {
+  if (action.type === 'approval') {
     return 'approval'
   }
 
-  if (searchableText.includes('access')) {
+  if (action.type === 'access') {
     return 'access_needed'
   }
 
-  if (searchableText.includes('file') || searchableText.includes('asset') || searchableText.includes('photo')) {
+  if (action.type === 'asset') {
     return 'file_needed'
   }
 
-  if (searchableText.includes('feedback') || searchableText.includes('review')) {
+  if (action.type === 'feedback') {
     return 'feedback'
   }
 
-  if (searchableText.includes('confirm') || searchableText.includes('confirmation')) {
+  if (action.type === 'decision') {
     return 'confirmation'
   }
 
   return 'question'
 }
 
+function getClientActionState(action) {
+  if (action.isOverdue) {
+    return 'overdue'
+  }
+
+  if (action.isDueSoon) {
+    return 'due_soon'
+  }
+
+  return action.status
+}
+
 function mapAction(action, now) {
-  return {
+  const mappedAction = {
     ...action,
     actionType: getActionType(action),
     isDueSoon: isDueSoon(action, now),
     isOverdue: isOverdue(action, now),
+  }
+
+  return {
+    ...mappedAction,
+    clientState: getClientActionState(mappedAction),
   }
 }
 
@@ -95,6 +110,8 @@ export function getClientActionNeededPage({
     counts: {
       all: actions.length,
       answered: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.ANSWERED),
+      approved: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.APPROVED),
+      changesRequested: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.CHANGES_REQUESTED),
       completed: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.RESOLVED),
       dueSoon: countBy(actions, (action) => action.isDueSoon),
       open: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.PENDING),

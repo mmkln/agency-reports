@@ -9,6 +9,7 @@ import {
 
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import { ActionNeededCard } from './ActionNeededCard'
+import { ActionNeededDetailDialog } from './ActionNeededDetailDialog'
 import { ActionNeededFilters } from './ActionNeededFilters'
 
 function filterActions(actions, activeFilter) {
@@ -54,10 +55,12 @@ export function ActionNeededSummary({ counts }) {
 
 export function ActionNeededInbox({ actions, counts, onAnswer }) {
   const [activeFilter, setActiveFilter] = useState('open')
+  const [selectedActionId, setSelectedActionId] = useState(null)
   const filteredActions = useMemo(
     () => filterActions(actions, activeFilter),
     [actions, activeFilter],
   )
+  const selectedAction = actions.find((action) => action.id === selectedActionId) ?? null
 
   return (
     <Panel>
@@ -75,7 +78,11 @@ export function ActionNeededInbox({ actions, counts, onAnswer }) {
         {filteredActions.length ? (
           <div className="grid gap-3">
             {filteredActions.map((action) => (
-              <ActionNeededCard action={action} key={action.id} onAnswer={onAnswer} />
+              <ActionNeededCard
+                action={action}
+                key={action.id}
+                onViewDetails={(nextAction) => setSelectedActionId(nextAction.id)}
+              />
             ))}
           </div>
         ) : (
@@ -85,6 +92,13 @@ export function ActionNeededInbox({ actions, counts, onAnswer }) {
             title="Nothing waiting here"
           />
         )}
+
+        <ActionNeededDetailDialog
+          action={selectedAction}
+          isOpen={Boolean(selectedAction)}
+          onAnswer={onAnswer}
+          onClose={() => setSelectedActionId(null)}
+        />
       </PanelBody>
     </Panel>
   )

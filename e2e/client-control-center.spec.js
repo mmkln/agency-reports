@@ -3,12 +3,14 @@ import { expect, test } from '@playwright/test'
 import { PORTAL_STORAGE_KEY } from '../src/app/providers/repositories/createLocalStoragePortalRepository.js'
 import { SEED_IDS } from '../src/app/providers/repositories/portalSeedData.js'
 import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/services/authService.js'
+import { NEEDED_ACTION_STATUSES } from '../src/entities/needed-from-client/index.js'
+import { TASK_STATUSES } from '../src/entities/task/index.js'
 
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -22,10 +24,14 @@ async function resetLocalDemo(page) {
 }
 
 async function signInAsClient(page) {
-  await page.evaluate((authKey) => {
+  await page.evaluate(({ authKey, demoRoleKey }) => {
     window.localStorage.removeItem(authKey)
-  }, AUTH_SESSION_STORAGE_KEY)
-  await page.goto('/login')
+    window.localStorage.setItem(demoRoleKey, 'client')
+  }, {
+    authKey: AUTH_SESSION_STORAGE_KEY,
+    demoRoleKey: DEMO_ROLE_KEY,
+  })
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await page.locator('input[name="email"]').fill(CLIENT_EMAIL)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
@@ -70,4 +76,72 @@ test('client user cannot open admin Client Control Center workspaces', async ({ 
     'href',
     `/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
   )
+})
+
+test('client can approve an action without mutating linked internal task status', async ({ page }) => {
+  await signInAsClient(page)
+  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  const actionCard = page.locator('article').filter({ hasText: 'Approve creative batch #2' })
+
+  await expect(actionCard).toBeVisible()
+  await actionCard.getByRole('button', { name: 'View details' }).click()
+
+  const dialog = page.getByRole('dialog')
+
+  await expect(dialog.getByRole('heading', { name: 'Approve creative batch #2' })).toBeVisible()
+  await dialog.getByLabel('Response').fill('Approved for launch.')
+  await dialog.getByRole('button', { name: 'Approve' }).click()
+
+  await page.getByRole('button', { name: /Approved/ }).click()
+
+  const approvedCard = page.locator('article').filter({ hasText: 'Approve creative batch #2' })
+
+  await expect(approvedCard).toBeVisible()
+  await expect(approvedCard.getByText('Your response')).toBeVisible()
+  await expect(approvedCard.getByText('Approved for launch.')).toBeVisible()
+
+  const persistedState = await page.evaluate(({ actionId, portalKey, taskId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const action = portalData.needed_from_client.find((item) => item.id === actionId)
+    const task = portalData.tasks.find((item) => item.id === taskId)
+
+    return {
+      actionStatus: action?.status,
+      taskStatus: task?.status,
+    }
+  }, {
+    actionId: SEED_IDS.NEEDED_CREATIVE_APPROVAL,
+    portalKey: PORTAL_STORAGE_KEY,
+    taskId: SEED_IDS.TASK_REVIEW_CREATIVES,
+  })
+
+  expect(persistedState).toEqual({
+    actionStatus: NEEDED_ACTION_STATUSES.APPROVED,
+    taskStatus: TASK_STATUSES.WAITING_CLIENT,
+  })
+})
+
+test('client can inspect project detail without internal work noise', async ({ page }) => {
+  await signInAsClient(page)
+  await page.goto(`/client/projects?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  await expect(page.locator('h1').getByText('Projects')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Active/ })).toBeVisible()
+  await expect(page.getByText('Campaign Setup').first()).toBeVisible()
+
+  await page.locator('article').filter({ hasText: 'Campaign Setup' }).first().getByRole('link', { name: 'View project' }).click()
+  await expect(page).toHaveURL(/projectId=/)
+  await expect(page.getByText('Campaign Setup').first()).toBeVisible()
+
+  await expect(page.getByRole('heading', { name: 'Milestones' })).toBeVisible()
+  await expect(page.getByText('Kickoff')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Client-relevant blockers' })).toBeVisible()
+  await expect(page.getByText('Approve creative batch #2').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Related results' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Marketing Performance Dashboard/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /April 2026 Monthly Summary/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Project update history' })).toBeVisible()
+  await expect(page.getByText('Creative batch prepared for launch')).toBeVisible()
+  await expect(page.getByText('Internal tracking note')).toHaveCount(0)
 })

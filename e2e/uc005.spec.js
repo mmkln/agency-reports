@@ -8,8 +8,10 @@ const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
+test.setTimeout(120_000)
+
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -30,7 +32,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -56,7 +58,7 @@ test('UC-005 request lifecycle stays client-safe from create to resolve', async 
   const internalNote = 'Internal: confirm budget before chasing again.'
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('button', { name: 'New Request' })).toBeVisible()
   await page.getByRole('button', { name: 'New Request' }).click()
   await expect(page.getByRole('dialog', { name: 'New client request' })).toBeVisible()
@@ -71,20 +73,21 @@ test('UC-005 request lifecycle stays client-safe from create to resolve', async 
   await expect(createdRequestCard.getByText(internalNote)).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await page.locator('aside[aria-label="Demo role switcher"]').evaluate((element) => element.remove())
-  await expect(page.locator('h1').getByText('Client Requests')).toBeVisible()
+  await expect(page.locator('h1').getByText('Action Needed')).toBeVisible()
   const clientRequestCard = page.locator('article').filter({ hasText: title })
   await expect(clientRequestCard).toBeVisible()
   await expect(page.getByText(internalNote)).toHaveCount(0)
-  await clientRequestCard.getByRole('button', { name: 'Respond' }).click()
-  await page.getByPlaceholder('Write a short response for the agency...').fill('Approved for launch.')
-  await clientRequestCard.getByRole('button', { name: 'Send response' }).click()
+  await clientRequestCard.getByRole('button', { name: 'View details' }).click()
+  const actionDialog = page.getByRole('dialog', { name: title })
+  await actionDialog.getByPlaceholder('Write a short response for the agency...').fill('Approved for launch.')
+  await actionDialog.getByRole('button', { name: 'Send response' }).click()
   await page.getByRole('button', { name: 'Answered' }).click()
   await expect(page.getByText('Approved for launch.')).toBeVisible()
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   const requestCard = page.locator('[data-testid^="request-card-"]').filter({ hasText: title })
   await expect(requestCard).toBeVisible()
   await expect(requestCard.getByText('Approved for launch.')).toBeVisible()

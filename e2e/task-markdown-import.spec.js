@@ -7,7 +7,7 @@ import { AUTH_SESSION_STORAGE_KEY } from '../src/domain/services/authService.js'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -21,7 +21,7 @@ async function resetLocalDemo(page) {
 }
 
 async function signInAsAdmin(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, adminUserId }) => {
     window.localStorage.setItem(authKey, JSON.stringify({
       expiresAt: new Date(Date.now() + 1000 * 60 * 60).toISOString(),

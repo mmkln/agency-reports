@@ -22,6 +22,11 @@ import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
 const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
 const VALID_NEEDED_ACTION_TYPES = new Set(Object.values(NEEDED_ACTION_TYPES))
+const VALID_CLIENT_RESPONSE_STATUSES = new Set([
+  NEEDED_ACTION_STATUSES.ANSWERED,
+  NEEDED_ACTION_STATUSES.APPROVED,
+  NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+])
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function recordNeededActionActivity({
@@ -734,6 +739,7 @@ export function answerNeededAction({
   message = '',
   now = () => new Date().toISOString(),
   repositories,
+  responseStatus = NEEDED_ACTION_STATUSES.ANSWERED,
   viewer,
 }) {
   const action = getAction({ actionId, repositories, viewer })
@@ -744,6 +750,19 @@ export function answerNeededAction({
 
   if (!canClientRespondToNeededAction({ action, viewer })) {
     throw new Error('Only pending actions can be answered.')
+  }
+
+  if (!VALID_CLIENT_RESPONSE_STATUSES.has(responseStatus)) {
+    throw new Error('Client response status is not available.')
+  }
+
+  const normalizedAction = normalizeNeededAction(action)
+
+  if (
+    [NEEDED_ACTION_STATUSES.APPROVED, NEEDED_ACTION_STATUSES.CHANGES_REQUESTED].includes(responseStatus)
+    && normalizedAction.type !== NEEDED_ACTION_TYPES.APPROVAL
+  ) {
+    throw new Error('Approval decisions are only available for approval actions.')
   }
 
   const timestamp = now()
@@ -763,7 +782,7 @@ export function answerNeededAction({
     })),
     responded_at: timestamp,
     responded_by: viewer.userId,
-    status: NEEDED_ACTION_STATUSES.ANSWERED,
+    status: responseStatus,
     updated_at: timestamp,
   }
 

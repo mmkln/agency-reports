@@ -13,6 +13,14 @@ import {
 import { CLIENT_WORK_ITEM_STATUS_META } from '../../entities/client-work-item'
 import { Icon } from '../../shared/icons'
 
+const projectFilters = [
+  { countKey: 'active', label: 'Active', value: 'active' },
+  { countKey: 'waitingOnMe', label: 'Waiting on me', value: 'waiting_on_me' },
+  { countKey: 'completed', label: 'Completed', value: 'completed' },
+  { countKey: 'archived', label: 'Archived', value: 'archived' },
+  { countKey: 'all', label: 'All', value: 'all' },
+]
+
 function formatDate(date) {
   if (!date) {
     return 'No target date'
@@ -53,7 +61,7 @@ function ProjectCard({ clientId, isSelected, project }) {
           <p className="mt-2 line-clamp-2 text-body text-text-secondary">{project.objective}</p>
         </div>
         <Button asChild className="shrink-0" size="sm" variant={isSelected ? 'primary' : 'outline'}>
-          <Link to={`/client/projects?clientId=${clientId}&projectId=${project.id}`}>
+          <Link to={`/client/projects?clientId=${clientId}&projectId=${project.id}&filter=all`}>
             View project
           </Link>
         </Button>
@@ -76,7 +84,29 @@ function ProjectCard({ clientId, isSelected, project }) {
   )
 }
 
-export function ProjectsListSection({ clientId, projects, selectedProject }) {
+function ProjectFilters({ clientId, counts, filter }) {
+  return (
+    <div className="-mx-1 overflow-x-auto px-1">
+      <div className="flex min-w-max items-center gap-tag">
+        {projectFilters.map((item) => (
+          <Button
+            asChild
+            key={item.value}
+            size="sm"
+            variant={filter === item.value ? 'primary' : 'ghost'}
+          >
+            <Link to={`/client/projects?clientId=${clientId}&filter=${item.value}`}>
+              {item.label}
+              <span className="ml-1 text-label font-normal opacity-75">{counts[item.countKey] ?? 0}</span>
+            </Link>
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ProjectsListSection({ clientId, counts, filter, projects, selectedProject }) {
   return (
     <Panel>
       <PanelHeader
@@ -84,6 +114,7 @@ export function ProjectsListSection({ clientId, projects, selectedProject }) {
         title="Projects"
       />
       <PanelBody className="grid gap-3">
+        <ProjectFilters clientId={clientId} counts={counts} filter={filter} />
         {projects.length ? (
           projects.map((project) => (
             <ProjectCard
@@ -140,6 +171,134 @@ function WaitingOnYouSection({ actions }) {
             {actions.length} client action{actions.length === 1 ? '' : 's'} may affect this project.
           </p>
         </div>
+      </div>
+    </section>
+  )
+}
+
+function ProjectTimelineSection({ timeline }) {
+  if (!timeline?.length) {
+    return null
+  }
+
+  const statusMeta = {
+    completed: {
+      className: 'bg-success text-success-foreground',
+      iconName: 'checkCircle2',
+    },
+    in_progress: {
+      className: 'bg-action text-action',
+      iconName: 'clock',
+    },
+    planned: {
+      className: 'bg-control text-text-muted',
+      iconName: 'circle',
+    },
+  }
+
+  return (
+    <section className="grid gap-3">
+      <div>
+        <p className="text-label text-text-muted">Timeline</p>
+        <h3 className="mt-1 text-heading text-text-primary">Milestones</h3>
+      </div>
+      <div className="grid gap-2">
+        {timeline.map((milestone) => {
+          const meta = statusMeta[milestone.status] ?? statusMeta.planned
+
+          return (
+            <article className="flex items-center justify-between gap-3 rounded-control bg-block-subtle px-3 py-2" key={milestone.id}>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className={`flex size-7 shrink-0 items-center justify-center rounded-full ${meta.className}`}>
+                  <Icon name={meta.iconName} size={14} />
+                </span>
+                <span className="truncate text-ui text-text-primary">{milestone.label}</span>
+              </div>
+              <span className="shrink-0 text-label font-normal text-text-muted">
+                {milestone.date ? formatDate(milestone.date) : milestone.status.replace('_', ' ')}
+              </span>
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function ProjectBlockersSection({ blockers }) {
+  if (!blockers.length) {
+    return null
+  }
+
+  return (
+    <section className="grid gap-3">
+      <div>
+        <p className="text-label text-text-muted">Blockers</p>
+        <h3 className="mt-1 text-heading text-text-primary">Client-relevant blockers</h3>
+      </div>
+      <div className="grid gap-3">
+        {blockers.map((blocker) => (
+          <article className="rounded-control bg-warning-muted p-4 text-warning-foreground" key={blocker.id}>
+            <h4 className="text-ui">{blocker.title}</h4>
+            {blocker.whyNeeded ? <p className="mt-2 text-body">{blocker.whyNeeded}</p> : null}
+            <p className="mt-2 text-label font-normal">{blocker.impactIfDelayed}</p>
+            <p className="mt-1 text-label font-normal">Due {formatDate(blocker.dueDate)}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function RelatedResultsSection({ links }) {
+  if (!links.length) {
+    return null
+  }
+
+  return (
+    <section className="grid gap-3">
+      <div>
+        <p className="text-label text-text-muted">Reports & Dashboards</p>
+        <h3 className="mt-1 text-heading text-text-primary">Related results</h3>
+      </div>
+      <div className="grid gap-2">
+        {links.map((link) => (
+          <Button asChild className="justify-start" key={link.id} variant="outline">
+            <Link to={link.href}>
+              <Icon name={link.type === 'Latest report' ? 'fileText' : 'layoutDashboard'} size={15} />
+              <span className="min-w-0 truncate">{link.label}</span>
+              <span className="ml-auto text-label font-normal text-text-muted">{link.type}</span>
+            </Link>
+          </Button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ProjectUpdatesSection({ updates }) {
+  if (!updates.length) {
+    return null
+  }
+
+  return (
+    <section className="grid gap-3">
+      <div>
+        <p className="text-label text-text-muted">Updates</p>
+        <h3 className="mt-1 text-heading text-text-primary">Project update history</h3>
+      </div>
+      <div className="grid gap-3">
+        {updates.slice(0, 4).map((update) => (
+          <article className="rounded-control bg-block-subtle p-4" key={update.id}>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge meta={update.typeMeta} />
+              <span className="text-label font-normal text-text-muted">{formatDate(update.publishedAt)}</span>
+            </div>
+            <h4 className="mt-3 text-ui text-text-primary">{update.title}</h4>
+            {update.whatChanged ? <p className="mt-2 text-body text-text-secondary">{update.whatChanged}</p> : null}
+            {update.whatNext ? <p className="mt-2 text-label font-normal text-text-muted">Next: {update.whatNext}</p> : null}
+          </article>
+        ))}
       </div>
     </section>
   )
@@ -225,7 +384,10 @@ export function ProjectDetailSection({ project }) {
         </div>
 
         <WaitingOnYouSection actions={project.clientActions} />
+        <ProjectTimelineSection timeline={project.timeline} />
+        <ProjectBlockersSection blockers={project.blockers} />
         <ProjectFilesSection fileLinks={project.fileLinks} />
+        <RelatedResultsSection links={project.relatedResultLinks} />
 
         <section className="grid gap-3">
           <div>
@@ -242,6 +404,7 @@ export function ProjectDetailSection({ project }) {
             />
           )}
         </section>
+        <ProjectUpdatesSection updates={project.updates} />
       </PanelBody>
     </Panel>
   )

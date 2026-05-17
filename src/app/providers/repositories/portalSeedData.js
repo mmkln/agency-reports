@@ -17,6 +17,7 @@ import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../../entities/
 import {
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
 } from '../../../entities/needed-from-client'
 import {
   PERFORMANCE_CHANNELS,
@@ -618,6 +619,7 @@ export const portalSeedData = Object.freeze({
       related_link: '',
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Confirm final offer details',
+      type: NEEDED_ACTION_TYPES.DECISION,
       updated_at: '2026-05-06T10:00:00.000Z',
     },
     {
@@ -630,8 +632,11 @@ export const portalSeedData = Object.freeze({
       owner_name: 'Sarah Johnson',
       priority: NEEDED_ACTION_PRIORITIES.MEDIUM,
       related_link: 'https://drive.google.com/example',
+      related_task_id: SEED_IDS.TASK_REVIEW_CREATIVES,
+      related_work_item_id: SEED_IDS.CLIENT_WORK_REVIEW_CREATIVES,
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Approve creative batch #2',
+      type: NEEDED_ACTION_TYPES.APPROVAL,
       updated_at: '2026-05-05T10:00:00.000Z',
     },
   ],

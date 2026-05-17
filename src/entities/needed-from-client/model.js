@@ -1,6 +1,8 @@
 export const NEEDED_ACTION_STATUSES = Object.freeze({
   ANSWERED: 'answered',
+  APPROVED: 'approved',
   CANCELLED: 'cancelled',
+  CHANGES_REQUESTED: 'changes_requested',
   PENDING: 'pending',
   RESOLVED: 'resolved',
 })
@@ -30,6 +32,16 @@ export const NEEDED_ACTION_STATUS_META = Object.freeze({
     icon: 'messageSquare',
     label: 'Answered',
     tone: 'blue',
+  },
+  [NEEDED_ACTION_STATUSES.APPROVED]: {
+    icon: 'checkCircle2',
+    label: 'Approved',
+    tone: 'green',
+  },
+  [NEEDED_ACTION_STATUSES.CHANGES_REQUESTED]: {
+    icon: 'messageSquare',
+    label: 'Changes requested',
+    tone: 'amber',
   },
   [NEEDED_ACTION_STATUSES.RESOLVED]: {
     icon: 'checkCircle2',

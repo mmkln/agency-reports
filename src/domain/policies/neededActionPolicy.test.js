@@ -29,6 +29,8 @@ describe('neededActionPolicy', () => {
   it('returns transition targets and stable selection options', () => {
     expect(getNeededActionStatusTransitionTargets(NEEDED_ACTION_STATUSES.PENDING)).toEqual([
       NEEDED_ACTION_STATUSES.ANSWERED,
+      NEEDED_ACTION_STATUSES.APPROVED,
+      NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
       NEEDED_ACTION_STATUSES.RESOLVED,
       NEEDED_ACTION_STATUSES.CANCELLED,
     ])
@@ -38,6 +40,8 @@ describe('neededActionPolicy', () => {
     })).toEqual([
       NEEDED_ACTION_STATUSES.PENDING,
       NEEDED_ACTION_STATUSES.ANSWERED,
+      NEEDED_ACTION_STATUSES.APPROVED,
+      NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
       NEEDED_ACTION_STATUSES.RESOLVED,
       NEEDED_ACTION_STATUSES.CANCELLED,
     ])

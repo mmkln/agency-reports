@@ -7,6 +7,8 @@ const filters = [
   { label: 'Due soon', value: 'due_soon' },
   { label: 'Overdue', value: 'overdue' },
   { label: 'Answered', value: NEEDED_ACTION_STATUSES.ANSWERED },
+  { label: 'Approved', value: NEEDED_ACTION_STATUSES.APPROVED },
+  { label: 'Changes requested', value: NEEDED_ACTION_STATUSES.CHANGES_REQUESTED },
   { label: 'Completed', value: NEEDED_ACTION_STATUSES.RESOLVED },
   { label: 'All', value: 'all' },
 ]
@@ -15,6 +17,8 @@ function getFilterCount({ counts, value }) {
   return {
     all: counts.all,
     answered: counts.answered,
+    approved: counts.approved,
+    changes_requested: counts.changesRequested,
     completed: counts.completed,
     due_soon: counts.dueSoon,
     open: counts.open,

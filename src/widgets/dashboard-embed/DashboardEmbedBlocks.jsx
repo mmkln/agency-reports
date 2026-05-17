@@ -132,7 +132,7 @@ export function DashboardPageSummary({ clientId, dashboard }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link to={`/client/reports?clientId=${clientId}`}>
+            <Link to={`/client/reports-dashboards?clientId=${clientId}#report-archive`}>
               Latest summary
             </Link>
           </Button>
@@ -169,7 +169,7 @@ export function LatestSummaryCallout({ clientId, report }) {
       <CardContent className="grid gap-4 py-5">
         <p className="text-body text-text-secondary">{report.summary}</p>
         <Button asChild variant="outline">
-          <Link to={`/client/reports?clientId=${clientId}&reportId=${report.id}`}>
+          <Link to={`/client/reports-dashboards?clientId=${clientId}&reportId=${report.id}`}>
             Read report
           </Link>
         </Button>

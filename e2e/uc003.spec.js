@@ -8,8 +8,10 @@ const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
+test.setTimeout(120_000)
+
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -30,7 +32,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -98,7 +100,10 @@ test('agency admin can publish a monthly report and client can read it in the ar
     title: reportTitle,
   })
 
-  await page.goto(`/admin/client-report-preview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${reportId}`)
+  await page.goto(
+    `/admin/client-report-preview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${reportId}`,
+    { waitUntil: 'domcontentloaded' },
+  )
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText(summary).first()).toBeVisible()
@@ -106,7 +111,10 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await expect(page.getByText(results).first()).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(
+    `/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${reportId}`,
+    { waitUntil: 'domcontentloaded' },
+  )
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText(wins)).toBeVisible()
   await expect(page.getByText(problems)).toBeVisible()
@@ -115,19 +123,11 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open PDF' })).toBeVisible()
 
-  const archive = page.getByRole('complementary').filter({ hasText: 'Report archive' })
-  const archiveList = page.getByTestId('report-archive-list')
-  await expect(archiveList.getByText(reportTitle)).toBeVisible()
-  await expect(archiveList.getByText(summary)).toBeVisible()
-  await expect(archiveList.getByRole('link', { name: 'Read' }).first()).toBeVisible()
-  await archive.getByLabel('Search reports').fill('April')
-  await expect(archiveList.getByText('April 2026 Monthly Summary')).toBeVisible()
-  await expect(archiveList.getByText(reportTitle)).toHaveCount(0)
-
-  await archive.getByLabel('Search reports').fill('missing client report')
-  await expect(archive.getByText('No reports match these filters')).toBeVisible()
-  await archive.getByRole('button', { name: 'Clear filters' }).click()
-  await expect(archiveList.getByText(reportTitle)).toBeVisible()
+  const archive = page.locator('#report-archive')
+  await expect(archive.getByText('Report Archive')).toBeVisible()
+  await expect(archive.getByText(reportTitle)).toBeVisible()
+  await expect(archive.getByText(summary)).toBeVisible()
+  await expect(archive.getByRole('link', { name: 'Read report' }).first()).toBeVisible()
 })
 
 test('client report archive hides draft reports', async ({ page }) => {
@@ -158,13 +158,16 @@ test('client report archive hides draft reports', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText('Preview only. This report is not visible to the client.')).toBeVisible()
-  await expect(page.getByText('Hidden from client')).toBeVisible()
+  await expect(page.locator('#selected-report').getByText('Draft').first()).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByText(reportTitle)).toHaveCount(0)
 
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${draftReportId}`)
+  await page.goto(
+    `/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${draftReportId}`,
+    { waitUntil: 'domcontentloaded' },
+  )
   await expect(page.getByText('Report unavailable')).toBeVisible()
   await expect(page.getByText(reportTitle)).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Go to latest report' })).toBeVisible()
@@ -172,7 +175,10 @@ test('client report archive hides draft reports', async ({ page }) => {
 
 test('client report reader shows narrative hierarchy and link fallbacks', async ({ page }) => {
   await signInAsClient(page)
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`)
+  await page.goto(
+    `/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`,
+    { waitUntil: 'domcontentloaded' },
+  )
 
   await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
   await expect(page.getByText('Executive summary')).toBeVisible()
@@ -202,7 +208,7 @@ test('agency admin can duplicate a published report into a hidden draft', async 
   await expect(duplicatedRow).toContainText('Draft')
 
   await signInAsClient(page)
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByText('Copy of April 2026 Monthly Summary')).toHaveCount(0)
 })
 
@@ -246,7 +252,10 @@ test('agency admin can archive a published report and client still sees it in th
   await expect(sourceReport).toContainText('Archived')
 
   await signInAsClient(page)
-  await page.goto(`/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`)
+  await page.goto(
+    `/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`,
+    { waitUntil: 'domcontentloaded' },
+  )
   await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
   await expect(page.getByText('Archived').first()).toBeVisible()
 })

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { getClientActionNeededPage } from './clientActionNeededService'
@@ -46,6 +47,7 @@ function createRepositories(overrides = {}) {
         priority: NEEDED_ACTION_PRIORITIES.HIGH,
         status: NEEDED_ACTION_STATUSES.PENDING,
         title: 'Approve creative batch',
+        type: NEEDED_ACTION_TYPES.APPROVAL,
       },
       {
         client_id: IDS.CLIENT_A,
@@ -54,6 +56,7 @@ function createRepositories(overrides = {}) {
         id: '44444444-4444-4444-8444-444444444444',
         status: NEEDED_ACTION_STATUSES.PENDING,
         title: 'Access needed',
+        type: NEEDED_ACTION_TYPES.ACCESS,
       },
       {
         client_id: IDS.CLIENT_A,
@@ -107,6 +110,8 @@ describe('getClientActionNeededPage', () => {
     expect(page.counts).toEqual({
       all: 4,
       answered: 1,
+      approved: 0,
+      changesRequested: 0,
       completed: 1,
       dueSoon: 1,
       open: 2,

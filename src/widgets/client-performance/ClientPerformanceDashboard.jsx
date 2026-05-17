@@ -158,7 +158,7 @@ export function ClientPerformanceDashboard({
                   </p>
                   <p className="mt-2 text-body text-text-secondary">{page.latestReport.summary}</p>
                   <Button asChild className="mt-3" size="sm" variant="outline">
-                    <Link to={`/client/reports?clientId=${page.client.id}&reportId=${page.latestReport.id}`}>
+                    <Link to={`/client/reports-dashboards?clientId=${page.client.id}&reportId=${page.latestReport.id}`}>
                       Read report
                       <Icon name="arrowRight" size={14} />
                     </Link>

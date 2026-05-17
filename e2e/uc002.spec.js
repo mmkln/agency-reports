@@ -9,7 +9,7 @@ const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.removeItem(demoRoleKey)
@@ -30,7 +30,7 @@ async function clearAuthSession(page) {
 
 async function signIn(page, email) {
   await clearAuthSession(page)
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Sign in to your account' })).toBeVisible()
   await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
@@ -78,21 +78,27 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   await dashboardRow.getByLabel('Dashboard actions').click()
   await page.getByRole('menuitem', { name: 'Preview dashboard' }).click()
   await expect(page).toHaveURL(/\/admin\/client-dashboard-preview/)
-  await expect(page.getByRole('heading', { exact: true, name: 'Marketing Dashboard' })).toBeVisible()
+  await expect(page.getByRole('heading', { exact: true, name: 'Reports & Dashboards' })).toBeVisible()
   await expect(page.getByRole('heading', { name: dashboardName })).toBeVisible()
   await expect(page.getByText('E2E dashboard description')).toBeVisible()
 })
 
 test('client can open their active dashboard and cannot open another client dashboard', async ({ page }) => {
   await signInAsClient(page)
-  await page.goto(`/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`)
+  await page.goto(
+    `/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`,
+    { waitUntil: 'domcontentloaded' },
+  )
 
   await expect(page.getByRole('heading', { name: 'Marketing Dashboard' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Marketing Performance Dashboard' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Latest summary' })).toBeVisible()
   await expect(page.getByTitle('Marketing Performance Dashboard')).toBeVisible()
 
-  await page.goto(`/client/dashboard?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`)
+  await page.goto(
+    `/client/dashboard?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`,
+    { waitUntil: 'domcontentloaded' },
+  )
 
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
@@ -108,7 +114,10 @@ test('unavailable dashboard shows a controlled client fallback', async ({ page }
   await expect(page.getByText('Dashboard status updated', { exact: true }).first()).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`)
+  await page.goto(
+    `/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`,
+    { waitUntil: 'domcontentloaded' },
+  )
 
   await expect(page.getByRole('heading', { name: 'Dashboard is temporarily unavailable' })).toBeVisible()
   await expect(page.getByText('Marketing dashboard is being prepared.')).toBeVisible()
