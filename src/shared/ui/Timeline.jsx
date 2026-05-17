@@ -54,20 +54,20 @@ export function TimelineItem({
   return (
     <li
       id={inspectorId}
-      className={cn('grid grid-cols-[72px_minmax(0,1fr)] gap-control sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-component', className)}
+      className={cn('grid grid-cols-[104px_minmax(0,1fr)] gap-control sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-component', className)}
     >
-      <div className="relative flex items-start gap-item pt-component">
-        {date ? <time className="min-w-0 flex-1 pt-tag text-right text-label font-normal text-text-muted">{date}</time> : null}
+      <div className="relative flex items-start gap-item">
         <div className="relative flex w-control-small shrink-0 justify-center">
           <span
             aria-hidden="true"
-            className="absolute -bottom-card top-[calc(var(--spacing-control-small)+var(--spacing-item))] w-px bg-separator"
+            className="absolute bottom-[calc(var(--spacing-card)*-1)] top-[calc(var(--spacing-component)+var(--spacing-control-small))] w-px bg-separator"
             data-slot="timeline-rail"
           />
-          <span className={cn('relative z-10 flex size-control-small items-center justify-center rounded-full ring-4 ring-background', markerToneClass)}>
+          <span className={cn('relative z-10 mt-component flex size-control-small items-center justify-center rounded-full ring-4 ring-background', markerToneClass)}>
             {icon ?? (iconName ? <Icon name={iconName} size={15} /> : null)}
           </span>
         </div>
+        {date ? <time className="mt-[calc(var(--spacing-component)+var(--spacing-tag))] min-w-0 text-label font-normal text-text-muted">{date}</time> : null}
       </div>
 
       <article className="rounded-block bg-block px-card py-component shadow-block">
@@ -76,7 +76,11 @@ export function TimelineItem({
             {title ? <TitleComp className="text-ui font-semibold text-text-primary">{title}</TitleComp> : null}
             {description ? <p className="mt-item max-w-readable text-ui font-normal text-text-secondary">{description}</p> : null}
           </div>
-          {badge ? <div className="shrink-0">{badge}</div> : null}
+          {badge ? (
+            <div className="flex shrink-0 items-center gap-item">
+              {badge}
+            </div>
+          ) : null}
         </div>
 
         {notice ? <div className="mt-component">{notice}</div> : null}
