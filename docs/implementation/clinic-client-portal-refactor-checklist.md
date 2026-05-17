@@ -77,7 +77,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Ensure draft compliance/approval items are hidden unless assigned as client actions.
 - [ ] Ensure admin preview can read draft clinic surfaces for owned clients.
 - [x] Ensure clinic clients cannot mutate internal agency tasks.
-- [ ] Ensure approval decisions record actor, timestamp, version, and decision state.
+- [x] Ensure approval decisions record actor, timestamp, version, and decision state.
 - [ ] Ensure compliance review state is enforced in domain services, not UI-only checks.
 
 ## Phase 3 - Clinic Overview
@@ -333,7 +333,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for admin clinic compliance permissions, refs, history, and aggregate-only saves.
 - [x] Add domain tests for reputation visibility.
 - [x] Add domain tests for compliance approval read model and approval history.
-- [ ] Add domain tests for compliance approval transitions.
+- [x] Add domain tests for compliance approval transitions.
 - [x] Add domain tests for clinic Action Needed type mapping.
 - [x] Add domain tests for admin clinic setup permissions and aggregate-only saves.
 - [ ] Add e2e for clinic Overview.

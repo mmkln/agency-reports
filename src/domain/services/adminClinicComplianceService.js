@@ -15,8 +15,29 @@ import {
 import { USER_ROLES } from '../../entities/profile'
 
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
-const VALID_APPROVAL_STATUSES = new Set(Object.values(CLINIC_APPROVAL_STATUSES))
 const VALID_APPROVAL_TYPES = new Set(Object.values(CLINIC_APPROVAL_TYPES))
+const TERMINAL_APPROVAL_STATUSES = new Set([
+  CLINIC_APPROVAL_STATUSES.APPROVED,
+  CLINIC_APPROVAL_STATUSES.EXPIRED,
+  CLINIC_APPROVAL_STATUSES.REJECTED,
+])
+const APPROVAL_TRANSITIONS = Object.freeze({
+  [CLINIC_APPROVAL_STATUSES.APPROVED]: new Set([
+    CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+  ]),
+  [CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED]: new Set([
+    CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+  ]),
+  [CLINIC_APPROVAL_STATUSES.REJECTED]: new Set([
+    CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+  ]),
+  [CLINIC_APPROVAL_STATUSES.EXPIRED]: new Set([
+    CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+  ]),
+})
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
@@ -254,12 +275,7 @@ function buildMedicalApprovalRecord({
 
   const locationId = normalizeOptionalReference(input.location_id)
   const serviceLineId = normalizeOptionalReference(input.service_line_id)
-  const status = normalizeEnum(
-    input.status,
-    VALID_APPROVAL_STATUSES,
-    CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
-    'Approval status',
-  )
+  const status = existingRecord?.status ?? CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW
 
   validateReference(locationId, foundation.locationIds, 'Medical approval location')
   validateReference(serviceLineId, foundation.serviceLineIds, 'Medical approval service line')
@@ -301,6 +317,111 @@ function buildMedicalApprovalRecord({
 function requireIdGenerator(idGenerator) {
   if (!idGenerator) {
     throw new Error('idGenerator is required.')
+  }
+}
+
+function getEditableMedicalApproval({ approvalId, clientId, repositories, viewer }) {
+  getEditableClinicClient({ clientId, repositories, viewer })
+
+  const approval = repositories.medicalApprovals.findById(approvalId)
+
+  if (!approval || approval.client_id !== clientId) {
+    throw new Error('Medical approval was not found.')
+  }
+
+  return normalizeMedicalApproval(approval)
+}
+
+function getActorLabel(viewer) {
+  return normalizeOptionalText(viewer?.name)
+    || normalizeOptionalText(viewer?.email)
+    || normalizeOptionalText(viewer?.userId)
+    || 'Agency admin'
+}
+
+function requireOpenApproval(approval, nextStatus) {
+  if (TERMINAL_APPROVAL_STATUSES.has(approval.status)) {
+    throw new Error('Medical approval decision is already final.')
+  }
+
+  if (!APPROVAL_TRANSITIONS[nextStatus]?.has(approval.status)) {
+    throw new Error('Medical approval transition is not allowed.')
+  }
+}
+
+function normalizeDecisionInput(input = {}, { requiresComment = false } = {}) {
+  assertClinicAggregateRecord(input, 'Medical approval decision')
+
+  const comment = normalizeOptionalText(input.comment ?? input.decision_comment)
+
+  if (requiresComment && !comment) {
+    throw new Error('Decision comment is required.')
+  }
+
+  return {
+    comment,
+    version: normalizeOptionalText(input.version),
+  }
+}
+
+function transitionMedicalApproval({
+  approvalId,
+  clientId,
+  input,
+  nextStatus,
+  now = () => new Date().toISOString(),
+  repositories,
+  requiresComment = false,
+  viewer,
+}) {
+  const approval = getEditableMedicalApproval({
+    approvalId,
+    clientId,
+    repositories,
+    viewer,
+  })
+  const decision = normalizeDecisionInput(input, { requiresComment })
+  const timestamp = now()
+
+  requireOpenApproval(approval, nextStatus)
+
+  const version = decision.version || approval.version
+  const history = [
+    ...approval.history,
+    {
+      actor_label: getActorLabel(viewer),
+      comment: decision.comment,
+      decision: nextStatus,
+      decided_at: timestamp,
+      version,
+    },
+  ]
+
+  repositories.medicalApprovals.upsert(normalizeMedicalApproval({
+    ...approval,
+    approved_at: nextStatus === CLINIC_APPROVAL_STATUSES.APPROVED ? timestamp : approval.approved_at,
+    changes_requested_at: nextStatus === CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED
+      ? timestamp
+      : approval.changes_requested_at,
+    decision_comment: decision.comment,
+    history,
+    last_updated_at: timestamp,
+    status: nextStatus,
+    updated_at: timestamp,
+  }))
+
+  return getAdminClinicCompliancePage({ clientId, repositories, viewer })
+}
+
+export function getMedicalApprovalDecisionCapabilities(approval) {
+  const normalizedApproval = normalizeMedicalApproval(approval)
+
+  return {
+    canApprove: APPROVAL_TRANSITIONS[CLINIC_APPROVAL_STATUSES.APPROVED].has(normalizedApproval.status),
+    canExpire: APPROVAL_TRANSITIONS[CLINIC_APPROVAL_STATUSES.EXPIRED].has(normalizedApproval.status),
+    canReject: APPROVAL_TRANSITIONS[CLINIC_APPROVAL_STATUSES.REJECTED].has(normalizedApproval.status),
+    canRequestChanges: APPROVAL_TRANSITIONS[CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED].has(normalizedApproval.status),
+    isFinal: TERMINAL_APPROVAL_STATUSES.has(normalizedApproval.status),
   }
 }
 
@@ -387,4 +508,34 @@ export function saveAdminClinicCompliance({
   })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
+}
+
+export function approveMedicalApproval(args) {
+  return transitionMedicalApproval({
+    ...args,
+    nextStatus: CLINIC_APPROVAL_STATUSES.APPROVED,
+  })
+}
+
+export function requestChangesForMedicalApproval(args) {
+  return transitionMedicalApproval({
+    ...args,
+    nextStatus: CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+    requiresComment: true,
+  })
+}
+
+export function rejectMedicalApproval(args) {
+  return transitionMedicalApproval({
+    ...args,
+    nextStatus: CLINIC_APPROVAL_STATUSES.REJECTED,
+    requiresComment: true,
+  })
+}
+
+export function expireMedicalApproval(args) {
+  return transitionMedicalApproval({
+    ...args,
+    nextStatus: CLINIC_APPROVAL_STATUSES.EXPIRED,
+  })
 }

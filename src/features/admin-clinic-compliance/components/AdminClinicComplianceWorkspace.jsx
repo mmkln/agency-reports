@@ -34,6 +34,7 @@ function ClinicComplianceErrorState({ message }) {
 export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const {
+    applyApprovalDecision,
     draft,
     error,
     isDirty,
@@ -102,7 +103,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
           />
           <MedicalApprovalsCard
             draft={draft}
+            isDirty={isDirty}
             locations={page.locations}
+            onApplyDecision={applyApprovalDecision}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />

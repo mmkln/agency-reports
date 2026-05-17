@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import {
+  approveMedicalApproval,
   getAdminClinicCompliancePage,
+  rejectMedicalApproval,
+  requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
 } from '../../domain/services/adminClinicComplianceService'
 import { useToast } from '../../shared/notifications'
@@ -25,6 +28,12 @@ function createInitialState() {
     status: 'loading',
   }
 }
+
+const APPROVAL_DECISION_SERVICES = Object.freeze({
+  approve: approveMedicalApproval,
+  reject: rejectMedicalApproval,
+  request_changes: requestChangesForMedicalApproval,
+})
 
 export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
   const toast = useToast()
@@ -141,7 +150,49 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('')
   }
 
+  function applyApprovalDecision({ action, approvalId, comment, version }) {
+    const service = APPROVAL_DECISION_SERVICES[action]
+
+    if (!service) {
+      throw new Error('Medical approval action is invalid.')
+    }
+
+    setSaveState('Recording decision...')
+
+    runtime.dataClient.write((repositories) => service({
+      approvalId,
+      clientId,
+      input: {
+        comment,
+        version,
+      },
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Decision recorded')
+        toast.success('Medical approval updated', `${page.client.name}'s approval decision was recorded.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Medical approval was not updated', caughtError.message)
+      })
+  }
+
   return {
+    applyApprovalDecision,
     draft: state.draft,
     error: state.error,
     isDirty,

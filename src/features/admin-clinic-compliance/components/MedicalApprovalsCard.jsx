@@ -6,6 +6,7 @@ import {
   CLINIC_APPROVAL_TYPES,
   CLINIC_APPROVAL_TYPE_META,
 } from '../../../entities/clinic'
+import { getMedicalApprovalDecisionCapabilities } from '../../../domain/services/adminClinicComplianceService'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
   NotesField,
@@ -33,7 +34,31 @@ function createBlankApproval() {
   }
 }
 
-export function MedicalApprovalsCard({ draft, locations, onUpdate, serviceLines }) {
+function getStatusLabel(status) {
+  return CLINIC_APPROVAL_STATUS_META[status]?.label
+    ?? CLINIC_APPROVAL_STATUS_META[CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW].label
+}
+
+function getDecisionTimestampSummary(approval) {
+  if (approval.approved_at) {
+    return `Approved at ${approval.approved_at}`
+  }
+
+  if (approval.changes_requested_at) {
+    return `Changes requested at ${approval.changes_requested_at}`
+  }
+
+  return 'No decision timestamp yet'
+}
+
+export function MedicalApprovalsCard({
+  draft,
+  isDirty,
+  locations,
+  onApplyDecision,
+  onUpdate,
+  serviceLines,
+}) {
   function updateApproval(index, fieldName, value) {
     onUpdate((currentDraft) => ({
       ...currentDraft,
@@ -60,6 +85,15 @@ export function MedicalApprovalsCard({ draft, locations, onUpdate, serviceLines 
     }))
   }
 
+  function applyDecision(action, approval) {
+    onApplyDecision({
+      action,
+      approvalId: approval.id,
+      comment: approval.decision_comment,
+      version: approval.version,
+    })
+  }
+
   return (
     <WorkspaceCard
       action={(
@@ -67,7 +101,7 @@ export function MedicalApprovalsCard({ draft, locations, onUpdate, serviceLines 
           Add approval
         </Button>
       )}
-      description="Medical, legal, and platform-sensitive approval records. Transitions will get a dedicated decision flow next."
+      description="Medical, legal, and platform-sensitive approval records with auditable decision history."
       iconName="checkCircle2"
       title="Medical Approvals"
     >
@@ -79,123 +113,185 @@ export function MedicalApprovalsCard({ draft, locations, onUpdate, serviceLines 
         ) : null}
 
         {draft.medicalApprovals.map((approval, index) => (
-          <section className="grid gap-component rounded-control bg-surface-subtle p-3" key={approval.id || `new-approval-${index}`}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-label font-semibold text-text-primary">
-                Approval {index + 1}
-              </p>
-              <Button onClick={() => removeApproval(index)} size="sm" type="button" variant="ghost">
-                Remove
-              </Button>
-            </div>
-
-            <div className="grid gap-component md:grid-cols-3">
-              <TextField
-                label="Title"
-                onChange={(value) => updateApproval(index, 'title', value)}
-                placeholder="Implant success-rate claim"
-                required
-                value={approval.title}
-              />
-              <SelectField
-                label="Type"
-                onChange={(value) => updateApproval(index, 'approval_type', value)}
-                value={approval.approval_type || CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM}
-              >
-                {Object.values(CLINIC_APPROVAL_TYPES).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {CLINIC_APPROVAL_TYPE_META[type].label}
-                  </SelectItem>
-                ))}
-              </SelectField>
-              <SelectField
-                label="Status"
-                onChange={(value) => updateApproval(index, 'status', value)}
-                value={approval.status || CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW}
-              >
-                {Object.values(CLINIC_APPROVAL_STATUSES).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {CLINIC_APPROVAL_STATUS_META[status].label}
-                  </SelectItem>
-                ))}
-              </SelectField>
-              <TextField
-                label="Version"
-                onChange={(value) => updateApproval(index, 'version', value)}
-                placeholder="v1"
-                value={approval.version}
-              />
-              <TextField
-                label="Due date"
-                onChange={(value) => updateApproval(index, 'due_date', value)}
-                type="date"
-                value={approval.due_date}
-              />
-              <SelectField
-                label="Service line"
-                onChange={(value) => updateApproval(index, 'service_line_id', value)}
-                value={approval.service_line_id}
-              >
-                {serviceLines.map((serviceLine) => (
-                  <SelectItem key={serviceLine.id} value={serviceLine.id}>
-                    {serviceLine.name}
-                  </SelectItem>
-                ))}
-              </SelectField>
-              <SelectField
-                label="Location"
-                onChange={(value) => updateApproval(index, 'location_id', value)}
-                value={approval.location_id}
-              >
-                {locations.map((location) => (
-                  <SelectItem key={location.id} value={location.id}>
-                    {location.name}
-                  </SelectItem>
-                ))}
-              </SelectField>
-              <TextField
-                label="Requested by"
-                onChange={(value) => updateApproval(index, 'requested_by_label', value)}
-                placeholder="Agency team"
-                value={approval.requested_by_label}
-              />
-              <TextField
-                label="Approver"
-                onChange={(value) => updateApproval(index, 'approver_label', value)}
-                placeholder="Doctor, legal, or clinic owner"
-                value={approval.approver_label}
-              />
-            </div>
-
-            <div className="grid gap-component md:grid-cols-2">
-              <TextField
-                label="Approved at"
-                onChange={(value) => updateApproval(index, 'approved_at', value)}
-                type="datetime-local"
-                value={approval.approved_at}
-              />
-              <TextField
-                label="Changes requested at"
-                onChange={(value) => updateApproval(index, 'changes_requested_at', value)}
-                type="datetime-local"
-                value={approval.changes_requested_at}
-              />
-              <NotesField
-                label="Instructions"
-                onChange={(value) => updateApproval(index, 'instructions', value)}
-                placeholder="What exactly needs medical or policy review"
-                value={approval.instructions}
-              />
-              <NotesField
-                label="Decision comment"
-                onChange={(value) => updateApproval(index, 'decision_comment', value)}
-                placeholder="Client-safe decision note"
-                value={approval.decision_comment}
-              />
-            </div>
-          </section>
+          <ApprovalEditor
+            approval={approval}
+            index={index}
+            isDirty={isDirty}
+            key={approval.id || `new-approval-${index}`}
+            locations={locations}
+            onApplyDecision={applyDecision}
+            onRemove={removeApproval}
+            onUpdate={updateApproval}
+            serviceLines={serviceLines}
+          />
         ))}
       </div>
     </WorkspaceCard>
+  )
+}
+
+function ApprovalEditor({
+  approval,
+  index,
+  isDirty,
+  locations,
+  onApplyDecision,
+  onRemove,
+  onUpdate,
+  serviceLines,
+}) {
+  const capabilities = getMedicalApprovalDecisionCapabilities(approval)
+  const needsComment = !approval.decision_comment
+
+  return (
+    <section className="grid gap-component rounded-control bg-surface-subtle p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid gap-1">
+          <p className="text-label font-semibold text-text-primary">
+            Approval {index + 1}
+          </p>
+          <p className="text-label text-text-muted">
+            Status: {getStatusLabel(approval.status)}
+          </p>
+        </div>
+        <Button onClick={() => onRemove(index)} size="sm" type="button" variant="ghost">
+          Remove
+        </Button>
+      </div>
+
+      <div className="grid gap-component md:grid-cols-3">
+        <TextField
+          label="Title"
+          onChange={(value) => onUpdate(index, 'title', value)}
+          placeholder="Implant success-rate claim"
+          required
+          value={approval.title}
+        />
+        <SelectField
+          label="Type"
+          onChange={(value) => onUpdate(index, 'approval_type', value)}
+          value={approval.approval_type || CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM}
+        >
+          {Object.values(CLINIC_APPROVAL_TYPES).map((type) => (
+            <SelectItem key={type} value={type}>
+              {CLINIC_APPROVAL_TYPE_META[type].label}
+            </SelectItem>
+          ))}
+        </SelectField>
+        <TextField
+          label="Version"
+          onChange={(value) => onUpdate(index, 'version', value)}
+          placeholder="v1"
+          value={approval.version}
+        />
+        <TextField
+          label="Due date"
+          onChange={(value) => onUpdate(index, 'due_date', value)}
+          type="date"
+          value={approval.due_date}
+        />
+        <SelectField
+          label="Service line"
+          onChange={(value) => onUpdate(index, 'service_line_id', value)}
+          value={approval.service_line_id}
+        >
+          {serviceLines.map((serviceLine) => (
+            <SelectItem key={serviceLine.id} value={serviceLine.id}>
+              {serviceLine.name}
+            </SelectItem>
+          ))}
+        </SelectField>
+        <SelectField
+          label="Location"
+          onChange={(value) => onUpdate(index, 'location_id', value)}
+          value={approval.location_id}
+        >
+          {locations.map((location) => (
+            <SelectItem key={location.id} value={location.id}>
+              {location.name}
+            </SelectItem>
+          ))}
+        </SelectField>
+        <TextField
+          label="Requested by"
+          onChange={(value) => onUpdate(index, 'requested_by_label', value)}
+          placeholder="Agency team"
+          value={approval.requested_by_label}
+        />
+        <TextField
+          label="Approver"
+          onChange={(value) => onUpdate(index, 'approver_label', value)}
+          placeholder="Doctor, legal, or clinic owner"
+          value={approval.approver_label}
+        />
+      </div>
+
+      <p className="text-label text-text-muted">
+        {getDecisionTimestampSummary(approval)}
+      </p>
+
+      <div className="grid gap-component md:grid-cols-2">
+        <NotesField
+          label="Instructions"
+          onChange={(value) => onUpdate(index, 'instructions', value)}
+          placeholder="What exactly needs medical or policy review"
+          value={approval.instructions}
+        />
+        <NotesField
+          label="Decision comment"
+          onChange={(value) => onUpdate(index, 'decision_comment', value)}
+          placeholder="Client-safe decision note"
+          value={approval.decision_comment}
+        />
+      </div>
+
+      <div className="grid gap-3 rounded-control bg-surface px-3 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-label font-semibold text-text-primary">
+              Decision actions
+            </p>
+            <p className="text-label text-text-muted">
+              {approval.id
+                ? 'Use these actions to preserve status history and timestamps.'
+                : 'Save this approval before recording a decision.'}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              disabled={!approval.id || isDirty || !capabilities.canApprove}
+              onClick={() => onApplyDecision('approve', approval)}
+              size="sm"
+              type="button"
+            >
+              Approve
+            </Button>
+            <Button
+              disabled={!approval.id || isDirty || !capabilities.canRequestChanges || needsComment}
+              onClick={() => onApplyDecision('request_changes', approval)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Request changes
+            </Button>
+            <Button
+              disabled={!approval.id || isDirty || !capabilities.canReject || needsComment}
+              onClick={() => onApplyDecision('reject', approval)}
+              size="sm"
+              type="button"
+              variant="destructive"
+            >
+              Reject
+            </Button>
+          </div>
+        </div>
+        {isDirty && approval.id ? (
+          <p className="text-label text-text-muted">
+            Save compliance changes before recording a decision.
+          </p>
+        ) : null}
+      </div>
+    </section>
   )
 }

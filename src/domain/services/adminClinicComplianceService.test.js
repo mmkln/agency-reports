@@ -9,7 +9,11 @@ import {
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import {
+  approveMedicalApproval,
+  expireMedicalApproval,
   getAdminClinicCompliancePage,
+  rejectMedicalApproval,
+  requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
 } from './adminClinicComplianceService'
 
@@ -110,8 +114,23 @@ function createRepositories(overrides = {}) {
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
   return {
     agencyId,
+    email: 'admin@agency.test',
+    name: 'Agency Admin',
     role: USER_ROLES.AGENCY_ADMIN,
     userId: 'admin-user-id',
+  }
+}
+
+function createApproval(overrides = {}) {
+  return {
+    approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+    client_id: IDS.CLIENT_A,
+    due_date: '2026-05-20',
+    id: IDS.APPROVAL_A,
+    status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    title: 'Implant success-rate claim',
+    version: 'v1',
+    ...overrides,
   }
 }
 
@@ -330,5 +349,121 @@ describe('adminClinicComplianceService', () => {
       repositories: createRepositories(),
       viewer: createAdminViewer(),
     })).toThrow('Medical approval must stay aggregate-only.')
+  })
+
+  it('approves medical approvals with actor, timestamp, version, and history', () => {
+    const repositories = createRepositories({
+      medicalApprovals: createRepository([createApproval()]),
+    })
+
+    const page = approveMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: {
+        comment: 'Approved for the May landing page.',
+        version: 'v2',
+      },
+      now: () => '2026-05-18T11:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.medicalApprovals[0]).toMatchObject({
+      approved_at: '2026-05-18T11:00:00.000Z',
+      decision_comment: 'Approved for the May landing page.',
+      last_updated_at: '2026-05-18T11:00:00.000Z',
+      status: CLINIC_APPROVAL_STATUSES.APPROVED,
+    })
+    expect(page.medicalApprovals[0].history).toEqual([
+      expect.objectContaining({
+        actor_label: 'Agency Admin',
+        comment: 'Approved for the May landing page.',
+        decision: CLINIC_APPROVAL_STATUSES.APPROVED,
+        decided_at: '2026-05-18T11:00:00.000Z',
+        version: 'v2',
+      }),
+    ])
+  })
+
+  it('requests changes and rejects medical approvals with required comments', () => {
+    const repositories = createRepositories({
+      medicalApprovals: createRepository([createApproval()]),
+    })
+
+    expect(() => requestChangesForMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: { comment: '' },
+      repositories,
+      viewer: createAdminViewer(),
+    })).toThrow('Decision comment is required.')
+
+    const changesPage = requestChangesForMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: { comment: 'Remove guaranteed outcome language.' },
+      now: () => '2026-05-18T12:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(changesPage.medicalApprovals[0]).toMatchObject({
+      changes_requested_at: '2026-05-18T12:00:00.000Z',
+      decision_comment: 'Remove guaranteed outcome language.',
+      status: CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+    })
+
+    const rejectedPage = rejectMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: { comment: 'Claim cannot be supported by the provided evidence.' },
+      now: () => '2026-05-18T13:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(rejectedPage.medicalApprovals[0]).toMatchObject({
+      decision_comment: 'Claim cannot be supported by the provided evidence.',
+      status: CLINIC_APPROVAL_STATUSES.REJECTED,
+    })
+    expect(rejectedPage.medicalApprovals[0].history).toHaveLength(2)
+    expect(rejectedPage.medicalApprovals[0].history[1]).toMatchObject({
+      decision: CLINIC_APPROVAL_STATUSES.REJECTED,
+      decided_at: '2026-05-18T13:00:00.000Z',
+    })
+  })
+
+  it('blocks invalid medical approval transitions, wrong admins, and PHI decision input', () => {
+    expect(() => approveMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: {},
+      repositories: createRepositories({
+        medicalApprovals: createRepository([
+          createApproval({ status: CLINIC_APPROVAL_STATUSES.REJECTED }),
+        ]),
+      }),
+      viewer: createAdminViewer(),
+    })).toThrow('Medical approval decision is already final.')
+
+    expect(() => approveMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: { patient_name: 'Jane Patient' },
+      repositories: createRepositories({
+        medicalApprovals: createRepository([createApproval()]),
+      }),
+      viewer: createAdminViewer(),
+    })).toThrow('Medical approval decision must stay aggregate-only.')
+
+    expect(() => expireMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      input: {},
+      repositories: createRepositories({
+        medicalApprovals: createRepository([createApproval()]),
+      }),
+      viewer: createAdminViewer(IDS.AGENCY_B),
+    })).toThrow('Clinic compliance is not available for this admin.')
   })
 })
