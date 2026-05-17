@@ -48,6 +48,10 @@ export function isClientFileLinkVisibleToClient(fileLink) {
   ].includes(fileLink.status)
 }
 
+export function isClientFileLinkArchivedVisibleToClient(fileLink) {
+  return isClientVisible(fileLink) && fileLink?.status === CLIENT_FILE_LINK_STATUSES.ARCHIVED
+}
+
 export function isReportVisibleToClient(report) {
   return [
     REPORT_STATUSES.PUBLISHED,

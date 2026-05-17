@@ -13,16 +13,22 @@ export function Panel({ children, className = '', id }) {
   )
 }
 
-export function PanelHeader({ action, children, eyebrow, id, subtitle, title }) {
+export function PanelHeader({ action, children, divided = false, eyebrow, id, subtitle, title }) {
   const inspectorId = useInspectorId('PanelHeader', id)
 
   return (
-    <CardHeader id={inspectorId} className="flex-row items-start justify-between gap-component border-b border-separator bg-surface-subtle px-card py-component">
+    <CardHeader
+      id={inspectorId}
+      className={cn(
+        'flex-row items-start justify-between gap-component px-card pb-item pt-component',
+        divided && 'border-b border-separator',
+      )}
+    >
       {title ? (
         <div>
-          {eyebrow ? <p className="mb-1 text-label text-action uppercase">{eyebrow}</p> : null}
-          <h2 className="m-0 text-heading text-text-primary">{title}</h2>
-          {subtitle ? <p className="mt-1 text-body text-text-secondary">{subtitle}</p> : null}
+          {eyebrow ? <p className="mb-micro text-label text-action uppercase">{eyebrow}</p> : null}
+          <h2 className="m-0 text-ui font-semibold text-text-primary">{title}</h2>
+          {subtitle ? <p className="mt-tag text-ui text-text-muted">{subtitle}</p> : null}
         </div>
       ) : (
         children

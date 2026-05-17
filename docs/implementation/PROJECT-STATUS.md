@@ -2,7 +2,7 @@
 
 ```text
 Product: Agency Client Portal Aggregator
-Status date: 2026-05-16
+Status date: 2026-05-17
 Current storage mode: frontend/localStorage MVP
 ```
 
@@ -36,7 +36,7 @@ It is not intended to become a full analytics platform, CRM, project management 
 
 ## Current Verification Baseline
 
-Latest full verification recorded after UC-005:
+Latest full verification recorded after the Client Control Center refactor:
 
 ```text
 npm run lint
@@ -45,13 +45,30 @@ npx playwright test
 npm run build
 ```
 
-Current baseline from the last UC-005 run:
+Current baseline from the latest full run:
 
 ```text
-Unit tests: 150 passed
-Full e2e: 22 passed
+Unit tests: 226 passed
+Full e2e: 29 passed
 Build: passed
 ```
+
+## Current Client IA Status
+
+The client-facing portal has been refactored from separate use-case routes into the mature Client Control Center destinations:
+
+```text
+- Overview
+- Action Needed
+- Projects
+- Reports & Dashboards
+- Files & Links
+- Requests
+- Updates
+- Settings
+```
+
+Legacy client Dashboard, Performance, and Reports routes remain hidden/deep-link compatible, while top-level client navigation points to the mature destinations.
 
 ## Architecture Baseline
 
@@ -72,14 +89,14 @@ The current frontend architecture expects:
 Recommended next step:
 
 ```text
-Use the Client Control Center refactor checklist when starting the mature client-side IA refactor.
+Continue with the remaining Client Control Center admin-alignment and polish items.
 ```
 
 Reason:
 
 ```text
-The UC-001 through UC-005 frontend/localStorage MVP path is implemented.
-The next major product move is an IA refactor from use-case routes to mature client product destinations.
+The UC-001 through UC-005 frontend/localStorage MVP path is implemented, and the mature client product destinations are now the primary client IA.
+The next major product move is admin-side control and preview coverage for every client-visible surface.
 ```
 
 Primary planning tracker:

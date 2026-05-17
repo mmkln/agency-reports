@@ -9,7 +9,10 @@ import {
   StatusBadge,
 } from '@/shared/ui'
 
-import { CLIENT_FILE_LINK_TYPES } from '../../entities/client-file-link'
+import {
+  CLIENT_FILE_LINK_STATUSES,
+  CLIENT_FILE_LINK_TYPES,
+} from '../../entities/client-file-link'
 import { Icon } from '../../shared/icons'
 
 const filters = [
@@ -20,6 +23,7 @@ const filters = [
   { label: 'Brand assets', value: CLIENT_FILE_LINK_TYPES.BRAND_ASSET },
   { label: 'Shared links', value: CLIENT_FILE_LINK_TYPES.SHARED_LINK },
   { label: 'Contracts/admin', value: CLIENT_FILE_LINK_TYPES.CONTRACT_ADMIN },
+  { label: 'Archived', value: CLIENT_FILE_LINK_STATUSES.ARCHIVED },
 ]
 
 function formatDate(date) {
@@ -43,6 +47,7 @@ function formatDate(date) {
 function getFilterCount({ counts, value }) {
   return {
     all: counts.all,
+    archived: counts.archived,
     brand_asset: counts.brandAssets,
     client_upload: counts.clientUploads,
     contract_admin: counts.contractsAdmin,
@@ -143,11 +148,19 @@ export function FilesLinksSummary({ counts }) {
 
 export function FilesLinksLibrary({ counts, fileLinks }) {
   const [activeFilter, setActiveFilter] = useState('all')
-  const filteredFileLinks = useMemo(() => (
-    activeFilter === 'all'
-      ? fileLinks
-      : fileLinks.filter((fileLink) => fileLink.type === activeFilter)
-  ), [activeFilter, fileLinks])
+  const filteredFileLinks = useMemo(() => {
+    if (activeFilter === CLIENT_FILE_LINK_STATUSES.ARCHIVED) {
+      return fileLinks.filter((fileLink) => fileLink.status === CLIENT_FILE_LINK_STATUSES.ARCHIVED)
+    }
+
+    const activeFileLinks = fileLinks.filter((fileLink) => (
+      fileLink.status !== CLIENT_FILE_LINK_STATUSES.ARCHIVED
+    ))
+
+    return activeFilter === 'all'
+      ? activeFileLinks
+      : activeFileLinks.filter((fileLink) => fileLink.type === activeFilter)
+  }, [activeFilter, fileLinks])
 
   return (
     <Panel>
@@ -170,7 +183,9 @@ export function FilesLinksLibrary({ counts, fileLinks }) {
           </div>
         ) : (
           <EmptyState
-            description="No published client resources match this view."
+            description={activeFilter === CLIENT_FILE_LINK_STATUSES.ARCHIVED
+              ? 'No archived client resources are available.'
+              : 'No published client resources match this view.'}
             iconName="fileText"
             title="No resources here"
           />

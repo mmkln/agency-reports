@@ -166,6 +166,9 @@ test('client mature routes hide internal and draft records from persisted data',
   await page.goto(`/client/files-links?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('h1').getByText('Files & Links')).toBeVisible()
   await expect(page.getByText('Brand assets folder')).toBeVisible()
+  await expect(page.getByText('Initial campaign launch archive')).toHaveCount(0)
+  await page.getByRole('button', { name: /Archived 1/ }).click()
+  await expect(page.getByText('Initial campaign launch archive')).toBeVisible()
   await expect(page.getByText('Internal tracking debug notes')).toHaveCount(0)
 
   await page.goto(`/client/updates?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })

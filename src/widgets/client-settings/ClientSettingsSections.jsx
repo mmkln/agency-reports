@@ -1,18 +1,16 @@
 import {
+  AvatarFallback,
+  Badge,
+  CodeValue,
   EmptyState,
+  ListPanel,
+  ListRow,
   Panel,
   PanelBody,
   PanelHeader,
+  PropertyGrid,
+  UnavailableState,
 } from '@/shared/ui'
-
-function DetailItem({ label, value }) {
-  return (
-    <div>
-      <p className="text-label text-text-muted">{label}</p>
-      <p className="mt-1 text-ui text-text-primary">{value || 'Not set'}</p>
-    </div>
-  )
-}
 
 export function ProfileSettingsSection({ membership, profile }) {
   return (
@@ -21,10 +19,24 @@ export function ProfileSettingsSection({ membership, profile }) {
         subtitle="Your portal identity and client access role."
         title="Profile"
       />
-      <PanelBody className="grid gap-4 p-5 sm:grid-cols-3">
-        <DetailItem label="Name" value={profile.name} />
-        <DetailItem label="Email" value={profile.email} />
-        <DetailItem label="Portal role" value={membership?.roleLabel ?? profile.roleLabel} />
+      <PanelBody>
+        <PropertyGrid
+          columns={3}
+          items={[
+            {
+              label: 'Name',
+              value: profile.name,
+            },
+            {
+              label: 'Email',
+              value: profile.email,
+            },
+            {
+              label: 'Portal role',
+              value: <Badge tone="blue">{membership?.roleLabel ?? profile.roleLabel}</Badge>,
+            },
+          ]}
+        />
       </PanelBody>
     </Panel>
   )
@@ -37,11 +49,28 @@ export function CompanySettingsSection({ client }) {
         subtitle="The client workspace connected to your account."
         title="Company"
       />
-      <PanelBody className="grid gap-4 p-5 sm:grid-cols-2">
-        <DetailItem label="Client" value={client.name} />
-        <DetailItem label="Portal slug" value={client.portalSlug} />
-        <DetailItem label="Primary contact" value={client.primaryContactName} />
-        <DetailItem label="Primary contact email" value={client.primaryContactEmail} />
+      <PanelBody>
+        <PropertyGrid
+          columns={2}
+          items={[
+            {
+              label: 'Client',
+              value: client.name,
+            },
+            {
+              label: 'Portal slug',
+              value: <CodeValue>{client.portalSlug}</CodeValue>,
+            },
+            {
+              label: 'Primary contact',
+              value: client.primaryContactName,
+            },
+            {
+              label: 'Primary contact email',
+              value: client.primaryContactEmail,
+            },
+          ]}
+        />
       </PanelBody>
     </Panel>
   )
@@ -51,26 +80,26 @@ export function TeamMembersSection({ members }) {
   return (
     <Panel>
       <PanelHeader
+        divided
         subtitle="People with access to this client portal."
         title="Team Members"
       />
-      <PanelBody className="grid gap-3">
+      <PanelBody className="p-0">
         {members.length ? (
-          members.map((member) => (
-            <article className="rounded-control border border-control-border bg-block-subtle p-4" key={member.id}>
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-ui text-text-primary">{member.name}</p>
-                  <p className="mt-1 text-label font-normal text-text-muted">{member.email}</p>
-                </div>
-                <span className="w-fit rounded-control bg-control px-2 py-1 text-label text-text-secondary">
-                  {member.roleLabel}
-                </span>
-              </div>
-            </article>
-          ))
+          <ListPanel>
+            {members.map((member) => (
+              <ListRow
+                description={member.email}
+                key={member.id}
+                leading={<AvatarFallback name={member.name} />}
+                title={member.name}
+                trailing={<Badge tone={member.role === 'owner' ? 'blue' : 'neutral'}>{member.roleLabel}</Badge>}
+              />
+            ))}
+          </ListPanel>
         ) : (
           <EmptyState
+            className="m-card"
             description="No members are currently attached to this client."
             iconName="users"
             title="No team members"
@@ -86,7 +115,7 @@ export function UnavailableSettingsSection({ iconName, section, title }) {
     <Panel>
       <PanelHeader title={title} />
       <PanelBody>
-        <EmptyState
+        <UnavailableState
           description={section.message}
           iconName={iconName}
           title={`${title} unavailable`}

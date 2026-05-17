@@ -30,7 +30,7 @@ export function TablePanel({ columns, id, rows, title }) {
 
   return (
     <Panel id={inspectorId}>
-      <PanelHeader title={title} />
+      <PanelHeader divided title={title} />
       <PanelBody>
         <Table className="min-w-[760px]">
           <TableHeader>

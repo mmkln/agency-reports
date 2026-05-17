@@ -1,4 +1,5 @@
 export { ActivityRow } from './ActivityRow'
+export { AvatarFallback } from './AvatarFallback'
 export { Badge } from './Badge'
 export { BrandLogo } from './BrandLogo'
 export { Button } from './Button'
@@ -16,6 +17,7 @@ export { ChartLegend } from './ChartLegend'
 export { ChartPanel } from './ChartPanel'
 export { Checkbox } from '@/components/ui/checkbox'
 export { ChecklistItem } from './ChecklistItem'
+export { CodeValue } from './CodeValue'
 export {
   Command,
   CommandEmpty,
@@ -68,6 +70,8 @@ export { useInspectorId } from './inspectorId'
 export { Input } from '@/components/ui/input'
 export { Label } from '@/components/ui/label'
 export { KpiCard } from './KpiCard'
+export { ListPanel } from './ListPanel'
+export { ListRow } from './ListRow'
 export { MetricGrid } from './MetricGrid'
 export { MultiSelect } from './MultiSelect'
 export { MutedBlock } from './MutedBlock'
@@ -84,6 +88,7 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from './Popove
 export { ProgressBar } from './ProgressBar'
 export { Progress } from '@/components/ui/progress'
 export { ProgressRow } from './ProgressRow'
+export { PropertyGrid, PropertyItem } from './PropertyGrid'
 export { RangeInput } from './RangeInput'
 export {
   Select as RadixSelect,
@@ -137,4 +142,5 @@ export { Textarea } from '@/components/ui/textarea'
 export { ToggleGroup } from './ToggleGroup'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip'
 export { TooltipIconButton } from './TooltipIconButton'
+export { UnavailableState } from './UnavailableState'
 export { VirtualGrid } from './VirtualGrid'

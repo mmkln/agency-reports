@@ -8,7 +8,10 @@ import {
 import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
 import { canAccessClient } from '../policies/accessPolicy'
-import { isClientFileLinkVisibleToClient } from '../policies/visibilityPolicy'
+import {
+  isClientFileLinkArchivedVisibleToClient,
+  isClientFileLinkVisibleToClient,
+} from '../policies/visibilityPolicy'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -191,8 +194,36 @@ function groupByType(fileLinks) {
   }))
 }
 
+function isArchivedFileLink(fileLink) {
+  return fileLink.status === CLIENT_FILE_LINK_STATUSES.ARCHIVED
+}
+
+function getActiveFileLinks(fileLinks) {
+  return fileLinks.filter((fileLink) => !isArchivedFileLink(fileLink))
+}
+
+function countFileLinksByType(fileLinks, type) {
+  return fileLinks.filter((fileLink) => fileLink.type === type).length
+}
+
+function createClientFileLinkCounts(fileLinks) {
+  const activeFileLinks = getActiveFileLinks(fileLinks)
+
+  return {
+    all: activeFileLinks.length,
+    archived: fileLinks.filter(isArchivedFileLink).length,
+    brandAssets: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.BRAND_ASSET),
+    clientUploads: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.CLIENT_UPLOAD),
+    contractsAdmin: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.CONTRACT_ADMIN),
+    deliverables: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.DELIVERABLE),
+    reports: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.REPORT),
+    sharedLinks: countFileLinksByType(activeFileLinks, CLIENT_FILE_LINK_TYPES.SHARED_LINK),
+  }
+}
+
 export function listClientVisibleFileLinks({
   clientId,
+  includeArchived = false,
   projectId,
   repositories,
   viewer,
@@ -210,7 +241,8 @@ export function listClientVisibleFileLinks({
   const projectsById = getProjectMap(repositories)
   const reportsById = getReportMap(repositories)
   const fileLinks = (repositories.clientFileLinks?.listByClientId(normalizedClientId) ?? [])
-    .filter(isClientFileLinkVisibleToClient)
+    .filter((fileLink) => isClientFileLinkVisibleToClient(fileLink)
+      || (includeArchived && isClientFileLinkArchivedVisibleToClient(fileLink)))
     .map((fileLink) => mapClientFileLink({
       fileLink,
       projectsById,
@@ -238,6 +270,7 @@ export function getClientFilesLinksPage({
 }) {
   const result = listClientVisibleFileLinks({
     clientId,
+    includeArchived: true,
     projectId,
     repositories,
     viewer,
@@ -247,18 +280,12 @@ export function getClientFilesLinksPage({
     return result
   }
 
+  const activeFileLinks = getActiveFileLinks(result.fileLinks)
+
   return {
     ...result,
-    counts: {
-      all: result.fileLinks.length,
-      brandAssets: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.BRAND_ASSET).length,
-      clientUploads: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.CLIENT_UPLOAD).length,
-      contractsAdmin: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.CONTRACT_ADMIN).length,
-      deliverables: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.DELIVERABLE).length,
-      reports: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.REPORT).length,
-      sharedLinks: result.fileLinks.filter((fileLink) => fileLink.type === CLIENT_FILE_LINK_TYPES.SHARED_LINK).length,
-    },
-    groups: groupByType(result.fileLinks),
+    counts: createClientFileLinkCounts(result.fileLinks),
+    groups: groupByType(activeFileLinks),
     selectedProjectId: projectId ?? null,
   }
 }

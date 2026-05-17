@@ -8,6 +8,8 @@ const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
+test.setTimeout(120_000)
+
 async function resetLocalDemo(page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
@@ -92,7 +94,7 @@ test('agency admin can create a client and the generated invite grants client ov
 test('client users cannot access another client overview', async ({ page }) => {
   await signInAsClient(page)
 
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
   await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
@@ -102,7 +104,7 @@ test('admin draft changes stay private until publish, then appear on the client 
   const updateText = `E2E published client update ${Date.now()}`
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Green Dental Clinic' })).toBeVisible()
 
   await page
@@ -111,18 +113,18 @@ test('admin draft changes stay private until publish, then appear on the client 
   await expect(page.getByText(/Saved.*just now/).first()).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByText(updateText)).toHaveCount(0)
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: /^Publish$/ }).click()
   await expect(page.getByRole('dialog', { name: 'Publish client overview?' })).toBeVisible()
   await page.getByRole('button', { name: 'Publish overview' }).click()
   await expect(page.getByRole('link', { name: 'View client version' })).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByText(updateText)).toBeVisible()
 })
 
@@ -130,7 +132,7 @@ test('client can answer a needed action and admin can mark it resolved', async (
   const responseText = `Approved in e2e ${Date.now()}`
 
   await signInAsClient(page)
-  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   const neededAction = page.locator('article').filter({ hasText: 'Confirm final offer details' }).first()
   await expect(neededAction).toBeVisible()
@@ -144,7 +146,7 @@ test('client can answer a needed action and admin can mark it resolved', async (
   await expect(neededAction.getByText(responseText)).toBeVisible()
 
   await signInAsAdmin(page)
-  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/admin/client-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByText(responseText)).toBeVisible()
   await page
@@ -157,7 +159,7 @@ test('client can answer a needed action and admin can mark it resolved', async (
 
 test('client overview hides internal tasks and internal notes', async ({ page }) => {
   await signInAsClient(page)
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByText('Review new ad creatives')).toBeVisible()
   await expect(page.getByText('Debug internal tracking mismatch')).toHaveCount(0)

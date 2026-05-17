@@ -143,7 +143,7 @@ function createAdminViewer() {
 }
 
 describe('clientFilesLinksService', () => {
-  it('returns only visible active client files and links with safe metadata', () => {
+  it('returns visible active and archived client files and links with safe metadata for the library page', () => {
     const page = getClientFilesLinksPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
@@ -154,6 +154,7 @@ describe('clientFilesLinksService', () => {
     expect(page.fileLinks.map((fileLink) => fileLink.title)).toEqual([
       'Creative batch',
       'April report PDF',
+      'Archived contract',
     ])
     expect(page.fileLinks[0]).toMatchObject({
       projectName: 'May Campaign',
@@ -166,11 +167,25 @@ describe('clientFilesLinksService', () => {
     })
     expect(page.counts).toMatchObject({
       all: 2,
+      archived: 1,
       deliverables: 1,
       reports: 1,
     })
     expect(JSON.stringify(page)).not.toContain('Internal notes')
-    expect(JSON.stringify(page)).not.toContain('Archived contract')
+  })
+
+  it('keeps archived files out of active client previews by default', () => {
+    const result = listClientVisibleFileLinks({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(result.status).toBe('ready')
+    expect(result.fileLinks.map((fileLink) => fileLink.title)).toEqual([
+      'Creative batch',
+      'April report PDF',
+    ])
   })
 
   it('filters file links by project for project detail use', () => {

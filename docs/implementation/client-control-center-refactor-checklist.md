@@ -158,14 +158,14 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Add repository adapter methods for files/links if required.
 - [x] Create `src/pages/client/files-links`.
 - [x] Create `src/widgets/client-files-links`.
-- [ ] Build tabs:
+- [x] Build tabs:
   - [x] Deliverables
   - [x] Client uploads
   - [x] Reports
   - [x] Brand assets
   - [x] Shared links
   - [x] Contracts/admin
-  - [ ] Archived
+  - [x] Archived
 - [x] Build file/link cards.
 - [x] Enforce explicit client visibility.
 - [x] Add Overview files/links preview.
@@ -259,12 +259,12 @@ Mark items as complete only after the code, tests, and documentation for that it
 
 ## Phase 12 - Tests And Verification
 
-- [ ] Add or update domain tests for client isolation across all mature destinations.
-- [ ] Add or update tests for hidden draft reports.
-- [ ] Add or update tests for hidden draft/WIP dashboards.
-- [ ] Add or update tests for internal notes hidden from client read models.
-- [ ] Add or update tests for action visibility.
-- [ ] Add or update tests for project/work visibility.
+- [x] Add or update domain tests for client isolation across all mature destinations.
+- [x] Add or update tests for hidden draft reports.
+- [x] Add or update tests for hidden draft/WIP dashboards.
+- [x] Add or update tests for internal notes hidden from client read models.
+- [x] Add or update tests for action visibility.
+- [x] Add or update tests for project/work visibility.
 - [x] Add or update tests for request triage status.
 - [x] Add or update tests for updates visibility if implemented.
 - [x] Add or update tests for files/links visibility if implemented.
@@ -279,7 +279,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
-- [ ] Run browser/e2e verification when the mature client-facing workflows are implemented.
+- [x] Run browser/e2e verification when the mature client-facing workflows are implemented.
 
 Implemented domain coverage so far:
 
@@ -317,11 +317,11 @@ Implemented domain coverage so far:
 - [x] Action Needed owns client obligations.
 - [x] Projects owns visible workstreams.
 - [x] Reports & Dashboards owns current performance, source dashboard, and report archive.
-- [ ] Files & Links owns deliverables/resources.
+- [x] Files & Links owns deliverables/resources.
 - [ ] Requests owns client-initiated asks.
 - [ ] Updates owns curated history.
 - [ ] Settings owns client account controls.
-- [ ] No client route exposes internal notes, draft reports, WIP dashboards, internal task noise, workload, time spent, or profitability.
-- [ ] Domain services provide client-safe read models per page.
-- [ ] Pages are thin route composition layers.
-- [ ] Documentation, tests, and build are updated.
+- [x] No client route exposes internal notes, draft reports, WIP dashboards, internal task noise, workload, time spent, or profitability.
+- [x] Domain services provide client-safe read models per page.
+- [x] Pages are thin route composition layers.
+- [x] Documentation, tests, and build are updated.
