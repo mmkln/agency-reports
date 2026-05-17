@@ -4,7 +4,10 @@ import {
   Skeleton,
 } from '@/shared/ui'
 
-import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  ClinicClientPreviewLinks,
+} from '../../admin-client-workspace'
 import { useAdminClinicReputationWorkflow } from '../useAdminClinicReputationWorkflow'
 import { ReputationSnapshotsCard } from './ReputationSnapshotsCard'
 
@@ -58,6 +61,20 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
         actions={(
           <>
             {saveState ? <span className="text-label text-text-muted">{saveState}</span> : null}
+            <ClinicClientPreviewLinks
+              clientId={page.client.id}
+              links={[
+                {
+                  href: '/admin/client-reputation-preview',
+                  label: 'Published reputation',
+                },
+                {
+                  href: '/admin/client-reputation-preview',
+                  label: 'Draft reputation',
+                  source: 'draft',
+                },
+              ]}
+            />
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>

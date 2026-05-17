@@ -2,6 +2,7 @@ import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientCallsBookingsPage } from '../../../domain/services/clinicClientService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 function HeaderActions({ latestUpdatedAt, metricCount }) {
   return (
@@ -18,11 +19,13 @@ function HeaderActions({ latestUpdatedAt, metricCount }) {
 
 export function ClientCallsBookingsPageHeader({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:calls-bookings-header:${clientId}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:calls-bookings-header:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientCallsBookingsPage({
       clientId,
       repositories,
+      source: previewSource,
       viewer: runtime.viewer,
     })),
   })

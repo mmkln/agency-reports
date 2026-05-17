@@ -173,6 +173,10 @@ describe('route role access', () => {
     const adminPreviewRouteIds = [
       'admin-client-preview',
       'admin-client-action-needed-preview',
+      'admin-client-patient-acquisition-preview',
+      'admin-client-calls-bookings-preview',
+      'admin-client-reputation-preview',
+      'admin-client-compliance-approvals-preview',
       'admin-client-projects-preview',
       'admin-client-reports-dashboards-preview',
       'admin-client-files-links-preview',

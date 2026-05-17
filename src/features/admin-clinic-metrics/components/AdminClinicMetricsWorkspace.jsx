@@ -4,7 +4,10 @@ import {
   Skeleton,
 } from '@/shared/ui'
 
-import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  ClinicClientPreviewLinks,
+} from '../../admin-client-workspace'
 import { useAdminClinicMetricsWorkflow } from '../useAdminClinicMetricsWorkflow'
 import { CallBookingMetricsCard } from './CallBookingMetricsCard'
 import { PatientAcquisitionMetricsCard } from './PatientAcquisitionMetricsCard'
@@ -60,6 +63,29 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
         actions={(
           <>
             {saveState ? <span className="text-label text-text-muted">{saveState}</span> : null}
+            <ClinicClientPreviewLinks
+              clientId={page.client.id}
+              links={[
+                {
+                  href: '/admin/client-patient-acquisition-preview',
+                  label: 'Published acquisition',
+                },
+                {
+                  href: '/admin/client-patient-acquisition-preview',
+                  label: 'Draft acquisition',
+                  source: 'draft',
+                },
+                {
+                  href: '/admin/client-calls-bookings-preview',
+                  label: 'Published calls',
+                },
+                {
+                  href: '/admin/client-calls-bookings-preview',
+                  label: 'Draft calls',
+                  source: 'draft',
+                },
+              ]}
+            />
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>

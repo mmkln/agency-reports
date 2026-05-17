@@ -3,14 +3,17 @@ import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import { ClientCallsBookingsView } from '../../../widgets/client-calls-bookings'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 export function ClientCallsBookingsPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-calls-bookings:${clientId}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-calls-bookings:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientCallsBookingsPage({
       clientId,
       repositories,
+      source: previewSource,
       viewer: runtime.viewer,
     })),
   })

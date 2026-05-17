@@ -2,6 +2,7 @@ import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientPatientAcquisitionPage } from '../../../domain/services/clinicClientService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 function HeaderActions({ latestUpdatedAt, snapshotCount }) {
   return (
@@ -18,11 +19,13 @@ function HeaderActions({ latestUpdatedAt, snapshotCount }) {
 
 export function ClientPatientAcquisitionPageHeader({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:patient-acquisition-header:${clientId}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:patient-acquisition-header:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientPatientAcquisitionPage({
       clientId,
       repositories,
+      source: previewSource,
       viewer: runtime.viewer,
     })),
   })

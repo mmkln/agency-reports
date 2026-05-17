@@ -2,6 +2,7 @@ import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientComplianceApprovalsPage } from '../../../domain/services/clinicClientService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 function HeaderActions({ approvalCount, latestUpdatedAt, reviewCount }) {
   return (
@@ -21,11 +22,13 @@ function HeaderActions({ approvalCount, latestUpdatedAt, reviewCount }) {
 
 export function ClientComplianceApprovalsPageHeader({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:compliance-approvals-header:${clientId}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:compliance-approvals-header:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientComplianceApprovalsPage({
       clientId,
       repositories,
+      source: previewSource,
       viewer: runtime.viewer,
     })),
   })

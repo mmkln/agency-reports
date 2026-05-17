@@ -4,7 +4,10 @@ import {
   Skeleton,
 } from '@/shared/ui'
 
-import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  ClinicClientPreviewLinks,
+} from '../../admin-client-workspace'
 import { useAdminClinicComplianceWorkflow } from '../useAdminClinicComplianceWorkflow'
 import { ComplianceReviewsCard } from './ComplianceReviewsCard'
 import { MedicalApprovalsCard } from './MedicalApprovalsCard'
@@ -61,6 +64,20 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
         actions={(
           <>
             {saveState ? <span className="text-label text-text-muted">{saveState}</span> : null}
+            <ClinicClientPreviewLinks
+              clientId={page.client.id}
+              links={[
+                {
+                  href: '/admin/client-compliance-approvals-preview',
+                  label: 'Published compliance',
+                },
+                {
+                  href: '/admin/client-compliance-approvals-preview',
+                  label: 'Draft compliance',
+                  source: 'draft',
+                },
+              ]}
+            />
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>

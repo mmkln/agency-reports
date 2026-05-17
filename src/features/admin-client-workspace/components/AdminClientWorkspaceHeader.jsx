@@ -96,6 +96,9 @@ const tabs = [
 
 const clientPreviewRoutesByPage = {
   overview: '/admin/client-preview',
+  'clinic-metrics': '/admin/client-patient-acquisition-preview',
+  'clinic-reputation': '/admin/client-reputation-preview',
+  'clinic-compliance': '/admin/client-compliance-approvals-preview',
   projects: '/admin/client-projects-preview',
   actions: '/admin/client-action-needed-preview',
   requests: '/admin/client-requests-preview',
