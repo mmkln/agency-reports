@@ -92,7 +92,6 @@ High-risk files by size and local component count:
 | --- | ---: | ---: | --- |
 | `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 426 | 5 | Extract import preview and issue list sections if touched. |
 | `src/features/admin-client-setup/components/CreateClientModal.jsx` | 396 | 10 | Extract form field groups and validation display. |
-| `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 383 | 1 | Move workflow state to a hook, as done for overview editor. |
 
 Recently resolved:
 
@@ -104,6 +103,7 @@ Recently resolved:
 | `src/pages/client/reports/ClientReportsPage.jsx` | 651-line duplicate archive/reader implementation | 27-line legacy redirect bridge into mature Reports & Dashboards. |
 | `src/widgets/client-reports-dashboards/ReportsDashboardsSections.jsx` | 477-line multi-section widget | 6-line export facade plus focused section files. |
 | `src/widgets/client-projects/ClientProjectsSections.jsx` | 379-line list/detail widget | 2-line export facade plus focused list/detail files. |
+| `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 361-line editor shell with local workflow state | 203-line composition shell plus `useAdminPerformanceDashboardEditorWorkflow`. |
 
 Fix direction:
 
