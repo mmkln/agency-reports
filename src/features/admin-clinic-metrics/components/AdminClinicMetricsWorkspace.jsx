@@ -11,6 +11,7 @@ import {
 import { useAdminClinicMetricsWorkflow } from '../useAdminClinicMetricsWorkflow'
 import { CallBookingMetricsCard } from './CallBookingMetricsCard'
 import { PatientAcquisitionMetricsCard } from './PatientAcquisitionMetricsCard'
+import { ServiceLinePerformanceCard } from './ServiceLinePerformanceCard'
 
 function ClinicMetricsLoadingState() {
   return (
@@ -84,6 +85,15 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
                   label: 'Draft calls',
                   source: 'draft',
                 },
+                {
+                  href: '/admin/client-service-lines-preview',
+                  label: 'Published services',
+                },
+                {
+                  href: '/admin/client-service-lines-preview',
+                  label: 'Draft services',
+                  source: 'draft',
+                },
               ]}
             />
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
@@ -118,7 +128,8 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
         >
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
             These records are the aggregate source for the client Patient Acquisition and Calls & Bookings pages.
-            They should describe patient demand, booked appointments, and front desk leakage without storing PHI.
+            They should describe patient demand, booked appointments, service-line performance, and front desk leakage
+            without storing PHI.
           </div>
 
           <PatientAcquisitionMetricsCard
@@ -130,6 +141,14 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             serviceLines={page.serviceLines}
           />
           <CallBookingMetricsCard
+            draft={draft}
+            isDirty={isDirty}
+            locations={page.locations}
+            onPublish={publishMetricRecord}
+            onUpdate={updateDraft}
+            serviceLines={page.serviceLines}
+          />
+          <ServiceLinePerformanceCard
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}

@@ -3,6 +3,7 @@ import {
   CLINIC_ACQUISITION_CHANNEL_META,
   CLINIC_APPROVAL_STATUS_META,
   CLINIC_APPROVAL_TYPE_META,
+  CLINIC_CAMPAIGN_STATUS_META,
   CLINIC_COMPLIANCE_STATUS_META,
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_RECORD_PUBLISH_STATES,
@@ -15,6 +16,7 @@ import {
   normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
+  normalizeServiceLinePerformance,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
@@ -200,6 +202,80 @@ function mapCallBookingMetric(metric, { locationsById, serviceLinesById }) {
     summary: normalizedMetric.summary,
     totalCalls: normalizedMetric.total_calls,
   }
+}
+
+function mapServiceLinePerformance(performance, { locationsById, serviceLinesById }) {
+  const normalizedPerformance = normalizeServiceLinePerformance(performance)
+
+  return {
+    adApprovalStatus: normalizedPerformance.ad_approval_status,
+    bookedAppointments: normalizedPerformance.booked_appointments,
+    bookingRate: divide(normalizedPerformance.booked_appointments, normalizedPerformance.inquiries),
+    campaignName: normalizedPerformance.campaign_name,
+    campaignStatus: normalizedPerformance.campaign_status,
+    campaignStatusMeta: CLINIC_CAMPAIGN_STATUS_META[normalizedPerformance.campaign_status],
+    capacityNote: normalizedPerformance.capacity_note,
+    clientId: normalizedPerformance.client_id,
+    complianceStatus: normalizedPerformance.compliance_status,
+    complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META[normalizedPerformance.compliance_status],
+    costPerBookedAppointment: normalizedPerformance.cost_per_booked_appointment
+      || divide(normalizedPerformance.spend, normalizedPerformance.booked_appointments),
+    costPerInquiry: normalizedPerformance.cost_per_inquiry
+      || divide(normalizedPerformance.spend, normalizedPerformance.inquiries),
+    dataSource: normalizedPerformance.data_source,
+    id: normalizedPerformance.id,
+    inquiries: normalizedPerformance.inquiries,
+    insight: normalizedPerformance.insight,
+    landingPageStatus: normalizedPerformance.landing_page_status,
+    lastUpdatedAt: normalizedPerformance.last_updated_at,
+    location: normalizedPerformance.location_id ? locationsById.get(normalizedPerformance.location_id) ?? null : null,
+    locationId: normalizedPerformance.location_id,
+    periodEnd: normalizedPerformance.period_end,
+    periodLabel: normalizedPerformance.period_label,
+    periodStart: normalizedPerformance.period_start,
+    serviceLine: normalizedPerformance.service_line_id
+      ? serviceLinesById.get(normalizedPerformance.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedPerformance.service_line_id,
+    spend: normalizedPerformance.spend,
+    summary: normalizedPerformance.summary,
+  }
+}
+
+function createEmptyServiceLinePerformanceTotals() {
+  return {
+    bookedAppointments: 0,
+    inquiries: 0,
+    spend: 0,
+  }
+}
+
+function addServiceLinePerformanceTotals(total, performance) {
+  return {
+    bookedAppointments: total.bookedAppointments + performance.bookedAppointments,
+    inquiries: total.inquiries + performance.inquiries,
+    spend: total.spend + performance.spend,
+  }
+}
+
+function attachPerformanceToServiceLines(serviceLines, performanceRecords) {
+  return serviceLines.map((serviceLine) => {
+    const records = performanceRecords.filter((performance) => performance.serviceLineId === serviceLine.id)
+    const totals = records.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
+    const latestPerformance = records[0] ?? null
+
+    return {
+      ...serviceLine,
+      latestPerformance,
+      performanceRecords: records,
+      performanceTotals: {
+        ...totals,
+        bookingRate: divide(totals.bookedAppointments, totals.inquiries),
+        costPerBookedAppointment: divide(totals.spend, totals.bookedAppointments),
+        costPerInquiry: divide(totals.spend, totals.inquiries),
+      },
+    }
+  })
 }
 
 function createEmptyCallBookingTotals() {
@@ -440,14 +516,36 @@ export function getClientClinicServiceLinesPage(input) {
     return foundationPage
   }
 
+  const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
+  const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
+  const performanceRecords = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.serviceLinePerformance,
+    source: foundationPage.source,
+  })
+    .map((performance) => mapServiceLinePerformance(performance, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
+    ))
+  const serviceLines = attachPerformanceToServiceLines(foundationPage.serviceLines, performanceRecords)
+  const totals = performanceRecords.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
+
   return {
     client: foundationPage.client,
-    isEmpty: foundationPage.serviceLines.length === 0,
+    isEmpty: serviceLines.length === 0,
     locations: foundationPage.locations,
+    performanceRecords,
     profile: foundationPage.profile,
-    serviceLines: foundationPage.serviceLines,
+    serviceLines,
     source: foundationPage.source,
     status: 'ready',
+    totals: {
+      ...totals,
+      bookingRate: divide(totals.bookedAppointments, totals.inquiries),
+      costPerBookedAppointment: divide(totals.spend, totals.bookedAppointments),
+      costPerInquiry: divide(totals.spend, totals.inquiries),
+    },
   }
 }
 

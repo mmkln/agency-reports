@@ -46,6 +46,60 @@ export const CLINIC_ACQUISITION_CHANNEL_META = Object.freeze({
   [CLINIC_ACQUISITION_CHANNELS.OTHER]: { label: 'Other' },
 })
 
+export const CLINIC_CAMPAIGN_STATUSES = Object.freeze({
+  COMPLETED: 'completed',
+  COMPLIANCE_REVIEW: 'compliance_review',
+  LIMITED_BY_POLICY: 'limited_by_policy',
+  LIVE: 'live',
+  OPTIMIZING: 'optimizing',
+  PAUSED: 'paused',
+  PLANNED: 'planned',
+  WAITING_CLINIC_APPROVAL: 'waiting_clinic_approval',
+})
+
+export const CLINIC_CAMPAIGN_STATUS_META = Object.freeze({
+  [CLINIC_CAMPAIGN_STATUSES.PLANNED]: {
+    icon: 'circle',
+    label: 'Planned',
+    tone: 'neutral',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.WAITING_CLINIC_APPROVAL]: {
+    icon: 'clock',
+    label: 'Waiting clinic approval',
+    tone: 'yellow',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.COMPLIANCE_REVIEW]: {
+    icon: 'shieldCheck',
+    label: 'Compliance review',
+    tone: 'blue',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.LIVE]: {
+    icon: 'checkCircle2',
+    label: 'Live',
+    tone: 'green',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.LIMITED_BY_POLICY]: {
+    icon: 'triangleAlert',
+    label: 'Limited by policy',
+    tone: 'yellow',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.OPTIMIZING]: {
+    icon: 'clock',
+    label: 'Optimizing',
+    tone: 'blue',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.PAUSED]: {
+    icon: 'circlePause',
+    label: 'Paused',
+    tone: 'neutral',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.COMPLETED]: {
+    icon: 'checkCircle2',
+    label: 'Completed',
+    tone: 'green',
+  },
+})
+
 export const CLINIC_RECORD_PUBLISH_STATES = Object.freeze({
   DRAFT: 'draft',
   PUBLISHED: 'published',
@@ -400,6 +454,52 @@ export function normalizeCallBookingMetric(metric = {}) {
     summary: normalizeText(metric.summary),
     total_calls: normalizeNumber(metric.total_calls),
     updated_at: metric.updated_at ?? metric.created_at ?? null,
+  }
+}
+
+export function normalizeServiceLinePerformance(performance = {}) {
+  assertClinicAggregateRecord(performance, 'Service line performance')
+
+  return {
+    ad_approval_status: normalizeText(performance.ad_approval_status),
+    booked_appointments: normalizeNumber(performance.booked_appointments),
+    campaign_name: normalizeText(performance.campaign_name),
+    campaign_status: normalizeEnum(
+      performance.campaign_status,
+      CLINIC_CAMPAIGN_STATUSES,
+      CLINIC_CAMPAIGN_STATUSES.PLANNED,
+    ),
+    capacity_note: normalizeText(performance.capacity_note),
+    client_id: normalizeText(performance.client_id),
+    compliance_status: normalizeEnum(
+      performance.compliance_status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    cost_per_booked_appointment: normalizeNumber(performance.cost_per_booked_appointment),
+    cost_per_inquiry: normalizeNumber(performance.cost_per_inquiry),
+    created_at: performance.created_at ?? null,
+    data_source: normalizeNullableText(performance.data_source),
+    id: normalizeText(performance.id),
+    inquiries: normalizeNumber(performance.inquiries),
+    insight: normalizeText(performance.insight),
+    landing_page_status: normalizeText(performance.landing_page_status),
+    last_updated_at: performance.last_updated_at ?? performance.updated_at ?? performance.created_at ?? null,
+    location_id: normalizeNullableText(performance.location_id),
+    period_end: normalizeText(performance.period_end),
+    period_label: normalizeText(performance.period_label),
+    period_start: normalizeText(performance.period_start),
+    publish_state: normalizeEnum(
+      performance.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: performance.published_at ?? null,
+    published_by: normalizeNullableText(performance.published_by),
+    service_line_id: normalizeNullableText(performance.service_line_id),
+    spend: normalizeNumber(performance.spend),
+    summary: normalizeText(performance.summary),
+    updated_at: performance.updated_at ?? performance.created_at ?? null,
   }
 }
 

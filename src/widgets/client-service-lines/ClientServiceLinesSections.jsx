@@ -28,6 +28,17 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(value)
 }
 
+function formatPercent(value) {
+  if (!value) {
+    return 'Not set'
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 1,
+    style: 'percent',
+  }).format(value)
+}
+
 function formatChannel(value) {
   if (!value) {
     return 'Not set'
@@ -43,6 +54,8 @@ function ServiceLineCard({ serviceLine }) {
   const locationLabel = serviceLine.locations.length
     ? serviceLine.locations.map((location) => location.name).join(', ')
     : 'No location assigned'
+  const latestPerformance = serviceLine.latestPerformance
+  const performanceTotals = serviceLine.performanceTotals
 
   return (
     <article className="rounded-block bg-block p-block shadow-block">
@@ -51,11 +64,15 @@ function ServiceLineCard({ serviceLine }) {
           <div className="flex flex-wrap items-center gap-tag">
             <h3 className="text-ui font-medium text-text-primary">{serviceLine.name}</h3>
             <StatusBadge meta={serviceLine.statusMeta} />
+            {latestPerformance?.campaignStatusMeta ? <StatusBadge meta={latestPerformance.campaignStatusMeta} /> : null}
+            {latestPerformance?.complianceStatusMeta ? <StatusBadge meta={latestPerformance.complianceStatusMeta} /> : null}
           </div>
-          <p className="mt-2 text-body text-text-secondary">{serviceLine.capacityNote || 'Capacity note not set.'}</p>
+          <p className="mt-2 text-body text-text-secondary">
+            {latestPerformance?.summary || serviceLine.capacityNote || 'Capacity note not set.'}
+          </p>
         </div>
         <Badge className="w-fit border-control-border bg-fill text-text-secondary" variant="outline">
-          {formatChannel(serviceLine.primaryChannel)}
+          {latestPerformance?.campaignName || formatChannel(serviceLine.primaryChannel)}
         </Badge>
       </div>
 
@@ -63,6 +80,38 @@ function ServiceLineCard({ serviceLine }) {
         className="mt-5"
         columns={4}
         items={[
+          {
+            label: 'Spend',
+            value: formatCurrency(performanceTotals.spend),
+          },
+          {
+            label: 'Inquiries',
+            value: formatNumber(performanceTotals.inquiries),
+          },
+          {
+            label: 'Booked appointments',
+            value: formatNumber(performanceTotals.bookedAppointments),
+          },
+          {
+            label: 'Cost per booking',
+            value: formatCurrency(performanceTotals.costPerBookedAppointment),
+          },
+          {
+            label: 'Cost per inquiry',
+            value: formatCurrency(performanceTotals.costPerInquiry),
+          },
+          {
+            label: 'Conversion rate',
+            value: formatPercent(performanceTotals.bookingRate),
+          },
+          {
+            label: 'Landing page',
+            value: latestPerformance?.landingPageStatus || 'Not set',
+          },
+          {
+            label: 'Ad approval',
+            value: latestPerformance?.adApprovalStatus || 'Not set',
+          },
           {
             label: 'Target bookings',
             value: formatNumber(serviceLine.targetMonthlyBookings),

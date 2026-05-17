@@ -32,6 +32,7 @@ updates
 clinicProfiles
 clinicLocations
 clinicServiceLines
+serviceLinePerformance
 patientAcquisitionSnapshots
 callBookingMetrics
 neededFromClient
@@ -109,6 +110,7 @@ call_booking_metrics -> repositories.callBookingMetrics
 reputation_snapshots -> repositories.reputationSnapshots
 compliance_reviews -> repositories.complianceReviews
 medical_approvals -> repositories.medicalApprovals
+service_line_performance -> repositories.serviceLinePerformance
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports

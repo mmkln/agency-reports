@@ -476,6 +476,18 @@ export const routeDefinitions = [
     element: <ClientReputationPageRoute />,
   },
   {
+    path: '/admin/client-service-lines-preview',
+    id: 'admin-client-service-lines-preview',
+    label: 'Service Lines Preview',
+    pageTitle: 'Service Lines Preview',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    contentWidth: 'content',
+    header: ClientServiceLinesPageHeader,
+    showInNav: false,
+    iconName: 'stethoscope',
+    element: <ClientServiceLinesPageRoute />,
+  },
+  {
     path: '/admin/client-compliance-approvals-preview',
     id: 'admin-client-compliance-approvals-preview',
     label: 'Compliance & Approvals Preview',

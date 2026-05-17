@@ -161,7 +161,7 @@ Normalized output maps to `saveAdminClinicMetrics().input.callBookingMetrics`.
 
 ## Service Line Performance
 
-Use this for future Campaigns / Service Lines reporting. It is aggregate-only and not yet persisted as a first-class record in the MVP; the normalized contract is ready for the future `ServiceLinePerformance` entity.
+Use this for Campaigns / Service Lines reporting. It is aggregate-only and persists as the `ServiceLinePerformance` source record.
 
 ```json
 {
@@ -325,5 +325,5 @@ The domain normalizer:
 - normalizes numbers and enums before data reaches admin save workflows
 - forces imported rows to draft publish state
 - produces admin workflow input shapes for metrics, reputation, and compliance
-- keeps service-line performance normalized but unpersisted until its entity exists
+- normalizes service-line performance for the `service_line_performance` repository
 ```

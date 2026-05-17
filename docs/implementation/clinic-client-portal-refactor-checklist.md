@@ -52,14 +52,14 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `PatientAcquisitionSnapshot`.
 - [ ] Add `BookingPipelineSnapshot`.
 - [x] Add `CallBookingMetric`.
-- [ ] Add `ServiceLinePerformance`.
+- [x] Add `ServiceLinePerformance`.
 - [ ] Add `LocationPerformance`.
 - [x] Add `ReputationSnapshot`.
 - [x] Add `ComplianceReview`.
 - [x] Add `MedicalApproval`.
 - [x] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
 - [x] Add repository adapter methods for clinic entities.
-- [ ] Add seed data for at least one clinic with:
+- [x] Add seed data for at least one clinic with:
   - [x] multiple service lines
   - [x] at least one location
   - [x] acquisition metrics
@@ -150,28 +150,28 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `/client/service-lines` or `/client/campaigns-service-lines` route.
 - [x] Add `getClientServiceLinesPage` domain service.
 - [x] Add `widgets/client-service-lines`.
-- [ ] Build service line cards/table with:
+- [x] Build service line cards/table with:
   - [x] status
-  - [ ] spend
-  - [ ] inquiries
-  - [ ] booked appointments
-  - [ ] cost per inquiry
-  - [ ] cost per booked appointment
-  - [ ] conversion rate
-  - [ ] landing page status
-  - [ ] ad approval status
-  - [ ] compliance status
+  - [x] spend
+  - [x] inquiries
+  - [x] booked appointments
+  - [x] cost per inquiry
+  - [x] cost per booked appointment
+  - [x] conversion rate
+  - [x] landing page status
+  - [x] ad approval status
+  - [x] compliance status
   - [x] capacity note
   - [x] location breakdown
-- [ ] Add campaign statuses:
-  - [ ] planned
-  - [ ] waiting_clinic_approval
-  - [ ] compliance_review
-  - [ ] live
-  - [ ] limited_by_policy
-  - [ ] optimizing
-  - [ ] paused
-  - [ ] completed
+- [x] Add campaign statuses:
+  - [x] planned
+  - [x] waiting_clinic_approval
+  - [x] compliance_review
+  - [x] live
+  - [x] limited_by_policy
+  - [x] optimizing
+  - [x] paused
+  - [x] completed
 - [x] Decide whether generic `Projects` remains as secondary detail or redirects for clinic clients.
 - [ ] Add tests for service line/location filtering.
 

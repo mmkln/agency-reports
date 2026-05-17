@@ -2,6 +2,7 @@ import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientClinicServiceLinesPage } from '../../../domain/services/clinicClientService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 function HeaderActions({ locationCount, serviceLineCount }) {
   return (
@@ -18,11 +19,13 @@ function HeaderActions({ locationCount, serviceLineCount }) {
 
 export function ClientServiceLinesPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:service-lines-header:${clientId}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:service-lines-header:${clientId}:${previewSource}`,
     load: () => runtime.dataClient.read((repositories) => getClientClinicServiceLinesPage({
       clientId,
       repositories,
+      source: previewSource,
       viewer: runtime.viewer,
     })),
   })

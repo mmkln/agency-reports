@@ -6,6 +6,8 @@ export {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPE_META,
   CLINIC_APPROVAL_TYPES,
+  CLINIC_CAMPAIGN_STATUS_META,
+  CLINIC_CAMPAIGN_STATUSES,
   CLINIC_COMPLIANCE_STATUS_META,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_PROFILE_SPECIALTIES,
@@ -22,4 +24,5 @@ export {
   normalizePatientAcquisitionSnapshot,
   normalizeMedicalApproval,
   normalizeReputationSnapshot,
+  normalizeServiceLinePerformance,
 } from './model'

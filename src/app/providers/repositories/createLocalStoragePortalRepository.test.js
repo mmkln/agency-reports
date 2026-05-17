@@ -32,6 +32,7 @@ const seedData = Object.freeze({
   projects: [],
   reputation_snapshots: [],
   reports: [],
+  service_line_performance: [],
   tasks: [],
   updates: [],
 })
@@ -119,6 +120,7 @@ describe('createLocalStoragePortalRepository', () => {
         projects: [],
         reputation_snapshots: [],
         reports: [],
+        service_line_performance: [],
         tasks: [],
         updates: [],
       }),
@@ -187,6 +189,7 @@ describe('createLocalStoragePortalRepository', () => {
         projects: [],
         reputation_snapshots: [],
         reports: [],
+        service_line_performance: [],
         tasks: [],
         updates: [],
       }),
@@ -426,6 +429,28 @@ describe('createLocalStoragePortalRepository', () => {
     expect(reloadedRepository.complianceReviews.listByClientId(clientId)).toHaveLength(1)
     expect(reloadedRepository.medicalApprovals.findById(approval.id)).toMatchObject(approval)
     expect(reloadedRepository.medicalApprovals.listByClientId(clientId)).toHaveLength(1)
+  })
+
+  it('persists service line performance through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const performance = {
+      booked_appointments: 18,
+      campaign_status: 'live',
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '16161616-1616-4616-8616-161616161616',
+      inquiries: 27,
+      period_label: 'May 2026',
+      publish_state: 'draft',
+      service_line_id: '99999999-9999-4999-8999-999999999999',
+      spend: 2250,
+    }
+
+    repository.serviceLinePerformance.upsert(performance)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.serviceLinePerformance.findById(performance.id)).toMatchObject(performance)
+    expect(reloadedRepository.serviceLinePerformance.listByClientId(performance.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

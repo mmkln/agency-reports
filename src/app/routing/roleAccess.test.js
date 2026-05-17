@@ -176,6 +176,7 @@ describe('route role access', () => {
       'admin-client-patient-acquisition-preview',
       'admin-client-calls-bookings-preview',
       'admin-client-reputation-preview',
+      'admin-client-service-lines-preview',
       'admin-client-compliance-approvals-preview',
       'admin-client-projects-preview',
       'admin-client-reports-dashboards-preview',

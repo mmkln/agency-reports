@@ -22,6 +22,7 @@ const TABLE_NAMES = Object.freeze([
   'projects',
   'reputation_snapshots',
   'reports',
+  'service_line_performance',
   'medical_approvals',
   'tasks',
   'updates',
@@ -32,6 +33,7 @@ const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'medical_approvals',
   'patient_acquisition_snapshots',
   'reputation_snapshots',
+  'service_line_performance',
 ])
 
 function clone(value) {
@@ -258,6 +260,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     projects: createEntityRepository('projects', readSnapshot, writeSnapshot),
     reputationSnapshots: createEntityRepository('reputation_snapshots', readSnapshot, writeSnapshot),
     reports: createEntityRepository('reports', readSnapshot, writeSnapshot),
+    serviceLinePerformance: createEntityRepository('service_line_performance', readSnapshot, writeSnapshot),
     medicalApprovals: createEntityRepository('medical_approvals', readSnapshot, writeSnapshot),
     reset() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)

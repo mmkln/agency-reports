@@ -70,6 +70,7 @@ function createRepositories(initialClients, overrides = {}) {
     neededFromClient: createClientsRepository([]),
     projects: createClientsRepository([]),
     reports: createClientsRepository([]),
+    serviceLinePerformance: createClientsRepository([]),
     tasks: createClientsRepository([]),
     updates: createClientsRepository([]),
     ...overrides,
@@ -372,6 +373,13 @@ describe('adminClientService', () => {
           name: 'Dental Implants',
         },
       ]),
+      serviceLinePerformance: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '10101010-1010-4010-8010-101010101010',
+          service_line_id: '99999999-9999-4999-8999-999999999999',
+        },
+      ]),
     })
 
     expect(deleteAdminClient({
@@ -384,5 +392,6 @@ describe('adminClientService', () => {
     expect(repositories.clinicProfiles.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicLocations.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicServiceLines.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.serviceLinePerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
   })
 })

@@ -123,6 +123,10 @@ describe('clinicImportContractService', () => {
       inquiries: 19,
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
     })
+    expect(result.metricsInput.serviceLinePerformance[0]).toMatchObject({
+      campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
+      service_line_id: IDS.SERVICE_A,
+    })
     expect(result.reputationInput.reputationSnapshots[0]).toMatchObject({
       google_rating: 4.8,
       provider_profile_completeness: 92,

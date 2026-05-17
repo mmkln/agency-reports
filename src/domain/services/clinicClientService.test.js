@@ -4,6 +4,7 @@ import { CLIENT_TYPES } from '../../entities/client'
 import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
+  CLINIC_CAMPAIGN_STATUSES,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_ACQUISITION_CHANNELS,
@@ -33,6 +34,7 @@ const IDS = Object.freeze({
   REPUTATION: '99999999-9999-4999-8999-999999999999',
   COMPLIANCE_REVIEW: 'abababab-abab-4bab-8bab-abababababab',
   MEDICAL_APPROVAL: 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+  SERVICE_PERFORMANCE: 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
 })
 
 function createEntityRepository(records = []) {
@@ -163,6 +165,28 @@ function createRepositories(overrides = {}) {
         qualified_inquiries: 21,
         service_line_id: IDS.SERVICE_LINE,
         spend: 1860,
+      },
+    ]),
+    serviceLinePerformance: createEntityRepository([
+      {
+        booked_appointments: 18,
+        campaign_name: 'Implants search',
+        campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
+        client_id: IDS.CLIENT_A,
+        compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+        cost_per_booked_appointment: 125,
+        cost_per_inquiry: 83,
+        id: IDS.SERVICE_PERFORMANCE,
+        inquiries: 27,
+        landing_page_status: 'Live',
+        location_id: IDS.LOCATION,
+        period_end: '2026-05-31',
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
+        service_line_id: IDS.SERVICE_LINE,
+        spend: 2250,
       },
     ]),
     reputationSnapshots: createEntityRepository([
@@ -303,6 +327,74 @@ describe('clinicClientService', () => {
     expect(page.isEmpty).toBe(false)
     expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Dental Implants'])
     expect(page.locations.map((location) => location.name)).toEqual(['Main Clinic'])
+    expect(page.performanceRecords[0]).toMatchObject({
+      bookedAppointments: 18,
+      bookingRate: 18 / 27,
+      campaignName: 'Implants search',
+      campaignStatusMeta: {
+        label: 'Live',
+      },
+      complianceStatusMeta: {
+        label: 'Approved',
+      },
+      costPerBookedAppointment: 125,
+      costPerInquiry: 83,
+      serviceLine: expect.objectContaining({ name: 'Dental Implants' }),
+      spend: 2250,
+    })
+    expect(page.serviceLines[0]).toMatchObject({
+      latestPerformance: expect.objectContaining({
+        bookedAppointments: 18,
+        campaignStatus: CLINIC_CAMPAIGN_STATUSES.LIVE,
+      }),
+      performanceTotals: expect.objectContaining({
+        bookedAppointments: 18,
+        costPerBookedAppointment: 125,
+        costPerInquiry: 2250 / 27,
+        inquiries: 27,
+        spend: 2250,
+      }),
+    })
+  })
+
+  it('hides draft service line performance from client users and allows admin draft preview', () => {
+    const repositories = createRepositories({
+      serviceLinePerformance: createEntityRepository([
+        {
+          booked_appointments: 8,
+          campaign_status: CLINIC_CAMPAIGN_STATUSES.OPTIMIZING,
+          client_id: IDS.CLIENT_A,
+          id: IDS.SERVICE_PERFORMANCE,
+          inquiries: 11,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          service_line_id: IDS.SERVICE_LINE,
+          spend: 900,
+        },
+      ]),
+    })
+
+    const clientPage = getClientClinicServiceLinesPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })
+    const adminPreviewPage = getClientClinicServiceLinesPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+
+    expect(clientPage.performanceRecords).toEqual([])
+    expect(clientPage.serviceLines[0].latestPerformance).toBeNull()
+    expect(adminPreviewPage.source).toBe('draft')
+    expect(adminPreviewPage.performanceRecords[0]).toMatchObject({
+      bookedAppointments: 8,
+      campaignStatus: CLINIC_CAMPAIGN_STATUSES.OPTIMIZING,
+    })
   })
 
   it('returns aggregate patient acquisition totals and funnel data', () => {

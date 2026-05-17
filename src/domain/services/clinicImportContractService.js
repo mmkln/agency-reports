@@ -1,22 +1,13 @@
 import {
   CLINIC_ACQUISITION_CHANNELS,
+  CLINIC_CAMPAIGN_STATUSES,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_RECORD_PUBLISH_STATES,
   assertClinicAggregateRecord,
 } from '../../entities/clinic'
 
 export const CLINIC_IMPORT_CONTRACT_VERSION = 'clinic-import-v1'
-
-export const CLINIC_CAMPAIGN_STATUSES = Object.freeze({
-  COMPLETED: 'completed',
-  COMPLIANCE_REVIEW: 'compliance_review',
-  LIMITED_BY_POLICY: 'limited_by_policy',
-  LIVE: 'live',
-  OPTIMIZING: 'optimizing',
-  PAUSED: 'paused',
-  PLANNED: 'planned',
-  WAITING_CLINIC_APPROVAL: 'waiting_clinic_approval',
-})
+export { CLINIC_CAMPAIGN_STATUSES }
 
 const VALID_CHANNELS = new Set(Object.values(CLINIC_ACQUISITION_CHANNELS))
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
@@ -282,6 +273,8 @@ export function normalizeClinicImportPayload(payload = {}, { now = () => new Dat
   assertClinicAggregateRecord(payload, 'Clinic import payload')
 
   const fallbackPeriod = normalizeOptionalPeriod(payload)
+  const serviceLinePerformance = getArray(payload, ['service_line_performance', 'serviceLinePerformance'])
+    .map((record) => normalizeServiceLinePerformanceMetric(record, fallbackPeriod))
 
   return {
     clientId: requireText(payload.client_id ?? payload.clientId, 'Client ID'),
@@ -303,13 +296,13 @@ export function normalizeClinicImportPayload(payload = {}, { now = () => new Dat
         'patient_acquisition_snapshots',
         'patientAcquisitionMetrics',
       ]).map((record) => normalizePatientAcquisitionMetric(record, fallbackPeriod)),
+      serviceLinePerformance,
     },
     reputationInput: {
       reputationSnapshots: getArray(payload, ['reputation_snapshots', 'reputationSnapshots'])
         .map((record) => normalizeReputationSnapshot(record, fallbackPeriod)),
     },
-    serviceLinePerformance: getArray(payload, ['service_line_performance', 'serviceLinePerformance'])
-      .map((record) => normalizeServiceLinePerformanceMetric(record, fallbackPeriod)),
+    serviceLinePerformance,
     sourceSummary: normalizeText(payload.source_summary ?? payload.sourceSummary),
   }
 }

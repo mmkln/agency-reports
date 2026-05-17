@@ -5,6 +5,7 @@ import {
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
+  CLINIC_CAMPAIGN_STATUSES,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
@@ -17,6 +18,7 @@ import {
   normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
+  normalizeServiceLinePerformance,
 } from './model'
 
 describe('clinic entity model', () => {
@@ -118,6 +120,29 @@ describe('clinic entity model', () => {
     })
   })
 
+  it('normalizes aggregate service line performance records', () => {
+    expect(normalizeServiceLinePerformance({
+      booked_appointments: '18',
+      campaign_name: 'Implants search',
+      campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      cost_per_booked_appointment: '125',
+      cost_per_inquiry: '82',
+      inquiries: '27',
+      spend: '2250',
+    })).toMatchObject({
+      booked_appointments: 18,
+      campaign_name: 'Implants search',
+      campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      cost_per_booked_appointment: 125,
+      cost_per_inquiry: 82,
+      inquiries: 27,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+      spend: 2250,
+    })
+  })
+
   it('normalizes aggregate reputation snapshots', () => {
     expect(normalizeReputationSnapshot({
       gbp_updates: '4',
@@ -203,6 +228,14 @@ describe('clinic entity model', () => {
     expect(normalizeComplianceReview({
       status: 'legal_hold',
     }).status).toBe(CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED)
+
+    expect(normalizeServiceLinePerformance({
+      campaign_status: 'approved_to_launch',
+      compliance_status: 'legal_hold',
+    })).toMatchObject({
+      campaign_status: CLINIC_CAMPAIGN_STATUSES.PLANNED,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    })
 
     expect(normalizeMedicalApproval({
       approval_type: 'unknown',

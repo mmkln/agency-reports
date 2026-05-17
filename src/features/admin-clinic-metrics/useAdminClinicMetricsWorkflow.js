@@ -4,6 +4,7 @@ import {
   getAdminClinicMetricsPage,
   publishCallBookingMetric,
   publishPatientAcquisitionSnapshot,
+  publishServiceLinePerformance,
   saveAdminClinicMetrics,
 } from '../../domain/services/adminClinicMetricsService'
 import { useToast } from '../../shared/notifications'
@@ -16,6 +17,7 @@ function createDraft(page) {
   return {
     callBookingMetrics: page.callBookingMetrics.map((metric) => ({ ...metric })),
     patientAcquisitionSnapshots: page.patientAcquisitionSnapshots.map((snapshot) => ({ ...snapshot })),
+    serviceLinePerformance: page.serviceLinePerformance.map((performance) => ({ ...performance })),
   }
 }
 
@@ -31,6 +33,7 @@ function createInitialState() {
 const PUBLISH_SERVICES = Object.freeze({
   call_booking: publishCallBookingMetric,
   patient_acquisition: publishPatientAcquisitionSnapshot,
+  service_line_performance: publishServiceLinePerformance,
 })
 
 export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {

@@ -260,6 +260,8 @@ export function deleteAdminClient({
   repositories.clinicProfiles?.listByClientId(clientId).forEach((record) => repositories.clinicProfiles.deleteById(record.id))
   repositories.clinicLocations?.listByClientId(clientId).forEach((record) => repositories.clinicLocations.deleteById(record.id))
   repositories.clinicServiceLines?.listByClientId(clientId).forEach((record) => repositories.clinicServiceLines.deleteById(record.id))
+  repositories.serviceLinePerformance?.listByClientId(clientId)
+    .forEach((record) => repositories.serviceLinePerformance.deleteById(record.id))
   repositories.clients.deleteById(clientId)
 
   return true
