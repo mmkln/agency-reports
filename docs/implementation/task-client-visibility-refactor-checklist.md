@@ -589,14 +589,17 @@ client_user must not read Task directly as the client-facing work contract.
 
 **Result:** There is one mature path for client-facing active work.
 
+**Audit map:** `docs/implementation/task-client-visibility-legacy-coupling-audit.md`
+
 ### Tasks
 
-- [ ] Search for direct client-facing task usage:
-  - [ ] `client_visible`
-  - [ ] `visibility === VISIBILITY.CLIENT_VISIBLE`
-  - [ ] `client_safe_summary`
-  - [ ] `ActiveTasksBlock`
-  - [ ] `VisibleTasksManager`
+- [x] Search for direct client-facing task usage:
+  - [x] `client_visible`
+  - [x] `visibility === VISIBILITY.CLIENT_VISIBLE`
+  - [x] `client_safe_summary`
+  - [x] `ActiveTasksBlock`
+  - [x] `VisibleTasksManager`
+- [x] Document which legacy references are migration support vs cleanup targets.
 - [ ] Remove or migrate client-facing task filters from client services.
 - [ ] Rename components where needed:
   - [ ] `ActiveTasksBlock` -> `ActiveWorkBlock` or equivalent.
