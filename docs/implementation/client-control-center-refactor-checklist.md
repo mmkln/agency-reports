@@ -60,7 +60,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 
 ## Phase 2 - Page Read Models
 
-- [ ] Add or rename domain service for `getClientOverviewPage`.
+- [x] Add or rename domain service for `getClientOverviewPage`.
 - [x] Add `getClientActionNeededPage`.
 - [x] Add `getClientProjectsPage`.
 - [x] Add `getClientProjectDetailPage`.
@@ -300,6 +300,7 @@ Implemented domain coverage so far:
 - [x] Admin request triage updates client-submitted request status and agency response with audit history.
 - [x] Settings isolation and membership-derived access/profile data.
 - [x] Mature client route pages use `runtime.dataClient.read` around domain read models instead of direct repository access.
+- [x] Mature dynamic client route headers use `runtime.dataClient.read` around domain read models instead of direct repository access.
 - [x] Client read models return composed page data for widgets instead of exposing raw persistence records to route pages.
 - [x] Overview cleanup keeps action responses, report archive, source dashboards, and file management on their owning destinations.
 
