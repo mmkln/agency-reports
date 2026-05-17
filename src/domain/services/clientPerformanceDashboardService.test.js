@@ -309,7 +309,9 @@ describe('clientPerformanceDashboardService', () => {
     expect(page.sourceLinks).toHaveLength(1)
     expect(page.latestReport.title).toBe('April Report')
     expect(page.neededFromClient.map((item) => item.title)).toEqual(['Approve creative batch'])
+    expect(page.workSummary.completedWorkItems.map((item) => item.title)).toEqual(['Launch first campaign structure'])
     expect(page.workSummary.completedTasks.map((task) => task.title)).toEqual(['Launch first campaign structure'])
+    expect(page.workSummary.activeWorkItems.map((item) => item.title)).toEqual(['Monitor CPL stability'])
     expect(page.workSummary.activeTasks.map((task) => task.title)).toEqual(['Monitor CPL stability'])
     expect(page.workSummary.recentUpdates.map((update) => update.title)).toEqual(['Weekly performance update'])
     expect(page.periods.map((period) => period.id)).toEqual([

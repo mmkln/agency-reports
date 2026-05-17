@@ -168,11 +168,11 @@ function createWorkSummary({ repositories, clientId }) {
   const publishedWorkItems = (repositories.clientWorkItems?.listByClientId(clientId) ?? [])
     .filter((item) => item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED)
     .sort(sortByUpdatedDesc)
-  const completedTasks = publishedWorkItems
+  const completedWorkItems = publishedWorkItems
     .filter((item) => item.status === CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
     .map(mapWorkItem)
-  const activeTasks = publishedWorkItems
+  const activeWorkItems = publishedWorkItems
     .filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
     .map(mapWorkItem)
@@ -183,8 +183,10 @@ function createWorkSummary({ repositories, clientId }) {
     .map(mapClientVisibleUpdate)
 
   return {
-    activeTasks,
-    completedTasks,
+    activeTasks: activeWorkItems,
+    activeWorkItems,
+    completedTasks: completedWorkItems,
+    completedWorkItems,
     recentUpdates,
   }
 }
