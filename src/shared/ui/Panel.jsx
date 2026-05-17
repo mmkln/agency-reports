@@ -41,5 +41,5 @@ export function PanelHeader({ action, children, divided = false, eyebrow, id, su
 export function PanelBody({ children, className = '', id }) {
   const inspectorId = useInspectorId('PanelBody', id)
 
-  return <CardContent id={inspectorId} className={cn('p-card', className)}>{children}</CardContent>
+  return <CardContent id={inspectorId} className={cn('px-card py-card', className)}>{children}</CardContent>
 }

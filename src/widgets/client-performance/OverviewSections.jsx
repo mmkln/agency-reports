@@ -61,7 +61,7 @@ export function MetricCard({ metric }) {
 export function ExecutiveSummaryHero({ dashboard, executiveSummary, heroMetric }) {
   return (
     <Panel className="bg-action-muted">
-      <PanelBody className="grid gap-6 p-6 lg:grid-cols-[0.9fr_1.35fr]">
+      <PanelBody className="grid gap-6 lg:grid-cols-[0.9fr_1.35fr]">
         <div className="rounded-block bg-block p-5 shadow-block">
           <p className="text-label text-action">{heroMetric?.label || 'Hero metric'}</p>
           <strong className="mt-3 block text-display text-text-primary">{formatMetricValue(heroMetric)}</strong>

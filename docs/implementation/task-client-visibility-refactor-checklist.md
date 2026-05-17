@@ -372,7 +372,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] feedback.
   - [x] decision.
   - [x] other.
-- [ ] Update `neededFromClientService.js`:
+- [x] Update `neededFromClientService.js`:
   - [x] create request from task.
   - [x] create request from client work item.
   - [x] link existing request to task.
@@ -380,12 +380,12 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] list open requests for work item.
   - [x] list waiting-client tasks without requests.
 - [x] Ensure client response does not mutate internal `Task.status` directly.
-- [ ] Add admin/team processing flow:
-  - [ ] client responds.
-  - [ ] agency reviews/processes response.
-  - [ ] agency resolves request.
-  - [ ] agency manually updates linked internal task if work can continue.
-- [ ] Add tests:
+- [x] Add admin/team processing flow:
+  - [x] client responds.
+  - [x] agency reviews/processes response.
+  - [x] agency resolves request.
+  - [x] agency manually updates linked internal task if work can continue.
+- [x] Add tests:
   - [x] waiting-client task can be linked to request.
   - [x] request can be linked to client work item.
   - [x] client sees own pending/answered requests only.
@@ -394,9 +394,9 @@ client_user must not read Task directly as the client-facing work contract.
 
 ### Completion Criteria
 
-- [ ] `waiting_client` is represented to the client through an action/request record.
-- [ ] Clients cannot edit internal task status.
-- [ ] Client Overview and Action Needed can show linked work/request context.
+- [x] `waiting_client` is represented to the client through an action/request record.
+- [x] Clients cannot edit internal task status.
+- [x] Client Overview and Action Needed can show linked work/request context.
 
 ## Phase 8 - Client Overview Refactor
 
@@ -664,7 +664,7 @@ This refactor is complete when:
 - [ ] Internal task notes cannot appear in client view models.
 - [ ] Agency team can prepare client-facing summaries without publishing by default.
 - [ ] Agency admin/account manager controls publish/archive.
-- [ ] `waiting_client` internal work is represented to clients through `NeededFromClient` / client requests.
-- [ ] Client responses do not directly mutate internal task status.
-- [ ] Admin review queues identify stale, missing-summary, waiting-client, blocked, and ready-for-review work.
+- [x] `waiting_client` internal work is represented to clients through `NeededFromClient` / client requests.
+- [x] Client responses do not directly mutate internal task status.
+- [x] Admin review queues identify stale, missing-summary, waiting-client, blocked, and ready-for-review work.
 - [ ] Tests cover role, visibility, publish, and client-request boundaries.

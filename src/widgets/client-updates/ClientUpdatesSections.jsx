@@ -136,7 +136,7 @@ function UpdateCard({ update }) {
 export function UpdatesSummary({ latestUpdate, updateCount }) {
   return (
     <Panel>
-      <PanelBody className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <p className="text-label text-text-muted">Updates</p>
           <h2 className="mt-2 text-heading text-text-primary">

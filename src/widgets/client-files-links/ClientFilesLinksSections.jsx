@@ -124,7 +124,7 @@ function FileLinkCard({ fileLink }) {
 export function FilesLinksSummary({ counts }) {
   return (
     <Panel>
-      <PanelBody className="grid gap-4 p-5 sm:grid-cols-4">
+      <PanelBody className="grid gap-4 sm:grid-cols-4">
         <div>
           <p className="text-label text-text-muted">All resources</p>
           <p className="mt-1 text-data text-text-primary">{counts.all}</p>

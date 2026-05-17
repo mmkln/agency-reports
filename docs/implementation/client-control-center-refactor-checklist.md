@@ -120,7 +120,8 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] completed
   - [x] cancelled
 - [x] Map existing `needed_from_client` records into the Action Needed read model.
-- [ ] Decide how internal `waiting_client` tasks create or reference client-facing actions.
+- [x] Decide how internal `waiting_client` tasks create or reference client-facing actions.
+  - Decision: internal tasks stay internal; agency admins create or link a `NeededFromClient` action using the task/work-item reference, and clients respond to that action rather than editing the task.
 - [x] Ensure client action responses do not directly mutate internal agency task status.
 - [x] Keep Overview as an urgent-action preview only.
 - [x] Keep Reports & Dashboards action references contextual only.
@@ -231,7 +232,7 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] recent update
   - [x] reports & dashboards preview
   - [x] files & links preview
-  - [ ] contact / ask question
+  - [x] contact / ask question
 - [x] Remove or avoid full analytics ownership from Overview.
 - [x] Remove or avoid full report archive ownership from Overview.
 - [x] Remove or avoid full request lifecycle ownership from Overview.

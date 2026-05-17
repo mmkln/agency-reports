@@ -35,7 +35,7 @@ function filterActions(actions, activeFilter) {
 export function ActionNeededSummary({ counts }) {
   return (
     <Panel>
-      <PanelBody className="grid gap-4 p-5 sm:grid-cols-3">
+      <PanelBody className="grid gap-4 sm:grid-cols-3">
         <div>
           <p className="text-label text-text-muted">Open</p>
           <p className="mt-1 text-data text-text-primary">{counts.open}</p>

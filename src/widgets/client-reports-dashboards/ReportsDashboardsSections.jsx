@@ -47,7 +47,7 @@ export function ResultsHeader({ page }) {
 
   return (
     <Panel>
-      <PanelBody className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <PanelBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <p className="text-label text-text-muted">Reports & Dashboards</p>
           <h2 className="mt-2 text-heading text-text-primary">{page.client.name}</h2>
@@ -61,7 +61,7 @@ export function ResultsHeader({ page }) {
           {sourceDashboard?.statusMeta ? <StatusBadge meta={sourceDashboard.statusMeta} /> : null}
         </div>
       </PanelBody>
-      <PanelBody className="grid gap-3 border-t border-separator px-5 py-4 md:grid-cols-3">
+      <PanelBody className="grid gap-3 border-t border-separator md:grid-cols-3">
         <div>
           <p className="text-label text-text-muted">Current period</p>
           <p className="mt-1 text-ui text-text-primary">
