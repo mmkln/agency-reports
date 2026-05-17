@@ -4,6 +4,10 @@ Status: MVP-complete
 
 Date: 2026-05-09
 
+Refactor note, 2026-05-17:
+
+This report documents the original MVP acceptance state. The mature refactor replaces direct client-visible task exposure with published `ClientWorkItem` records, admin review/publish workflow, and explicit needed-from-client records. Treat rows that mention client-visible tasks as historical implementation evidence, not the current target architecture. Current refactor tracking lives in `docs/implementation/task-client-visibility-refactor-checklist.md` and `docs/implementation/task-client-visibility-legacy-coupling-audit.md`.
+
 ## Scope
 
 UC-001 delivers the client-facing status hub plus the minimum admin/team workflows required to keep that hub accurate while the project still uses localStorage as a repository adapter.
@@ -32,9 +36,9 @@ The implementation intentionally does not build chat, approvals, native analytic
 | `agency_admin` can set client status | `AdminClientOverviewEditor` writes client status through `saveAdminClientOverview`. |
 | `agency_admin` can add current focus | Admin overview editor stores up to three focus items on the client record. |
 | `agency_admin` can create projects | Admin overview editor upserts projects with progress and dates. |
-| `agency_admin` can create client-visible tasks | Admin overview editor upserts tasks with `visibility` and `client_visible`. |
+| `agency_admin` can create client-visible tasks | Historical MVP path: Admin overview editor upserts tasks with `visibility` and `client_visible`. Mature path: admin publishes `ClientWorkItem` records through the review layer. |
 | `agency_team` can update assigned task status | `updateAssignedTask` enforces `taskPolicy` transitions and persists task changes. |
-| Internal tasks are hidden from `client_user` | `clientOverviewService` filters tasks through client-visible active-task rules. |
+| Internal tasks are hidden from `client_user` | Historical MVP path: `clientOverviewService` filters tasks through client-visible active-task rules. Mature path: client active work comes from published `ClientWorkItem` records. |
 | Internal notes are hidden from `client_user` | Client-facing services do not map `internal_note`; tests assert internal details are absent. |
 | `agency_admin` can add latest update | Admin overview editor upserts updates with visibility controls. |
 | `agency_admin` can add needed-from-client items | Admin overview editor upserts needed actions with due date/link/status. |

@@ -606,6 +606,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [ ] `VisibleTasksManager` -> review/work-item language.
   - [ ] task cards in client UI -> work item cards.
 - [ ] Remove deprecated task visibility assumptions from docs.
+  - [x] Mark UC-001 acceptance/implementation docs as historical where they describe task-based client visibility.
 - [ ] Keep legacy compatibility only where tests prove it is needed.
 - [ ] Add a migration note for localStorage seed/reset behavior.
 

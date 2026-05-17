@@ -18,6 +18,10 @@ docs/frontend-architecture.md
 docs/implementation/UC-001-local-storage-architecture.md
 ```
 
+Refactor note, 2026-05-17:
+
+This checklist records the original UC-001 MVP implementation. It is still useful as historical acceptance evidence, but direct task visibility is no longer the target architecture. Current active-work architecture is tracked in `docs/implementation/task-client-visibility-refactor-checklist.md`; legacy task coupling is mapped in `docs/implementation/task-client-visibility-legacy-coupling-audit.md`.
+
 ## Current Technical Assumption
 
 The project does not connect to a real backend yet.
@@ -100,7 +104,7 @@ Until backend integration exists:
 
 - [x] Implement `clientOverviewService`.
 - [x] Apply `canAccessClient` before returning overview data.
-- [x] Filter active client-visible tasks.
+- [x] Filter active client-visible tasks. Historical MVP path; mature active work now comes from published `ClientWorkItem` records.
 - [x] Hide internal tasks.
 - [x] Hide internal updates.
 - [x] Select latest client-visible update.
@@ -135,7 +139,7 @@ Required UI sections:
 - [x] `ClientOverviewHeader`
 - [x] `CurrentFocusBlock`
 - [x] `ProgressSummaryBlock`
-- [x] `ActiveTasksBlock`
+- [x] `ActiveTasksBlock` (historical component name; migrate to active-work language in the mature refactor)
 - [x] `LatestUpdateBlock`
 - [x] `NeededFromClientBlock`
 - [x] `DashboardOverviewBlock`
@@ -208,7 +212,7 @@ Required editor blocks:
 - [x] `ClientStatusEditor`
 - [x] `CurrentFocusEditor`
 - [x] `ProgressSummaryEditor`
-- [x] `VisibleTasksManager`
+- [x] `VisibleTasksManager` (historical editor name; mature flow uses admin review/client work item publishing)
 - [x] `LatestUpdateEditor`
 - [x] `NeededFromClientManager`
 - [x] `DashboardLinkManager`
@@ -222,7 +226,7 @@ Implementation tasks:
 - [x] Admin can add/edit/remove current focus items.
 - [x] Admin can create projects.
 - [x] Admin can set project progress.
-- [x] Admin can create client-visible tasks.
+- [x] Admin can create client-visible tasks. Historical MVP path; mature flow creates or publishes `ClientWorkItem` records.
 - [x] Admin can create internal tasks that are hidden from client.
 - [x] Admin can write latest client-facing update.
 - [x] Admin can add needed-from-client items.
@@ -270,7 +274,7 @@ Implementation tasks:
 
 **Acceptance check:**
 
-- [x] Task updates can change overview progress/status only through approved client-visible fields.
+- [x] Task updates can change overview progress/status only through approved client-visible fields. Historical MVP wording; mature flow lets task updates prepare reviewable client work but not publish directly.
 - [x] Internal operational complexity remains hidden.
 
 ---
@@ -364,7 +368,7 @@ Acceptance checklist from the use case:
 - [x] `agency_admin` can set client status.
 - [x] `agency_admin` can add current focus.
 - [x] `agency_admin` can create projects.
-- [x] `agency_admin` can create client-visible tasks.
+- [x] `agency_admin` can create client-visible tasks. Historical MVP path; mature architecture uses `ClientWorkItem` publishing.
 - [x] `agency_team` can update assigned task status.
 - [x] Internal tasks are hidden from `client_user`.
 - [x] Internal notes are hidden from `client_user`.
