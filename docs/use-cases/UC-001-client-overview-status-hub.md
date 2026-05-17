@@ -107,7 +107,7 @@ Responsibilities:
 - create clients
 - invite client users
 - create projects
-- create client-visible tasks
+- create or publish client-facing work items
 - publish client-facing updates
 - set client status
 - add dashboard links
@@ -129,7 +129,7 @@ Responsibilities:
 - update task statuses
 - add internal notes
 - mark blockers
-- suggest client-visible updates
+- suggest client-facing summaries for review
 - keep delivery progress current
 ```
 
@@ -298,7 +298,7 @@ A new client needs access to the portal, or an existing client needs an updated 
 | Decision | Options |
 | --- | --- |
 | Client status | `on_track` / `needs_attention` / `blocked` / `waiting_client` / `paused` |
-| Task visibility | `internal` / `client_visible` |
+| Work publish state | `draft` / `ready_for_review` / `published` / `archived` |
 | Dashboard provider | `looker_studio` / `agencyanalytics` / `databox` / `whatagraph` / `dashthis` / `swydo` / `reportgarden` / `oviond` / `custom` |
 | Report status | `draft` / `ready` / `published` / `archived` |
 | Needed action status | `pending` / `answered` / `resolved` / `cancelled` |
@@ -324,9 +324,9 @@ A team member progresses, completes, blocks, or updates an assigned task.
 4. agency_team updates task status.
 5. agency_team adds an internal note if needed.
 6. agency_team marks blocker if relevant.
-7. agency_team adds or suggests a client-visible update if allowed.
+7. agency_team adds or suggests a client-facing summary for admin review if allowed.
 8. agency_team saves changes.
-9. Client Overview updates only with client-visible information.
+9. Client Overview updates only after client-facing work is published.
 ```
 
 ### 8.3 Task Status Transitions
@@ -344,6 +344,7 @@ blocked -> in_progress
 
 ```text
 Internal notes and internal tasks must never appear in the client portal.
+Task updates may prepare reviewable client-facing work, but they do not publish client-visible active work by themselves.
 ```
 
 ### 8.5 Success State
@@ -686,7 +687,7 @@ AssignedTasksList
 TaskStatusEditor
 BlockerMarker
 InternalNoteEditor
-ClientVisibleToggle
+ClientWorkReviewState
 ```
 
 ## 15. Edge Cases
@@ -702,7 +703,7 @@ Expected availability: [date]
 
 Do not render an empty iframe.
 
-### 15.2 No Active Tasks
+### 15.2 No Active Work
 
 Show:
 
