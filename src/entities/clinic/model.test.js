@@ -104,6 +104,18 @@ describe('clinic entity model', () => {
         { count: '4', reason: 'No available slot' },
         { count: 0, reason: 'Ignored zero' },
       ],
+      peak_call_times: [
+        {
+          booked_from_calls: '5',
+          call_count: '11',
+          label: 'Weekdays 9-11 AM',
+          missed_calls: '2',
+        },
+        {
+          call_count: 0,
+          label: 'Ignored zero',
+        },
+      ],
       total_calls: '43',
     })).toMatchObject({
       answered_calls: 37,
@@ -115,6 +127,14 @@ describe('clinic entity model', () => {
       missed_calls: 6,
       no_response_leads: 3,
       not_booked_reasons: [{ count: 4, reason: 'No available slot' }],
+      peak_call_times: [
+        {
+          booked_from_calls: 5,
+          call_count: 11,
+          label: 'Weekdays 9-11 AM',
+          missed_calls: 2,
+        },
+      ],
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       total_calls: 43,
     })

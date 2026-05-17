@@ -55,6 +55,13 @@ describe('clinicImportContractService', () => {
               reason: 'No suitable appointment slot',
             },
           ],
+          peak_call_times: [
+            {
+              calls: '12',
+              label: 'Weekdays 9-11 AM',
+              missed_calls: '2',
+            },
+          ],
           total_calls: '41',
         },
       ],
@@ -113,6 +120,13 @@ describe('clinicImportContractService', () => {
         {
           count: 3,
           reason: 'No suitable appointment slot',
+        },
+      ],
+      peak_call_times: [
+        {
+          call_count: 12,
+          label: 'Weekdays 9-11 AM',
+          missed_calls: 2,
         },
       ],
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,

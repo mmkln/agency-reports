@@ -507,6 +507,20 @@ export const portalSeedData = Object.freeze({
         { count: 4, reason: 'No same-day slot available' },
         { count: 3, reason: 'Caller asked for unavailable pricing' },
       ],
+      peak_call_times: [
+        {
+          booked_from_calls: 9,
+          call_count: 16,
+          label: 'Weekdays 9-11 AM',
+          missed_calls: 4,
+        },
+        {
+          booked_from_calls: 7,
+          call_count: 12,
+          label: 'Weekdays 4-6 PM',
+          missed_calls: 2,
+        },
+      ],
       period_end: '2026-05-31',
       period_label: 'May 2026',
       period_start: '2026-05-01',
@@ -537,6 +551,20 @@ export const portalSeedData = Object.freeze({
       not_booked_reasons: [
         { count: 3, reason: 'Needed financing details' },
         { count: 2, reason: 'Consult availability did not match caller schedule' },
+      ],
+      peak_call_times: [
+        {
+          booked_from_calls: 5,
+          call_count: 9,
+          label: 'Weekdays 12-2 PM',
+          missed_calls: 2,
+        },
+        {
+          booked_from_calls: 4,
+          call_count: 7,
+          label: 'Weekdays 4-6 PM',
+          missed_calls: 1,
+        },
       ],
       period_end: '2026-05-31',
       period_label: 'May 2026',

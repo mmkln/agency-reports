@@ -151,6 +151,14 @@ Use this for call handling, front-desk leakage, and booking conversion.
       "count": 3
     }
   ],
+  "peak_call_times": [
+    {
+      "label": "Weekdays 9-11 AM",
+      "call_count": 12,
+      "missed_calls": 2,
+      "booked_from_calls": 5
+    }
+  ],
   "summary": "Missed calls remain the main booking leakage.",
   "insight": "Front desk response improved, but peak-hour coverage is still thin.",
   "data_source": "CallRail aggregate export"
@@ -287,6 +295,7 @@ Google Search Console:
 
 CallRail / Nimbata / WhatConverts:
 - calls_bookings_metrics: total calls, first-time calls, answered/missed calls, booked-from-call rollup
+- calls_bookings_metrics: peak call windows when the call platform provides aggregate time buckets
 - patient_acquisition_metrics: calls and qualified inquiries after aggregate source mapping
 
 Booking / scheduling source:

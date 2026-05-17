@@ -18,8 +18,13 @@ import {
   normalizeReputationSnapshot,
   normalizeServiceLinePerformance,
 } from '../../entities/clinic'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { listClientNeededActions } from './neededFromClientService'
 
 function sortRawByDisplayOrder(left, right) {
   return (left.display_order ?? 0) - (right.display_order ?? 0)
@@ -278,6 +283,12 @@ function mapCallBookingMetric(metric, { locationsById, serviceLinesById }) {
     missedRate: divide(normalizedMetric.missed_calls, normalizedMetric.total_calls),
     noResponseLeads: normalizedMetric.no_response_leads,
     notBookedReasons: normalizedMetric.not_booked_reasons,
+    peakCallTimes: normalizedMetric.peak_call_times.map((item) => ({
+      bookedFromCalls: item.booked_from_calls,
+      callCount: item.call_count,
+      label: item.label,
+      missedCalls: item.missed_calls,
+    })),
     periodEnd: normalizedMetric.period_end,
     periodLabel: normalizedMetric.period_label,
     periodStart: normalizedMetric.period_start,
@@ -433,6 +444,138 @@ function aggregateNotBookedReasons(metrics) {
   return [...reasonsByName.entries()]
     .map(([reason, count]) => ({ count, reason }))
     .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
+}
+
+function aggregatePeakCallTimes(metrics) {
+  const peakTimesByLabel = new Map()
+
+  metrics.forEach((metric) => {
+    metric.peakCallTimes.forEach((item) => {
+      const existingItem = peakTimesByLabel.get(item.label) ?? {
+        bookedFromCalls: 0,
+        callCount: 0,
+        label: item.label,
+        missedCalls: 0,
+      }
+
+      peakTimesByLabel.set(item.label, {
+        bookedFromCalls: existingItem.bookedFromCalls + item.bookedFromCalls,
+        callCount: existingItem.callCount + item.callCount,
+        label: item.label,
+        missedCalls: existingItem.missedCalls + item.missedCalls,
+      })
+    })
+  })
+
+  return [...peakTimesByLabel.values()]
+    .map((item) => ({
+      ...item,
+      bookingRate: divide(item.bookedFromCalls, item.callCount),
+      missedRate: divide(item.missedCalls, item.callCount),
+    }))
+    .sort((left, right) => (
+      right.callCount - left.callCount
+      || right.missedCalls - left.missedCalls
+      || left.label.localeCompare(right.label)
+    ))
+}
+
+function listOpenCallBookingActions({ clientId, metricIds, repositories, viewer }) {
+  if (!repositories.neededFromClient) {
+    return []
+  }
+
+  const actionsResult = listClientNeededActions({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (actionsResult.status === 'error') {
+    return []
+  }
+
+  return actionsResult.actions.filter((action) => (
+    action.relatedCallBookingMetricId
+      && metricIds.has(action.relatedCallBookingMetricId)
+      && ![
+        NEEDED_ACTION_STATUSES.CANCELLED,
+        NEEDED_ACTION_STATUSES.RESOLVED,
+      ].includes(action.status)
+  ))
+}
+
+function createCallBookingInsight({
+  actionType,
+  actions,
+  description,
+  id,
+  metricIds,
+  recommendation,
+  severity = 'watch',
+  title,
+  value,
+}) {
+  const relatedActions = actions.filter((action) => (
+    (!actionType || action.clinicActionType === actionType)
+      && (!metricIds?.size || metricIds.has(action.relatedCallBookingMetricId))
+  ))
+
+  return {
+    description,
+    id,
+    recommendation,
+    relatedActions,
+    severity,
+    title,
+    value,
+  }
+}
+
+function buildCallBookingOperationalInsights({ actions, metrics, totals }) {
+  const insights = []
+  const metricIds = new Set(metrics.map((metric) => metric.id))
+
+  if (totals.missedCalls > 0) {
+    insights.push(createCallBookingInsight({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      actions,
+      description: `${totals.missedCalls} tracked calls were missed in the selected view.`,
+      id: 'missed-calls',
+      metricIds,
+      recommendation: 'Confirm same-day callback coverage and missed-call follow-up ownership.',
+      severity: totals.missedRate >= 0.15 ? 'critical' : 'watch',
+      title: 'Missed calls are leaking patient demand',
+      value: totals.missedCalls,
+    }))
+  }
+
+  if (totals.averageResponseSeconds >= 120) {
+    insights.push(createCallBookingInsight({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+      actions,
+      description: `Average response time is ${Math.round(totals.averageResponseSeconds)} seconds.`,
+      id: 'slow-response',
+      metricIds,
+      recommendation: 'Review front-desk coverage and approve a short call handling script for high-intent services.',
+      title: 'Response time is slower than the booking target',
+      value: Math.round(totals.averageResponseSeconds),
+    }))
+  }
+
+  if (totals.noResponseLeads > 0 || totals.followUpNeededCount > 0) {
+    insights.push(createCallBookingInsight({
+      actions,
+      description: `${totals.noResponseLeads} form leads had no response and ${totals.followUpNeededCount} inquiries still need follow-up.`,
+      id: 'follow-up-gap',
+      metricIds,
+      recommendation: 'Confirm who owns follow-up and when unresolved inquiries should be escalated.',
+      title: 'Follow-up gaps need clinic ownership',
+      value: totals.noResponseLeads + totals.followUpNeededCount,
+    }))
+  }
+
+  return insights
 }
 
 function mapReputationSnapshot(snapshot, { locationsById }) {
@@ -780,6 +923,19 @@ export function getClientCallsBookingsPage(input) {
     ))
   const metrics = allMetrics.filter((metric) => matchesClinicRecordFilters(metric, filters))
   const rawTotals = metrics.reduce(addCallBookingTotals, createEmptyCallBookingTotals())
+  const totals = {
+    ...rawTotals,
+    answeredRate: divide(rawTotals.answeredCalls, rawTotals.totalCalls),
+    averageResponseSeconds: divide(rawTotals.responseSecondsWeightedTotal, rawTotals.totalCalls),
+    callBookingRate: divide(rawTotals.bookedFromCalls, rawTotals.totalCalls),
+    missedRate: divide(rawTotals.missedCalls, rawTotals.totalCalls),
+  }
+  const openCallBookingActions = listOpenCallBookingActions({
+    clientId: input.clientId,
+    metricIds: new Set(metrics.map((metric) => metric.id)),
+    repositories: input.repositories,
+    viewer: input.viewer,
+  })
 
   return {
     client: foundationPage.client,
@@ -797,17 +953,17 @@ export function getClientCallsBookingsPage(input) {
     locations: foundationPage.locations,
     metrics,
     notBookedReasons: aggregateNotBookedReasons(metrics),
+    operationalInsights: buildCallBookingOperationalInsights({
+      actions: openCallBookingActions,
+      metrics,
+      totals,
+    }),
+    peakCallTimes: aggregatePeakCallTimes(metrics),
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     source: foundationPage.source,
     status: 'ready',
-    totals: {
-      ...rawTotals,
-      answeredRate: divide(rawTotals.answeredCalls, rawTotals.totalCalls),
-      averageResponseSeconds: divide(rawTotals.responseSecondsWeightedTotal, rawTotals.totalCalls),
-      callBookingRate: divide(rawTotals.bookedFromCalls, rawTotals.totalCalls),
-      missedRate: divide(rawTotals.missedCalls, rawTotals.totalCalls),
-    },
+    totals,
   }
 }
 

@@ -140,10 +140,12 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] average response time
   - [x] no-response leads
   - [x] not-booked reasons
-  - [ ] peak call times
+  - [x] peak call times
 - [x] Add booking leakage summary.
 - [ ] Add clinic action creation/linking for missed-call or slow-response issues.
-- [ ] Add tests that missed-call insights do not expose patient-level data.
+  - [x] Link missed-call operational insights to existing clinic actions.
+  - [ ] Create suggested clinic actions from missed-call or slow-response thresholds.
+- [x] Add tests that missed-call insights do not expose patient-level data.
 
 ## Phase 6 - Campaigns / Service Lines
 

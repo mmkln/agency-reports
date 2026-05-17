@@ -9,6 +9,10 @@ import {
 } from '@/shared/ui'
 
 import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+import {
+  OperationalInsightsSection,
+  PeakCallTimesSection,
+} from './ClientCallsBookingsOperationalSections'
 
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(value || 0))
@@ -256,6 +260,10 @@ export function ClientCallsBookingsView({ page }) {
       </section>
 
       <LeakageSection page={page} />
+
+      <OperationalInsightsSection clientId={page.client.id} insights={page.operationalInsights} />
+
+      <PeakCallTimesSection peakCallTimes={page.peakCallTimes} />
 
       <Panel>
         <PanelHeader title="Service Line Call Handling" />

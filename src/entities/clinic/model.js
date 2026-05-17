@@ -420,6 +420,21 @@ function normalizeReasonBreakdown(items) {
     .filter((item) => item.reason && item.count > 0)
 }
 
+function normalizePeakCallTimes(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      booked_from_calls: normalizeNumber(item?.booked_from_calls ?? item?.bookedFromCalls),
+      call_count: normalizeNumber(item?.call_count ?? item?.calls ?? item?.count),
+      label: normalizeText(item?.label ?? item?.time_window ?? item?.timeWindow),
+      missed_calls: normalizeNumber(item?.missed_calls ?? item?.missedCalls),
+    }))
+    .filter((item) => item.label && item.call_count > 0)
+}
+
 export function normalizeCallBookingMetric(metric = {}) {
   assertClinicAggregateRecord(metric, 'Call booking metric')
 
@@ -440,6 +455,7 @@ export function normalizeCallBookingMetric(metric = {}) {
     missed_calls: normalizeNumber(metric.missed_calls),
     no_response_leads: normalizeNumber(metric.no_response_leads),
     not_booked_reasons: normalizeReasonBreakdown(metric.not_booked_reasons),
+    peak_call_times: normalizePeakCallTimes(metric.peak_call_times),
     period_end: normalizeText(metric.period_end),
     period_label: normalizeText(metric.period_label),
     period_start: normalizeText(metric.period_start),

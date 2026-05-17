@@ -217,6 +217,13 @@ describe('adminClinicMetricsService', () => {
                 reason: 'No suitable appointment slots',
               },
             ],
+            peak_call_times: [
+              {
+                call_count: 11,
+                label: 'Weekdays 9-11 AM',
+                missed_calls: 2,
+              },
+            ],
             period_end: '2026-05-31',
             period_label: 'May 2026',
             period_start: '2026-05-01',
@@ -286,6 +293,13 @@ describe('adminClinicMetricsService', () => {
       client_id: IDS.CLIENT_A,
       id: IDS.CALLS_A,
       location_id: IDS.LOCATION_A,
+      peak_call_times: [
+        {
+          call_count: 11,
+          label: 'Weekdays 9-11 AM',
+          missed_calls: 2,
+        },
+      ],
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
     })
     expect(page.serviceLinePerformance[0]).toMatchObject({

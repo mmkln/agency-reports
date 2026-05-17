@@ -138,6 +138,25 @@ function normalizeNotBookedReasons(items) {
     .filter((item) => item.reason && item.count > 0)
 }
 
+function normalizePeakCallTimes(items) {
+  if (items == null) {
+    return []
+  }
+
+  if (!Array.isArray(items)) {
+    throw new Error('Peak call times must be an array.')
+  }
+
+  return items
+    .map((item) => ({
+      booked_from_calls: normalizeNumber(item?.booked_from_calls ?? item?.bookedFromCalls, 'Peak booked calls'),
+      call_count: normalizeNumber(item?.call_count ?? item?.calls ?? item?.count, 'Peak call count'),
+      label: normalizeText(item?.label ?? item?.time_window ?? item?.timeWindow),
+      missed_calls: normalizeNumber(item?.missed_calls ?? item?.missedCalls, 'Peak missed calls'),
+    }))
+    .filter((item) => item.label && item.call_count > 0)
+}
+
 function normalizeCommonFields(record, fallbackPeriod, context) {
   return {
     ...normalizePeriod(record, fallbackPeriod, context),
@@ -186,6 +205,7 @@ function normalizeCallBookingMetric(record, fallbackPeriod) {
     missed_calls: normalizeNumber(record.missed_calls, 'Missed calls'),
     no_response_leads: normalizeNumber(record.no_response_leads, 'No-response leads'),
     not_booked_reasons: normalizeNotBookedReasons(record.not_booked_reasons),
+    peak_call_times: normalizePeakCallTimes(record.peak_call_times),
     total_calls: normalizeNumber(record.total_calls, 'Total calls'),
   }
 }

@@ -12,6 +12,7 @@ import {
   SelectItem,
   TextField,
 } from './MetricFields'
+import { CallPeakTimesEditor } from './CallPeakTimesEditor'
 
 function createBlankMetric() {
   return {
@@ -30,6 +31,7 @@ function createBlankMetric() {
     period_end: '',
     period_label: '',
     period_start: '',
+    peak_call_times: [],
     service_line_id: '',
     summary: '',
     total_calls: '',
@@ -191,6 +193,8 @@ export function CallBookingMetricsCard({
               <NumberField label="Follow-up needed" onChange={(value) => updateMetric(index, 'follow_up_needed_count', value)} value={metric.follow_up_needed_count} />
               <NumberField label="Average response seconds" onChange={(value) => updateMetric(index, 'average_response_seconds', value)} value={metric.average_response_seconds} />
             </div>
+
+            <CallPeakTimesEditor metric={metric} metricIndex={index} onUpdate={onUpdate} />
 
             <div className="grid gap-component md:grid-cols-2">
               <NotesField

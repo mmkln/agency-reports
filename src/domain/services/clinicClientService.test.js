@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_TYPES } from '../../entities/client'
 import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
+import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
   CLINIC_CAMPAIGN_STATUSES,
@@ -138,6 +143,20 @@ function createRepositories(overrides = {}) {
         not_booked_reasons: [
           { count: 4, reason: 'No available slot' },
           { count: 3, reason: 'Needed pricing details' },
+        ],
+        peak_call_times: [
+          {
+            booked_from_calls: 9,
+            call_count: 16,
+            label: 'Weekdays 9-11 AM',
+            missed_calls: 4,
+          },
+          {
+            booked_from_calls: 7,
+            call_count: 12,
+            label: 'Weekdays 4-6 PM',
+            missed_calls: 2,
+          },
         ],
         period_label: 'May 2026',
         period_start: '2026-05-01',
@@ -699,6 +718,48 @@ describe('clinicClientService', () => {
       { count: 4, reason: 'No available slot' },
       { count: 3, reason: 'Needed pricing details' },
     ])
+    expect(page.peakCallTimes[0]).toMatchObject({
+      bookingRate: 9 / 16,
+      callCount: 16,
+      label: 'Weekdays 9-11 AM',
+      missedCalls: 4,
+      missedRate: 4 / 16,
+    })
+    expect(page.operationalInsights.map((insight) => insight.id)).toEqual([
+      'missed-calls',
+      'follow-up-gap',
+    ])
+  })
+
+  it('links calls and bookings operational insights to open clinic actions', () => {
+    const page = getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        neededFromClient: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+            id: 'efefefef-efef-4fef-8fef-efefefefefef',
+            related_call_booking_metric_id: IDS.CALL_BOOKING,
+            status: NEEDED_ACTION_STATUSES.PENDING,
+            title: 'Confirm missed-call follow-up process',
+            type: NEEDED_ACTION_TYPES.DECISION,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.operationalInsights[0]).toMatchObject({
+      id: 'missed-calls',
+      relatedActions: [
+        expect.objectContaining({
+          clinicActionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+          relatedCallBookingMetricId: IDS.CALL_BOOKING,
+          title: 'Confirm missed-call follow-up process',
+        }),
+      ],
+    })
   })
 
   it('filters calls and bookings by location, service line, and reporting period', () => {
@@ -1097,7 +1158,13 @@ describe('clinicClientService', () => {
         {
           client_id: IDS.CLIENT_A,
           id: IDS.CALL_BOOKING,
-          patient_email: 'jane@example.com',
+          peak_call_times: [
+            {
+              call_count: 1,
+              label: 'Weekdays 9-11 AM',
+              patient_phone: '+1 555 0100',
+            },
+          ],
           publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
           total_calls: 1,
         },

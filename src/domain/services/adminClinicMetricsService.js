@@ -266,6 +266,7 @@ function buildCallBookingMetricRecord({
     missed_calls: normalizeNumber(input.missed_calls, 'Missed calls'),
     no_response_leads: normalizeNumber(input.no_response_leads, 'No-response leads'),
     not_booked_reasons: Array.isArray(input.not_booked_reasons) ? input.not_booked_reasons : [],
+    peak_call_times: Array.isArray(input.peak_call_times) ? input.peak_call_times : [],
     period_end: requireText(input.period_end, 'Call booking period end'),
     period_label: requireText(input.period_label, 'Call booking period label'),
     period_start: requireText(input.period_start, 'Call booking period start'),
