@@ -1,4 +1,5 @@
 import {
+  CLINIC_RECORD_PUBLISH_STATES,
   normalizeCallBookingMetric,
 } from '../../entities/clinic'
 import {
@@ -399,6 +400,10 @@ function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }
 
   if (client.type !== CLIENT_TYPES.CLINIC) {
     throw new Error('Clinic booking suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedMetric.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic booking suggestions can only be created from published metrics.')
   }
 
   return normalizedMetric

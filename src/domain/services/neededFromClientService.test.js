@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_TYPES } from '../../entities/client'
+import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
@@ -128,6 +129,7 @@ function createWorkflowRepositories(overrides = {}) {
         missed_calls: 7,
         no_response_leads: 3,
         period_label: 'May 2026',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
         service_line_id: IDS.SERVICE_LINE,
         total_calls: 38,
       },
@@ -557,6 +559,29 @@ describe('neededFromClientService', () => {
       suggestionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
       viewer: createAdminViewer(),
     })).toThrow('Clinic booking suggestions are only available for clinic clients.')
+  })
+
+  it('rejects clinic booking suggestion actions from draft metrics', () => {
+    const repositories = createWorkflowRepositories({
+      callBookingMetrics: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.CALL_BOOKING_METRIC,
+          missed_calls: 3,
+          period_label: 'May 2026',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          total_calls: 12,
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      viewer: createAdminViewer(),
+    })).toThrow('Clinic booking suggestions can only be created from published metrics.')
   })
 
   it('links existing needed actions to a task and client work item', () => {

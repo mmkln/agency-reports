@@ -13,6 +13,7 @@ import {
   TextField,
 } from './MetricFields'
 import { CallPeakTimesEditor } from './CallPeakTimesEditor'
+import { CallBookingSuggestedActionButtons } from './CallBookingSuggestedActionButtons'
 
 function createBlankMetric() {
   return {
@@ -51,9 +52,12 @@ function canPublishRecord(record, isDirty) {
 }
 
 export function CallBookingMetricsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -129,6 +133,13 @@ export function CallBookingMetricsCard({
                 </Button>
               </div>
             </div>
+            <CallBookingSuggestedActionButtons
+              createdActionKeys={createdActionKeys}
+              creatingActionKey={creatingActionKey}
+              isDirty={isDirty}
+              metric={metric}
+              onCreateSuggestedAction={onCreateSuggestedAction}
+            />
 
             <div className="grid gap-component md:grid-cols-3">
               <TextField

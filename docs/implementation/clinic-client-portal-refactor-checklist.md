@@ -146,7 +146,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] Link missed-call operational insights to existing clinic actions.
   - [x] Show suggested clinic actions when no linked action exists.
   - [x] Create domain workflow for suggested clinic booking actions from missed-call, slow-response, and follow-up thresholds.
-  - [ ] Add admin UI action button for suggested clinic booking actions.
+  - [x] Add admin UI action button for suggested clinic booking actions.
 - [x] Add tests that missed-call insights do not expose patient-level data.
 
 ## Phase 6 - Campaigns / Service Lines

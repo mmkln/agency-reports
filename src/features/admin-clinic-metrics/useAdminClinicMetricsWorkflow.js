@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import {
+  createNeededActionFromClinicBookingSuggestion,
+} from '../../domain/services/neededFromClientService'
+import {
   getAdminClinicMetricsPage,
   publishCallBookingMetric,
   publishPatientAcquisitionSnapshot,
@@ -39,6 +42,8 @@ const PUBLISH_SERVICES = Object.freeze({
 export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [createdBookingActionKeys, setCreatedBookingActionKeys] = useState(() => new Set())
+  const [creatingBookingActionKey, setCreatingBookingActionKey] = useState('')
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -52,6 +57,8 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setCreatedBookingActionKeys(new Set())
+        setCreatingBookingActionKey('')
         setIsDirty(false)
         setSaveState('')
 
@@ -188,7 +195,40 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
       })
   }
 
+  function createBookingSuggestionAction({ metricId, suggestionType }) {
+    const actionKey = `${metricId}:${suggestionType}`
+
+    setCreatingBookingActionKey(actionKey)
+    setSaveState('Creating action...')
+
+    runtime.dataClient.write((repositories) => createNeededActionFromClinicBookingSuggestion({
+      callBookingMetricId: metricId,
+      idGenerator: createUuid,
+      repositories,
+      suggestionType,
+      viewer: runtime.viewer,
+    }))
+      .then((action) => {
+        setCreatedBookingActionKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(actionKey)
+          return nextKeys
+        })
+        setCreatingBookingActionKey('')
+        setSaveState('Action created')
+        toast.success('Clinic action created', action.title)
+      })
+      .catch((caughtError) => {
+        setCreatingBookingActionKey('')
+        setSaveState('')
+        toast.error('Clinic action was not created', caughtError.message)
+      })
+  }
+
   return {
+    createdBookingActionKeys,
+    createBookingSuggestionAction,
+    creatingBookingActionKey,
     draft: state.draft,
     error: state.error,
     isDirty,

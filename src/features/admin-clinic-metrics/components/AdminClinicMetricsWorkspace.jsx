@@ -38,6 +38,9 @@ function ClinicMetricsErrorState({ message }) {
 export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const {
+    createdBookingActionKeys,
+    createBookingSuggestionAction,
+    creatingBookingActionKey,
     draft,
     error,
     isDirty,
@@ -141,9 +144,12 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             serviceLines={page.serviceLines}
           />
           <CallBookingMetricsCard
+            createdActionKeys={createdBookingActionKeys}
+            creatingActionKey={creatingBookingActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
+            onCreateSuggestedAction={createBookingSuggestionAction}
             onPublish={publishMetricRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
