@@ -3,6 +3,7 @@ import {
   Button,
   PrimitiveCard as Card,
   Separator,
+  StatusBadge,
   Textarea,
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
@@ -13,8 +14,10 @@ const taskFieldTextareaClass = 'resize-none border-transparent bg-control px-com
 
 function TeamTaskDetailsContent({
   blockerReasonError,
+  canSendToClientReview,
   draft,
   onChange,
+  onSendToClientReview,
   statusOptions,
   task,
 }) {
@@ -106,6 +109,49 @@ function TeamTaskDetailsContent({
           />
         </label>
 
+        <section className="grid gap-3">
+          <div className="flex flex-col gap-3 rounded-control bg-control px-3 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-2 text-ui text-text-primary">
+                <Icon className="text-text-quaternary" name="eye" size={14} />
+                Client review state
+              </span>
+              {task.clientWorkItem?.publishStateMeta ? (
+                <StatusBadge meta={task.clientWorkItem.publishStateMeta} />
+              ) : (
+                <Badge tone="neutral" variant="outline">Not queued</Badge>
+              )}
+            </div>
+            <div className="grid gap-1 text-ui text-text-secondary">
+              <p>
+                {task.clientWorkItem
+                  ? 'Linked to client-facing work. Admin controls publish and archive.'
+                  : 'No client-facing work item exists yet. Sending this creates a review item for Admin.'}
+              </p>
+              {task.clientWorkItem?.title ? (
+                <p className="text-text-muted">Client title: {task.clientWorkItem.title}</p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              {task.clientWorkItem?.statusMeta ? (
+                <StatusBadge meta={task.clientWorkItem.statusMeta} />
+              ) : (
+                <span className="text-label font-normal text-text-muted">Hidden from client until Admin publishes.</span>
+              )}
+              <Button
+                disabled={!canSendToClientReview}
+                icon={<Icon name="send" size={14} />}
+                onClick={onSendToClientReview}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {task.clientWorkItem ? 'Mark Ready' : 'Send to Review'}
+              </Button>
+            </div>
+          </div>
+        </section>
+
         <label className="grid gap-2">
           <span>
             <span className="inline-flex items-center gap-2 text-ui text-text-primary">
@@ -128,6 +174,7 @@ function TeamTaskDetailsContent({
 
 export function TeamTaskDetailPanel({
   blockerReasonError = false,
+  canSendToClientReview = false,
   draft,
   error,
   isDirty,
@@ -135,6 +182,7 @@ export function TeamTaskDetailPanel({
   onClose,
   onReset,
   onSave,
+  onSendToClientReview,
   saveState,
   statusOptions,
   task,
@@ -172,8 +220,10 @@ export function TeamTaskDetailPanel({
         <div className="min-h-0 overflow-y-auto">
           <TeamTaskDetailsContent
             blockerReasonError={blockerReasonError}
+            canSendToClientReview={canSendToClientReview}
             draft={draft}
             onChange={onChange}
+            onSendToClientReview={onSendToClientReview}
             statusOptions={statusOptions}
             task={task}
           />

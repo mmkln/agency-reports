@@ -13,6 +13,7 @@ import {
   listPublishedClientWorkItems,
   markClientWorkItemReadyForReview,
   publishClientWorkItem,
+  suggestClientWorkItemFromTask,
 } from './clientWorkItemService'
 
 const IDS = Object.freeze({
@@ -114,6 +115,22 @@ function createAdminViewer() {
   return {
     agencyId: IDS.AGENCY,
     role: USER_ROLES.AGENCY_ADMIN,
+    userId: IDS.USER,
+  }
+}
+
+function createClientViewer(clientIds = [IDS.CLIENT]) {
+  return {
+    clientIds,
+    role: USER_ROLES.CLIENT_USER,
+  }
+}
+
+function createTeamViewer(clientIds = [IDS.CLIENT]) {
+  return {
+    agencyId: IDS.AGENCY,
+    clientIds,
+    role: USER_ROLES.AGENCY_TEAM,
     userId: IDS.USER,
   }
 }
@@ -242,6 +259,89 @@ describe('clientWorkItemService', () => {
     })
   })
 
+  it('lets assigned team members send a task summary to admin review without publishing it', () => {
+    const repositories = createRepositories({
+      clientWorkItems: createEntityRepository([]),
+    })
+
+    const workItem = suggestClientWorkItemFromTask({
+      idGenerator: () => IDS.WORK,
+      now: () => '2026-05-17T10:30:00.000Z',
+      repositories,
+      taskId: IDS.TASK,
+      viewer: createTeamViewer(),
+    })
+
+    expect(workItem).toMatchObject({
+      clientId: IDS.CLIENT,
+      publishState: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+      publishedAt: null,
+      sourceTaskId: IDS.TASK,
+      summary: 'Task proposed summary.',
+      title: 'Review creatives',
+    })
+
+    const clientResult = listPublishedClientWorkItems({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(clientResult.workItems).toEqual([])
+
+    publishClientWorkItem({
+      now: () => '2026-05-17T11:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+      workItemId: IDS.WORK,
+    })
+
+    const publishedClientResult = listPublishedClientWorkItems({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(publishedClientResult.workItems.map((item) => item.title)).toEqual(['Review creatives'])
+  })
+
+  it('requires a client-safe summary before team members can send a task to admin review', () => {
+    const repositories = createRepositories({
+      clientWorkItems: createEntityRepository([]),
+      tasks: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          client_safe_summary: '',
+          due_date: '2026-05-20',
+          id: IDS.TASK,
+          project_id: IDS.PROJECT,
+          status: TASK_STATUSES.IN_PROGRESS,
+          title: 'Review creatives',
+        },
+      ]),
+    })
+
+    expect(() => suggestClientWorkItemFromTask({
+      idGenerator: () => IDS.WORK,
+      repositories,
+      taskId: IDS.TASK,
+      viewer: createTeamViewer(),
+    })).toThrow('Client-safe summary is required before sending work for review.')
+  })
+
+  it('blocks team members from suggesting work for unassigned clients', () => {
+    const repositories = createRepositories({
+      clientWorkItems: createEntityRepository([]),
+    })
+
+    expect(() => suggestClientWorkItemFromTask({
+      idGenerator: () => IDS.WORK,
+      repositories,
+      taskId: IDS.TASK,
+      viewer: createTeamViewer([IDS.OTHER_CLIENT]),
+    })).toThrow('Source task was not found.')
+  })
+
   it('lets team members mark assigned client work ready for review but not publish', () => {
     const repositories = createRepositories({
       clientWorkItems: createEntityRepository([
@@ -302,6 +402,70 @@ describe('clientWorkItemService', () => {
       publishedAt: '2026-05-17T11:00:00.000Z',
       publishedBy: IDS.USER,
     })
+  })
+
+  it('keeps client work hidden until publish and returns only client-safe fields', () => {
+    const repositories = createRepositories({
+      clientWorkItems: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.WORK,
+          project_id: IDS.PROJECT,
+          publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+          source_task_id: IDS.TASK,
+          status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+          summary: 'Client-safe progress summary.',
+          target_date: '2026-05-20',
+          title: 'Client-safe work',
+          updated_at: '2026-05-09T09:00:00.000Z',
+        },
+      ]),
+      tasks: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          client_safe_summary: 'Client-safe progress summary.',
+          due_date: '2026-05-20',
+          id: IDS.TASK,
+          internal_note: 'Private margin and delivery risk.',
+          project_id: IDS.PROJECT,
+          status: TASK_STATUSES.IN_PROGRESS,
+          title: 'Internal source task title',
+        },
+      ]),
+    })
+
+    const beforePublish = listPublishedClientWorkItems({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(beforePublish.workItems).toEqual([])
+
+    publishClientWorkItem({
+      now: () => '2026-05-17T11:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+      workItemId: IDS.WORK,
+    })
+
+    const afterPublish = listPublishedClientWorkItems({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(afterPublish.workItems).toHaveLength(1)
+    expect(afterPublish.workItems[0]).toMatchObject({
+      projectName: 'Campaign Setup',
+      summary: 'Client-safe progress summary.',
+      targetDate: '2026-05-20',
+      title: 'Client-safe work',
+    })
+    expect(afterPublish.workItems[0]).not.toHaveProperty('publishState')
+    expect(afterPublish.workItems[0]).not.toHaveProperty('sourceTask')
+    expect(JSON.stringify(afterPublish)).not.toContain('Private margin')
+    expect(JSON.stringify(afterPublish)).not.toContain('Internal source task title')
   })
 
   it('requires a safe summary before publishing', () => {

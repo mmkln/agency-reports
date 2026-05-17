@@ -1,4 +1,4 @@
-import { CardContent, PrimitiveCard as Card } from '@/shared/ui'
+import { CardContent, PrimitiveCard as Card, StatusBadge } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 import {
   formatTaskDueDate,
@@ -90,6 +90,9 @@ function TeamTaskRow({ isSelected = false, onOpenTask, task }) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3 lg:justify-end">
+            {task.clientWorkItem?.publishStateMeta ? (
+              <StatusBadge meta={task.clientWorkItem.publishStateMeta} />
+            ) : null}
             <TaskStatusBadge status={task.status} />
           </div>
         </div>

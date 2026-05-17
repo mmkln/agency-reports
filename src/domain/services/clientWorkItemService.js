@@ -131,6 +131,32 @@ function getEditableClientWorkItem({ repositories, viewer, workItemId }) {
   }
 }
 
+function canPrepareClientWorkItemFromTask({ client, task, viewer }) {
+  if (!client || !task || task.client_id !== client.id) {
+    return false
+  }
+
+  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
+    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
+  }
+
+  if (viewer?.role === USER_ROLES.AGENCY_TEAM) {
+    return canAccessClient(viewer, task.client_id)
+  }
+
+  return false
+}
+
+function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
+  return repositories.clientWorkItems
+    .list()
+    .map(normalizeClientWorkItem)
+    .find((item) => (
+      item.source_task_id === taskId
+      && item.publish_state !== CLIENT_WORK_ITEM_PUBLISH_STATES.ARCHIVED
+    )) ?? null
+}
+
 function normalizeEditableFields(input = {}, fallback = {}) {
   return {
     project_id: normalizeText(input.projectId ?? input.project_id ?? fallback.project_id),
@@ -357,6 +383,74 @@ export function createClientWorkItemFromTask({
     now,
     repositories,
     viewer,
+  })
+}
+
+export function suggestClientWorkItemFromTask({
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  taskId,
+  viewer,
+}) {
+  assertUuidGenerator(idGenerator)
+
+  const task = repositories.tasks.findById(taskId)
+
+  if (!task) {
+    throw new Error('Source task was not found.')
+  }
+
+  const client = repositories.clients.findById(task.client_id)
+
+  if (!canPrepareClientWorkItemFromTask({ client, task, viewer })) {
+    throw new Error('Source task was not found.')
+  }
+
+  const existingWorkItem = findActiveClientWorkItemBySourceTaskId({
+    repositories,
+    taskId: task.id,
+  })
+
+  if (existingWorkItem) {
+    throw new Error('Client work item already exists for this task.')
+  }
+
+  const summary = normalizeText(input.summary ?? task.client_safe_summary)
+
+  if (!summary) {
+    throw new Error('Client-safe summary is required before sending work for review.')
+  }
+
+  const timestamp = now()
+  const item = {
+    client_id: client.id,
+    created_at: timestamp,
+    id: createClientWorkItemId(idGenerator),
+    last_reviewed_at: timestamp,
+    publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+    published_at: null,
+    published_by: null,
+    updated_at: timestamp,
+    ...normalizeEditableFields({
+      clientId: task.client_id,
+      projectId: task.project_id,
+      sourceTaskId: task.id,
+      status: input.status ?? mapTaskStatusToClientWorkStatus(task.status),
+      summary,
+      targetDate: input.targetDate ?? task.due_date ?? '',
+      title: input.title ?? task.title,
+    }),
+  }
+
+  repositories.clientWorkItems.upsert(item)
+
+  return mapAdminWorkItem({
+    client,
+    item,
+    project: item.project_id ? repositories.projects.findById(item.project_id) : null,
+    sourceTask: task,
   })
 }
 

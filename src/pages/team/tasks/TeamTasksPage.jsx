@@ -103,6 +103,7 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
         {selectedTask ? (
           <TeamTaskDetailPanel
             blockerReasonError={updateTaskWorkflow.blockerReasonError}
+            canSendToClientReview={updateTaskWorkflow.canSendToClientReview}
             draft={updateTaskWorkflow.draft}
             error={updateTaskWorkflow.error}
             isDirty={updateTaskWorkflow.isDirty}
@@ -110,6 +111,7 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
             onClose={updateTaskWorkflow.close}
             onReset={updateTaskWorkflow.reset}
             onSave={updateTaskWorkflow.save}
+            onSendToClientReview={updateTaskWorkflow.sendToClientReview}
             saveState={updateTaskWorkflow.saveState}
             statusOptions={updateTaskWorkflow.statusOptions}
             task={selectedTask}

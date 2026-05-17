@@ -233,7 +233,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `publishClientWorkItem`
   - [x] `archiveClientWorkItem`
 - [ ] Add team operations:
-  - [ ] `suggestClientWorkItemFromTask`
+  - [x] `suggestClientWorkItemFromTask`
   - [ ] `updateDraftClientWorkItem` if allowed.
   - [x] `markReadyForReview` if allowed.
 - [ ] Add client operations:
@@ -479,10 +479,12 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] create needed-from-client request.
   - [x] preview as client.
 - [x] Use shared `PageHeader`, `PageShell`, controls, and design tokens.
-- [ ] Add UI tests or e2e:
-  - [ ] admin publishes client work item.
-  - [ ] client sees it after publish.
-  - [ ] client does not see it before publish.
+- [x] Add integration coverage:
+  - [x] admin publishes client work item.
+  - [x] client sees it after publish.
+  - [x] client does not see it before publish.
+  - [x] client read model excludes source task internals.
+- [ ] Add browser/e2e coverage after the parallel client IA routes settle.
 
 ### Completion Criteria
 
@@ -498,28 +500,28 @@ client_user must not read Task directly as the client-facing work contract.
 ### Tasks
 
 - [ ] Update task detail panel:
-  - [ ] show linked client work item state.
-  - [ ] allow proposed client summary where allowed.
-  - [ ] allow mark ready for review where allowed.
-  - [ ] show that admin publishes final client-facing content.
+  - [x] show linked client work item state.
+  - [x] allow proposed client summary where allowed.
+  - [x] allow mark ready for review where allowed.
+  - [x] show that admin publishes final client-facing content.
 - [ ] Update create task flow:
   - [ ] keep new tasks internal by default.
   - [ ] avoid asking for client-facing lifecycle choices unless creating a client work item intentionally.
 - [ ] Add task list indicators:
-  - [ ] has client work item.
-  - [ ] ready for review.
-  - [ ] published.
+  - [x] has client work item.
+  - [x] ready for review.
+  - [x] published.
   - [ ] missing client summary.
   - [ ] waiting on client without request.
 - [ ] Update filters:
   - [ ] client work state if useful.
   - [ ] ready for review if available to team.
   - [ ] waiting on client without request if useful.
-- [ ] Ensure agency_team cannot publish unless explicitly allowed.
+- [x] Ensure agency_team cannot publish unless explicitly allowed.
 - [ ] Add tests:
-  - [ ] team can draft/propose.
-  - [ ] team cannot publish by default.
-  - [ ] admin can publish proposed work.
+  - [x] team can draft/propose.
+  - [x] team cannot publish by default.
+  - [x] admin can publish proposed work.
 
 ### Completion Criteria
 
@@ -631,6 +633,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [ ] client_user never sees internal notes.
   - [ ] waiting-client task links to needed-from-client request.
   - [ ] client response does not mutate task status directly.
+- [x] Add domain integration coverage for client-work publish boundary and safe client read models.
 - [ ] Update acceptance/implementation docs with final status.
 - [ ] Update `docs/implementation/PROJECT-STATUS.md`.
 

@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
 
 import { getTaskStatusSelectionOptions } from '@/domain/policies/taskPolicy'
+import {
+  markClientWorkItemReadyForReview,
+  suggestClientWorkItemFromTask,
+} from '@/domain/services/clientWorkItemService'
 import { updateWorkspaceTask } from '@/domain/services/taskWorkspaceService'
 
 import {
@@ -9,6 +13,10 @@ import {
   TASK_UPDATE_VALIDATION_MESSAGES,
   validateTaskUpdateDraft,
 } from './taskUpdateDraft'
+
+function createUuid() {
+  return crypto.randomUUID()
+}
 
 export function useUpdateTaskWorkflow({
   onUpdated,
@@ -26,6 +34,13 @@ export function useUpdateTaskWorkflow({
   const [saveState, setSaveState] = useState('')
   const isDirty = isTaskUpdateDraftChanged(selectedTask, draft)
   const blockerReasonError = error === TASK_UPDATE_VALIDATION_MESSAGES.blockerReasonRequired
+  const canSendToClientReview = Boolean(
+    selectedTask
+    && !isDirty
+    && selectedTask.clientSafeSummary?.trim()
+    && !selectedTask.isPublishedToClient
+    && !selectedTask.isReadyForClientReview,
+  )
   const statusOptions = selectedTask
     ? getTaskStatusSelectionOptions({
       currentStatus: selectedTask.status,
@@ -106,8 +121,54 @@ export function useUpdateTaskWorkflow({
     }
   }
 
+  function sendToClientReview() {
+    try {
+      if (!selectedTask) {
+        return
+      }
+
+      if (isDirty) {
+        setError('')
+        setSaveState('Save task changes before sending this work to admin review.')
+        return
+      }
+
+      if (!selectedTask.clientSafeSummary?.trim()) {
+        setError('Client-safe update is required before sending this work to admin review.')
+        setSaveState('')
+        toast.warning('Client-safe update required', 'Add a short client-safe summary, save it, then send it for review.')
+        return
+      }
+
+      if (selectedTask.clientWorkItem?.id) {
+        markClientWorkItemReadyForReview({
+          repositories: runtime.repositories,
+          viewer: runtime.viewer,
+          workItemId: selectedTask.clientWorkItem.id,
+        })
+      } else {
+        suggestClientWorkItemFromTask({
+          idGenerator: createUuid,
+          repositories: runtime.repositories,
+          taskId: selectedTask.id,
+          viewer: runtime.viewer,
+        })
+      }
+
+      setError('')
+      setSaveState('Sent to admin review.')
+      toast.success('Sent to review', `${selectedTask.title} is queued for client-facing review.`)
+      onUpdated(selectedTask)
+    } catch (caughtError) {
+      setError(caughtError.message)
+      setSaveState('')
+      toast.error('Review action failed', caughtError.message)
+    }
+  }
+
   return {
     blockerReasonError,
+    canSendToClientReview,
     changeDraft,
     close,
     draft,
@@ -117,6 +178,7 @@ export function useUpdateTaskWorkflow({
     save,
     saveState,
     selectTask,
+    sendToClientReview,
     selectedTask,
     statusOptions,
   }
