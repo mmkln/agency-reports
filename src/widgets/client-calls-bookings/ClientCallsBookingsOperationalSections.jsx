@@ -120,6 +120,12 @@ export function OperationalInsightsSection({ clientId, insights }) {
                   </div>
                 ))}
               </div>
+            ) : insight.suggestedAction ? (
+              <div className="mt-5 rounded-control bg-surface-subtle p-3">
+                <p className="text-label text-text-muted">Recommended action</p>
+                <p className="mt-1 text-ui text-text-primary">{insight.suggestedAction.title}</p>
+                <p className="mt-1 text-body text-text-secondary">{insight.suggestedAction.description}</p>
+              </div>
             ) : null}
           </article>
         ))}

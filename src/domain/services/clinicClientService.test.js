@@ -729,6 +729,10 @@ describe('clinicClientService', () => {
       'missed-calls',
       'follow-up-gap',
     ])
+    expect(page.operationalInsights[0].suggestedAction).toMatchObject({
+      clinicActionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      title: 'Create missed-call follow-up action',
+    })
   })
 
   it('links calls and bookings operational insights to open clinic actions', () => {
@@ -759,7 +763,26 @@ describe('clinicClientService', () => {
           title: 'Confirm missed-call follow-up process',
         }),
       ],
+      suggestedAction: null,
     })
+  })
+
+  it('suggests calls and bookings actions without creating workflow records', () => {
+    const neededFromClient = createEntityRepository([])
+
+    const page = getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        neededFromClient,
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(neededFromClient.list()).toEqual([])
+    expect(page.operationalInsights.map((insight) => insight.suggestedAction?.clinicActionType)).toEqual([
+      CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+    ])
   })
 
   it('filters calls and bookings by location, service line, and reporting period', () => {

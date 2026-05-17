@@ -513,6 +513,7 @@ function createCallBookingInsight({
   metricIds,
   recommendation,
   severity = 'watch',
+  suggestedAction,
   title,
   value,
 }) {
@@ -527,6 +528,7 @@ function createCallBookingInsight({
     recommendation,
     relatedActions,
     severity,
+    suggestedAction: relatedActions.length ? null : suggestedAction ?? null,
     title,
     value,
   }
@@ -545,6 +547,11 @@ function buildCallBookingOperationalInsights({ actions, metrics, totals }) {
       metricIds,
       recommendation: 'Confirm same-day callback coverage and missed-call follow-up ownership.',
       severity: totals.missedRate >= 0.15 ? 'critical' : 'watch',
+      suggestedAction: {
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+        description: 'Ask the clinic to confirm who calls back missed patients, how quickly they respond, and how follow-up is tracked.',
+        title: 'Create missed-call follow-up action',
+      },
       title: 'Missed calls are leaking patient demand',
       value: totals.missedCalls,
     }))
@@ -558,6 +565,11 @@ function buildCallBookingOperationalInsights({ actions, metrics, totals }) {
       id: 'slow-response',
       metricIds,
       recommendation: 'Review front-desk coverage and approve a short call handling script for high-intent services.',
+      suggestedAction: {
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+        description: 'Ask the clinic to approve a call handling script or coverage plan for high-intent service lines.',
+        title: 'Create call handling approval action',
+      },
       title: 'Response time is slower than the booking target',
       value: Math.round(totals.averageResponseSeconds),
     }))
@@ -570,6 +582,11 @@ function buildCallBookingOperationalInsights({ actions, metrics, totals }) {
       id: 'follow-up-gap',
       metricIds,
       recommendation: 'Confirm who owns follow-up and when unresolved inquiries should be escalated.',
+      suggestedAction: {
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+        description: 'Ask the clinic to confirm the follow-up owner, escalation rule, and appointment availability for unresolved inquiries.',
+        title: 'Create follow-up ownership action',
+      },
       title: 'Follow-up gaps need clinic ownership',
       value: totals.noResponseLeads + totals.followUpNeededCount,
     }))

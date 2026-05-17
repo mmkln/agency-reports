@@ -144,6 +144,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add booking leakage summary.
 - [ ] Add clinic action creation/linking for missed-call or slow-response issues.
   - [x] Link missed-call operational insights to existing clinic actions.
+  - [x] Show suggested clinic actions when no linked action exists.
   - [ ] Create suggested clinic actions from missed-call or slow-response thresholds.
 - [x] Add tests that missed-call insights do not expose patient-level data.
 
