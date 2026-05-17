@@ -2,17 +2,16 @@ import {
   ClientRequestDialog,
   useClientRequestsWorkflow,
 } from '../../../features/client-requests'
+import { useNavigate } from 'react-router-dom'
 import { getClientRequestsPage } from '../../../domain/services/clientRequestsService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
-import {
-  ClientRequestsList,
-  ClientRequestsSummary,
-} from '../../../widgets/client-requests'
+import { ClientRequestsList } from '../../../widgets/client-requests'
 
 export function ClientRequestsPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const navigate = useNavigate()
   const requestsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:client-initiated-requests:${clientId}`,
     initialData: {
@@ -30,10 +29,22 @@ export function ClientRequestsPage({ routeParams = {}, runtime }) {
     })),
   })
   const page = requestsResource.data
+  function closeCreateRequestRoute() {
+    const nextParams = new URLSearchParams(routeParams)
+
+    nextParams.delete('newRequest')
+    navigate(
+      { search: nextParams.toString() ? `?${nextParams.toString()}` : '' },
+      { replace: true },
+    )
+  }
+
   const workflow = useClientRequestsWorkflow({
     clientId,
+    initiallyOpen: routeParams.newRequest === 'true',
     onCreated: () => {
       void requestsResource.reload()
+      closeCreateRequestRoute()
     },
     runtime,
   })
@@ -52,14 +63,16 @@ export function ClientRequestsPage({ routeParams = {}, runtime }) {
 
   return (
     <div className="grid gap-6">
-      <ClientRequestsSummary counts={page.counts} onCreate={workflow.openCreateDialog} />
       <ClientRequestsList counts={page.counts} requests={page.requests} />
       <ClientRequestDialog
         draft={workflow.requestDraft}
         error={workflow.requestError}
         isOpen={workflow.isCreateOpen}
         onChange={workflow.setRequestDraft}
-        onClose={workflow.closeCreateDialog}
+        onClose={() => {
+          workflow.closeCreateDialog()
+          closeCreateRequestRoute()
+        }}
         onSubmit={workflow.submitRequest}
         saveState={workflow.requestSaveState}
       />

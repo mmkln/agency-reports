@@ -8,7 +8,7 @@ import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import { Panel, PanelBody } from '@/shared/ui'
-import { ActionNeededInbox, ActionNeededSummary } from '../../../widgets/client-action-needed'
+import { ActionNeededInbox } from '../../../widgets/client-action-needed'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 
 function createUuid() {
@@ -101,13 +101,10 @@ export function ClientActionNeededPage({ routeParams = {}, runtime }) {
   }
 
   return (
-    <div className="grid gap-6">
-      <ActionNeededSummary counts={page.counts} />
-      <ActionNeededInbox
-        actions={page.actions}
-        counts={page.counts}
-        onAnswer={answerAction}
-      />
-    </div>
+    <ActionNeededInbox
+      actions={page.actions}
+      counts={page.counts}
+      onAnswer={answerAction}
+    />
   )
 }

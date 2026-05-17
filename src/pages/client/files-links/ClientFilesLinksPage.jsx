@@ -2,10 +2,7 @@ import { getClientFilesLinksPage } from '../../../domain/services/clientFilesLin
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
-import {
-  FilesLinksLibrary,
-  FilesLinksSummary,
-} from '../../../widgets/client-files-links'
+import { FilesLinksLibrary } from '../../../widgets/client-files-links'
 
 export function ClientFilesLinksPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
@@ -32,10 +29,5 @@ export function ClientFilesLinksPage({ routeParams = {}, runtime }) {
     return <AccessDeniedState />
   }
 
-  return (
-    <div className="grid gap-6">
-      <FilesLinksSummary counts={page.counts} />
-      <FilesLinksLibrary counts={page.counts} fileLinks={page.fileLinks} />
-    </div>
-  )
+  return <FilesLinksLibrary counts={page.counts} fileLinks={page.fileLinks} />
 }

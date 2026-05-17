@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  LabeledNote,
   StatusBadge,
   Textarea,
 } from '@/shared/ui'
@@ -114,11 +115,10 @@ export function ActionNeededDetailDialog({
               ) : null}
 
               {action.clientResponse ? (
-                <div className="rounded-control bg-action-muted px-3 py-2 text-ui text-action">
-                  <p className="font-semibold">Your response</p>
-                  <p className="mt-1">{action.clientResponse}</p>
-                  {action.respondedAt ? <p className="mt-1 text-label">Sent {formatActionDate(action.respondedAt)}</p> : null}
-                </div>
+                <LabeledNote label="Your response">
+                  <p>{action.clientResponse}</p>
+                  {action.respondedAt ? <p className="mt-micro text-label text-text-muted">Sent {formatActionDate(action.respondedAt)}</p> : null}
+                </LabeledNote>
               ) : null}
 
               {canRespond ? (
