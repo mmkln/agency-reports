@@ -90,7 +90,6 @@ High-risk files by size and local component count:
 
 | File | Lines | Component declarations | Recommended action |
 | --- | ---: | ---: | --- |
-| `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 426 | 5 | Extract import preview and issue list sections if touched. |
 | `src/features/admin-client-setup/components/CreateClientModal.jsx` | 396 | 10 | Extract form field groups and validation display. |
 
 Recently resolved:
@@ -104,6 +103,7 @@ Recently resolved:
 | `src/widgets/client-reports-dashboards/ReportsDashboardsSections.jsx` | 477-line multi-section widget | 6-line export facade plus focused section files. |
 | `src/widgets/client-projects/ClientProjectsSections.jsx` | 379-line list/detail widget | 2-line export facade plus focused list/detail files. |
 | `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 361-line editor shell with local workflow state | 203-line composition shell plus `useAdminPerformanceDashboardEditorWorkflow`. |
+| `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 405-line modal with embedded JSON examples | 171-line modal plus model-owned import examples. |
 
 Fix direction:
 
