@@ -71,7 +71,8 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Add `getClientSettingsPage` if settings is implemented as a real destination.
 - [x] Ensure every client page reads through `runtime.dataClient.read`.
 - [x] Ensure page services return client-safe view models rather than raw repository records.
-- [ ] Add access denied, empty, loading, and unavailable states for each page read model.
+- [x] Add access denied, empty, loading, and unavailable states for each page read model.
+  - Audited mature client pages: loading panels/skeletons live in route pages, access-denied uses the shared client state, empty states live in owning widgets, and unavailable states cover dashboard/report/settings fallbacks.
 - [x] Verify client isolation is enforced in each page read model.
 
 ## Phase 3 - Reports & Dashboards
@@ -253,8 +254,10 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] Updates
   - [x] Access
   - [x] Activity
-- [ ] Ensure admin can control every client-visible surface.
-- [ ] Ensure preview-as-client works for major destinations.
+- [x] Ensure admin can control every client-visible surface.
+  - Audited admin workspace routes for Overview, Projects, Actions, Requests, Reports & Dashboards, Files & Links, Updates, Access, and Activity.
+- [x] Ensure preview-as-client works for major destinations.
+  - Overview has published/draft preview, and dashboard/performance/report previews route into the mature Reports & Dashboards destination.
 - [x] Preserve publishing/draft boundaries for dashboards, reports, updates, and files.
 - [x] Update admin headers/actions to avoid isolated query-param pages where workspace context is needed.
 
