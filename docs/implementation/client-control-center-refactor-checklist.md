@@ -110,7 +110,7 @@ Mark items as complete only after the code, tests, and documentation for that it
   - [x] access needed
   - [x] question
   - [x] confirmation
-- [ ] Support action statuses:
+- [x] Support action statuses:
   - [x] pending
   - [x] due soon
   - [x] overdue
@@ -134,7 +134,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Create `src/widgets/client-projects`.
 - [x] Define `ClientVisibleWorkItem` mapping from existing projects/tasks.
 - [x] Build project list cards.
-- [ ] Build simple filters:
+- [x] Build simple filters:
   - [x] Active
   - [x] Waiting on me
   - [x] Completed
@@ -179,7 +179,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Define mature `ClientUpdate` read model.
 - [x] Decide which existing updates/activity events are displayable as curated updates.
 - [x] Build update feed filters or grouping.
-- [ ] Support update types:
+- [x] Support update types:
   - [x] weekly update
   - [x] milestone update
   - [x] launch update
