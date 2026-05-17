@@ -144,6 +144,11 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
+function getClientWorkItems({ clientId, repositories }) {
+  return repositories.clientWorkItems?.listByClientId?.(clientId)
+    ?.sort(sortByUpdatedDesc) ?? []
+}
+
 function readPublishedAdminClientOverviewEditor({ client, clientId, repositories }) {
   return {
     client: {
@@ -160,6 +165,7 @@ function readPublishedAdminClientOverviewEditor({ client, clientId, repositories
       status: client.status,
       updatedAt: client.updated_at,
     },
+    clientWorkItems: getClientWorkItems({ clientId, repositories }),
     currentFocus: client.current_focus ?? [],
     dashboardLinks: repositories.dashboardLinks
       .listByClientId(clientId)
@@ -199,6 +205,7 @@ function readDraftAdminClientOverviewEditor({ client, clientId, draft, repositor
       status: draft.client?.status ?? client.status,
       updatedAt: client.updated_at,
     },
+    clientWorkItems: getClientWorkItems({ clientId, repositories }),
     currentFocus: clone(draft.currentFocus ?? []),
     dashboardLinks: clone(draft.dashboardLinks ?? []).sort(sortByUpdatedDesc),
     neededActions: repositories.neededFromClient

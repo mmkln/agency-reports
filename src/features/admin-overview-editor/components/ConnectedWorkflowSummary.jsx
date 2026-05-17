@@ -2,19 +2,25 @@ import { Link } from 'react-router-dom'
 
 import { Button } from '@/shared/ui'
 
+import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../../entities/client-work-item'
 import { NEEDED_ACTION_STATUSES } from '../../../entities/needed-from-client'
-import { TASK_STATUSES } from '../../../entities/task'
 import { VISIBILITY } from '../../../entities/update'
 import { Icon } from '../../../shared/icons'
 import { EditorCard } from './EditorCard'
 
 export function ConnectedWorkflowSummary({ editor }) {
+  const clientWorkItems = editor.clientWorkItems ?? []
   const tasks = editor.tasks ?? []
   const neededActions = editor.neededActions ?? []
   const clientId = editor.client.id
-  const clientVisibleTasks = tasks.filter((task) => (
-    task.visibility === VISIBILITY.CLIENT_VISIBLE
-    && task.status !== TASK_STATUSES.DONE
+  const publishedWorkItems = clientWorkItems.filter((item) => (
+    item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED
+  ))
+  const reviewWorkItems = clientWorkItems.filter((item) => (
+    [
+      CLIENT_WORK_ITEM_PUBLISH_STATES.DRAFT,
+      CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+    ].includes(item.publish_state)
   ))
   const internalTasks = tasks.filter((task) => task.visibility === VISIBILITY.INTERNAL)
   const openRequests = neededActions.filter((action) => [
@@ -22,15 +28,14 @@ export function ConnectedWorkflowSummary({ editor }) {
     NEEDED_ACTION_STATUSES.ANSWERED,
   ].includes(action.status))
   const answeredRequests = neededActions.filter((action) => action.status === NEEDED_ACTION_STATUSES.ANSWERED)
-  const taskHref = `/admin/tasks?clientId=${clientId}`
 
   const rows = [
     {
-      action: 'Manage tasks',
-      href: taskHref,
-      iconName: 'checkCircle2',
-      meta: `${clientVisibleTasks.length} client-visible - ${internalTasks.length} internal`,
-      title: 'Tasks',
+      action: 'Open review',
+      href: `/admin/client-work-review?clientId=${clientId}`,
+      iconName: 'send',
+      meta: `${publishedWorkItems.length} published - ${reviewWorkItems.length} in review - ${internalTasks.length} internal tasks`,
+      title: 'Active work',
     },
     {
       action: 'Manage requests',
