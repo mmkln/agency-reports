@@ -1,0 +1,1 @@
+export { ClientPatientAcquisitionView } from './ClientPatientAcquisitionSections'

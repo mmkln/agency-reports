@@ -94,6 +94,7 @@ describe('route role access', () => {
     expect(clientNavIds).not.toContain('client-dashboard')
     expect(clientNavIds).not.toContain('client-performance')
     expect(clientNavIds).not.toContain('client-reports')
+    expect(clientNavIds).not.toContain('client-patient-acquisition')
     expect(clientNavIds).not.toContain('client-service-lines')
   })
 
@@ -110,6 +111,7 @@ describe('route role access', () => {
     expect(clientNavIds).toEqual([
       'client-overview',
       'client-action-needed',
+      'client-patient-acquisition',
       'client-service-lines',
       'client-reports-dashboards',
       'client-files-links',

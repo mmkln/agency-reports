@@ -32,6 +32,7 @@ updates
 clinicProfiles
 clinicLocations
 clinicServiceLines
+patientAcquisitionSnapshots
 neededFromClient
 dashboardLinks
 reports
@@ -102,6 +103,7 @@ updates -> repositories.updates
 clinic_profiles -> repositories.clinicProfiles
 clinic_locations -> repositories.clinicLocations
 clinic_service_lines -> repositories.clinicServiceLines
+patient_acquisition_snapshots -> repositories.patientAcquisitionSnapshots
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports

@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CLINIC_PROFILE_SPECIALTIES,
+  CLINIC_ACQUISITION_CHANNELS,
   CLINIC_SERVICE_LINE_STATUSES,
   assertClinicAggregateRecord,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizePatientAcquisitionSnapshot,
 } from './model'
 
 describe('clinic entity model', () => {
@@ -51,6 +53,32 @@ describe('clinic entity model', () => {
     })
   })
 
+  it('normalizes aggregate patient acquisition snapshots', () => {
+    expect(normalizePatientAcquisitionSnapshot({
+      booked_appointments: '14',
+      calls: '18',
+      channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
+      chats: '3',
+      clicks: '240',
+      forms: '9',
+      impressions: '12800',
+      landing_page_visits: '211',
+      qualified_inquiries: '21',
+      spend: '1860',
+    })).toMatchObject({
+      booked_appointments: 14,
+      calls: 18,
+      channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
+      chats: 3,
+      clicks: 240,
+      forms: 9,
+      impressions: 12800,
+      landing_page_visits: 211,
+      qualified_inquiries: 21,
+      spend: 1860,
+    })
+  })
+
   it('falls back to safe defaults for unknown clinic enum values', () => {
     expect(normalizeClinicProfile({
       specialty: 'hospital',
@@ -59,6 +87,10 @@ describe('clinic entity model', () => {
     expect(normalizeClinicServiceLine({
       status: 'launched',
     }).status).toBe(CLINIC_SERVICE_LINE_STATUSES.PLANNED)
+
+    expect(normalizePatientAcquisitionSnapshot({
+      channel: 'print',
+    }).channel).toBe(CLINIC_ACQUISITION_CHANNELS.OTHER)
   })
 
   it('rejects patient-level keys anywhere in clinic aggregate records', () => {

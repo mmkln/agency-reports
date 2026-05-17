@@ -1,5 +1,7 @@
 export {
   assertClinicAggregateRecord,
+  CLINIC_ACQUISITION_CHANNEL_META,
+  CLINIC_ACQUISITION_CHANNELS,
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_SERVICE_LINE_STATUSES,
@@ -7,4 +9,5 @@ export {
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizePatientAcquisitionSnapshot,
 } from './model'

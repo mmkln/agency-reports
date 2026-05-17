@@ -10,6 +10,10 @@ import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboar
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientFilesLinksPage } from '../../pages/client/files-links/ClientFilesLinksPage'
 import { ClientFilesLinksPageHeader } from '../../pages/client/files-links/ClientFilesLinksPageHeader'
+import { ClientPatientAcquisitionPage } from '../../pages/client/patient-acquisition/ClientPatientAcquisitionPage'
+import {
+  ClientPatientAcquisitionPageHeader,
+} from '../../pages/client/patient-acquisition/ClientPatientAcquisitionPageHeader'
 import { ClientPerformancePage } from '../../pages/client/performance/ClientPerformancePage'
 import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
 import { ClientProjectsPage } from '../../pages/client/projects/ClientProjectsPage'
@@ -76,6 +80,10 @@ export const ClientActionNeededPageRoute = withPageProps(
 )
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
 export const ClientFilesLinksPageRoute = withPageProps(ClientFilesLinksPage, ClientFilesLinksPageHeader)
+export const ClientPatientAcquisitionPageRoute = withPageProps(
+  ClientPatientAcquisitionPage,
+  ClientPatientAcquisitionPageHeader,
+)
 export const ClientPerformancePageRoute = withPageProps(ClientPerformancePage, ClientPerformancePageHeader)
 export const ClientProjectsPageRoute = withPageProps(ClientProjectsPage, ClientProjectsPageHeader)
 export const ClientRequestsPageRoute = withPageProps(ClientRequestsPage, ClientRequestsPageHeader)

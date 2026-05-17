@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { CLIENT_TYPES } from '../../entities/client'
 import {
   CLINIC_PROFILE_SPECIALTIES,
+  CLINIC_ACQUISITION_CHANNELS,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import {
   getClientClinicFoundationPage,
   getClientClinicServiceLinesPage,
+  getClientPatientAcquisitionPage,
 } from './clinicClientService'
 
 const IDS = Object.freeze({
@@ -19,6 +21,7 @@ const IDS = Object.freeze({
   LOCATION: '44444444-4444-4444-8444-444444444444',
   PROFILE: '55555555-5555-4555-8555-555555555555',
   SERVICE_LINE: '66666666-6666-4666-8666-666666666666',
+  SNAPSHOT: '77777777-7777-4777-8777-777777777777',
 })
 
 function createEntityRepository(records = []) {
@@ -101,6 +104,29 @@ function createRepositories(overrides = {}) {
         target_monthly_bookings: 24,
       },
     ]),
+    patientAcquisitionSnapshots: createEntityRepository([
+      {
+        attended_appointments: 12,
+        booked_appointments: 14,
+        calls: 18,
+        channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
+        chats: 3,
+        client_id: IDS.CLIENT_A,
+        clicks: 240,
+        data_source: 'Manual export',
+        forms: 9,
+        id: IDS.SNAPSHOT,
+        impressions: 12800,
+        landing_page_visits: 211,
+        last_updated_at: '2026-05-08T09:00:00.000Z',
+        location_id: IDS.LOCATION,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        qualified_inquiries: 21,
+        service_line_id: IDS.SERVICE_LINE,
+        spend: 1860,
+      },
+    ]),
     ...overrides,
   }
 }
@@ -170,6 +196,53 @@ describe('clinicClientService', () => {
     expect(page.isEmpty).toBe(false)
     expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Dental Implants'])
     expect(page.locations.map((location) => location.name)).toEqual(['Main Clinic'])
+  })
+
+  it('returns aggregate patient acquisition totals and funnel data', () => {
+    const page = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.totals).toMatchObject({
+      bookedAppointments: 14,
+      calls: 18,
+      costPerBookedAppointment: 1860 / 14,
+      inquiries: 30,
+      qualifiedInquiries: 21,
+      spend: 1860,
+    })
+    expect(page.funnel.map((stage) => stage.id)).toEqual([
+      'impressions',
+      'clicks',
+      'visits',
+      'inquiries',
+      'qualified',
+      'booked',
+      'attended',
+    ])
+    expect(page.snapshots[0]).toMatchObject({
+      channelMeta: {
+        label: 'Google Ads',
+      },
+      location: expect.objectContaining({ name: 'Main Clinic' }),
+      serviceLine: expect.objectContaining({ name: 'Dental Implants' }),
+    })
+  })
+
+  it('denies cross-client patient acquisition access', () => {
+    const page = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_B,
+      repositories: createRepositories(),
+      viewer: createClientViewer(IDS.CLIENT_A),
+    })
+
+    expect(page).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
   })
 
   it('denies cross-client clinic access', () => {
@@ -256,5 +329,24 @@ describe('clinicClientService', () => {
       repositories,
       viewer: createClientViewer(),
     })).toThrow('Clinic profile must stay aggregate-only')
+  })
+
+  it('blocks patient-level fields from patient acquisition snapshots', () => {
+    const repositories = createRepositories({
+      patientAcquisitionSnapshots: createEntityRepository([
+        {
+          booked_appointments: 1,
+          client_id: IDS.CLIENT_A,
+          id: IDS.SNAPSHOT,
+          patient_phone: '+1 555 0100',
+        },
+      ]),
+    })
+
+    expect(() => getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })).toThrow('Patient acquisition snapshot must stay aggregate-only')
   })
 })

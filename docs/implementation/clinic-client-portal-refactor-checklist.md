@@ -49,7 +49,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `ClinicProfile`.
 - [x] Add `ClinicLocation`.
 - [x] Add `ClinicServiceLine`.
-- [ ] Add `PatientAcquisitionSnapshot`.
+- [x] Add `PatientAcquisitionSnapshot`.
 - [ ] Add `BookingPipelineSnapshot`.
 - [ ] Add `CallBookingMetric`.
 - [ ] Add `ServiceLinePerformance`.
@@ -62,7 +62,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add seed data for at least one clinic with:
   - [x] multiple service lines
   - [x] at least one location
-  - [ ] acquisition metrics
+  - [x] acquisition metrics
   - [ ] calls/bookings metrics
   - [ ] reputation snapshot
   - [ ] compliance review items
@@ -102,25 +102,25 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 4 - Patient Acquisition
 
-- [ ] Add `/client/patient-acquisition` route or clinic-template destination mapping.
-- [ ] Add `getClientPatientAcquisitionPage` domain service.
-- [ ] Add `widgets/client-patient-acquisition`.
-- [ ] Build patient acquisition header/KPI summary.
+- [x] Add `/client/patient-acquisition` route or clinic-template destination mapping.
+- [x] Add `getClientPatientAcquisitionPage` domain service.
+- [x] Add `widgets/client-patient-acquisition`.
+- [x] Build patient acquisition header/KPI summary.
 - [ ] Build funnel:
-  - [ ] impressions
-  - [ ] clicks
-  - [ ] landing page visits
-  - [ ] calls/forms/chats
-  - [ ] qualified inquiries
-  - [ ] booked appointments
-  - [ ] attended appointments, optional
+  - [x] impressions
+  - [x] clicks
+  - [x] landing page visits
+  - [x] calls/forms/chats
+  - [x] qualified inquiries
+  - [x] booked appointments
+  - [x] attended appointments, optional
 - [ ] Add filters:
   - [ ] location
   - [ ] service line
   - [ ] campaign
   - [ ] channel
   - [ ] date range / reporting period
-- [ ] Add leakage insight section.
+- [x] Add leakage insight section.
 - [ ] Add source/dashboard links when available.
 - [ ] Add tests for filtering and client isolation.
 
@@ -320,7 +320,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 ## Phase 13 - Tests And Verification
 
 - [x] Add unit tests for clinic entity normalization.
-- [ ] Add domain tests for patient acquisition client isolation.
+- [x] Add domain tests for patient acquisition client isolation.
 - [ ] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
 - [ ] Add domain tests for reputation visibility.

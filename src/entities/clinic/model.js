@@ -28,6 +28,24 @@ export const CLINIC_SERVICE_LINE_STATUSES = Object.freeze({
   PLANNED: 'planned',
 })
 
+export const CLINIC_ACQUISITION_CHANNELS = Object.freeze({
+  DIRECT: 'direct',
+  GOOGLE_ADS: 'google_ads',
+  META_ADS: 'meta_ads',
+  ORGANIC: 'organic',
+  REFERRAL: 'referral',
+  OTHER: 'other',
+})
+
+export const CLINIC_ACQUISITION_CHANNEL_META = Object.freeze({
+  [CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS]: { label: 'Google Ads' },
+  [CLINIC_ACQUISITION_CHANNELS.META_ADS]: { label: 'Meta Ads' },
+  [CLINIC_ACQUISITION_CHANNELS.ORGANIC]: { label: 'Organic' },
+  [CLINIC_ACQUISITION_CHANNELS.REFERRAL]: { label: 'Referral' },
+  [CLINIC_ACQUISITION_CHANNELS.DIRECT]: { label: 'Direct' },
+  [CLINIC_ACQUISITION_CHANNELS.OTHER]: { label: 'Other' },
+})
+
 export const CLINIC_SERVICE_LINE_STATUS_META = Object.freeze({
   [CLINIC_SERVICE_LINE_STATUSES.PLANNED]: {
     icon: 'circle',
@@ -168,5 +186,40 @@ export function normalizeClinicServiceLine(serviceLine = {}) {
     ),
     target_monthly_bookings: normalizeNumber(serviceLine.target_monthly_bookings),
     updated_at: serviceLine.updated_at ?? serviceLine.created_at ?? null,
+  }
+}
+
+export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Patient acquisition snapshot')
+
+  return {
+    attended_appointments: normalizeNumber(snapshot.attended_appointments),
+    booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    calls: normalizeNumber(snapshot.calls),
+    channel: normalizeEnum(
+      snapshot.channel,
+      CLINIC_ACQUISITION_CHANNELS,
+      CLINIC_ACQUISITION_CHANNELS.OTHER,
+    ),
+    chats: normalizeNumber(snapshot.chats),
+    client_id: normalizeText(snapshot.client_id),
+    clicks: normalizeNumber(snapshot.clicks),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    forms: normalizeNumber(snapshot.forms),
+    id: normalizeText(snapshot.id),
+    impressions: normalizeNumber(snapshot.impressions),
+    insight: normalizeText(snapshot.insight),
+    landing_page_visits: normalizeNumber(snapshot.landing_page_visits),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    location_id: normalizeNullableText(snapshot.location_id),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    qualified_inquiries: normalizeNumber(snapshot.qualified_inquiries),
+    service_line_id: normalizeNullableText(snapshot.service_line_id),
+    spend: normalizeNumber(snapshot.spend),
+    summary: normalizeText(snapshot.summary),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
   }
 }

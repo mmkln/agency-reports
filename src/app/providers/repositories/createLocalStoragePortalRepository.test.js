@@ -24,6 +24,7 @@ const seedData = Object.freeze({
   dashboard_links: [],
   needed_from_client: [],
   performance_dashboard_periods: [],
+  patient_acquisition_snapshots: [],
   profiles: [],
   projects: [],
   reports: [],
@@ -106,6 +107,7 @@ describe('createLocalStoragePortalRepository', () => {
         dashboard_links: [],
         needed_from_client: [],
         performance_dashboard_periods: [],
+        patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
         reports: [],
@@ -169,6 +171,7 @@ describe('createLocalStoragePortalRepository', () => {
             title: 'Locally edited title',
           },
         ],
+        patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
         reports: [],
@@ -324,6 +327,25 @@ describe('createLocalStoragePortalRepository', () => {
     expect(reloadedRepository.clinicLocations.listByClientId(clientId)).toHaveLength(1)
     expect(reloadedRepository.clinicServiceLines.findById(serviceLine.id)).toMatchObject(serviceLine)
     expect(reloadedRepository.clinicServiceLines.listByClientId(clientId)).toHaveLength(1)
+  })
+
+  it('persists patient acquisition snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      booked_appointments: 14,
+      calls: 18,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '10101010-1010-4010-8010-101010101010',
+      period_label: 'May 2026',
+      spend: 1800,
+    }
+
+    repository.patientAcquisitionSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.patientAcquisitionSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.patientAcquisitionSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

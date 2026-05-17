@@ -1,10 +1,12 @@
 import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
 import {
+  CLINIC_ACQUISITION_CHANNEL_META,
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_SERVICE_LINE_STATUS_META,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizePatientAcquisitionSnapshot,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
@@ -71,6 +73,92 @@ function mapProfile(profile) {
   }
 }
 
+function divide(numerator, denominator) {
+  return denominator > 0 ? numerator / denominator : 0
+}
+
+function addSnapshotTotals(total, snapshot) {
+  return {
+    attendedAppointments: total.attendedAppointments + snapshot.attendedAppointments,
+    bookedAppointments: total.bookedAppointments + snapshot.bookedAppointments,
+    calls: total.calls + snapshot.calls,
+    chats: total.chats + snapshot.chats,
+    clicks: total.clicks + snapshot.clicks,
+    forms: total.forms + snapshot.forms,
+    impressions: total.impressions + snapshot.impressions,
+    landingPageVisits: total.landingPageVisits + snapshot.landingPageVisits,
+    qualifiedInquiries: total.qualifiedInquiries + snapshot.qualifiedInquiries,
+    spend: total.spend + snapshot.spend,
+  }
+}
+
+function createEmptyAcquisitionTotals() {
+  return {
+    attendedAppointments: 0,
+    bookedAppointments: 0,
+    calls: 0,
+    chats: 0,
+    clicks: 0,
+    forms: 0,
+    impressions: 0,
+    landingPageVisits: 0,
+    qualifiedInquiries: 0,
+    spend: 0,
+  }
+}
+
+function mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesById }) {
+  const normalizedSnapshot = normalizePatientAcquisitionSnapshot(snapshot)
+  const inquiries = normalizedSnapshot.calls + normalizedSnapshot.forms + normalizedSnapshot.chats
+
+  return {
+    attendedAppointments: normalizedSnapshot.attended_appointments,
+    bookedAppointments: normalizedSnapshot.booked_appointments,
+    bookingRate: divide(normalizedSnapshot.booked_appointments, inquiries),
+    calls: normalizedSnapshot.calls,
+    channel: normalizedSnapshot.channel,
+    channelMeta: CLINIC_ACQUISITION_CHANNEL_META[normalizedSnapshot.channel],
+    chats: normalizedSnapshot.chats,
+    clientId: normalizedSnapshot.client_id,
+    clicks: normalizedSnapshot.clicks,
+    costPerBookedAppointment: divide(normalizedSnapshot.spend, normalizedSnapshot.booked_appointments),
+    dataSource: normalizedSnapshot.data_source,
+    forms: normalizedSnapshot.forms,
+    id: normalizedSnapshot.id,
+    impressions: normalizedSnapshot.impressions,
+    inquiries,
+    insight: normalizedSnapshot.insight,
+    landingPageVisits: normalizedSnapshot.landing_page_visits,
+    lastUpdatedAt: normalizedSnapshot.last_updated_at,
+    location: normalizedSnapshot.location_id ? locationsById.get(normalizedSnapshot.location_id) ?? null : null,
+    locationId: normalizedSnapshot.location_id,
+    periodEnd: normalizedSnapshot.period_end,
+    periodLabel: normalizedSnapshot.period_label,
+    periodStart: normalizedSnapshot.period_start,
+    qualifiedInquiries: normalizedSnapshot.qualified_inquiries,
+    serviceLine: normalizedSnapshot.service_line_id
+      ? serviceLinesById.get(normalizedSnapshot.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedSnapshot.service_line_id,
+    spend: normalizedSnapshot.spend,
+    summary: normalizedSnapshot.summary,
+  }
+}
+
+function buildAcquisitionFunnel(totals) {
+  const inquiries = totals.calls + totals.forms + totals.chats
+
+  return [
+    { id: 'impressions', label: 'Impressions', value: totals.impressions },
+    { id: 'clicks', label: 'Clicks', value: totals.clicks },
+    { id: 'visits', label: 'Landing page visits', value: totals.landingPageVisits },
+    { id: 'inquiries', label: 'Calls / forms / chats', value: inquiries },
+    { id: 'qualified', label: 'Qualified inquiries', value: totals.qualifiedInquiries },
+    { id: 'booked', label: 'Booked appointments', value: totals.bookedAppointments },
+    { id: 'attended', label: 'Attended appointments', value: totals.attendedAppointments },
+  ]
+}
+
 function canReadClinicClient({ client, clientId, viewer }) {
   if (!client || client.type !== CLIENT_TYPES.CLINIC) {
     return false
@@ -135,5 +223,47 @@ export function getClientClinicServiceLinesPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     status: 'ready',
+  }
+}
+
+export function getClientPatientAcquisitionPage(input) {
+  const foundationPage = getClientClinicFoundationPage(input)
+
+  if (foundationPage.status === 'error') {
+    return foundationPage
+  }
+
+  const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
+  const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
+  const snapshots = (input.repositories.patientAcquisitionSnapshots?.listByClientId(input.clientId) ?? [])
+    .map((snapshot) => mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || left.channel.localeCompare(right.channel)
+      || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
+    ))
+  const totals = snapshots.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
+  const inquiries = totals.calls + totals.forms + totals.chats
+
+  return {
+    client: foundationPage.client,
+    funnel: buildAcquisitionFunnel(totals),
+    isEmpty: snapshots.length === 0,
+    latestUpdatedAt: snapshots
+      .map((snapshot) => snapshot.lastUpdatedAt)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null,
+    locations: foundationPage.locations,
+    profile: foundationPage.profile,
+    serviceLines: foundationPage.serviceLines,
+    snapshots,
+    status: 'ready',
+    totals: {
+      ...totals,
+      bookingRate: divide(totals.bookedAppointments, inquiries),
+      costPerBookedAppointment: divide(totals.spend, totals.bookedAppointments),
+      inquiries,
+    },
   }
 }
