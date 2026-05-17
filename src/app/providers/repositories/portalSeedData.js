@@ -1,4 +1,4 @@
-import { CLIENT_STATUSES } from '../../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../../entities/client'
 import { CLIENT_INVITATION_STATUSES } from '../../../entities/client-invitation'
 import {
   CLIENT_FILE_LINK_STATUSES,
@@ -13,6 +13,10 @@ import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../../entities/client-work-item'
+import {
+  CLINIC_PROFILE_SPECIALTIES,
+  CLINIC_SERVICE_LINE_STATUSES,
+} from '../../../entities/clinic'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../../entities/dashboard-link'
 import {
   NEEDED_ACTION_PRIORITIES,
@@ -39,6 +43,11 @@ import { CLIENT_UPDATE_TYPES, VISIBILITY } from '../../../entities/update'
 export const SEED_IDS = Object.freeze({
   AGENCY_GROWTHLAB: '11111111-1111-4111-8111-111111111111',
   CLIENT_GREEN_DENTAL: '22222222-2222-4222-8222-222222222222',
+  CLINIC_LOCATION_GREEN_MAIN: '29292929-2929-4929-8929-292929292929',
+  CLINIC_PROFILE_GREEN: '30303030-3030-4030-9030-303030303030',
+  CLINIC_SERVICE_EMERGENCY_DENTAL: '31313131-3131-4131-9131-313131313131',
+  CLINIC_SERVICE_IMPLANTS: '32323232-3232-4232-9232-323232323232',
+  CLINIC_SERVICE_WHITENING: '34343434-3434-4434-9434-343434343434',
   CLIENT_INVITATION_GREEN: '19191919-1919-4919-8919-191919191919',
   CLIENT_NORTHSTAR_DENTAL: '23232323-2323-4323-8323-232323232323',
   CLIENT_WORK_GA4_CONVERSION: '24242424-2424-4424-8424-242424242424',
@@ -456,6 +465,75 @@ export const portalSeedData = Object.freeze({
       updated_at: '2026-04-25T09:00:00.000Z',
     },
   ],
+  clinic_profiles: [
+    {
+      capacity_notes: 'Implant consult capacity is strongest on Tuesday and Thursday. Emergency appointments need same-day slot protection.',
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      created_at: '2026-05-01T09:00:00.000Z',
+      id: SEED_IDS.CLINIC_PROFILE_GREEN,
+      insurance_model: 'Mixed insurance and private-pay treatment plans.',
+      primary_goal: 'Increase booked new patient appointments for high-value dental services without increasing missed-call leakage.',
+      specialty: CLINIC_PROFILE_SPECIALTIES.DENTAL,
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+  ],
+  clinic_locations: [
+    {
+      address: '124 Market Street',
+      city: 'Austin',
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      created_at: '2026-05-01T09:00:00.000Z',
+      display_order: 10,
+      id: SEED_IDS.CLINIC_LOCATION_GREEN_MAIN,
+      is_active: true,
+      name: 'Green Dental Main Clinic',
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+  ],
+  clinic_service_lines: [
+    {
+      average_value: 4200,
+      capacity_note: 'Two implant consult slots remain open per week; keep qualification strict before scaling.',
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      created_at: '2026-05-01T09:00:00.000Z',
+      display_order: 10,
+      id: SEED_IDS.CLINIC_SERVICE_IMPLANTS,
+      location_ids: [SEED_IDS.CLINIC_LOCATION_GREEN_MAIN],
+      name: 'Dental Implants',
+      primary_channel: 'google_ads',
+      status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+      target_monthly_bookings: 24,
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+    {
+      average_value: 180,
+      capacity_note: 'Reception needs same-day follow-up on missed emergency calls.',
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      created_at: '2026-05-01T09:00:00.000Z',
+      display_order: 20,
+      id: SEED_IDS.CLINIC_SERVICE_EMERGENCY_DENTAL,
+      location_ids: [SEED_IDS.CLINIC_LOCATION_GREEN_MAIN],
+      name: 'Emergency Dental Appointments',
+      primary_channel: 'google_ads',
+      status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+      target_monthly_bookings: 45,
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+    {
+      average_value: 650,
+      capacity_note: 'Offer wording requires approval before the next creative test.',
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      created_at: '2026-05-01T09:00:00.000Z',
+      display_order: 30,
+      id: SEED_IDS.CLINIC_SERVICE_WHITENING,
+      location_ids: [SEED_IDS.CLINIC_LOCATION_GREEN_MAIN],
+      name: 'Teeth Whitening',
+      primary_channel: 'meta_ads',
+      status: CLINIC_SERVICE_LINE_STATUSES.PLANNED,
+      target_monthly_bookings: 30,
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+  ],
   client_file_links: [
     {
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
@@ -588,6 +666,7 @@ export const portalSeedData = Object.freeze({
       primary_contact_email: 'sarah@greendental.example',
       primary_contact_name: 'Sarah Johnson',
       status: CLIENT_STATUSES.ON_TRACK,
+      type: CLIENT_TYPES.CLINIC,
       updated_at: '2026-05-08T09:00:00.000Z',
     },
     {
@@ -604,6 +683,7 @@ export const portalSeedData = Object.freeze({
       primary_contact_email: 'ops@northstar.example',
       primary_contact_name: 'Olivia Chen',
       status: CLIENT_STATUSES.WAITING_CLIENT,
+      type: CLIENT_TYPES.CLINIC,
       updated_at: '2026-05-08T09:00:00.000Z',
     },
   ],

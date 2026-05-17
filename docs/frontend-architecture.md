@@ -36,6 +36,7 @@ src/
 
   entities/
     client/
+    clinic/
     client-work-item/
     profile/
     project/
@@ -132,6 +133,7 @@ Entities for MVP:
 
 ```text
 client
+clinic
 client-work-item
 profile
 project
@@ -229,6 +231,44 @@ Rules:
 - Keep Overview as a summary surface that links to owning destinations.
 - Keep each destination backed by a domain read model and loaded through runtime.dataClient.read.
 - Client route pages should compose widgets and features, not own repository filtering or visibility rules.
+```
+
+## Clinic Vertical Architecture
+
+Clinic clients use the same Client Control Center safety model, but their destination hierarchy shifts from generic project status to patient acquisition, booking leakage, reputation, and compliance.
+
+The clinic template is selected from the client record:
+
+```text
+client.type = clinic
+```
+
+Generic clients keep the mature agency destinations. Clinic clients receive clinic-specific destinations backed by clinic domain read models:
+
+```text
+Overview = clinic control home with acquisition, booking, reputation, compliance, and action previews
+Patient Acquisition = aggregate funnel and source performance
+Calls & Bookings = call handling, booking conversion, missed-call leakage, and follow-up gaps
+Campaigns / Service Lines = clinic service-line performance, location context, capacity notes, and campaign status
+Reputation = reviews, Google Business Profile health, review-response work, and trust signals
+Compliance & Approvals = medical claim, ad policy, privacy/tracking, and approval history
+Action Needed = clinic obligations, including approvals, access, assets, booking operations, and reputation responses
+Reports = clinic performance reports and source dashboards
+Files & Assets = approved deliverables, clinic assets, bios, credentials, and shared links
+Settings / Access = client-side account, team, notifications, and access controls
+```
+
+Clinic architecture rules:
+
+```text
+- Keep clinic MVP data aggregate-only. Do not store patient names, patient emails, phone numbers, diagnoses, MRNs, DOBs, or patient-level attribution fields.
+- Clinic read models must be domain-owned and route pages must stay thin.
+- Client users may only read clinic records for their own client membership.
+- Admin reads must still be scoped to the owning agency.
+- Projects map to Campaigns / Service Lines for clinic clients. Internal task progress can support this, but it is not the primary client mental model.
+- Reports & Dashboards map to clinic result destinations: Patient Acquisition, Calls & Bookings, Campaigns / Service Lines, Reputation, Compliance, and Reports.
+- Compliance and approval records are first-class workflow records, not comment threads hidden inside tasks.
+- Clinic actions remain separate from internal agency tasks; client responses must not mutate internal task status directly.
 ```
 
 ### shared

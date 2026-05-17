@@ -18,6 +18,9 @@ const seedData = Object.freeze({
   client_memberships: [],
   client_requests: [],
   client_work_items: [],
+  clinic_locations: [],
+  clinic_profiles: [],
+  clinic_service_lines: [],
   dashboard_links: [],
   needed_from_client: [],
   performance_dashboard_periods: [],
@@ -97,6 +100,9 @@ describe('createLocalStoragePortalRepository', () => {
         client_memberships: [],
         client_requests: [],
         client_work_items: [],
+        clinic_locations: [],
+        clinic_profiles: [],
+        clinic_service_lines: [],
         dashboard_links: [],
         needed_from_client: [],
         performance_dashboard_periods: [],
@@ -139,6 +145,9 @@ describe('createLocalStoragePortalRepository', () => {
         client_memberships: [],
         client_requests: [],
         client_work_items: [],
+        clinic_locations: [],
+        clinic_profiles: [],
+        clinic_service_lines: [],
         dashboard_links: [],
         needed_from_client: [],
         performance_dashboard_periods: [
@@ -279,6 +288,42 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.clientRequests.findById(request.id)).toMatchObject(request)
     expect(reloadedRepository.clientRequests.listByClientId(request.client_id)).toHaveLength(1)
+  })
+
+  it('persists clinic foundation records through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const clientId = '11111111-1111-4111-8111-111111111111'
+    const profile = {
+      client_id: clientId,
+      id: '77777777-7777-4777-8777-777777777777',
+      primary_goal: 'Increase booked new patient appointments.',
+      specialty: 'dental',
+    }
+    const location = {
+      client_id: clientId,
+      id: '88888888-8888-4888-8888-888888888888',
+      name: 'Main Clinic',
+    }
+    const serviceLine = {
+      client_id: clientId,
+      id: '99999999-9999-4999-8999-999999999999',
+      location_ids: [location.id],
+      name: 'Dental Implants',
+      status: 'active',
+    }
+
+    repository.clinicProfiles.upsert(profile)
+    repository.clinicLocations.upsert(location)
+    repository.clinicServiceLines.upsert(serviceLine)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.clinicProfiles.findById(profile.id)).toMatchObject(profile)
+    expect(reloadedRepository.clinicProfiles.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.clinicLocations.findById(location.id)).toMatchObject(location)
+    expect(reloadedRepository.clinicLocations.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.clinicServiceLines.findById(serviceLine.id)).toMatchObject(serviceLine)
+    expect(reloadedRepository.clinicServiceLines.listByClientId(clientId)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

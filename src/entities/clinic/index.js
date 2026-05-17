@@ -1,0 +1,10 @@
+export {
+  assertClinicAggregateRecord,
+  CLINIC_PROFILE_SPECIALTIES,
+  CLINIC_PROFILE_SPECIALTY_META,
+  CLINIC_SERVICE_LINE_STATUSES,
+  CLINIC_SERVICE_LINE_STATUS_META,
+  normalizeClinicLocation,
+  normalizeClinicProfile,
+  normalizeClinicServiceLine,
+} from './model'

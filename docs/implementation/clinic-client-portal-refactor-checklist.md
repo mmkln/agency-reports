@@ -5,7 +5,7 @@ Document type: Implementation checklist
 Product area: Clinic vertical refactor
 Target direction: Patient acquisition + booking + compliance + reputation control center
 Primary reference: docs/research/clinic-client-portal-information-architecture.md
-Status: Not started
+Status: In progress
 ```
 
 ## Tracking Rule
@@ -16,39 +16,39 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Foundation Quality Gate
 
-- [ ] Confirm `docs/research/clinic-client-portal-information-architecture.md` is the product source for clinic vertical work.
-- [ ] Preserve existing Client Control Center visibility, publish, preview, and route guard guarantees.
-- [ ] Keep clinic MVP data aggregate-only; do not introduce patient-level PHI fields.
-- [ ] Keep route pages thin and clinic read models domain-owned.
+- [x] Confirm `docs/research/clinic-client-portal-information-architecture.md` is the product source for clinic vertical work.
+- [x] Preserve existing Client Control Center visibility, publish, preview, and route guard guarantees.
+- [x] Keep clinic MVP data aggregate-only; do not introduce patient-level PHI fields.
+- [x] Keep route pages thin and clinic read models domain-owned.
 - [ ] Keep clinic actions separate from internal agency tasks.
-- [ ] Add tests before exposing new clinic-safe data to client routes.
+- [x] Add tests before exposing new clinic-safe data to client routes.
 
 ## Phase 0 - Product Contract
 
-- [ ] Update `docs/frontend-architecture.md` with the clinic vertical destination model.
-- [ ] Update `docs/mvp-scope.md` to distinguish generic agency MVP from clinic template direction.
-- [ ] Update `docs/use-cases/README.md` with the clinic capability mapping.
-- [ ] Decide whether clinic template is selected per client with `client.type = clinic`.
-- [ ] Define the clinic template navigation:
-  - [ ] Overview
-  - [ ] Patient Acquisition
-  - [ ] Calls & Bookings
-  - [ ] Campaigns / Service Lines
-  - [ ] Reputation
-  - [ ] Compliance & Approvals
-  - [ ] Action Needed
-  - [ ] Reports
-  - [ ] Files & Assets
-  - [ ] Settings / Access
-- [ ] Decide which generic destinations remain available for non-clinic clients.
-- [ ] Document how `Projects` maps to `Campaigns / Service Lines` for clinic clients.
-- [ ] Document how `Reports & Dashboards` maps to clinic result destinations.
+- [x] Update `docs/frontend-architecture.md` with the clinic vertical destination model.
+- [x] Update `docs/mvp-scope.md` to distinguish generic agency MVP from clinic template direction.
+- [x] Update `docs/use-cases/README.md` with the clinic capability mapping.
+- [x] Decide whether clinic template is selected per client with `client.type = clinic`.
+- [x] Define the clinic template navigation:
+  - [x] Overview
+  - [x] Patient Acquisition
+  - [x] Calls & Bookings
+  - [x] Campaigns / Service Lines
+  - [x] Reputation
+  - [x] Compliance & Approvals
+  - [x] Action Needed
+  - [x] Reports
+  - [x] Files & Assets
+  - [x] Settings / Access
+- [x] Decide which generic destinations remain available for non-clinic clients.
+- [x] Document how `Projects` maps to `Campaigns / Service Lines` for clinic clients.
+- [x] Document how `Reports & Dashboards` maps to clinic result destinations.
 
 ## Phase 1 - Clinic Domain Model
 
-- [ ] Add `ClinicProfile`.
-- [ ] Add `ClinicLocation`.
-- [ ] Add `ClinicServiceLine`.
+- [x] Add `ClinicProfile`.
+- [x] Add `ClinicLocation`.
+- [x] Add `ClinicServiceLine`.
 - [ ] Add `PatientAcquisitionSnapshot`.
 - [ ] Add `BookingPipelineSnapshot`.
 - [ ] Add `CallBookingMetric`.
@@ -58,21 +58,21 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add `ComplianceReview`.
 - [ ] Add `MedicalApproval`.
 - [ ] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
-- [ ] Add repository adapter methods for clinic entities.
+- [x] Add repository adapter methods for clinic entities.
 - [ ] Add seed data for at least one clinic with:
-  - [ ] multiple service lines
-  - [ ] at least one location
+  - [x] multiple service lines
+  - [x] at least one location
   - [ ] acquisition metrics
   - [ ] calls/bookings metrics
   - [ ] reputation snapshot
   - [ ] compliance review items
   - [ ] clinic action needed items
-- [ ] Add schema/version migration handling for new localStorage records.
+- [x] Add schema/version migration handling for new localStorage records.
 
 ## Phase 2 - Safety And Permissions
 
-- [ ] Add product rule tests that clinic MVP data is aggregate-only.
-- [ ] Ensure client users only see clinic records for their own client membership.
+- [x] Add product rule tests that clinic MVP data is aggregate-only.
+- [x] Ensure client users only see clinic records for their own client membership.
 - [ ] Ensure draft clinic metrics are hidden from client users.
 - [ ] Ensure draft compliance/approval items are hidden unless assigned as client actions.
 - [ ] Ensure admin preview can read draft clinic surfaces for owned clients.
@@ -319,7 +319,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 13 - Tests And Verification
 
-- [ ] Add unit tests for clinic entity normalization.
+- [x] Add unit tests for clinic entity normalization.
 - [ ] Add domain tests for patient acquisition client isolation.
 - [ ] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
@@ -333,9 +333,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add e2e for Reputation.
 - [ ] Add e2e for Compliance & Approvals.
 - [ ] Add e2e for clinic Action Needed approval/response.
-- [ ] Run `npx eslint src`.
-- [ ] Run `npm test`.
-- [ ] Run `npm run build`.
+- [x] Run `npx eslint src`.
+- [x] Run `npm test`.
+- [x] Run `npm run build`.
 - [ ] Run targeted e2e for clinic workflows.
 
 ## Definition Of Done

@@ -29,6 +29,9 @@ profiles
 projects
 tasks
 updates
+clinicProfiles
+clinicLocations
+clinicServiceLines
 neededFromClient
 dashboardLinks
 reports
@@ -96,6 +99,9 @@ profiles -> repositories.profiles
 projects -> repositories.projects
 tasks -> repositories.tasks
 updates -> repositories.updates
+clinic_profiles -> repositories.clinicProfiles
+clinic_locations -> repositories.clinicLocations
+clinic_service_lines -> repositories.clinicServiceLines
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports
