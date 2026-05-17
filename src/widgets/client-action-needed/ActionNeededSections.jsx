@@ -27,6 +27,10 @@ function filterActions(actions, activeFilter) {
     return actions.filter((action) => action.isOverdue)
   }
 
+  if (activeFilter === 'clinic') {
+    return actions.filter((action) => action.clinicAction)
+  }
+
   return actions.filter((action) => action.status === activeFilter)
 }
 

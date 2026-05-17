@@ -46,6 +46,7 @@ export function ClientActionNeededPage({ routeParams = {}, runtime }) {
         answered: 0,
         approved: 0,
         changesRequested: 0,
+        clinic: 0,
         completed: 0,
         dueSoon: 0,
         open: 0,

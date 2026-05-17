@@ -1,4 +1,8 @@
-import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
+import { CLIENT_TYPES } from '../../entities/client'
+import {
+  CLINIC_NEEDED_ACTION_TYPE_META,
+  NEEDED_ACTION_STATUSES,
+} from '../../entities/needed-from-client'
 import { listClientNeededActions } from './neededFromClientService'
 
 function getDueTime(action) {
@@ -81,6 +85,57 @@ function mapAction(action, now) {
   }
 }
 
+function mapClinicReference(record) {
+  if (!record) {
+    return null
+  }
+
+  return {
+    id: record.id,
+    name: record.name,
+    title: record.title,
+  }
+}
+
+function getClinicActionContext({ action, repositories }) {
+  if (!action.clinicActionType) {
+    return null
+  }
+
+  return {
+    complianceRisk: action.complianceRisk,
+    location: mapClinicReference(
+      action.relatedLocationId ? repositories.clinicLocations?.findById(action.relatedLocationId) : null,
+    ),
+    patientImpact: action.patientImpact,
+    related: {
+      callBookingMetricId: action.relatedCallBookingMetricId,
+      complianceReviewId: action.relatedComplianceReviewId,
+      medicalApprovalId: action.relatedMedicalApprovalId,
+      reputationSnapshotId: action.relatedReputationSnapshotId,
+    },
+    serviceLine: mapClinicReference(
+      action.relatedServiceLineId ? repositories.clinicServiceLines?.findById(action.relatedServiceLineId) : null,
+    ),
+    type: action.clinicActionType,
+    typeMeta: CLINIC_NEEDED_ACTION_TYPE_META[action.clinicActionType],
+  }
+}
+
+function enrichClinicActions({ actions, client, repositories }) {
+  if (client?.type !== CLIENT_TYPES.CLINIC) {
+    return actions
+  }
+
+  return actions.map((action) => ({
+    ...action,
+    clinicAction: getClinicActionContext({
+      action,
+      repositories,
+    }),
+  }))
+}
+
 function countBy(actions, predicate) {
   return actions.filter(predicate).length
 }
@@ -102,7 +157,11 @@ export function getClientActionNeededPage({
   }
 
   const resolvedNow = now()
-  const actions = result.actions.map((action) => mapAction(action, resolvedNow))
+  const actions = enrichClinicActions({
+    actions: result.actions.map((action) => mapAction(action, resolvedNow)),
+    client: result.client,
+    repositories,
+  })
 
   return {
     actions,
@@ -112,6 +171,7 @@ export function getClientActionNeededPage({
       answered: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.ANSWERED),
       approved: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.APPROVED),
       changesRequested: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.CHANGES_REQUESTED),
+      clinic: countBy(actions, (action) => Boolean(action.clinicAction)),
       completed: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.RESOLVED),
       dueSoon: countBy(actions, (action) => action.isDueSoon),
       open: countBy(actions, (action) => action.status === NEEDED_ACTION_STATUSES.PENDING),

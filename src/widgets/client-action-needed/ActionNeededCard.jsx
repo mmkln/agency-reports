@@ -35,13 +35,51 @@ const actionTypeMeta = {
 }
 
 function ActionTypeLabel({ action }) {
-  const meta = actionTypeMeta[action.actionType] ?? actionTypeMeta.question
+  const meta = action.clinicAction?.typeMeta
+    ? {
+        iconName: action.clinicAction.typeMeta.icon,
+        label: action.clinicAction.typeMeta.label,
+      }
+    : actionTypeMeta[action.actionType] ?? actionTypeMeta.question
 
   return (
     <span className="inline-flex items-center gap-1 rounded-control bg-control px-2 py-1 text-label text-text-secondary">
       <Icon name={meta.iconName} size={13} />
       {meta.label}
     </span>
+  )
+}
+
+function ClinicActionContext({ action }) {
+  const clinicAction = action.clinicAction
+
+  if (!clinicAction) {
+    return null
+  }
+
+  const contextItems = [
+    clinicAction.serviceLine?.name,
+    clinicAction.location?.name,
+  ].filter(Boolean)
+
+  return (
+    <div className="mt-component grid gap-item rounded-control bg-block-subtle p-component">
+      {contextItems.length ? (
+        <div className="flex flex-wrap gap-tag">
+          {contextItems.map((item) => (
+            <span className="rounded-control bg-control px-2 py-1 text-label text-text-secondary" key={item}>
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {clinicAction.patientImpact ? (
+        <p className="text-body text-text-secondary">{clinicAction.patientImpact}</p>
+      ) : null}
+      {clinicAction.complianceRisk ? (
+        <p className="text-label font-normal text-text-muted">{clinicAction.complianceRisk}</p>
+      ) : null}
+    </div>
   )
 }
 
@@ -77,6 +115,8 @@ export function ActionNeededCard({ action, onViewDetails }) {
       {action.description ? (
         <p className="mt-component max-w-readable text-ui font-normal text-text-secondary">{action.description}</p>
       ) : null}
+
+      <ClinicActionContext action={action} />
 
       {action.clientResponse ? (
         <LabeledNote className="mt-component" label="Your response">

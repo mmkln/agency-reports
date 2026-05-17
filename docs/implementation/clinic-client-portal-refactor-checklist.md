@@ -57,7 +57,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `ReputationSnapshot`.
 - [x] Add `ComplianceReview`.
 - [x] Add `MedicalApproval`.
-- [ ] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
+- [x] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
 - [x] Add repository adapter methods for clinic entities.
 - [ ] Add seed data for at least one clinic with:
   - [x] multiple service lines
@@ -66,7 +66,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] calls/bookings metrics
   - [x] reputation snapshot
   - [x] compliance review items
-  - [ ] clinic action needed items
+  - [x] clinic action needed items
 - [x] Add schema/version migration handling for new localStorage records.
 
 ## Phase 2 - Safety And Permissions
@@ -76,7 +76,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Ensure draft clinic metrics are hidden from client users.
 - [ ] Ensure draft compliance/approval items are hidden unless assigned as client actions.
 - [ ] Ensure admin preview can read draft clinic surfaces for owned clients.
-- [ ] Ensure clinic clients cannot mutate internal agency tasks.
+- [x] Ensure clinic clients cannot mutate internal agency tasks.
 - [ ] Ensure approval decisions record actor, timestamp, version, and decision state.
 - [ ] Ensure compliance review state is enforced in domain services, not UI-only checks.
 
@@ -230,30 +230,30 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 9 - Clinic Action Needed
 
-- [ ] Extend Action Needed action types:
-  - [ ] approve_medical_claim
-  - [ ] approve_ad_copy
-  - [ ] approve_landing_page
-  - [ ] send_doctor_photos
-  - [ ] send_doctor_bio
-  - [ ] send_credentials
-  - [ ] confirm_service_pricing
-  - [ ] confirm_treatment_capacity
-  - [ ] provide_gbp_access
-  - [ ] connect_call_tracking
-  - [ ] fix_missed_call_follow_up
-  - [ ] approve_call_script
-  - [ ] respond_to_negative_review
-  - [ ] approve_review_response
-  - [ ] confirm_appointment_availability
-- [ ] Add clinic action metadata:
-  - [ ] related service line
-  - [ ] related location
+- [x] Extend Action Needed action types:
+  - [x] approve_medical_claim
+  - [x] approve_ad_copy
+  - [x] approve_landing_page
+  - [x] send_doctor_photos
+  - [x] send_doctor_bio
+  - [x] send_credentials
+  - [x] confirm_service_pricing
+  - [x] confirm_treatment_capacity
+  - [x] provide_gbp_access
+  - [x] connect_call_tracking
+  - [x] fix_missed_call_follow_up
+  - [x] approve_call_script
+  - [x] respond_to_negative_review
+  - [x] approve_review_response
+  - [x] confirm_appointment_availability
+- [x] Add clinic action metadata:
+  - [x] related service line
+  - [x] related location
   - [ ] related campaign
-  - [ ] patient/business impact
-  - [ ] compliance risk if delayed
-- [ ] Update Action Needed filters/categories for clinic actions.
-- [ ] Ensure responses do not mutate internal tasks directly.
+  - [x] patient/business impact
+  - [x] compliance risk if delayed
+- [x] Update Action Needed filters/categories for clinic actions.
+- [x] Ensure responses do not mutate internal tasks directly.
 - [ ] Add e2e for medical approval and missed-call action flows.
 
 ## Phase 10 - Clinic Reports
@@ -326,7 +326,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for reputation visibility.
 - [x] Add domain tests for compliance approval read model and approval history.
 - [ ] Add domain tests for compliance approval transitions.
-- [ ] Add domain tests for clinic Action Needed type mapping.
+- [x] Add domain tests for clinic Action Needed type mapping.
 - [ ] Add e2e for clinic Overview.
 - [ ] Add e2e for Patient Acquisition.
 - [ ] Add e2e for Calls & Bookings.
@@ -347,7 +347,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Campaigns / Service Lines is first-class.
 - [x] Reputation is first-class.
 - [x] Compliance & Approvals is first-class.
-- [ ] Action Needed includes clinic operations and medical/compliance actions.
+- [x] Action Needed includes clinic operations and medical/compliance actions.
 - [ ] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
 - [ ] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.
 - [ ] Admins can manage clinic setup, service lines, metrics, reputation, compliance, approvals, and preview-as-client.
