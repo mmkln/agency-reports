@@ -19,6 +19,7 @@ const TABLE_NAMES = Object.freeze([
   'patient_acquisition_snapshots',
   'profiles',
   'projects',
+  'reputation_snapshots',
   'reports',
   'tasks',
   'updates',
@@ -236,6 +237,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
       },
     },
     projects: createEntityRepository('projects', readSnapshot, writeSnapshot),
+    reputationSnapshots: createEntityRepository('reputation_snapshots', readSnapshot, writeSnapshot),
     reports: createEntityRepository('reports', readSnapshot, writeSnapshot),
     reset() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)

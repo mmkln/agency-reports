@@ -106,6 +106,7 @@ clinic_locations -> repositories.clinicLocations
 clinic_service_lines -> repositories.clinicServiceLines
 patient_acquisition_snapshots -> repositories.patientAcquisitionSnapshots
 call_booking_metrics -> repositories.callBookingMetrics
+reputation_snapshots -> repositories.reputationSnapshots
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports

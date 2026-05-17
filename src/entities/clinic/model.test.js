@@ -10,6 +10,7 @@ import {
   normalizeClinicServiceLine,
   normalizeCallBookingMetric,
   normalizePatientAcquisitionSnapshot,
+  normalizeReputationSnapshot,
 } from './model'
 
 describe('clinic entity model', () => {
@@ -106,6 +107,30 @@ describe('clinic entity model', () => {
       no_response_leads: 3,
       not_booked_reasons: [{ count: 4, reason: 'No available slot' }],
       total_calls: 43,
+    })
+  })
+
+  it('normalizes aggregate reputation snapshots', () => {
+    expect(normalizeReputationSnapshot({
+      gbp_updates: '4',
+      google_rating: '4.7',
+      negative_reviews: '2',
+      provider_profile_completeness: '0.86',
+      review_count: '286',
+      review_request_sent: '142',
+      review_response_drafts: '3',
+      reviews_gained: '18',
+      unanswered_reviews: '3',
+    })).toMatchObject({
+      gbp_updates: 4,
+      google_rating: 4.7,
+      negative_reviews: 2,
+      provider_profile_completeness: 0.86,
+      review_count: 286,
+      review_request_sent: 142,
+      review_response_drafts: 3,
+      reviews_gained: 18,
+      unanswered_reviews: 3,
     })
   })
 

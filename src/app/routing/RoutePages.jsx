@@ -26,6 +26,8 @@ import { ClientReportsDashboardsPage } from '../../pages/client/reports-dashboar
 import { ClientReportsDashboardsPageHeader } from '../../pages/client/reports-dashboards/ClientReportsDashboardsPageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { ClientReputationPage } from '../../pages/client/reputation/ClientReputationPage'
+import { ClientReputationPageHeader } from '../../pages/client/reputation/ClientReputationPageHeader'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
 import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
 import { ClientServiceLinesPage } from '../../pages/client/service-lines/ClientServiceLinesPage'
@@ -98,6 +100,7 @@ export const ClientReportsDashboardsPageRoute = withPageProps(
   ClientReportsDashboardsPageHeader,
 )
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
+export const ClientReputationPageRoute = withPageProps(ClientReputationPage, ClientReputationPageHeader)
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, ClientSettingsPageHeader)
 export const ClientServiceLinesPageRoute = withPageProps(ClientServiceLinesPage, ClientServiceLinesPageHeader)
 export const ClientUpdatesPageRoute = withPageProps(ClientUpdatesPage, ClientUpdatesPageHeader)

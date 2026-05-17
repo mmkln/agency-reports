@@ -266,3 +266,32 @@ export function normalizeCallBookingMetric(metric = {}) {
     updated_at: metric.updated_at ?? metric.created_at ?? null,
   }
 }
+
+export function normalizeReputationSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Reputation snapshot')
+
+  return {
+    client_id: normalizeText(snapshot.client_id),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    gbp_updates: normalizeNumber(snapshot.gbp_updates),
+    google_rating: normalizeNumber(snapshot.google_rating),
+    id: normalizeText(snapshot.id),
+    insight: normalizeText(snapshot.insight),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    local_visibility_note: normalizeText(snapshot.local_visibility_note),
+    location_id: normalizeNullableText(snapshot.location_id),
+    negative_reviews: normalizeNumber(snapshot.negative_reviews),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    provider_profile_completeness: normalizeNumber(snapshot.provider_profile_completeness),
+    review_count: normalizeNumber(snapshot.review_count),
+    review_request_sent: normalizeNumber(snapshot.review_request_sent),
+    review_response_drafts: normalizeNumber(snapshot.review_response_drafts),
+    reviews_gained: normalizeNumber(snapshot.reviews_gained),
+    summary: normalizeText(snapshot.summary),
+    unanswered_reviews: normalizeNumber(snapshot.unanswered_reviews),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}

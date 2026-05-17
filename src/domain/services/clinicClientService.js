@@ -8,6 +8,7 @@ import {
   normalizeClinicProfile,
   normalizeClinicServiceLine,
   normalizePatientAcquisitionSnapshot,
+  normalizeReputationSnapshot,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
@@ -238,6 +239,51 @@ function aggregateNotBookedReasons(metrics) {
     .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
 }
 
+function mapReputationSnapshot(snapshot, { locationsById }) {
+  const normalizedSnapshot = normalizeReputationSnapshot(snapshot)
+
+  return {
+    clientId: normalizedSnapshot.client_id,
+    dataSource: normalizedSnapshot.data_source,
+    gbpUpdates: normalizedSnapshot.gbp_updates,
+    googleRating: normalizedSnapshot.google_rating,
+    id: normalizedSnapshot.id,
+    insight: normalizedSnapshot.insight,
+    lastUpdatedAt: normalizedSnapshot.last_updated_at,
+    localVisibilityNote: normalizedSnapshot.local_visibility_note,
+    location: normalizedSnapshot.location_id ? locationsById.get(normalizedSnapshot.location_id) ?? null : null,
+    locationId: normalizedSnapshot.location_id,
+    negativeReviews: normalizedSnapshot.negative_reviews,
+    periodEnd: normalizedSnapshot.period_end,
+    periodLabel: normalizedSnapshot.period_label,
+    periodStart: normalizedSnapshot.period_start,
+    providerProfileCompleteness: normalizedSnapshot.provider_profile_completeness,
+    reviewCount: normalizedSnapshot.review_count,
+    reviewRequestSent: normalizedSnapshot.review_request_sent,
+    reviewRequestStatus: normalizedSnapshot.review_request_sent > 0 ? 'Active' : 'Not started',
+    reviewResponseDrafts: normalizedSnapshot.review_response_drafts,
+    reviewsGained: normalizedSnapshot.reviews_gained,
+    summary: normalizedSnapshot.summary,
+    unansweredReviews: normalizedSnapshot.unanswered_reviews,
+  }
+}
+
+function summarizeReputationSnapshots(snapshots) {
+  const latestSnapshot = snapshots[0] ?? null
+
+  return {
+    gbpUpdates: snapshots.reduce((total, snapshot) => total + snapshot.gbpUpdates, 0),
+    googleRating: latestSnapshot?.googleRating ?? 0,
+    negativeReviews: snapshots.reduce((total, snapshot) => total + snapshot.negativeReviews, 0),
+    providerProfileCompleteness: latestSnapshot?.providerProfileCompleteness ?? 0,
+    reviewCount: latestSnapshot?.reviewCount ?? 0,
+    reviewRequestSent: snapshots.reduce((total, snapshot) => total + snapshot.reviewRequestSent, 0),
+    reviewResponseDrafts: snapshots.reduce((total, snapshot) => total + snapshot.reviewResponseDrafts, 0),
+    reviewsGained: snapshots.reduce((total, snapshot) => total + snapshot.reviewsGained, 0),
+    unansweredReviews: snapshots.reduce((total, snapshot) => total + snapshot.unansweredReviews, 0),
+  }
+}
+
 function canReadClinicClient({ client, clientId, viewer }) {
   if (!client || client.type !== CLIENT_TYPES.CLINIC) {
     return false
@@ -385,5 +431,38 @@ export function getClientCallsBookingsPage(input) {
       callBookingRate: divide(rawTotals.bookedFromCalls, rawTotals.totalCalls),
       missedRate: divide(rawTotals.missedCalls, rawTotals.totalCalls),
     },
+  }
+}
+
+export function getClientReputationPage(input) {
+  const foundationPage = getClientClinicFoundationPage(input)
+
+  if (foundationPage.status === 'error') {
+    return foundationPage
+  }
+
+  const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
+  const snapshots = (input.repositories.reputationSnapshots?.listByClientId(input.clientId) ?? [])
+    .map((snapshot) => mapReputationSnapshot(snapshot, { locationsById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || (left.location?.name ?? '').localeCompare(right.location?.name ?? '')
+    ))
+
+  return {
+    client: foundationPage.client,
+    isEmpty: snapshots.length === 0,
+    latestSnapshot: snapshots[0] ?? null,
+    latestUpdatedAt: snapshots
+      .map((snapshot) => snapshot.lastUpdatedAt)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null,
+    locations: foundationPage.locations,
+    profile: foundationPage.profile,
+    serviceLines: foundationPage.serviceLines,
+    snapshots,
+    status: 'ready',
+    totals: summarizeReputationSnapshots(snapshots),
   }
 }

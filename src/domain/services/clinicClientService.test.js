@@ -12,6 +12,7 @@ import {
   getClientClinicServiceLinesPage,
   getClientCallsBookingsPage,
   getClientPatientAcquisitionPage,
+  getClientReputationPage,
 } from './clinicClientService'
 
 const IDS = Object.freeze({
@@ -24,6 +25,7 @@ const IDS = Object.freeze({
   SERVICE_LINE: '66666666-6666-4666-8666-666666666666',
   SNAPSHOT: '77777777-7777-4777-8777-777777777777',
   CALL_BOOKING: '88888888-8888-4888-8888-888888888888',
+  REPUTATION: '99999999-9999-4999-8999-999999999999',
 })
 
 function createEntityRepository(records = []) {
@@ -150,6 +152,25 @@ function createRepositories(overrides = {}) {
         qualified_inquiries: 21,
         service_line_id: IDS.SERVICE_LINE,
         spend: 1860,
+      },
+    ]),
+    reputationSnapshots: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        gbp_updates: 4,
+        google_rating: 4.7,
+        id: IDS.REPUTATION,
+        last_updated_at: '2026-05-08T09:00:00.000Z',
+        location_id: IDS.LOCATION,
+        negative_reviews: 2,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        provider_profile_completeness: 0.86,
+        review_count: 286,
+        review_request_sent: 142,
+        review_response_drafts: 3,
+        reviews_gained: 18,
+        unanswered_reviews: 3,
       },
     ]),
     ...overrides,
@@ -285,6 +306,32 @@ describe('clinicClientService', () => {
     ])
   })
 
+  it('returns aggregate reputation and local presence data', () => {
+    const page = getClientReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.totals).toMatchObject({
+      gbpUpdates: 4,
+      googleRating: 4.7,
+      negativeReviews: 2,
+      providerProfileCompleteness: 0.86,
+      reviewCount: 286,
+      reviewRequestSent: 142,
+      reviewResponseDrafts: 3,
+      reviewsGained: 18,
+      unansweredReviews: 3,
+    })
+    expect(page.latestSnapshot).toMatchObject({
+      location: expect.objectContaining({ name: 'Main Clinic' }),
+      periodLabel: 'May 2026',
+      reviewRequestStatus: 'Active',
+    })
+  })
+
   it('denies cross-client patient acquisition access', () => {
     const page = getClientPatientAcquisitionPage({
       clientId: IDS.CLIENT_B,
@@ -300,6 +347,19 @@ describe('clinicClientService', () => {
 
   it('denies cross-client calls and bookings access', () => {
     const page = getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_B,
+      repositories: createRepositories(),
+      viewer: createClientViewer(IDS.CLIENT_A),
+    })
+
+    expect(page).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
+  })
+
+  it('denies cross-client reputation access', () => {
+    const page = getClientReputationPage({
       clientId: IDS.CLIENT_B,
       repositories: createRepositories(),
       viewer: createClientViewer(IDS.CLIENT_A),
@@ -433,5 +493,24 @@ describe('clinicClientService', () => {
       repositories,
       viewer: createClientViewer(),
     })).toThrow('Call booking metric must stay aggregate-only')
+  })
+
+  it('blocks patient-level fields from reputation snapshots', () => {
+    const repositories = createRepositories({
+      reputationSnapshots: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.REPUTATION,
+          patient_name: 'Jane Patient',
+          review_count: 1,
+        },
+      ]),
+    })
+
+    expect(() => getClientReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })).toThrow('Reputation snapshot must stay aggregate-only')
   })
 })

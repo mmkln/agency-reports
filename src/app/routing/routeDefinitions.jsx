@@ -21,6 +21,7 @@ import { ClientPerformancePageHeader } from '../../pages/client/performance/Clie
 import { ClientProjectsPageHeader } from '../../pages/client/projects/ClientProjectsPageHeader'
 import { ClientReportsDashboardsPageHeader } from '../../pages/client/reports-dashboards/ClientReportsDashboardsPageHeader'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { ClientReputationPageHeader } from '../../pages/client/reputation/ClientReputationPageHeader'
 import { ClientRequestsPageHeader } from '../../pages/client/requests/ClientRequestsPageHeader'
 import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
 import { ClientServiceLinesPageHeader } from '../../pages/client/service-lines/ClientServiceLinesPageHeader'
@@ -56,6 +57,7 @@ import {
   ClientProjectsPageRoute,
   ClientReportsDashboardsPageRoute,
   ClientReportsPageRoute,
+  ClientReputationPageRoute,
   ClientRequestsPageRoute,
   ClientSettingsPageRoute,
   ClientServiceLinesPageRoute,
@@ -200,6 +202,18 @@ export const routeDefinitions = [
     iconName: 'stethoscope',
     clientTypes: [CLIENT_TYPES.CLINIC],
     element: <ClientServiceLinesPageRoute />,
+  },
+  {
+    path: '/client/reputation',
+    id: 'client-reputation',
+    label: 'Reputation',
+    pageTitle: 'Reputation',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    contentWidth: 'content',
+    header: ClientReputationPageHeader,
+    iconName: 'messageSquare',
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    element: <ClientReputationPageRoute />,
   },
   {
     path: '/client/reports-dashboards',

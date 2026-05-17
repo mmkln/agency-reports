@@ -54,7 +54,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `CallBookingMetric`.
 - [ ] Add `ServiceLinePerformance`.
 - [ ] Add `LocationPerformance`.
-- [ ] Add `ReputationSnapshot`.
+- [x] Add `ReputationSnapshot`.
 - [ ] Add `ComplianceReview`.
 - [ ] Add `MedicalApproval`.
 - [ ] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
@@ -64,7 +64,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] at least one location
   - [x] acquisition metrics
   - [x] calls/bookings metrics
-  - [ ] reputation snapshot
+  - [x] reputation snapshot
   - [ ] compliance review items
   - [ ] clinic action needed items
 - [x] Add schema/version migration handling for new localStorage records.
@@ -177,22 +177,22 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 7 - Reputation
 
-- [ ] Add `/client/reputation` route or clinic-template destination mapping.
-- [ ] Add `getClientReputationPage` domain service.
-- [ ] Add `widgets/client-reputation`.
-- [ ] Build reputation metrics:
-  - [ ] Google rating
-  - [ ] review count
-  - [ ] reviews gained
-  - [ ] unanswered reviews
-  - [ ] negative reviews
-  - [ ] review response drafts
-  - [ ] review request campaign status
-  - [ ] Google Business Profile updates
-  - [ ] provider profile completeness
-  - [ ] local visibility notes
+- [x] Add `/client/reputation` route or clinic-template destination mapping.
+- [x] Add `getClientReputationPage` domain service.
+- [x] Add `widgets/client-reputation`.
+- [x] Build reputation metrics:
+  - [x] Google rating
+  - [x] review count
+  - [x] reviews gained
+  - [x] unanswered reviews
+  - [x] negative reviews
+  - [x] review response drafts
+  - [x] review request campaign status
+  - [x] Google Business Profile updates
+  - [x] provider profile completeness
+  - [x] local visibility notes
 - [ ] Add Action Needed links for review responses and negative review handling.
-- [ ] Add tests for client-safe reputation data.
+- [x] Add tests for client-safe reputation data.
 
 ## Phase 8 - Compliance & Approvals
 
@@ -323,7 +323,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for patient acquisition client isolation.
 - [x] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
-- [ ] Add domain tests for reputation visibility.
+- [x] Add domain tests for reputation visibility.
 - [ ] Add domain tests for compliance approval transitions.
 - [ ] Add domain tests for clinic Action Needed type mapping.
 - [ ] Add e2e for clinic Overview.
@@ -344,7 +344,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Clinic Overview answers new inquiries, bookings, missed calls, reputation, compliance, and actions needed.
 - [ ] Calls & Bookings is first-class.
 - [ ] Campaigns / Service Lines is first-class.
-- [ ] Reputation is first-class.
+- [x] Reputation is first-class.
 - [ ] Compliance & Approvals is first-class.
 - [ ] Action Needed includes clinic operations and medical/compliance actions.
 - [ ] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.

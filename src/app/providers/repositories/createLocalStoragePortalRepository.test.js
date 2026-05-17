@@ -28,6 +28,7 @@ const seedData = Object.freeze({
   patient_acquisition_snapshots: [],
   profiles: [],
   projects: [],
+  reputation_snapshots: [],
   reports: [],
   tasks: [],
   updates: [],
@@ -112,6 +113,7 @@ describe('createLocalStoragePortalRepository', () => {
         patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
+        reputation_snapshots: [],
         reports: [],
         tasks: [],
         updates: [],
@@ -177,6 +179,7 @@ describe('createLocalStoragePortalRepository', () => {
         patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
+        reputation_snapshots: [],
         reports: [],
         tasks: [],
         updates: [],
@@ -368,6 +371,25 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.callBookingMetrics.findById(metric.id)).toMatchObject(metric)
     expect(reloadedRepository.callBookingMetrics.listByClientId(metric.client_id)).toHaveLength(1)
+  })
+
+  it('persists reputation snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      google_rating: 4.7,
+      id: '13131313-1313-4313-8313-131313131313',
+      period_label: 'May 2026',
+      review_count: 286,
+      reviews_gained: 18,
+    }
+
+    repository.reputationSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.reputationSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.reputationSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {
