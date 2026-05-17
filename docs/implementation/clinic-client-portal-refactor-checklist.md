@@ -285,8 +285,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add capacity notes.
 - [x] Add admin clinic setup workspace route.
 - [x] Add aggregate-only domain validation for admin clinic setup saves.
-- [ ] Add metric entry/import workflow for patient acquisition.
-- [ ] Add metric entry/import workflow for calls/bookings.
+- [x] Add metric entry/import workflow for patient acquisition.
+- [x] Add metric entry/import workflow for calls/bookings.
+- [x] Add admin clinic metrics workspace route.
 - [ ] Add reputation snapshot entry/import workflow.
 - [ ] Add compliance review management.
 - [ ] Add medical approval request management.
@@ -325,6 +326,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for patient acquisition client isolation.
 - [x] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
+- [x] Add domain tests for admin clinic metrics permissions and aggregate-only saves.
 - [x] Add domain tests for reputation visibility.
 - [x] Add domain tests for compliance approval read model and approval history.
 - [ ] Add domain tests for compliance approval transitions.

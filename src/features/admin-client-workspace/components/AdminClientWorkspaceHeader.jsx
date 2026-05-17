@@ -24,6 +24,13 @@ const tabs = [
     route: '/admin/clinic-setup',
   },
   {
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    id: 'clinic-metrics',
+    iconName: 'target',
+    label: 'Clinic Metrics',
+    route: '/admin/clinic-metrics',
+  },
+  {
     id: 'projects',
     iconName: 'checkCircle2',
     label: 'Projects',
