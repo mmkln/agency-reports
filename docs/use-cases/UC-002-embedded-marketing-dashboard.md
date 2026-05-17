@@ -22,6 +22,14 @@ Source basis:
 - User-provided UC-002 specification
 ```
 
+Client Control Center IA relationship:
+
+```text
+UC-002 maps to Reports & Dashboards / Source Dashboard.
+The external dashboard embed/link is no longer a competing top-level client navigation item.
+Reference: docs/research/client-control-center-information-architecture.md
+```
+
 ## 0. Document Purpose
 
 This document defines the product flow for UC-002: Embedded Marketing Dashboard inside the Agency Client Portal Aggregator.

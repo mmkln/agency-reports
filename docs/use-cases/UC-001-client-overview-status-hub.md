@@ -20,6 +20,14 @@ Source basis:
 - User-provided UC-001 specification
 ```
 
+Client Control Center IA relationship:
+
+```text
+UC-001 maps to the mature Overview destination.
+Overview is a compact control home with previews and links to Action Needed, Projects, Reports & Dashboards, Files & Links, and Updates.
+Reference: docs/research/client-control-center-information-architecture.md
+```
+
 ## 1. Purpose
 
 UC-001 defines the first core client-facing experience of the Agency Client Portal Aggregator.

@@ -14,12 +14,22 @@ import {
 } from '../providers/session/demoRoleSwitch'
 
 const legacyHashRouteMap = Object.freeze({
-  '#client-dashboard': '/client/dashboard',
+  '#action-needed': '/client/action-needed',
+  '#client-dashboard': '/client/reports-dashboards',
+  '#client-files-links': '/client/files-links',
   '#client-overview': '/client/overview',
-  '#client-performance': '/client/performance',
-  '#dashboard': '/client/dashboard',
-  '#performance': '/client/performance',
-  '#performance-dashboard': '/client/performance',
+  '#client-performance': '/client/reports-dashboards',
+  '#client-requests': '/client/requests',
+  '#projects': '/client/projects',
+  '#files-links': '/client/files-links',
+  '#updates': '/client/updates',
+  '#client-updates': '/client/updates',
+  '#requests': '/client/requests',
+  '#settings': '/client/settings',
+  '#client-settings': '/client/settings',
+  '#dashboard': '/client/reports-dashboards',
+  '#performance': '/client/reports-dashboards',
+  '#performance-dashboard': '/client/reports-dashboards',
 })
 
 export function RootLayout() {

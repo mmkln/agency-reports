@@ -165,11 +165,38 @@ external_contractor
 
 ### Client-Facing Pages
 
+Mature Client Control Center direction:
+
+```text
+/client/overview
+/client/action-needed
+/client/projects
+/client/reports-dashboards
+/client/files-links
+/client/requests
+/client/updates
+/client/settings
+```
+
+The original MVP route list below is historical scope language. It should not be used as the target information architecture for new client-facing work.
+
 ```text
 /client/overview
 /client/progress
 /client/dashboard
 /client/reports
+```
+
+Mature mapping:
+
+```text
+progress -> Projects
+dashboard -> Reports & Dashboards / Source Dashboard
+reports -> Reports & Dashboards / Report Archive
+needed-from-client -> Action Needed
+files/links -> Files & Links
+updates/activity -> Updates
+client-created asks -> Requests
 ```
 
 ### Admin Pages
@@ -183,7 +210,7 @@ external_contractor
 /admin/dashboard-links
 ```
 
-### Not Required in MVP
+### Not Required in the Original MVP
 
 ```text
 /client/chat
@@ -192,6 +219,13 @@ external_contractor
 /client/settings
 /client/advanced-analytics
 /client/custom-dashboard-builder
+```
+
+Current refactor note:
+
+```text
+/client/settings is now part of the mature Client Control Center as a limited account, company, team, notification, and security destination.
+It does not expose agency admin controls.
 ```
 
 ---

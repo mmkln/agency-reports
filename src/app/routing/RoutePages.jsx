@@ -2,18 +2,35 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../providers/auth/useAuth'
+import { ClientActionNeededPage } from '../../pages/client/action-needed/ClientActionNeededPage'
+import { ClientActionNeededPageHeader } from '../../pages/client/action-needed/ClientActionNeededPageHeader'
 import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPage'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboardPage'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
+import { ClientFilesLinksPage } from '../../pages/client/files-links/ClientFilesLinksPage'
+import { ClientFilesLinksPageHeader } from '../../pages/client/files-links/ClientFilesLinksPageHeader'
 import { ClientPerformancePage } from '../../pages/client/performance/ClientPerformancePage'
 import { ClientPerformancePageHeader } from '../../pages/client/performance/ClientPerformancePageHeader'
+import { ClientProjectsPage } from '../../pages/client/projects/ClientProjectsPage'
+import { ClientProjectsPageHeader } from '../../pages/client/projects/ClientProjectsPageHeader'
 import { ClientRequestsPage } from '../../pages/client/requests/ClientRequestsPage'
+import { ClientRequestsPageHeader } from '../../pages/client/requests/ClientRequestsPageHeader'
+import { ClientReportsDashboardsPage } from '../../pages/client/reports-dashboards/ClientReportsDashboardsPage'
+import { ClientReportsDashboardsPageHeader } from '../../pages/client/reports-dashboards/ClientReportsDashboardsPageHeader'
 import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
+import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
+import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
+import { ClientUpdatesPage } from '../../pages/client/updates/ClientUpdatesPage'
+import { ClientUpdatesPageHeader } from '../../pages/client/updates/ClientUpdatesPageHeader'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClientActivityPage } from '../../pages/admin/client-activity/AdminClientActivityPage'
+import { AdminClientFilesLinksPage } from '../../pages/admin/client-files-links'
+import { AdminClientReportsDashboardsPage } from '../../pages/admin/client-reports-dashboards'
 import { AdminClientRequestsPage } from '../../pages/admin/client-requests/AdminClientRequestsPage'
+import { AdminClientSubmittedRequestsPage } from '../../pages/admin/client-submitted-requests'
+import { AdminClientUpdatesPage } from '../../pages/admin/client-updates'
 import { AdminClientWorkReviewPage } from '../../pages/admin/client-work-review/AdminClientWorkReviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
@@ -51,10 +68,22 @@ function withPageProps(PageComponent, HeaderComponent) {
 }
 
 export const ClientOverviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
+export const ClientActionNeededPageRoute = withPageProps(
+  ClientActionNeededPage,
+  ClientActionNeededPageHeader,
+)
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
+export const ClientFilesLinksPageRoute = withPageProps(ClientFilesLinksPage, ClientFilesLinksPageHeader)
 export const ClientPerformancePageRoute = withPageProps(ClientPerformancePage, ClientPerformancePageHeader)
-export const ClientRequestsPageRoute = withPageProps(ClientRequestsPage, undefined)
+export const ClientProjectsPageRoute = withPageProps(ClientProjectsPage, ClientProjectsPageHeader)
+export const ClientRequestsPageRoute = withPageProps(ClientRequestsPage, ClientRequestsPageHeader)
+export const ClientReportsDashboardsPageRoute = withPageProps(
+  ClientReportsDashboardsPage,
+  ClientReportsDashboardsPageHeader,
+)
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
+export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, ClientSettingsPageHeader)
+export const ClientUpdatesPageRoute = withPageProps(ClientUpdatesPage, ClientUpdatesPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)
 export const AdminPerformanceDashboardsPageRoute = withPageProps(
@@ -68,7 +97,11 @@ export const AdminPerformanceDashboardEditorPageRoute = withPageProps(
 export const AdminReportsPageRoute = withPageProps(AdminReportsPage, AdminReportsPageHeader)
 export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, undefined)
 export const AdminClientActivityPageRoute = withPageProps(AdminClientActivityPage, undefined)
+export const AdminClientFilesLinksPageRoute = withPageProps(AdminClientFilesLinksPage, undefined)
+export const AdminClientReportsDashboardsPageRoute = withPageProps(AdminClientReportsDashboardsPage, undefined)
 export const AdminClientRequestsPageRoute = withPageProps(AdminClientRequestsPage, undefined)
+export const AdminClientSubmittedRequestsPageRoute = withPageProps(AdminClientSubmittedRequestsPage, undefined)
+export const AdminClientUpdatesPageRoute = withPageProps(AdminClientUpdatesPage, undefined)
 export const AdminClientWorkReviewPageRoute = withPageProps(AdminClientWorkReviewPage, undefined)
 export const AdminClientPreviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
 export const AdminClientOverviewPageRoute = withPageProps(AdminClientOverviewPage, undefined)

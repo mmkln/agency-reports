@@ -36,7 +36,12 @@ import {
   TrendSeriesSection,
 } from './TrendAndDetailSections'
 
-export function ClientPerformanceDashboard({ mode, page }) {
+export function ClientPerformanceDashboard({
+  mode,
+  page,
+  showContext = true,
+  showRelatedLinks = true,
+}) {
   const dashboard = page.performanceDashboard
   const content = dashboard.content ?? {}
   const executiveSummary = content.executive_summary ?? {}
@@ -47,12 +52,14 @@ export function ClientPerformanceDashboard({ mode, page }) {
 
   return (
     <div className="grid min-w-0 grid-cols-1 gap-6">
-      <DashboardContextBar
-        client={page.client}
-        dashboard={dashboard}
-        mode={mode}
-        periods={page.periods}
-      />
+      {showContext ? (
+        <DashboardContextBar
+          client={page.client}
+          dashboard={dashboard}
+          mode={mode}
+          periods={page.periods}
+        />
+      ) : null}
 
       <div className="flex flex-wrap gap-tag">
         <StatusBadge meta={dashboard.dataConfidenceMeta} />
@@ -110,58 +117,60 @@ export function ClientPerformanceDashboard({ mode, page }) {
 
       <AppendixTablesSection tables={content.appendix_tables} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <BulletPanel
-          emptyText="No client actions are open right now."
-          items={page.neededFromClient}
-          renderItem={(action) => (
-            <ClientActionCard
-              action={action}
-              key={action.id}
-              requestsHref={`/client/requests?clientId=${page.client.id}`}
-            />
-          )}
-          title="Needed From Client"
-        />
+      {showRelatedLinks ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <BulletPanel
+            emptyText="No client actions are open right now."
+            items={page.neededFromClient}
+            renderItem={(action) => (
+              <ClientActionCard
+                action={action}
+                key={action.id}
+                requestsHref={`/client/action-needed?clientId=${page.client.id}`}
+              />
+            )}
+            title="Needed From Client"
+          />
 
-        <Panel>
-          <PanelHeader title="Source Links & Latest Report" />
-          <PanelBody className="grid gap-component">
-            {page.sourceLinks?.length ? (
-              <div className="grid gap-2">
-                {page.sourceLinks.map((sourceLink) => (
-                  <Button asChild className="w-full min-w-0 justify-start" key={sourceLink.id} variant="outline">
-                    <a href={sourceLink.publicUrl || sourceLink.embedUrl} rel="noreferrer" target="_blank">
-                      <Icon name="layoutDashboard" size={15} />
-                      <span className="min-w-0 truncate">{sourceLink.name}</span>
-                    </a>
+          <Panel>
+            <PanelHeader title="Source Links & Latest Report" />
+            <PanelBody className="grid gap-component">
+              {page.sourceLinks?.length ? (
+                <div className="grid gap-2">
+                  {page.sourceLinks.map((sourceLink) => (
+                    <Button asChild className="w-full min-w-0 justify-start" key={sourceLink.id} variant="outline">
+                      <a href={sourceLink.publicUrl || sourceLink.embedUrl} rel="noreferrer" target="_blank">
+                        <Icon name="layoutDashboard" size={15} />
+                        <span className="min-w-0 truncate">{sourceLink.name}</span>
+                      </a>
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-ui text-text-muted">No external source links are published yet.</p>
+              )}
+
+              {page.latestReport ? (
+                <div className="rounded-control border border-control-border bg-block-subtle p-4">
+                  <p className="text-ui text-text-primary">{page.latestReport.title}</p>
+                  <p className="mt-1 text-label font-normal text-text-muted">
+                    {formatDate(page.latestReport.periodStart)} - {formatDate(page.latestReport.periodEnd)}
+                  </p>
+                  <p className="mt-2 text-body text-text-secondary">{page.latestReport.summary}</p>
+                  <Button asChild className="mt-3" size="sm" variant="outline">
+                    <Link to={`/client/reports?clientId=${page.client.id}&reportId=${page.latestReport.id}`}>
+                      Read report
+                      <Icon name="arrowRight" size={14} />
+                    </Link>
                   </Button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-ui text-text-muted">No external source links are published yet.</p>
-            )}
-
-            {page.latestReport ? (
-              <div className="rounded-control border border-control-border bg-block-subtle p-4">
-                <p className="text-ui text-text-primary">{page.latestReport.title}</p>
-                <p className="mt-1 text-label font-normal text-text-muted">
-                  {formatDate(page.latestReport.periodStart)} - {formatDate(page.latestReport.periodEnd)}
-                </p>
-                <p className="mt-2 text-body text-text-secondary">{page.latestReport.summary}</p>
-                <Button asChild className="mt-3" size="sm" variant="outline">
-                  <Link to={`/client/reports?clientId=${page.client.id}&reportId=${page.latestReport.id}`}>
-                    Read report
-                    <Icon name="arrowRight" size={14} />
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              <p className="text-ui text-text-muted">No published report yet.</p>
-            )}
-          </PanelBody>
-        </Panel>
-      </div>
+                </div>
+              ) : (
+                <p className="text-ui text-text-muted">No published report yet.</p>
+              )}
+            </PanelBody>
+          </Panel>
+        </div>
+      ) : null}
     </div>
   )
 }

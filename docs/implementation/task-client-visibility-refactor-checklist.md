@@ -420,11 +420,11 @@ client_user must not read Task directly as the client-facing work contract.
   - [ ] latest report.
   - [ ] recent activity.
 - [ ] Update `ClientOverviewBlocks` or related widgets:
-  - [ ] rename task-facing components to active-work language where appropriate.
-  - [ ] render `ClientWorkItem` cards.
+  - [x] rename task-facing components to active-work language where appropriate.
+  - [x] render `ClientWorkItem` cards.
   - [ ] show linked needed-action indicator.
-  - [ ] show target date and last updated.
-- [ ] Remove direct task filtering from client overview.
+  - [x] show target date and last updated.
+- [x] Remove direct task filtering from client overview.
 - [ ] Add overview tests:
   - [x] draft client work item hidden.
   - [x] ready-for-review client work item hidden.
@@ -436,7 +436,7 @@ client_user must not read Task directly as the client-facing work contract.
 ### Completion Criteria
 
 - [x] Client Overview active work is sourced from published `ClientWorkItem` records.
-- [ ] Client Overview can answer status/progress/action questions without exposing raw task records.
+- [x] Client Overview can answer status/progress/action questions without exposing raw task records.
 
 ## Phase 9 - Admin Review UI
 
@@ -600,25 +600,26 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `ActiveTasksBlock`
   - [x] `VisibleTasksManager`
 - [x] Document which legacy references are migration support vs cleanup targets.
-- [ ] Remove or migrate client-facing task filters from client services.
+- [x] Remove or migrate client-facing task filters from client services.
   - [x] Migrate admin overview connected workflow summary from client-visible task counts to client work item review/publish counts.
   - [x] Migrate performance dashboard work summary from client-visible tasks to published client work items.
+  - [x] Remove client overview raw task fallback and `activeTasks` alias.
 - [ ] Rename components where needed:
-  - [ ] `ActiveTasksBlock` -> `ActiveWorkBlock` or equivalent.
-  - [ ] `VisibleTasksManager` -> review/work-item language.
-  - [ ] task cards in client UI -> work item cards.
+  - [x] `ActiveTasksBlock` -> `ActiveWorkBlock` or equivalent.
+  - [x] `VisibleTasksManager` -> review/work-item language.
+  - [x] task cards in client UI -> work item cards.
 - [ ] Remove deprecated task visibility assumptions from docs.
   - [x] Mark UC-001 acceptance/implementation docs as historical where they describe task-based client visibility.
   - [x] Update UC-001 use-case language from client-visible task decisions to client work item publishing.
   - [x] Update MVP scope positioning, permissions, and acceptance language to published client-facing work.
 - [ ] Keep legacy compatibility only where tests prove it is needed.
-- [ ] Add a migration note for localStorage seed/reset behavior.
+- [x] Add a migration note for localStorage seed/reset behavior.
 
 ### Completion Criteria
 
-- [ ] Client UI has no direct dependency on task visibility as client-facing truth.
-- [ ] Naming reflects active work/client work items rather than raw tasks.
-- [ ] Deprecated paths are removed or explicitly documented as temporary.
+- [x] Client UI has no direct dependency on task visibility as client-facing truth.
+- [x] Naming reflects active work/client work items rather than raw tasks.
+- [x] Deprecated paths are removed or explicitly documented as temporary.
 
 ## Phase 14 - Verification
 

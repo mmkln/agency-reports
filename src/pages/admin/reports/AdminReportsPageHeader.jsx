@@ -23,7 +23,7 @@ export function AdminReportsPageHeader({ routeParams = {}, runtime }) {
     return (
       <AdminClientWorkspaceHeader
         client={client}
-        currentPage="reports"
+        currentPage="reports-dashboards"
         eyebrow="Client reports"
         primaryAction={{ children: 'New Report', to: createHref }}
       />

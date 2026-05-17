@@ -1,11 +1,24 @@
+import { Link } from 'react-router-dom'
+
+import { Button } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 
 import { EmptyState, SectionCard } from './_shared'
 import { formatDate } from './formatters'
 
-export function LatestUpdateBlock({ focusItems, update }) {
+export function LatestUpdateBlock({ clientId, focusItems, update }) {
   return (
-    <SectionCard iconName="target" title="Latest updates and focus">
+    <SectionCard
+      action={(
+        <Button asChild size="sm" variant="outline">
+          <Link to={`/client/updates?clientId=${clientId}`}>
+            View updates
+          </Link>
+        </Button>
+      )}
+      iconName="target"
+      title="Latest updates and focus"
+    >
       {update ? (
         <article className="rounded-control border border-control-border bg-block-subtle p-4">
           <p className="text-ui text-text-secondary">{update.title}</p>

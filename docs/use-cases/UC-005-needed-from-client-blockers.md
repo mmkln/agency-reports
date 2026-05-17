@@ -22,6 +22,14 @@ Source basis:
 - docs/use-cases/UC-004-client-performance-dashboard.md
 ```
 
+Client Control Center IA relationship:
+
+```text
+UC-005 maps to Action Needed.
+Overview and Reports & Dashboards may preview blockers, but client obligations and responses are owned by Action Needed.
+Reference: docs/research/client-control-center-information-architecture.md
+```
+
 ## 1. Purpose
 
 UC-005 defines the workflow for client actions, agency blockers, and client responses.

@@ -36,7 +36,7 @@ export function AdminPerformanceDashboardsPageHeader({ routeParams = {}, runtime
     return (
       <AdminClientWorkspaceHeader
         client={client}
-        currentPage="performance"
+        currentPage="reports-dashboards"
         eyebrow="Client analytics"
         actions={importAction}
         primaryAction={{ children: 'New Dashboard', to: createHref }}

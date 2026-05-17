@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
+import {
+  CLIENT_WORK_ITEM_PUBLISH_STATES,
+  CLIENT_WORK_ITEM_STATUSES,
+} from '../../entities/client-work-item'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import {
@@ -12,7 +16,7 @@ import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
-import { getClientOverview } from './clientOverviewService'
+import { getClientOverviewPage } from './clientOverviewService'
 
 const IDS = Object.freeze({
   AGENCY: '11111111-1111-4111-8111-111111111111',
@@ -31,6 +35,11 @@ const IDS = Object.freeze({
   TASK_CLIENT_VISIBLE: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
   TASK_DONE: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
   TASK_INTERNAL: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+  WORK_ITEM_ARCHIVED: 'c87a8d3b-9839-4f3c-ae67-16f6888f0100',
+  WORK_ITEM_DELIVERED: 'c87a8d3b-9839-4f3c-ae67-16f6888f0101',
+  WORK_ITEM_DRAFT: 'c87a8d3b-9839-4f3c-ae67-16f6888f0102',
+  WORK_ITEM_PUBLISHED: 'c87a8d3b-9839-4f3c-ae67-16f6888f0103',
+  WORK_ITEM_READY: 'c87a8d3b-9839-4f3c-ae67-16f6888f0104',
   UPDATE_CLIENT_VISIBLE: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
   UPDATE_INTERNAL: '123e4567-e89b-42d3-a456-426614174000',
 })
@@ -39,6 +48,9 @@ function createEntityRepository(records) {
   return {
     findById(id) {
       return records.find((record) => record.id === id) ?? null
+    },
+    list() {
+      return [...records]
     },
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
@@ -68,6 +80,68 @@ function createRepositories(overrides = {}) {
         primary_contact_email: 'client-b@example.com',
         primary_contact_name: 'Client B Contact',
         status: CLIENT_STATUSES.BLOCKED,
+      },
+    ],
+    clientWorkItems: [
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ITEM_ARCHIVED,
+        project_id: IDS.PROJECT_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.ARCHIVED,
+        sort_order: 0,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summary: 'Archived work item must stay hidden.',
+        target_date: '2026-05-11',
+        title: 'Archived work item',
+        updated_at: '2026-05-08T08:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ITEM_PUBLISHED,
+        project_id: IDS.PROJECT_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        sort_order: 1,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summary: 'Safe published work item summary.',
+        target_date: '2026-05-12',
+        title: 'Published work item',
+        updated_at: '2026-05-08T08:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ITEM_DRAFT,
+        project_id: IDS.PROJECT_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.DRAFT,
+        sort_order: 2,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summary: 'Draft work item must stay hidden.',
+        target_date: '2026-05-13',
+        title: 'Draft work item',
+        updated_at: '2026-05-08T08:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ITEM_READY,
+        project_id: IDS.PROJECT_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+        sort_order: 3,
+        status: CLIENT_WORK_ITEM_STATUSES.NEEDS_ATTENTION,
+        summary: 'Ready work item must stay hidden.',
+        target_date: '2026-05-14',
+        title: 'Ready for review work item',
+        updated_at: '2026-05-08T08:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ITEM_DELIVERED,
+        project_id: IDS.PROJECT_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        sort_order: 4,
+        status: CLIENT_WORK_ITEM_STATUSES.DELIVERED,
+        summary: 'Delivered work item is visible elsewhere but not active overview work.',
+        target_date: '2026-05-01',
+        title: 'Delivered work item',
+        updated_at: '2026-05-08T08:00:00.000Z',
       },
     ],
     dashboardLinks: [
@@ -306,6 +380,7 @@ function createRepositories(overrides = {}) {
 
   return {
     clients: createEntityRepository(data.clients),
+    clientWorkItems: createEntityRepository(data.clientWorkItems),
     dashboardLinks: createEntityRepository(data.dashboardLinks),
     neededFromClient: createEntityRepository(data.neededFromClient),
     performanceDashboardPeriods: createEntityRepository(data.performanceDashboardPeriods),
@@ -334,7 +409,7 @@ function createAdminViewer() {
 
 describe('getClientOverview', () => {
   it('returns a safe client overview for the matching client user', () => {
-    const overview = getClientOverview({
+    const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
       viewer: createClientViewer(),
@@ -343,7 +418,7 @@ describe('getClientOverview', () => {
     expect(overview.status).toBe('ready')
     expect(overview.client.id).toBe(IDS.CLIENT_A)
     expect(overview.currentFocus).toEqual(['Campaign optimization', 'Landing page review'])
-    expect(overview.activeTasks.map((task) => task.title)).toEqual(['Visible task'])
+    expect(overview.activeWorkItems.map((item) => item.title)).toEqual(['Published work item'])
     expect(overview.latestUpdate.title).toBe('Visible update')
     expect(overview.neededActions.map((action) => action.title)).toEqual(['Approve creative batch'])
     expect(overview.dashboard.name).toBe('Active Dashboard')
@@ -357,7 +432,7 @@ describe('getClientOverview', () => {
   })
 
   it('denies access when a client user requests another client overview', () => {
-    const overview = getClientOverview({
+    const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_B,
       repositories: createRepositories(),
       viewer: createClientViewer(IDS.CLIENT_A),
@@ -370,7 +445,7 @@ describe('getClientOverview', () => {
   })
 
   it('denies access when the client does not exist', () => {
-    const overview = getClientOverview({
+    const overview = getClientOverviewPage({
       clientId: '123e4567-e89b-42d3-a456-426614174999',
       repositories: createRepositories(),
       viewer: createClientViewer('123e4567-e89b-42d3-a456-426614174999'),
@@ -380,8 +455,8 @@ describe('getClientOverview', () => {
     expect(overview.reason).toBe('access_denied')
   })
 
-  it('never returns internal tasks, done tasks, internal updates, draft dashboards, or draft reports', () => {
-    const overview = getClientOverview({
+  it('never returns internal tasks, non-published work items, done work, internal updates, draft dashboards, or draft reports', () => {
+    const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
       viewer: createClientViewer(),
@@ -391,6 +466,10 @@ describe('getClientOverview', () => {
 
     expect(serializedOverview).not.toContain('Internal task')
     expect(serializedOverview).not.toContain('Done task')
+    expect(serializedOverview).not.toContain('Draft work item')
+    expect(serializedOverview).not.toContain('Ready for review work item')
+    expect(serializedOverview).not.toContain('Archived work item')
+    expect(serializedOverview).not.toContain('Delivered work item')
     expect(serializedOverview).not.toContain('Internal update')
     expect(serializedOverview).not.toContain('Draft Dashboard')
     expect(serializedOverview).not.toContain('May Draft Summary')
@@ -398,9 +477,10 @@ describe('getClientOverview', () => {
   })
 
   it('returns empty-state-safe values when optional overview records are missing', () => {
-    const overview = getClientOverview({
+    const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories({
+        clientWorkItems: [],
         dashboardLinks: [],
         neededFromClient: [],
         performanceDashboardPeriods: [],
@@ -425,7 +505,7 @@ describe('getClientOverview', () => {
     })
 
     expect(overview.status).toBe('ready')
-    expect(overview.activeTasks).toEqual([])
+    expect(overview.activeWorkItems).toEqual([])
     expect(overview.dashboard).toBeNull()
     expect(overview.latestReport).toBeNull()
     expect(overview.latestUpdate).toBeNull()
@@ -435,7 +515,7 @@ describe('getClientOverview', () => {
   })
 
   it('maps unavailable dashboards as visible but unavailable', () => {
-    const overview = getClientOverview({
+    const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories({
         dashboardLinks: [
@@ -496,18 +576,18 @@ describe('getClientOverview', () => {
       ],
     })
 
-    const publishedOverview = getClientOverview({
+    const publishedOverview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories,
       viewer: createClientViewer(),
     })
-    const draftPreview = getClientOverview({
+    const draftPreview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories,
       source: 'draft',
       viewer: createAdminViewer(),
     })
-    const deniedDraftPreview = getClientOverview({
+    const deniedDraftPreview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories,
       source: 'draft',
@@ -568,13 +648,13 @@ describe('getClientOverview', () => {
       ],
     })
 
-    const publishedPreview = getClientOverview({
+    const publishedPreview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories,
       source: 'published',
       viewer: createAdminViewer(),
     })
-    const draftPreview = getClientOverview({
+    const draftPreview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,
       repositories,
       source: 'draft',
@@ -584,11 +664,11 @@ describe('getClientOverview', () => {
     expect(publishedPreview.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
     expect(publishedPreview.currentFocus).toEqual(['Published snapshot focus'])
     expect(publishedPreview.progressSummary.map((project) => project.name)).toEqual(['Published Snapshot Project'])
-    expect(publishedPreview.activeTasks.map((task) => task.title)).toEqual(['Visible task'])
+    expect(publishedPreview.activeWorkItems.map((item) => item.title)).toEqual(['Published work item'])
     expect(publishedPreview.neededActions.map((action) => action.title)).toEqual(['Approve creative batch'])
     expect(draftPreview.client.status).toBe(CLIENT_STATUSES.WAITING_CLIENT)
     expect(draftPreview.currentFocus).toEqual(['Draft focus'])
-    expect(draftPreview.activeTasks.map((task) => task.title)).toEqual(['Visible task'])
+    expect(draftPreview.activeWorkItems.map((item) => item.title)).toEqual(['Published work item'])
     expect(draftPreview.neededActions.map((action) => action.title)).toEqual(['Approve creative batch'])
   })
 })

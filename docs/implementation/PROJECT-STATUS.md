@@ -72,14 +72,21 @@ The current frontend architecture expects:
 Recommended next step:
 
 ```text
-Review and clean unrelated legacy board/import work before starting the next use case.
+Use the Client Control Center refactor checklist when starting the mature client-side IA refactor.
 ```
 
 Reason:
 
 ```text
-The UC-001 through UC-005 frontend/localStorage MVP path is now implemented.
-The current worktree contains unrelated uncommitted legacy board changes that should be resolved separately before new product work starts.
+The UC-001 through UC-005 frontend/localStorage MVP path is implemented.
+The next major product move is an IA refactor from use-case routes to mature client product destinations.
+```
+
+Primary planning tracker:
+
+```text
+docs/implementation/client-control-center-refactor-checklist.md
+docs/implementation/task-client-visibility-refactor-checklist.md
 ```
 
 ## Known Backend/Integration Deferrals

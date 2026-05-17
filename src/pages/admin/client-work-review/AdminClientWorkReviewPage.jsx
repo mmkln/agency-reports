@@ -62,8 +62,8 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
           </Button>
         )}
         client={workflow.client}
-        currentPage="review"
-        eyebrow="Client-facing work review"
+        currentPage="projects"
+        eyebrow="Client projects"
       />
 
       <PageShell className="px-app-gutter py-content-gutter">

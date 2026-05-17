@@ -1,32 +1,35 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
-import { getClientOverview } from '../../../domain/services/clientOverviewService'
-import { answerNeededAction } from '../../../domain/services/neededFromClientService'
+import { getClientOverviewPage } from '../../../domain/services/clientOverviewService'
 import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
-import { useToast } from '../../../shared/notifications'
 import {
   AccessDeniedState,
-  ActiveTasksBlock,
-  DashboardOverviewBlock,
+  ActiveWorkBlock,
   EmptyOverviewState,
-  LatestMonthlySummaryBlock,
+  FilesLinksOverviewBlock,
   LatestUpdateBlock,
   LoadingOverviewState,
   NeededFromClientBlock,
-  PerformanceOverviewBlock,
   ProgressSummaryBlock,
+  ReportsDashboardsOverviewBlock,
 } from '../../../widgets/client-overview'
 
 function createUuid() {
   return crypto.randomUUID()
 }
 
-function recordClientActivity({ clientId, eventType, metadata = {}, runtime }) {
+function recordClientActivity({
+  clientId,
+  eventType,
+  metadata = {},
+  repositories,
+  runtime,
+}) {
   if (runtime.viewer.role !== USER_ROLES.CLIENT_USER) {
     return
   }
@@ -36,26 +39,18 @@ function recordClientActivity({ clientId, eventType, metadata = {}, runtime }) {
     eventType,
     idGenerator: createUuid,
     metadata,
-    repositories: runtime.repositories,
+    repositories,
     viewer: runtime.viewer,
   })
 }
 
 export function ClientOverviewPage({ routeParams = {}, runtime }) {
-  const toast = useToast()
   const recordedOverviewOpenRef = useRef(false)
-  const [, setRevision] = useState(0)
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = routeParams.preview === 'draft' ? 'draft' : 'published'
-  const dashboardHrefBase = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN
-    ? '/admin/client-dashboard-preview'
-    : '/client/dashboard'
-  const performanceHrefBase = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN
-    ? '/admin/client-performance-preview'
-    : '/client/performance'
   const overviewResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:${clientId}:${previewSource}`,
-    load: () => runtime.dataClient.read((repositories) => getClientOverview({
+    load: () => runtime.dataClient.read((repositories) => getClientOverviewPage({
       clientId,
       repositories,
       source: previewSource,
@@ -70,14 +65,15 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
     }
 
     recordedOverviewOpenRef.current = true
-    recordClientActivity({
+    void runtime.dataClient.write((repositories) => recordClientActivity({
       clientId,
       eventType: ACTIVITY_EVENT_TYPES.OVERVIEW_OPENED,
       metadata: {
         source: 'client_overview',
       },
+      repositories,
       runtime,
-    })
+    }))
   }, [clientId, overview?.status, overviewResource.status, runtime])
 
   if (overviewResource.status === 'loading' || !overview) {
@@ -105,45 +101,30 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
           <div className="grid gap-6">
             <NeededFromClientBlock
               actions={overview.neededActions}
-              requestsHref={`/client/requests?clientId=${overview.client.id}`}
-              onAnswerAction={runtime.viewer.role === USER_ROLES.CLIENT_USER
-                ? (actionId, message) => {
-                    answerNeededAction({
-                      actionId,
-                      message,
-                      repositories: runtime.repositories,
-                      viewer: runtime.viewer,
-                    })
-                    recordClientActivity({
-                      clientId,
-                      eventType: ACTIVITY_EVENT_TYPES.NEEDED_ACTION_ANSWERED,
-                      metadata: {
-                        actionId,
-                      },
-                      runtime,
-                    })
-                    setRevision((currentRevision) => currentRevision + 1)
-                    void overviewResource.reload()
-                    toast.success('Response sent', 'The agency team can now see your answer.')
-                  }
-                : null}
+              requestsHref={`/client/action-needed?clientId=${overview.client.id}`}
             />
-            <LatestUpdateBlock focusItems={overview.currentFocus} update={overview.latestUpdate} />
-            <ActiveTasksBlock tasks={overview.activeTasks} />
+            <LatestUpdateBlock
+              clientId={overview.client.id}
+              focusItems={overview.currentFocus}
+              update={overview.latestUpdate}
+            />
+            <ActiveWorkBlock
+              projectsHref={`/client/projects?clientId=${overview.client.id}`}
+              workItems={overview.activeWorkItems}
+            />
           </div>
           <aside className="grid gap-6">
             <ProgressSummaryBlock projects={overview.progressSummary} />
-            <PerformanceOverviewBlock
-              clientId={overview.client.id}
-              hrefBase={performanceHrefBase}
-              preview={overview.performancePreview}
-            />
-            <DashboardOverviewBlock
+            <ReportsDashboardsOverviewBlock
               clientId={overview.client.id}
               dashboard={overview.dashboard}
-              hrefBase={dashboardHrefBase}
+              performancePreview={overview.performancePreview}
+              report={overview.latestReport}
             />
-            <LatestMonthlySummaryBlock clientId={overview.client.id} report={overview.latestReport} />
+            <FilesLinksOverviewBlock
+              clientId={overview.client.id}
+              fileLinks={overview.fileLinksPreview}
+            />
           </aside>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { DASHBOARD_LINK_STATUSES } from '../../entities/dashboard-link'
+import { CLIENT_FILE_LINK_STATUSES } from '../../entities/client-file-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import { canClientViewPerformanceDashboardPeriod } from '../../entities/performance-dashboard'
 import { REPORT_STATUSES } from '../../entities/report'
@@ -34,6 +35,17 @@ export function isDashboardVisibleToClient(dashboardLink) {
     DASHBOARD_LINK_STATUSES.ACTIVE,
     DASHBOARD_LINK_STATUSES.UNAVAILABLE,
   ].includes(dashboardLink.status)
+}
+
+export function isClientFileLinkVisibleToClient(fileLink) {
+  if (!isClientVisible(fileLink)) {
+    return false
+  }
+
+  return [
+    CLIENT_FILE_LINK_STATUSES.ACTIVE,
+    CLIENT_FILE_LINK_STATUSES.UNAVAILABLE,
+  ].includes(fileLink.status)
 }
 
 export function isReportVisibleToClient(report) {

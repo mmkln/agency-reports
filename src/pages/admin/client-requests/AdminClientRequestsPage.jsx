@@ -54,8 +54,8 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
           </Button>
         )}
         client={workflow.client}
-        currentPage="requests"
-        eyebrow="Client requests"
+        currentPage="actions"
+        eyebrow="Action Needed"
       />
 
       <PageShell className="px-app-gutter py-content-gutter">

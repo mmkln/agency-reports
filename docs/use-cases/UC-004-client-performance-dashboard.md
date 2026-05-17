@@ -26,6 +26,14 @@ Source basis:
 - User-provided research summaries about agency client analytics dashboards
 ```
 
+Client Control Center IA relationship:
+
+```text
+UC-004 maps to Reports & Dashboards / Current Performance.
+Current Performance should lead with interpreted business value before source dashboards or report archive detail.
+Reference: docs/research/client-control-center-information-architecture.md
+```
+
 ## 1. Purpose
 
 UC-004 defines the client-facing performance analytics experience for the Agency Client Portal Aggregator.

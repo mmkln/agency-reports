@@ -208,7 +208,7 @@ export function ClientActionCard({ action, requestsHref }) {
           <p className="mt-3 text-label text-warning-foreground">Due {formatDate(action.dueDate)}</p>
           <Button asChild className="mt-3" size="sm" variant="outline">
             <Link to={requestsHref}>
-              View request
+              View action
               <Icon name="arrowUpRight" size={14} />
             </Link>
           </Button>

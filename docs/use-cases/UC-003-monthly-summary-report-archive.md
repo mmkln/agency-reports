@@ -23,6 +23,14 @@ Source basis:
 - User-provided UC-003 specification
 ```
 
+Client Control Center IA relationship:
+
+```text
+UC-003 maps to Reports & Dashboards / Report Archive.
+Published monthly summaries and reports live beside current performance and source dashboards.
+Reference: docs/research/client-control-center-information-architecture.md
+```
+
 ## 1. Purpose
 
 UC-003 defines the product flow for Monthly Summary / Report Archive inside the Agency Client Portal Aggregator.

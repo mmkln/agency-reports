@@ -1,4 +1,5 @@
-import { getClientOverview } from '../../../domain/services/clientOverviewService'
+import { getClientOverviewPage } from '../../../domain/services/clientOverviewService'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { PageHeader } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
 
@@ -33,14 +34,22 @@ function ProjectStatusAction({ client }) {
 export function ClientOverviewPageHeader({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = routeParams.preview === 'draft' ? 'draft' : 'published'
-  const overview = getClientOverview({
-    clientId,
-    repositories: runtime.repositories,
-    source: previewSource,
-    viewer: runtime.viewer,
+  const overviewResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:overview-header:${clientId}:${previewSource}`,
+    load: () => runtime.dataClient.read((repositories) => getClientOverviewPage({
+      clientId,
+      repositories,
+      source: previewSource,
+      viewer: runtime.viewer,
+    })),
   })
+  const overview = overviewResource.data
 
-  if (overview.status === 'error') {
+  if (overviewResource.status === 'loading' || !overview) {
+    return <PageHeader title="Overview" />
+  }
+
+  if (overviewResource.status === 'error' || overview.status === 'error') {
     return <PageHeader title="Access denied" />
   }
 

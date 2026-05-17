@@ -1,4 +1,7 @@
 import { CLIENT_STATUS_META } from '../../entities/client'
+import {
+  CLIENT_WORK_ITEM_STATUSES,
+} from '../../entities/client-work-item'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import {
   NEEDED_ACTION_PRIORITY_META,
@@ -6,11 +9,11 @@ import {
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
-import { TASK_STATUS_META } from '../../entities/task'
 import { canAccessClient } from '../policies/accessPolicy'
+import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import { getClientPerformanceOverviewPreview } from './clientPerformanceDashboardService'
+import { listPublishedClientWorkItems } from './clientWorkItemService'
 import {
-  isActiveClientTask,
   isDashboardVisibleToClient,
   isNeededActionVisibleToClient,
   isReportVisibleToClient,
@@ -25,18 +28,6 @@ function getStatusMeta(status, registry) {
   return registry[status] ?? {
     label: status,
     tone: 'neutral',
-  }
-}
-
-function mapTask(task, project) {
-  return {
-    assigneeName: task.assignee_name,
-    dueDate: task.due_date,
-    id: task.id,
-    projectName: project?.name ?? 'General',
-    status: task.status,
-    statusMeta: getStatusMeta(task.status, TASK_STATUS_META),
-    title: task.title,
   }
 }
 
@@ -74,15 +65,15 @@ function mapProject(project) {
   }
 }
 
-function getSnapshotOverviewCollections({ client, clientId, repositories, snapshot }) {
+function getSnapshotOverviewCollections({ client, clientId, repositories, snapshot, viewer }) {
   return {
+    activeWorkItems: getPublishedActiveWorkItems({ clientId, repositories, viewer }),
     clientStatus: snapshot.client?.status ?? client.status,
     currentFocus: snapshot.currentFocus ?? [],
     dashboardLinks: snapshot.dashboardLinks ?? [],
     neededActions: repositories.neededFromClient.listByClientId(clientId),
     projects: snapshot.projects ?? [],
     reports: snapshot.reports ?? [],
-    tasks: repositories.tasks.listByClientId(clientId),
     updates: snapshot.updates ?? [],
   }
 }
@@ -95,13 +86,13 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
 
     if (client.overview_draft) {
       return {
+        activeWorkItems: getPublishedActiveWorkItems({ clientId, repositories, viewer }),
         clientStatus: client.overview_draft.client?.status ?? client.status,
         currentFocus: client.overview_draft.currentFocus ?? [],
         dashboardLinks: client.overview_draft.dashboardLinks ?? [],
         neededActions: repositories.neededFromClient.listByClientId(clientId),
         projects: client.overview_draft.projects ?? [],
         reports: client.overview_draft.reports ?? [],
-        tasks: repositories.tasks.listByClientId(clientId),
         updates: client.overview_draft.updates ?? [],
       }
     }
@@ -113,19 +104,38 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
       clientId,
       repositories,
       snapshot: client.overview_published_snapshot,
+      viewer,
     })
   }
 
   return {
+    activeWorkItems: getPublishedActiveWorkItems({ clientId, repositories, viewer }),
     clientStatus: client.status,
     currentFocus: client.current_focus ?? [],
     dashboardLinks: repositories.dashboardLinks.listByClientId(clientId),
     neededActions: repositories.neededFromClient.listByClientId(clientId),
     projects: repositories.projects.listByClientId(clientId),
     reports: repositories.reports.listByClientId(clientId),
-    tasks: repositories.tasks.listByClientId(clientId),
     updates: repositories.updates.listByClientId(clientId),
   }
+}
+
+function getPublishedActiveWorkItems({ clientId, repositories, viewer }) {
+  if (!repositories.clientWorkItems) {
+    return []
+  }
+
+  const result = listPublishedClientWorkItems({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (result.status === 'error') {
+    return []
+  }
+
+  return result.workItems.filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED)
 }
 
 function getPerformancePreview({ clientId, repositories, viewer }) {
@@ -142,7 +152,25 @@ function getPerformancePreview({ clientId, repositories, viewer }) {
   return preview.status === 'ready' ? preview.performanceDashboard : null
 }
 
-export function getClientOverview({ clientId, repositories, source = 'published', viewer }) {
+function getFilesLinksPreview({ clientId, repositories, viewer }) {
+  if (!repositories.clientFileLinks) {
+    return []
+  }
+
+  const result = listClientVisibleFileLinks({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (result.status === 'error') {
+    return []
+  }
+
+  return result.fileLinks.slice(0, 4)
+}
+
+export function getClientOverviewPage({ clientId, repositories, source = 'published', viewer }) {
   const client = repositories.clients.findById(clientId)
 
   if (!client || !canAccessClient(viewer, clientId)) {
@@ -171,12 +199,7 @@ export function getClientOverview({ clientId, repositories, source = 'published'
     .map(mapProject)
     .sort((a, b) => b.progressPercent - a.progressPercent)
 
-  const projectsById = new Map(projects.map((project) => [project.id, project]))
-
-  const activeTasks = collections.tasks
-    .filter(isActiveClientTask)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((task) => mapTask(task, projectsById.get(task.project_id)))
+  const activeWorkItems = collections.activeWorkItems
 
   const latestUpdate = collections.updates
     .filter(isUpdateVisibleToClient)
@@ -208,18 +231,24 @@ export function getClientOverview({ clientId, repositories, source = 'published'
     repositories,
     viewer,
   })
+  const fileLinksPreview = getFilesLinksPreview({
+    clientId,
+    repositories,
+    viewer,
+  })
   const currentFocus = collections.currentFocus
   const isEmpty = currentFocus.length === 0
     && projects.length === 0
-    && activeTasks.length === 0
+    && activeWorkItems.length === 0
     && !latestUpdate
     && neededActions.length === 0
     && !dashboard
     && !latestReport
+    && fileLinksPreview.length === 0
     && !performancePreview
 
   return {
-    activeTasks,
+    activeWorkItems,
     client: {
       id: client.id,
       name: client.name,
@@ -264,9 +293,14 @@ export function getClientOverview({ clientId, repositories, source = 'published'
           updatedAt: latestUpdate.updated_at,
         }
       : null,
+    fileLinksPreview,
     neededActions,
     performancePreview,
     progressSummary: projects,
     status: 'ready',
   }
+}
+
+export function getClientOverview(args) {
+  return getClientOverviewPage(args)
 }

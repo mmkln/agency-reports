@@ -202,6 +202,35 @@ Rules:
 - If a workflow has status transitions, responses, history, filters, creation, or destructive actions, model it as a feature/domain service and route-level surface rather than an embedded section in another page.
 ```
 
+## Mature Client Destination Architecture
+
+Use cases define capabilities. Client routes define product destinations.
+
+The mature client-facing portal is the Client Control Center described in `docs/research/client-control-center-information-architecture.md`.
+
+Client routes should be treated as stable destinations:
+
+```text
+Overview = compact control home and previews
+Action Needed = client obligations and blocker responses
+Projects = client-visible workstreams and project detail
+Reports & Dashboards = interpreted performance, source dashboard, report archive
+Files & Links = deliverables, assets, shared links, reports, contracts
+Requests = client-initiated asks that require agency triage
+Updates = curated communication and decision history
+Settings = client-side profile, company, team, notifications, security
+```
+
+Rules:
+
+```text
+- Do not recreate the old Dashboard, Performance, and Reports split as competing client navigation.
+- Keep source dashboards, native performance, and monthly reports inside Reports & Dashboards.
+- Keep Overview as a summary surface that links to owning destinations.
+- Keep each destination backed by a domain read model and loaded through runtime.dataClient.read.
+- Client route pages should compose widgets and features, not own repository filtering or visibility rules.
+```
+
 ### shared
 
 Shared contains generic UI and infrastructure only.
@@ -231,6 +260,19 @@ Report visibility rules
 Those belong to entities, widgets, or domain.
 
 ## Use Case Mapping
+
+Mature destination mapping:
+
+| Use case / capability | Mature client destination | Notes |
+| --- | --- | --- |
+| UC-001 - Client Overview / Status Hub | Overview | Preview-only control home; links to owning destinations. |
+| UC-002 - Embedded Marketing Dashboard | Reports & Dashboards / Source Dashboard | External embed/link remains source-owned and visibility-gated. |
+| UC-003 - Monthly Summary / Report Archive | Reports & Dashboards / Report Archive | Published reports only. Draft and ready reports stay admin-only. |
+| UC-004 - Client Performance Dashboard | Reports & Dashboards / Current Performance | Business-value analytics before raw/source dashboards. |
+| UC-005 - Needed From Client / Blockers | Action Needed | Client obligations and responses; does not directly mutate agency tasks. |
+| Tasks / progress | Projects | Client-visible work items, not internal task management. |
+| Updates / activity | Updates | Curated client updates, not raw internal activity. |
+| Files / links | Files & Links | Explicitly client-visible resources only. |
 
 ### UC-001 - Client Overview / Status Hub
 

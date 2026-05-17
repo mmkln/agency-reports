@@ -13,8 +13,11 @@ const seedData = Object.freeze({
       name: 'Seed Client',
     },
   ],
+  client_file_links: [],
   client_invitations: [],
   client_memberships: [],
+  client_requests: [],
+  client_work_items: [],
   dashboard_links: [],
   needed_from_client: [],
   performance_dashboard_periods: [],
@@ -90,7 +93,10 @@ describe('createLocalStoragePortalRepository', () => {
           },
         ],
         client_invitations: [],
+        client_file_links: [],
         client_memberships: [],
+        client_requests: [],
+        client_work_items: [],
         dashboard_links: [],
         needed_from_client: [],
         performance_dashboard_periods: [],
@@ -129,7 +135,10 @@ describe('createLocalStoragePortalRepository', () => {
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
         clients: [],
         client_invitations: [],
+        client_file_links: [],
         client_memberships: [],
+        client_requests: [],
+        client_work_items: [],
         dashboard_links: [],
         needed_from_client: [],
         performance_dashboard_periods: [
@@ -214,6 +223,62 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.performanceDashboardPeriods.findById(period.id)).toMatchObject(period)
     expect(reloadedRepository.performanceDashboardPeriods.listByClientId(period.client_id)).toHaveLength(1)
+  })
+
+  it('persists client work items through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const workItem = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '44444444-4444-4444-8444-444444444444',
+      publish_state: 'draft',
+      status: 'planned',
+      title: 'Client-facing work',
+    }
+
+    repository.clientWorkItems.upsert(workItem)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.clientWorkItems.findById(workItem.id)).toMatchObject(workItem)
+    expect(reloadedRepository.clientWorkItems.listByClientId(workItem.client_id)).toHaveLength(1)
+  })
+
+  it('persists client file links through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const fileLink = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '55555555-5555-4555-8555-555555555555',
+      status: 'active',
+      title: 'Brand assets folder',
+      type: 'brand_asset',
+      url: 'https://drive.google.com/example',
+      visibility: 'client_visible',
+    }
+
+    repository.clientFileLinks.upsert(fileLink)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.clientFileLinks.findById(fileLink.id)).toMatchObject(fileLink)
+    expect(reloadedRepository.clientFileLinks.listByClientId(fileLink.client_id)).toHaveLength(1)
+  })
+
+  it('persists client initiated requests through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const request = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '66666666-6666-4666-8666-666666666666',
+      request_type: 'new_work',
+      status: 'submitted',
+      title: 'Add landing page variant',
+    }
+
+    repository.clientRequests.upsert(request)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.clientRequests.findById(request.id)).toMatchObject(request)
+    expect(reloadedRepository.clientRequests.listByClientId(request.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {
