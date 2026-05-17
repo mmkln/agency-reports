@@ -7,6 +7,7 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
+import { PolicyIssuesEditor } from './PolicyIssuesEditor'
 import {
   NotesField,
   NumberField,
@@ -24,6 +25,7 @@ function createBlankReview() {
     next_action: '',
     open_issues: '',
     pending_approvals: '',
+    policy_issues: [],
     platform: '',
     risk_note: '',
     service_line_id: '',
@@ -139,17 +141,28 @@ export function ComplianceReviewsCard({
                 placeholder="Google Ads, Meta, HIPAA tracking"
                 value={review.platform}
               />
-              <SelectField
-                label="Status"
-                onChange={(value) => updateReview(index, 'status', value)}
-                value={review.status || CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED}
-              >
-                {Object.values(CLINIC_COMPLIANCE_STATUSES).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {CLINIC_COMPLIANCE_STATUS_META[status].label}
-                  </SelectItem>
-                ))}
-              </SelectField>
+              {review.id ? (
+                <div className="grid gap-2">
+                  <span className="text-label text-text-muted">Status</span>
+                  <p className="rounded-control bg-block px-3 py-2 text-ui text-text-primary">
+                    {CLINIC_COMPLIANCE_STATUS_META[
+                      review.status || CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED
+                    ].label}
+                  </p>
+                </div>
+              ) : (
+                <SelectField
+                  label="Initial status"
+                  onChange={(value) => updateReview(index, 'status', value)}
+                  value={review.status || CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED}
+                >
+                  {Object.values(CLINIC_COMPLIANCE_STATUSES).map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {CLINIC_COMPLIANCE_STATUS_META[status].label}
+                    </SelectItem>
+                  ))}
+                </SelectField>
+              )}
               <SelectField
                 label="Service line"
                 onChange={(value) => updateReview(index, 'service_line_id', value)}
@@ -207,6 +220,12 @@ export function ComplianceReviewsCard({
                 value={review.next_action}
               />
             </div>
+
+            <PolicyIssuesEditor
+              onUpdate={onUpdate}
+              review={review}
+              reviewIndex={index}
+            />
           </section>
         ))}
       </div>

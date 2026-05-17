@@ -246,6 +246,16 @@ function createRepositories(overrides = {}) {
         next_action: 'Doctor approval is needed before launch.',
         open_issues: 3,
         pending_approvals: 1,
+        policy_issues: [
+          {
+            affected_campaign: 'Implants search',
+            next_action: 'Revise ad copy and request review.',
+            platform: 'Google Ads',
+            reason: 'Ad limited by healthcare policy.',
+            status: 'open',
+            type: 'limited_ad',
+          },
+        ],
         platform: 'Google Ads',
         publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
         published_at: '2026-05-08T10:00:00.000Z',
@@ -972,7 +982,9 @@ describe('clinicClientService', () => {
       blockedItems: 1,
       limitedAds: 2,
       openIssues: 3,
+      openPolicyIssues: 1,
       pendingApprovals: 1,
+      policyIssueCount: 1,
       reviewCount: 1,
       riskFlaggedReviews: 1,
     })
@@ -981,6 +993,14 @@ describe('clinicClientService', () => {
       statusMeta: {
         label: 'Risk flagged',
       },
+      policyIssues: [
+        expect.objectContaining({
+          affected_campaign: 'Implants search',
+          platform: 'Google Ads',
+          status: 'open',
+          type: 'limited_ad',
+        }),
+      ],
     })
     expect(page.approvals[0]).toMatchObject({
       approvalTypeMeta: {

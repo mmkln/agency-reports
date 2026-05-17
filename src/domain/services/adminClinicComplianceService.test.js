@@ -5,6 +5,8 @@ import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
   CLINIC_COMPLIANCE_STATUSES,
+  CLINIC_POLICY_ISSUE_STATUSES,
+  CLINIC_POLICY_ISSUE_TYPES,
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
@@ -18,6 +20,7 @@ import {
   rejectMedicalApproval,
   requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
+  transitionComplianceReviewStatus,
 } from './adminClinicComplianceService'
 
 const IDS = Object.freeze({
@@ -201,6 +204,16 @@ describe('adminClinicComplianceService', () => {
             next_action: 'Revise the landing page claim before launch.',
             open_issues: '3',
             pending_approvals: '1',
+            policy_issues: [
+              {
+                affected_campaign: 'Implants search',
+                next_action: 'Revise claim language and resubmit.',
+                platform: 'Google Ads',
+                reason: 'Ad limited by healthcare policy.',
+                status: CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+                type: CLINIC_POLICY_ISSUE_TYPES.LIMITED_AD,
+              },
+            ],
             platform: 'Google Ads',
             risk_note: 'Avoid guaranteed outcome language.',
             service_line_id: IDS.SERVICE_A,
@@ -243,6 +256,14 @@ describe('adminClinicComplianceService', () => {
       id: IDS.REVIEW_A,
       last_updated_at: '2026-05-18T10:00:00.000Z',
       limited_ads: 2,
+      policy_issues: [
+        expect.objectContaining({
+          affected_campaign: 'Implants search',
+          platform: 'Google Ads',
+          status: CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+          type: CLINIC_POLICY_ISSUE_TYPES.LIMITED_AD,
+        }),
+      ],
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       service_line_id: IDS.SERVICE_A,
     })
@@ -268,6 +289,7 @@ describe('adminClinicComplianceService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.REVIEW_A,
           publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
           title: 'Tracking review',
         },
       ]),
@@ -305,6 +327,27 @@ describe('adminClinicComplianceService', () => {
     })
   })
 
+  it('blocks publishing not-reviewed compliance reviews', () => {
+    const repositories = createRepositories({
+      complianceReviews: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.REVIEW_A,
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+          title: 'Tracking review',
+        },
+      ]),
+    })
+
+    expect(() => publishComplianceReview({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      reviewId: IDS.REVIEW_A,
+      viewer: createAdminViewer(),
+    })).toThrow('Compliance review must be reviewed before publishing.')
+  })
+
   it('deletes omitted compliance records when saving', () => {
     const repositories = createRepositories({
       complianceReviews: createRepository([
@@ -336,6 +379,103 @@ describe('adminClinicComplianceService', () => {
 
     expect(page.complianceReviews).toEqual([])
     expect(page.medicalApprovals).toEqual([])
+  })
+
+  it('changes compliance review status through audited domain transitions only', () => {
+    const repositories = createRepositories({
+      complianceReviews: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.REVIEW_A,
+          open_issues: 1,
+          status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+          title: 'Implants tracking policy review',
+        },
+      ]),
+    })
+
+    const reviewPage = transitionComplianceReviewStatus({
+      clientId: IDS.CLIENT_A,
+      input: {
+        note: 'Review started before campaign launch.',
+      },
+      nextStatus: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+      now: () => '2026-05-18T09:00:00.000Z',
+      repositories,
+      reviewId: IDS.REVIEW_A,
+      viewer: createAdminViewer(),
+    })
+
+    expect(reviewPage.complianceReviews[0]).toMatchObject({
+      last_updated_at: '2026-05-18T09:00:00.000Z',
+      status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+      status_history: [
+        expect.objectContaining({
+          actor_label: 'Agency Admin',
+          changed_at: '2026-05-18T09:00:00.000Z',
+          from_status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+          note: 'Review started before campaign launch.',
+          to_status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+        }),
+      ],
+    })
+
+    expect(() => saveAdminClinicCompliance({
+      clientId: IDS.CLIENT_A,
+      idGenerator: () => 'unused',
+      input: {
+        complianceReviews: [
+          {
+            id: IDS.REVIEW_A,
+            status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+            title: 'Implants tracking policy review',
+          },
+        ],
+        medicalApprovals: [],
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })).not.toThrow()
+    expect(repositories.complianceReviews.findById(IDS.REVIEW_A)).toMatchObject({
+      status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+    })
+  })
+
+  it('blocks invalid compliance review transitions and PHI status input', () => {
+    expect(() => transitionComplianceReviewStatus({
+      clientId: IDS.CLIENT_A,
+      nextStatus: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      repositories: createRepositories({
+        complianceReviews: createRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.REVIEW_A,
+            status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+            title: 'Tracking policy review',
+          },
+        ]),
+      }),
+      reviewId: IDS.REVIEW_A,
+      viewer: createAdminViewer(),
+    })).toThrow('Compliance review transition is not allowed.')
+
+    expect(() => transitionComplianceReviewStatus({
+      clientId: IDS.CLIENT_A,
+      input: { patient_name: 'Jane Patient' },
+      nextStatus: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+      repositories: createRepositories({
+        complianceReviews: createRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.REVIEW_A,
+            status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+            title: 'Tracking policy review',
+          },
+        ]),
+      }),
+      reviewId: IDS.REVIEW_A,
+      viewer: createAdminViewer(),
+    })).toThrow('Compliance review status update must stay aggregate-only.')
   })
 
   it('blocks invalid access, invalid references, invalid statuses, and PHI fields', () => {

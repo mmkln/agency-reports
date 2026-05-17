@@ -78,7 +78,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Ensure admin preview can read draft clinic surfaces for owned clients.
 - [x] Ensure clinic clients cannot mutate internal agency tasks.
 - [x] Ensure approval decisions record actor, timestamp, version, and decision state.
-- [ ] Ensure compliance review state is enforced in domain services, not UI-only checks.
+- [x] Ensure compliance review state is enforced in domain services, not UI-only checks.
 
 ## Phase 3 - Clinic Overview
 
@@ -228,9 +228,9 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] blocked
   - [x] limited_by_policy
 - [x] Build approval history with version, approver, timestamp, and decision comment.
-- [ ] Add rejected/limited ad policy issue log.
+- [x] Add rejected/limited ad policy issue log.
 - [x] Add tracking/privacy setup status.
-- [ ] Add tests for hidden draft compliance items.
+- [x] Add tests for hidden draft compliance items.
 
 ## Phase 9 - Clinic Action Needed
 

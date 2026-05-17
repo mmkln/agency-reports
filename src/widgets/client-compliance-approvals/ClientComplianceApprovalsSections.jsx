@@ -16,6 +16,13 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleDateString() : 'Not set'
 }
 
+function formatIssueLabel(value) {
+  return String(value || 'Issue')
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 function SummaryMetric({ helper, label, value }) {
   return (
     <article className="rounded-block bg-block p-block shadow-block">
@@ -70,6 +77,29 @@ function ComplianceReviewCard({ review }) {
       ) : null}
       {review.nextAction ? (
         <p className="mt-3 text-body text-text-primary">{review.nextAction}</p>
+      ) : null}
+
+      {review.policyIssues?.length ? (
+        <div className="mt-5 grid gap-item">
+          {review.policyIssues.map((issue, index) => (
+            <div className="rounded-control bg-block-subtle p-component" key={issue.id || `${review.id}-policy-${index}`}>
+              <div className="flex flex-wrap items-center gap-tag">
+                <Badge className="border-control-border bg-fill text-text-secondary" variant="outline">
+                  {formatIssueLabel(issue.type)}
+                </Badge>
+                <span className="text-label text-text-muted">
+                  {issue.platform || 'Policy'}{issue.affected_campaign ? ` - ${issue.affected_campaign}` : ''}
+                </span>
+              </div>
+              {issue.reason ? (
+                <p className="mt-2 text-body text-text-secondary">{issue.reason}</p>
+              ) : null}
+              {issue.next_action ? (
+                <p className="mt-2 text-body text-text-primary">{issue.next_action}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
       ) : null}
     </article>
   )
@@ -190,9 +220,9 @@ export function ClientComplianceApprovalsView({ page }) {
           value={formatNumber(page.totals.limitedAds)}
         />
         <SummaryMetric
-          helper="High-risk review records"
-          label="Risk flagged"
-          value={formatNumber(page.totals.riskFlaggedReviews)}
+          helper="Logged unresolved platform or privacy issues"
+          label="Open policy issues"
+          value={formatNumber(page.totals.openPolicyIssues)}
         />
       </section>
 

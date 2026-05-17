@@ -695,6 +695,7 @@ function mapComplianceReview(review, { locationsById, serviceLinesById }) {
     nextAction: normalizedReview.next_action,
     openIssues: normalizedReview.open_issues,
     pendingApprovals: normalizedReview.pending_approvals,
+    policyIssues: normalizedReview.policy_issues,
     platform: normalizedReview.platform,
     riskNote: normalizedReview.risk_note,
     serviceLine: normalizedReview.service_line_id
@@ -702,6 +703,7 @@ function mapComplianceReview(review, { locationsById, serviceLinesById }) {
       : null,
     serviceLineId: normalizedReview.service_line_id,
     status: normalizedReview.status,
+    statusHistory: normalizedReview.status_history,
     statusMeta: CLINIC_COMPLIANCE_STATUS_META[normalizedReview.status],
     summary: normalizedReview.summary,
     title: normalizedReview.title,
@@ -739,12 +741,16 @@ function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
 }
 
 function summarizeCompliance({ approvals, reviews }) {
+  const policyIssues = reviews.flatMap((review) => review.policyIssues)
+
   return {
     approvedApprovals: approvals.filter((approval) => approval.status === 'approved').length,
     blockedItems: reviews.reduce((total, review) => total + review.blockedItems, 0),
     limitedAds: reviews.reduce((total, review) => total + review.limitedAds, 0),
     openIssues: reviews.reduce((total, review) => total + review.openIssues, 0),
+    openPolicyIssues: policyIssues.filter((issue) => issue.status === 'open').length,
     pendingApprovals: approvals.filter((approval) => approval.status === 'pending_medical_review').length,
+    policyIssueCount: policyIssues.length,
     rejectedApprovals: approvals.filter((approval) => approval.status === 'rejected').length,
     reviewCount: reviews.length,
     riskFlaggedReviews: reviews.filter((review) => ['risk_flagged', 'blocked', 'limited_by_policy'].includes(review.status)).length,

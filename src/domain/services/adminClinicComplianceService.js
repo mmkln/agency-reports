@@ -6,6 +6,8 @@ import {
   CLINIC_APPROVAL_TYPE_META,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_COMPLIANCE_STATUS_META,
+  CLINIC_POLICY_ISSUE_STATUSES,
+  CLINIC_POLICY_ISSUE_TYPES,
   CLINIC_RECORD_PUBLISH_STATE_META,
   CLINIC_RECORD_PUBLISH_STATES,
   assertClinicAggregateRecord,
@@ -18,6 +20,8 @@ import { USER_ROLES } from '../../entities/profile'
 
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
 const VALID_APPROVAL_TYPES = new Set(Object.values(CLINIC_APPROVAL_TYPES))
+const VALID_POLICY_ISSUE_STATUSES = new Set(Object.values(CLINIC_POLICY_ISSUE_STATUSES))
+const VALID_POLICY_ISSUE_TYPES = new Set(Object.values(CLINIC_POLICY_ISSUE_TYPES))
 const TERMINAL_APPROVAL_STATUSES = new Set([
   CLINIC_APPROVAL_STATUSES.APPROVED,
   CLINIC_APPROVAL_STATUSES.EXPIRED,
@@ -38,6 +42,38 @@ const APPROVAL_TRANSITIONS = Object.freeze({
   [CLINIC_APPROVAL_STATUSES.EXPIRED]: new Set([
     CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
     CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED,
+  ]),
+})
+const COMPLIANCE_REVIEW_TRANSITIONS = Object.freeze({
+  [CLINIC_COMPLIANCE_STATUSES.APPROVED]: new Set([
+    CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+    CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY,
+    CLINIC_COMPLIANCE_STATUSES.BLOCKED,
+  ]),
+  [CLINIC_COMPLIANCE_STATUSES.BLOCKED]: new Set([
+    CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+    CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY,
+  ]),
+  [CLINIC_COMPLIANCE_STATUSES.IN_REVIEW]: new Set([
+    CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY,
+    CLINIC_COMPLIANCE_STATUSES.BLOCKED,
+    CLINIC_COMPLIANCE_STATUSES.APPROVED,
+  ]),
+  [CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY]: new Set([
+    CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+    CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    CLINIC_COMPLIANCE_STATUSES.BLOCKED,
+    CLINIC_COMPLIANCE_STATUSES.APPROVED,
+  ]),
+  [CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED]: new Set([
+    CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+    CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY,
+    CLINIC_COMPLIANCE_STATUSES.BLOCKED,
+    CLINIC_COMPLIANCE_STATUSES.APPROVED,
   ]),
 })
 
@@ -228,6 +264,39 @@ function filterMeaningfulApprovals(records = []) {
   ))
 }
 
+function normalizePolicyIssues(inputIssues = []) {
+  if (!Array.isArray(inputIssues)) {
+    return []
+  }
+
+  return inputIssues
+    .map((issue) => {
+      assertClinicAggregateRecord(issue, 'Compliance policy issue')
+
+      return {
+        affected_campaign: normalizeOptionalText(issue.affected_campaign ?? issue.campaign),
+        id: normalizeOptionalText(issue.id),
+        next_action: normalizeOptionalText(issue.next_action),
+        platform: normalizeOptionalText(issue.platform),
+        reason: normalizeOptionalText(issue.reason),
+        resolved_at: normalizeOptionalDate(issue.resolved_at, 'Policy issue resolved at'),
+        status: normalizeEnum(
+          issue.status,
+          VALID_POLICY_ISSUE_STATUSES,
+          CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+          'Policy issue status',
+        ),
+        type: normalizeEnum(
+          issue.type,
+          VALID_POLICY_ISSUE_TYPES,
+          CLINIC_POLICY_ISSUE_TYPES.OTHER,
+          'Policy issue type',
+        ),
+      }
+    })
+    .filter((issue) => issue.reason || issue.next_action || issue.platform || issue.affected_campaign)
+}
+
 function buildComplianceReviewRecord({
   clientId,
   existingRecord,
@@ -244,6 +313,12 @@ function buildComplianceReviewRecord({
   validateReference(locationId, foundation.locationIds, 'Compliance review location')
   validateReference(serviceLineId, foundation.serviceLineIds, 'Compliance review service line')
 
+  const status = existingRecord?.status ?? normalizeEnum(
+    input.status,
+    VALID_COMPLIANCE_STATUSES,
+    CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    'Compliance status',
+  )
   const record = normalizeComplianceReview({
     blocked_items: normalizeNumber(input.blocked_items, 'Blocked items'),
     client_id: clientId,
@@ -255,16 +330,13 @@ function buildComplianceReviewRecord({
     next_action: normalizeOptionalText(input.next_action),
     open_issues: normalizeNumber(input.open_issues, 'Open issues'),
     pending_approvals: normalizeNumber(input.pending_approvals, 'Pending approvals'),
+    policy_issues: normalizePolicyIssues(input.policy_issues),
     platform: normalizeOptionalText(input.platform),
     ...preservePublishState(existingRecord),
     risk_note: normalizeOptionalText(input.risk_note),
     service_line_id: serviceLineId,
-    status: normalizeEnum(
-      input.status,
-      VALID_COMPLIANCE_STATUSES,
-      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
-      'Compliance status',
-    ),
+    status,
+    status_history: existingRecord?.status_history ?? [],
     summary: normalizeOptionalText(input.summary),
     title: requireText(input.title, 'Compliance review title'),
   })
@@ -344,6 +416,18 @@ function getEditableMedicalApproval({ approvalId, clientId, repositories, viewer
   return normalizeMedicalApproval(approval)
 }
 
+function getEditableComplianceReview({ clientId, repositories, reviewId, viewer }) {
+  getEditableClinicClient({ clientId, repositories, viewer })
+
+  const review = repositories.complianceReviews.findById(reviewId)
+
+  if (!review || review.client_id !== clientId) {
+    throw new Error('Compliance review was not found.')
+  }
+
+  return normalizeComplianceReview(review)
+}
+
 function publishClinicComplianceRecord({
   clientId,
   id,
@@ -363,6 +447,10 @@ function publishClinicComplianceRecord({
 
   const timestamp = now()
   const normalizedRecord = normalize(existingRecord)
+
+  if (normalizedRecord.status === CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED) {
+    throw new Error('Compliance review must be reviewed before publishing.')
+  }
 
   repository.upsert(normalize({
     ...normalizedRecord,
@@ -392,6 +480,20 @@ function requireOpenApproval(approval, nextStatus) {
   }
 }
 
+function requireComplianceReviewTransition(review, nextStatus) {
+  if (!VALID_COMPLIANCE_STATUSES.has(nextStatus)) {
+    throw new Error('Compliance status is invalid.')
+  }
+
+  if (review.status === nextStatus) {
+    throw new Error('Compliance review is already in this status.')
+  }
+
+  if (!COMPLIANCE_REVIEW_TRANSITIONS[nextStatus]?.has(review.status)) {
+    throw new Error('Compliance review transition is not allowed.')
+  }
+}
+
 function normalizeDecisionInput(input = {}, { requiresComment = false } = {}) {
   assertClinicAggregateRecord(input, 'Medical approval decision')
 
@@ -405,6 +507,66 @@ function normalizeDecisionInput(input = {}, { requiresComment = false } = {}) {
     comment,
     version: normalizeOptionalText(input.version),
   }
+}
+
+function normalizeComplianceStatusInput(input = {}) {
+  assertClinicAggregateRecord(input, 'Compliance review status update')
+
+  return {
+    note: normalizeOptionalText(input.note ?? input.comment),
+  }
+}
+
+export function getComplianceReviewTransitionCapabilities(review) {
+  const normalizedReview = normalizeComplianceReview(review)
+
+  return {
+    canApprove: COMPLIANCE_REVIEW_TRANSITIONS[CLINIC_COMPLIANCE_STATUSES.APPROVED].has(normalizedReview.status),
+    canBlock: COMPLIANCE_REVIEW_TRANSITIONS[CLINIC_COMPLIANCE_STATUSES.BLOCKED].has(normalizedReview.status),
+    canFlagRisk: COMPLIANCE_REVIEW_TRANSITIONS[CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED].has(normalizedReview.status),
+    canMarkInReview: COMPLIANCE_REVIEW_TRANSITIONS[CLINIC_COMPLIANCE_STATUSES.IN_REVIEW].has(normalizedReview.status),
+    canMarkLimited: COMPLIANCE_REVIEW_TRANSITIONS[CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY].has(normalizedReview.status),
+  }
+}
+
+export function transitionComplianceReviewStatus({
+  clientId,
+  input = {},
+  nextStatus,
+  now = () => new Date().toISOString(),
+  repositories,
+  reviewId,
+  viewer,
+}) {
+  const review = getEditableComplianceReview({
+    clientId,
+    repositories,
+    reviewId,
+    viewer,
+  })
+  const statusInput = normalizeComplianceStatusInput(input)
+  const timestamp = now()
+
+  requireComplianceReviewTransition(review, nextStatus)
+
+  repositories.complianceReviews.upsert(normalizeComplianceReview({
+    ...review,
+    last_updated_at: timestamp,
+    status: nextStatus,
+    status_history: [
+      ...review.status_history,
+      {
+        actor_label: getActorLabel(viewer),
+        changed_at: timestamp,
+        from_status: review.status,
+        note: statusInput.note,
+        to_status: nextStatus,
+      },
+    ],
+    updated_at: timestamp,
+  }))
+
+  return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
 
 function transitionMedicalApproval({

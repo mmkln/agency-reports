@@ -127,6 +127,20 @@ export const CLINIC_COMPLIANCE_STATUSES = Object.freeze({
   RISK_FLAGGED: 'risk_flagged',
 })
 
+export const CLINIC_POLICY_ISSUE_STATUSES = Object.freeze({
+  OPEN: 'open',
+  RESOLVED: 'resolved',
+})
+
+export const CLINIC_POLICY_ISSUE_TYPES = Object.freeze({
+  BLOCKED_AD: 'blocked_ad',
+  LIMITED_AD: 'limited_ad',
+  MEDICAL_CLAIM: 'medical_claim',
+  OTHER: 'other',
+  PRIVACY_TRACKING: 'privacy_tracking',
+  REJECTED_AD: 'rejected_ad',
+})
+
 export const CLINIC_COMPLIANCE_STATUS_META = Object.freeze({
   [CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED]: {
     icon: 'circle',
@@ -571,6 +585,49 @@ function normalizeApprovalHistory(items) {
     .filter((item) => item.decision || item.comment || item.decided_at)
 }
 
+function normalizeComplianceHistory(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      actor_label: normalizeText(item?.actor_label),
+      changed_at: item?.changed_at ?? null,
+      from_status: normalizeText(item?.from_status),
+      note: normalizeText(item?.note),
+      to_status: normalizeText(item?.to_status),
+    }))
+    .filter((item) => item.from_status || item.to_status || item.note || item.changed_at)
+}
+
+function normalizePolicyIssues(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      affected_campaign: normalizeText(item?.affected_campaign ?? item?.campaign),
+      id: normalizeText(item?.id),
+      next_action: normalizeText(item?.next_action),
+      platform: normalizeText(item?.platform),
+      reason: normalizeText(item?.reason),
+      resolved_at: item?.resolved_at ?? null,
+      status: normalizeEnum(
+        item?.status,
+        CLINIC_POLICY_ISSUE_STATUSES,
+        CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+      ),
+      type: normalizeEnum(
+        item?.type,
+        CLINIC_POLICY_ISSUE_TYPES,
+        CLINIC_POLICY_ISSUE_TYPES.OTHER,
+      ),
+    }))
+    .filter((item) => item.reason || item.next_action || item.platform || item.affected_campaign)
+}
+
 export function normalizeComplianceReview(review = {}) {
   assertClinicAggregateRecord(review, 'Compliance review')
 
@@ -586,6 +643,7 @@ export function normalizeComplianceReview(review = {}) {
     next_action: normalizeText(review.next_action),
     open_issues: normalizeNumber(review.open_issues),
     pending_approvals: normalizeNumber(review.pending_approvals),
+    policy_issues: normalizePolicyIssues(review.policy_issues),
     platform: normalizeText(review.platform),
     publish_state: normalizeEnum(
       review.publish_state,
@@ -596,6 +654,7 @@ export function normalizeComplianceReview(review = {}) {
     published_by: normalizeNullableText(review.published_by),
     risk_note: normalizeText(review.risk_note),
     service_line_id: normalizeNullableText(review.service_line_id),
+    status_history: normalizeComplianceHistory(review.status_history),
     status: normalizeEnum(
       review.status,
       CLINIC_COMPLIANCE_STATUSES,
