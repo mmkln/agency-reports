@@ -20,7 +20,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Preserve existing Client Control Center visibility, publish, preview, and route guard guarantees.
 - [x] Keep clinic MVP data aggregate-only; do not introduce patient-level PHI fields.
 - [x] Keep route pages thin and clinic read models domain-owned.
-- [ ] Keep clinic actions separate from internal agency tasks.
+- [x] Keep clinic actions separate from internal agency tasks.
 - [x] Add tests before exposing new clinic-safe data to client routes.
 
 ## Phase 0 - Product Contract
@@ -145,7 +145,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add clinic action creation/linking for missed-call or slow-response issues.
   - [x] Link missed-call operational insights to existing clinic actions.
   - [x] Show suggested clinic actions when no linked action exists.
-  - [ ] Create suggested clinic actions from missed-call or slow-response thresholds.
+  - [x] Create domain workflow for suggested clinic booking actions from missed-call, slow-response, and follow-up thresholds.
+  - [ ] Add admin UI action button for suggested clinic booking actions.
 - [x] Add tests that missed-call insights do not expose patient-level data.
 
 ## Phase 6 - Campaigns / Service Lines
