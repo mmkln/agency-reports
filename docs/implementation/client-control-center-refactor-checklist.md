@@ -225,7 +225,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 ## Phase 10 - Overview Cleanup
 
 - [x] Re-audit `src/pages/client/overview`.
-- [ ] Keep only preview-level sections:
+- [x] Keep only preview-level sections:
   - [x] status
   - [x] top action needed
   - [x] active projects/work preview

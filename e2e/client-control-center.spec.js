@@ -64,6 +64,11 @@ test('client sidebar exposes mature Client Control Center destinations only', as
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Dashboard' })).toHaveCount(0)
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Performance' })).toHaveCount(0)
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Reports' })).toHaveCount(0)
+  await expect(page.getByText('Contact', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ask a question' })).toHaveAttribute(
+    'href',
+    `/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+  )
 })
 
 test('client user cannot open admin Client Control Center workspaces', async ({ page }) => {

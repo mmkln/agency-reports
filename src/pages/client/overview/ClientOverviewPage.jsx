@@ -10,6 +10,7 @@ import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import {
   AccessDeniedState,
   ActiveWorkBlock,
+  ContactAskQuestionBlock,
   EmptyOverviewState,
   FilesLinksOverviewBlock,
   LatestUpdateBlock,
@@ -125,6 +126,7 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
               clientId={overview.client.id}
               fileLinks={overview.fileLinksPreview}
             />
+            <ContactAskQuestionBlock client={overview.client} />
           </aside>
         </div>
       )}

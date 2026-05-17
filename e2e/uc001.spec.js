@@ -162,6 +162,14 @@ test('client overview hides internal tasks and internal notes', async ({ page })
   await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByText('Review new ad creatives')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ask a question' })).toHaveAttribute(
+    'href',
+    `/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+  )
+  await expect(page.getByRole('link', { name: 'sarah@greendental.example' })).toHaveAttribute(
+    'href',
+    'mailto:sarah@greendental.example',
+  )
   await expect(page.getByText('Debug internal tracking mismatch')).toHaveCount(0)
   await expect(page.getByText('Mismatch between form-submit event and CRM lead count')).toHaveCount(0)
   await expect(page.getByText('Internal tracking mismatch is under investigation.')).toHaveCount(0)
