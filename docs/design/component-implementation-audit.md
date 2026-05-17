@@ -110,6 +110,7 @@ Recently resolved:
 | `src/features/admin-performance-dashboards/components/editor/PerformanceCollectionSections.jsx` | 327-line collection section bundle | 5-line section export facade plus focused KPI, goal, insight, channel, and next-action section files. |
 | `src/shared/layout/AppSidebar.jsx` | 318-line app shell component with config, row styling, navigation, search, notifications, account, and theme menu in one file | 59-line shell composition plus focused shared layout files for styles/config, nav item, search, notifications, and account menu. |
 | `src/features/tasks/import-task-markdown/components/TaskMarkdownImportModal.jsx` | 328-line modal with local FileReader, form state, fields, warnings, and preview rendering | 82-line modal shell plus feature hook, field component, preview component, and model-owned example Markdown. |
+| `src/features/admin-client-access/components/InvitationsPanel.jsx` | 281-line invitation lifecycle panel with local repository reads, form state, list cards, actions, and confirmation dialog in one file | 71-line panel composition plus invitation workflow hook, card/form components, and invite-link helper. |
 
 Fix direction:
 
