@@ -65,6 +65,18 @@ const tabs = [
   },
 ]
 
+const clientPreviewRoutesByPage = {
+  overview: '/admin/client-preview',
+  projects: '/admin/client-projects-preview',
+  actions: '/admin/client-action-needed-preview',
+  requests: '/admin/client-requests-preview',
+  'reports-dashboards': '/admin/client-reports-dashboards-preview',
+  'files-links': '/admin/client-files-links-preview',
+  updates: '/admin/client-updates-preview',
+  access: '/admin/client-settings-preview',
+  activity: '/admin/client-updates-preview',
+}
+
 function getClientField(client, camelName, snakeName) {
   return client?.[camelName] ?? client?.[snakeName] ?? ''
 }
@@ -114,6 +126,7 @@ export function AdminClientWorkspaceHeader({
   const portalSlug = getClientField(client, 'portalSlug', 'portal_slug')
   const primaryContactName = getClientField(client, 'primaryContactName', 'primary_contact_name')
   const primaryContactEmail = getClientField(client, 'primaryContactEmail', 'primary_contact_email')
+  const previewRoute = clientPreviewRoutesByPage[currentPage] ?? clientPreviewRoutesByPage.overview
   const status = client?.status
 
   return (
@@ -126,12 +139,13 @@ export function AdminClientWorkspaceHeader({
               {portalSlug ? (
                 <Link
                   className="inline-flex h-control-small items-center gap-1 text-label text-link no-underline hover:text-link-hover"
-                  to={`/admin/client-preview?clientId=${clientId}`}
+                  to={`${previewRoute}?clientId=${clientId}`}
                 >
-                  agency.com/{portalSlug}
+                  Preview published client page
                   <Icon name="arrowUpRight" size={12} />
                 </Link>
               ) : null}
+              {portalSlug ? <span className="text-label text-text-muted">agency.com/{portalSlug}</span> : null}
               {primaryContactName ? <span className="text-label text-text-muted">{primaryContactName}</span> : null}
               {primaryContactEmail ? <span className="text-label text-text-muted">{primaryContactEmail}</span> : null}
               {actions}

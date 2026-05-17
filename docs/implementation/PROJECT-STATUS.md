@@ -48,7 +48,7 @@ npm run build
 Current baseline from the latest verification run:
 
 ```text
-Unit tests: 228 passed
+Unit tests: 229 passed
 Full e2e: 29/30 passed on the latest parallel run; the failed navigation-abort case passed when rerun individually.
 Build: passed
 ```

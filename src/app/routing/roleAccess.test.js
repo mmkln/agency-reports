@@ -99,4 +99,28 @@ describe('route role access', () => {
       expect(canAccessRoute({ role: USER_ROLES.CLIENT_USER }, route)).toBe(false)
     })
   })
+
+  it('keeps published client preview routes admin-only and hidden from navigation', () => {
+    const adminPreviewRouteIds = [
+      'admin-client-preview',
+      'admin-client-action-needed-preview',
+      'admin-client-projects-preview',
+      'admin-client-reports-dashboards-preview',
+      'admin-client-files-links-preview',
+      'admin-client-requests-preview',
+      'admin-client-updates-preview',
+      'admin-client-settings-preview',
+      'admin-client-dashboard-preview',
+      'admin-client-performance-preview',
+      'admin-client-report-preview',
+    ]
+    const adminPreviewRoutes = routeMetadata.filter((route) => adminPreviewRouteIds.includes(route.id))
+
+    expect(adminPreviewRoutes).toHaveLength(adminPreviewRouteIds.length)
+    adminPreviewRoutes.forEach((route) => {
+      expect(route.showInNav).toBe(false)
+      expect(canAccessRoute({ role: USER_ROLES.AGENCY_ADMIN }, route)).toBe(true)
+      expect(canAccessRoute({ role: USER_ROLES.CLIENT_USER }, route)).toBe(false)
+    })
+  })
 })

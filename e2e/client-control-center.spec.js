@@ -6,6 +6,7 @@ import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/serv
 import { NEEDED_ACTION_STATUSES } from '../src/entities/needed-from-client/index.js'
 import { TASK_STATUSES } from '../src/entities/task/index.js'
 
+const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
@@ -36,6 +37,21 @@ async function signInAsClient(page) {
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page).toHaveURL(/\/client\/overview/)
+}
+
+async function signInAsAdmin(page) {
+  await page.evaluate(({ authKey, demoRoleKey }) => {
+    window.localStorage.removeItem(authKey)
+    window.localStorage.setItem(demoRoleKey, 'admin')
+  }, {
+    authKey: AUTH_SESSION_STORAGE_KEY,
+    demoRoleKey: DEMO_ROLE_KEY,
+  })
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
+  await page.locator('input[name="email"]').fill(ADMIN_EMAIL)
+  await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/admin\/clients/)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -81,6 +97,25 @@ test('client user cannot open admin Client Control Center workspaces', async ({ 
     'href',
     `/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
   )
+})
+
+test('agency admin preview link opens the matching published client surface', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/client-files-links?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  const previewLink = page.getByRole('link', { name: /Preview published client page/ })
+
+  await expect(previewLink).toHaveAttribute(
+    'href',
+    `/admin/client-files-links-preview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+  )
+
+  await previewLink.click()
+
+  await expect(page).toHaveURL(/\/admin\/client-files-links-preview/)
+  await expect(page.locator('h1').getByText('Files & Links')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Deliverables 1/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Archived 1/ })).toBeVisible()
 })
 
 test('client settings owns account context without agency admin controls', async ({ page }) => {

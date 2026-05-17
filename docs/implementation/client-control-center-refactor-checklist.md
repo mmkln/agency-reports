@@ -257,7 +257,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Ensure admin can control every client-visible surface.
   - Audited admin workspace routes for Overview, Projects, Actions, Requests, Reports & Dashboards, Files & Links, Updates, Access, and Activity.
 - [x] Ensure preview-as-client works for major destinations.
-  - Overview has published/draft preview, and dashboard/performance/report previews route into the mature Reports & Dashboards destination.
+  - Overview has published/draft preview, dashboard/performance/report previews route into the mature Reports & Dashboards destination, and workspace headers open page-aware published previews for Actions, Projects, Requests, Files & Links, Updates, and Settings.
 - [x] Preserve publishing/draft boundaries for dashboards, reports, updates, and files.
 - [x] Update admin headers/actions to avoid isolated query-param pages where workspace context is needed.
 
