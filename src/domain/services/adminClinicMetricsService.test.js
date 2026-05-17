@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import {
   CLINIC_ACQUISITION_CHANNELS,
+  CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import {
   getAdminClinicMetricsPage,
+  publishCallBookingMetric,
+  publishPatientAcquisitionSnapshot,
   saveAdminClinicMetrics,
 } from './adminClinicMetricsService'
 
@@ -230,6 +233,7 @@ describe('adminClinicMetricsService', () => {
       client_id: IDS.CLIENT_A,
       id: IDS.ACQUISITION_A,
       last_updated_at: '2026-05-17T10:00:00.000Z',
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       service_line_id: IDS.SERVICE_A,
     })
     expect(page.callBookingMetrics[0]).toMatchObject({
@@ -237,6 +241,58 @@ describe('adminClinicMetricsService', () => {
       client_id: IDS.CLIENT_A,
       id: IDS.CALLS_A,
       location_id: IDS.LOCATION_A,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    })
+  })
+
+  it('publishes metric records with audit metadata', () => {
+    const repositories = createRepositories({
+      callBookingMetrics: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.CALLS_A,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+      patientAcquisitionSnapshots: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.ACQUISITION_A,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+    })
+
+    const acquisitionPage = publishPatientAcquisitionSnapshot({
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T10:00:00.000Z',
+      repositories,
+      snapshotId: IDS.ACQUISITION_A,
+      viewer: createAdminViewer(),
+    })
+    const callsPage = publishCallBookingMetric({
+      clientId: IDS.CLIENT_A,
+      metricId: IDS.CALLS_A,
+      now: () => '2026-05-18T10:30:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(acquisitionPage.patientAcquisitionSnapshots[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:00:00.000Z',
+      published_by: 'admin-user-id',
+    })
+    expect(callsPage.callBookingMetrics[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:30:00.000Z',
+      published_by: 'admin-user-id',
     })
   })
 

@@ -5,6 +5,7 @@ import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
   CLINIC_COMPLIANCE_STATUSES,
+  CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
@@ -12,6 +13,8 @@ import {
   approveMedicalApproval,
   expireMedicalApproval,
   getAdminClinicCompliancePage,
+  publishComplianceReview,
+  publishMedicalApproval,
   rejectMedicalApproval,
   requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
@@ -240,6 +243,7 @@ describe('adminClinicComplianceService', () => {
       id: IDS.REVIEW_A,
       last_updated_at: '2026-05-18T10:00:00.000Z',
       limited_ads: 2,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       service_line_id: IDS.SERVICE_A,
     })
     expect(page.medicalApprovals[0]).toMatchObject({
@@ -252,7 +256,52 @@ describe('adminClinicComplianceService', () => {
         }),
       ],
       id: IDS.APPROVAL_A,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       title: 'Implant success-rate claim',
+    })
+  })
+
+  it('publishes compliance reviews and medical approvals with audit metadata', () => {
+    const repositories = createRepositories({
+      complianceReviews: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.REVIEW_A,
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          title: 'Tracking review',
+        },
+      ]),
+      medicalApprovals: createRepository([
+        createApproval({
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        }),
+      ]),
+    })
+
+    const reviewPage = publishComplianceReview({
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T10:00:00.000Z',
+      repositories,
+      reviewId: IDS.REVIEW_A,
+      viewer: createAdminViewer(),
+    })
+    const approvalPage = publishMedicalApproval({
+      approvalId: IDS.APPROVAL_A,
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T10:30:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(reviewPage.complianceReviews[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:00:00.000Z',
+      published_by: 'admin-user-id',
+    })
+    expect(approvalPage.medicalApprovals[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:30:00.000Z',
+      published_by: 'admin-user-id',
     })
   })
 

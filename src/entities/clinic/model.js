@@ -46,6 +46,24 @@ export const CLINIC_ACQUISITION_CHANNEL_META = Object.freeze({
   [CLINIC_ACQUISITION_CHANNELS.OTHER]: { label: 'Other' },
 })
 
+export const CLINIC_RECORD_PUBLISH_STATES = Object.freeze({
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+})
+
+export const CLINIC_RECORD_PUBLISH_STATE_META = Object.freeze({
+  [CLINIC_RECORD_PUBLISH_STATES.DRAFT]: {
+    icon: 'filePenLine',
+    label: 'Draft',
+    tone: 'neutral',
+  },
+  [CLINIC_RECORD_PUBLISH_STATES.PUBLISHED]: {
+    icon: 'send',
+    label: 'Published',
+    tone: 'green',
+  },
+})
+
 export const CLINIC_COMPLIANCE_STATUSES = Object.freeze({
   APPROVED: 'approved',
   BLOCKED: 'blocked',
@@ -320,6 +338,13 @@ export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
     period_end: normalizeText(snapshot.period_end),
     period_label: normalizeText(snapshot.period_label),
     period_start: normalizeText(snapshot.period_start),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
     qualified_inquiries: normalizeNumber(snapshot.qualified_inquiries),
     service_line_id: normalizeNullableText(snapshot.service_line_id),
     spend: normalizeNumber(snapshot.spend),
@@ -364,6 +389,13 @@ export function normalizeCallBookingMetric(metric = {}) {
     period_end: normalizeText(metric.period_end),
     period_label: normalizeText(metric.period_label),
     period_start: normalizeText(metric.period_start),
+    publish_state: normalizeEnum(
+      metric.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: metric.published_at ?? null,
+    published_by: normalizeNullableText(metric.published_by),
     service_line_id: normalizeNullableText(metric.service_line_id),
     summary: normalizeText(metric.summary),
     total_calls: normalizeNumber(metric.total_calls),
@@ -390,6 +422,13 @@ export function normalizeReputationSnapshot(snapshot = {}) {
     period_label: normalizeText(snapshot.period_label),
     period_start: normalizeText(snapshot.period_start),
     provider_profile_completeness: normalizeNumber(snapshot.provider_profile_completeness),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
     review_count: normalizeNumber(snapshot.review_count),
     review_request_sent: normalizeNumber(snapshot.review_request_sent),
     review_response_drafts: normalizeNumber(snapshot.review_response_drafts),
@@ -432,6 +471,13 @@ export function normalizeComplianceReview(review = {}) {
     open_issues: normalizeNumber(review.open_issues),
     pending_approvals: normalizeNumber(review.pending_approvals),
     platform: normalizeText(review.platform),
+    publish_state: normalizeEnum(
+      review.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: review.published_at ?? null,
+    published_by: normalizeNullableText(review.published_by),
     risk_note: normalizeText(review.risk_note),
     service_line_id: normalizeNullableText(review.service_line_id),
     status: normalizeEnum(
@@ -466,6 +512,13 @@ export function normalizeMedicalApproval(approval = {}) {
     instructions: normalizeText(approval.instructions),
     last_updated_at: approval.last_updated_at ?? approval.updated_at ?? approval.created_at ?? null,
     location_id: normalizeNullableText(approval.location_id),
+    publish_state: normalizeEnum(
+      approval.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: approval.published_at ?? null,
+    published_by: normalizeNullableText(approval.published_by),
     requested_by_label: normalizeText(approval.requested_by_label),
     service_line_id: normalizeNullableText(approval.service_line_id),
     status: normalizeEnum(

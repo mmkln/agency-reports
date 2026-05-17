@@ -6,6 +6,8 @@ import {
   CLINIC_APPROVAL_TYPE_META,
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_COMPLIANCE_STATUS_META,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
   assertClinicAggregateRecord,
   normalizeClinicLocation,
   normalizeClinicServiceLine,
@@ -168,6 +170,14 @@ function updateTimestamped(existingRecord, record, timestamp) {
   }
 }
 
+function preservePublishState(existingRecord) {
+  return {
+    publish_state: existingRecord?.publish_state ?? CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    published_at: existingRecord?.published_at ?? null,
+    published_by: existingRecord?.published_by ?? null,
+  }
+}
+
 function getClinicFoundation({ clientId, repositories }) {
   const locations = repositories.clinicLocations
     .listByClientId(clientId)
@@ -246,6 +256,7 @@ function buildComplianceReviewRecord({
     open_issues: normalizeNumber(input.open_issues, 'Open issues'),
     pending_approvals: normalizeNumber(input.pending_approvals, 'Pending approvals'),
     platform: normalizeOptionalText(input.platform),
+    ...preservePublishState(existingRecord),
     risk_note: normalizeOptionalText(input.risk_note),
     service_line_id: serviceLineId,
     status: normalizeEnum(
@@ -302,6 +313,7 @@ function buildMedicalApprovalRecord({
     instructions: normalizeOptionalText(input.instructions),
     last_updated_at: timestamp,
     location_id: locationId,
+    ...preservePublishState(existingRecord),
     requested_by_label: normalizeOptionalText(input.requested_by_label),
     service_line_id: serviceLineId,
     status,
@@ -330,6 +342,37 @@ function getEditableMedicalApproval({ approvalId, clientId, repositories, viewer
   }
 
   return normalizeMedicalApproval(approval)
+}
+
+function publishClinicComplianceRecord({
+  clientId,
+  id,
+  normalize,
+  now = () => new Date().toISOString(),
+  repository,
+  repositories,
+  viewer,
+}) {
+  getEditableClinicClient({ clientId, repositories, viewer })
+
+  const existingRecord = repository.findById(id)
+
+  if (!existingRecord || existingRecord.client_id !== clientId) {
+    throw new Error('Clinic compliance record was not found.')
+  }
+
+  const timestamp = now()
+  const normalizedRecord = normalize(existingRecord)
+
+  repository.upsert(normalize({
+    ...normalizedRecord,
+    publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+    published_at: normalizedRecord.published_at ?? timestamp,
+    published_by: normalizedRecord.published_by ?? viewer.userId ?? null,
+    updated_at: timestamp,
+  }))
+
+  return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
 
 function getActorLabel(viewer) {
@@ -443,6 +486,7 @@ export function getAdminClinicCompliancePage({ clientId, repositories, viewer })
       .listByClientId(clientId)
       .map(normalizeMedicalApproval)
       .sort(sortApprovals),
+    publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
     status: 'ready',
   }
@@ -537,5 +581,23 @@ export function expireMedicalApproval(args) {
   return transitionMedicalApproval({
     ...args,
     nextStatus: CLINIC_APPROVAL_STATUSES.EXPIRED,
+  })
+}
+
+export function publishComplianceReview(args) {
+  return publishClinicComplianceRecord({
+    ...args,
+    id: args.reviewId ?? args.id,
+    normalize: normalizeComplianceReview,
+    repository: args.repositories.complianceReviews,
+  })
+}
+
+export function publishMedicalApproval(args) {
+  return publishClinicComplianceRecord({
+    ...args,
+    id: args.approvalId ?? args.id,
+    normalize: normalizeMedicalApproval,
+    repository: args.repositories.medicalApprovals,
   })
 }

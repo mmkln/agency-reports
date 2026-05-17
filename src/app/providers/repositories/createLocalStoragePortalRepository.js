@@ -26,6 +26,13 @@ const TABLE_NAMES = Object.freeze([
   'tasks',
   'updates',
 ])
+const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
+  'call_booking_metrics',
+  'compliance_reviews',
+  'medical_approvals',
+  'patient_acquisition_snapshots',
+  'reputation_snapshots',
+])
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
@@ -100,6 +107,15 @@ function mergeSeedPerformanceDashboardPeriod(record, seedRecord) {
 function mergeSeedRecord(record, seedRecord, tableName) {
   if (tableName === 'performance_dashboard_periods') {
     return mergeSeedPerformanceDashboardPeriod(record, seedRecord)
+  }
+
+  if (CLINIC_PUBLISH_STATE_TABLES.includes(tableName) && !record.publish_state && seedRecord.publish_state) {
+    return {
+      ...record,
+      publish_state: seedRecord.publish_state,
+      published_at: record.published_at ?? seedRecord.published_at ?? null,
+      published_by: record.published_by ?? seedRecord.published_by ?? null,
+    }
   }
 
   return record

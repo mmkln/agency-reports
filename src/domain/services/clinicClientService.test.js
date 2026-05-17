@@ -7,6 +7,7 @@ import {
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_ACQUISITION_CHANNELS,
+  CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
@@ -133,6 +134,8 @@ function createRepositories(overrides = {}) {
         ],
         period_label: 'May 2026',
         period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
         service_line_id: IDS.SERVICE_LINE,
         total_calls: 43,
       },
@@ -155,6 +158,8 @@ function createRepositories(overrides = {}) {
         location_id: IDS.LOCATION,
         period_label: 'May 2026',
         period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
         qualified_inquiries: 21,
         service_line_id: IDS.SERVICE_LINE,
         spend: 1860,
@@ -172,6 +177,8 @@ function createRepositories(overrides = {}) {
         period_label: 'May 2026',
         period_start: '2026-05-01',
         provider_profile_completeness: 0.86,
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
         review_count: 286,
         review_request_sent: 142,
         review_response_drafts: 3,
@@ -191,6 +198,8 @@ function createRepositories(overrides = {}) {
         open_issues: 3,
         pending_approvals: 1,
         platform: 'Google Ads',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
         risk_note: 'Avoid guaranteed outcome language.',
         service_line_id: IDS.SERVICE_LINE,
         status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
@@ -216,6 +225,8 @@ function createRepositories(overrides = {}) {
         id: IDS.MEDICAL_APPROVAL,
         instructions: 'Review the claim.',
         last_updated_at: '2026-05-08T09:00:00.000Z',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
         requested_by_label: 'GrowthLab',
         service_line_id: IDS.SERVICE_LINE,
         status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
@@ -328,6 +339,74 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('hides draft clinic metrics from client users', () => {
+    const repositories = createRepositories({
+      callBookingMetrics: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.CALL_BOOKING,
+          period_label: 'Draft May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          total_calls: 99,
+        },
+      ]),
+      patientAcquisitionSnapshots: createEntityRepository([
+        {
+          booked_appointments: 99,
+          client_id: IDS.CLIENT_A,
+          id: IDS.SNAPSHOT,
+          period_label: 'Draft May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+    })
+
+    expect(getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    }).snapshots).toEqual([])
+    expect(getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    }).metrics).toEqual([])
+  })
+
+  it('allows owned agency admins to preview draft clinic metrics explicitly', () => {
+    const repositories = createRepositories({
+      patientAcquisitionSnapshots: createEntityRepository([
+        {
+          booked_appointments: 9,
+          client_id: IDS.CLIENT_A,
+          id: IDS.SNAPSHOT,
+          period_label: 'Draft May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+    })
+
+    const clientPage = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createClientViewer(),
+    })
+    const adminPreviewPage = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+
+    expect(clientPage.snapshots).toEqual([])
+    expect(adminPreviewPage.source).toBe('draft')
+    expect(adminPreviewPage.snapshots).toHaveLength(1)
+  })
+
   it('returns aggregate call and booking performance data', () => {
     const page = getClientCallsBookingsPage({
       clientId: IDS.CLIENT_A,
@@ -382,6 +461,51 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('hides draft reputation snapshots from client users', () => {
+    const page = getClientReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        reputationSnapshots: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.REPUTATION,
+            period_label: 'Draft May 2026',
+            period_start: '2026-05-01',
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            review_count: 999,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.snapshots).toEqual([])
+    expect(page.totals.reviewCount).toBe(0)
+  })
+
+  it('allows owned agency admins to preview draft reputation snapshots explicitly', () => {
+    const page = getClientReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        reputationSnapshots: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.REPUTATION,
+            period_label: 'Draft May 2026',
+            period_start: '2026-05-01',
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            review_count: 999,
+          },
+        ]),
+      }),
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.source).toBe('draft')
+    expect(page.snapshots).toHaveLength(1)
+  })
+
   it('returns compliance reviews and medical approval history', () => {
     const page = getClientComplianceApprovalsPage({
       clientId: IDS.CLIENT_A,
@@ -418,6 +542,65 @@ describe('clinicClientService', () => {
         label: 'Pending medical review',
       },
     })
+  })
+
+  it('hides draft compliance reviews and medical approvals from client users', () => {
+    const page = getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        complianceReviews: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.COMPLIANCE_REVIEW,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            title: 'Draft compliance issue',
+          },
+        ]),
+        medicalApprovals: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.MEDICAL_APPROVAL,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            title: 'Draft approval',
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.reviews).toEqual([])
+    expect(page.approvals).toEqual([])
+    expect(page.isEmpty).toBe(true)
+  })
+
+  it('allows owned agency admins to preview draft compliance and approval records explicitly', () => {
+    const page = getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        complianceReviews: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.COMPLIANCE_REVIEW,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            title: 'Draft compliance issue',
+          },
+        ]),
+        medicalApprovals: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.MEDICAL_APPROVAL,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+            title: 'Draft approval',
+          },
+        ]),
+      }),
+      source: 'draft',
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.source).toBe('draft')
+    expect(page.reviews).toHaveLength(1)
+    expect(page.approvals).toHaveLength(1)
   })
 
   it('denies cross-client patient acquisition access', () => {
@@ -566,6 +749,7 @@ describe('clinicClientService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.SNAPSHOT,
           patient_phone: '+1 555 0100',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
         },
       ]),
     })
@@ -584,6 +768,7 @@ describe('clinicClientService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.CALL_BOOKING,
           patient_email: 'jane@example.com',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
           total_calls: 1,
         },
       ]),
@@ -603,6 +788,7 @@ describe('clinicClientService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.REPUTATION,
           patient_name: 'Jane Patient',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
           review_count: 1,
         },
       ]),
@@ -622,6 +808,7 @@ describe('clinicClientService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.COMPLIANCE_REVIEW,
           patient_id: 'patient-a',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
           title: 'Unsafe compliance review',
         },
       ]),
@@ -640,6 +827,7 @@ describe('clinicClientService', () => {
           client_id: IDS.CLIENT_A,
           id: IDS.MEDICAL_APPROVAL,
           patient_email: 'jane@example.com',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
           title: 'Unsafe approval',
         },
       ]),

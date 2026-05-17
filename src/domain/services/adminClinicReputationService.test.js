@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
+import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import {
   getAdminClinicReputationPage,
+  publishReputationSnapshot,
   saveAdminClinicReputation,
 } from './adminClinicReputationService'
 
@@ -168,8 +170,38 @@ describe('adminClinicReputationService', () => {
       google_rating: 4.8,
       id: IDS.SNAPSHOT_A,
       last_updated_at: '2026-05-17T10:00:00.000Z',
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       provider_profile_completeness: 90,
       reviews_gained: 14,
+    })
+  })
+
+  it('publishes reputation snapshots with audit metadata', () => {
+    const repositories = createRepositories({
+      reputationSnapshots: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.SNAPSHOT_A,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+    })
+
+    const page = publishReputationSnapshot({
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T10:00:00.000Z',
+      repositories,
+      snapshotId: IDS.SNAPSHOT_A,
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.reputationSnapshots[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:00:00.000Z',
+      published_by: 'admin-user-id',
     })
   })
 

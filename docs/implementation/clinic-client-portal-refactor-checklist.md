@@ -73,9 +73,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 - [x] Add product rule tests that clinic MVP data is aggregate-only.
 - [x] Ensure client users only see clinic records for their own client membership.
-- [ ] Ensure draft clinic metrics are hidden from client users.
-- [ ] Ensure draft compliance/approval items are hidden unless assigned as client actions.
-- [ ] Ensure admin preview can read draft clinic surfaces for owned clients.
+- [x] Ensure draft clinic metrics are hidden from client users.
+- [x] Ensure draft compliance/approval items are hidden unless assigned as client actions.
+- [x] Ensure admin preview can read draft clinic surfaces for owned clients.
 - [x] Ensure clinic clients cannot mutate internal agency tasks.
 - [x] Ensure approval decisions record actor, timestamp, version, and decision state.
 - [ ] Ensure compliance review state is enforced in domain services, not UI-only checks.
@@ -297,7 +297,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 12 - Integrations Readiness
 
-- [ ] Keep MVP manual/import-first.
+- [x] Keep MVP manual/import-first.
 - [ ] Define import contracts for:
   - [ ] patient acquisition metrics
   - [ ] calls/bookings metrics

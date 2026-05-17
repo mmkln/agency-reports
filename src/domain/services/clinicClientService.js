@@ -5,6 +5,7 @@ import {
   CLINIC_APPROVAL_TYPE_META,
   CLINIC_COMPLIANCE_STATUS_META,
   CLINIC_PROFILE_SPECIALTY_META,
+  CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUS_META,
   normalizeCallBookingMetric,
   normalizeComplianceReview,
@@ -372,9 +373,30 @@ function canReadClinicClient({ client, clientId, viewer }) {
   return canAccessClient(viewer, clientId)
 }
 
+function canPreviewClinicDrafts({ client, source, viewer }) {
+  return source === 'draft'
+    && viewer?.role === USER_ROLES.AGENCY_ADMIN
+    && Boolean(viewer.agencyId && client?.agency_id === viewer.agencyId)
+}
+
+function isPublishedClinicRecord(record) {
+  return record?.publish_state === CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
+}
+
+function listClientVisibleClinicRecords({ clientId, repository, source }) {
+  const records = repository?.listByClientId(clientId) ?? []
+
+  if (source === 'draft') {
+    return records
+  }
+
+  return records.filter(isPublishedClinicRecord)
+}
+
 export function getClientClinicFoundationPage({
   clientId,
   repositories,
+  source = 'published',
   viewer,
 }) {
   const client = repositories.clients.findById(clientId)
@@ -406,6 +428,7 @@ export function getClientClinicFoundationPage({
     locations,
     profile: mapProfile(profileRecord),
     serviceLines,
+    source: canPreviewClinicDrafts({ client, source, viewer }) ? 'draft' : 'published',
     status: 'ready',
   }
 }
@@ -423,6 +446,7 @@ export function getClientClinicServiceLinesPage(input) {
     locations: foundationPage.locations,
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
+    source: foundationPage.source,
     status: 'ready',
   }
 }
@@ -436,7 +460,11 @@ export function getClientPatientAcquisitionPage(input) {
 
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const snapshots = (input.repositories.patientAcquisitionSnapshots?.listByClientId(input.clientId) ?? [])
+  const snapshots = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.patientAcquisitionSnapshots,
+    source: foundationPage.source,
+  })
     .map((snapshot) => mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesById }))
     .sort((left, right) => (
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
@@ -459,6 +487,7 @@ export function getClientPatientAcquisitionPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,
+    source: foundationPage.source,
     status: 'ready',
     totals: {
       ...totals,
@@ -478,7 +507,11 @@ export function getClientCallsBookingsPage(input) {
 
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const metrics = (input.repositories.callBookingMetrics?.listByClientId(input.clientId) ?? [])
+  const metrics = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.callBookingMetrics,
+    source: foundationPage.source,
+  })
     .map((metric) => mapCallBookingMetric(metric, { locationsById, serviceLinesById }))
     .sort((left, right) => (
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
@@ -499,6 +532,7 @@ export function getClientCallsBookingsPage(input) {
     notBookedReasons: aggregateNotBookedReasons(metrics),
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
+    source: foundationPage.source,
     status: 'ready',
     totals: {
       ...rawTotals,
@@ -518,7 +552,11 @@ export function getClientReputationPage(input) {
   }
 
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const snapshots = (input.repositories.reputationSnapshots?.listByClientId(input.clientId) ?? [])
+  const snapshots = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.reputationSnapshots,
+    source: foundationPage.source,
+  })
     .map((snapshot) => mapReputationSnapshot(snapshot, { locationsById }))
     .sort((left, right) => (
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
@@ -538,6 +576,7 @@ export function getClientReputationPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,
+    source: foundationPage.source,
     status: 'ready',
     totals: summarizeReputationSnapshots(snapshots),
   }
@@ -552,13 +591,21 @@ export function getClientComplianceApprovalsPage(input) {
 
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const reviews = (input.repositories.complianceReviews?.listByClientId(input.clientId) ?? [])
+  const reviews = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.complianceReviews,
+    source: foundationPage.source,
+  })
     .map((review) => mapComplianceReview(review, { locationsById, serviceLinesById }))
     .sort((left, right) => (
       right.openIssues - left.openIssues
       || left.title.localeCompare(right.title)
     ))
-  const approvals = (input.repositories.medicalApprovals?.listByClientId(input.clientId) ?? [])
+  const approvals = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.medicalApprovals,
+    source: foundationPage.source,
+  })
     .map((approval) => mapMedicalApproval(approval, { locationsById, serviceLinesById }))
     .sort((left, right) => (
       new Date(left.dueDate ?? '9999-12-31').getTime() - new Date(right.dueDate ?? '9999-12-31').getTime()
@@ -578,6 +625,7 @@ export function getClientComplianceApprovalsPage(input) {
     profile: foundationPage.profile,
     reviews,
     serviceLines: foundationPage.serviceLines,
+    source: foundationPage.source,
     status: 'ready',
     totals: summarizeCompliance({ approvals, reviews }),
   }

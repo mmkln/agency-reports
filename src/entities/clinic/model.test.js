@@ -6,6 +6,7 @@ import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_TYPES,
   CLINIC_COMPLIANCE_STATUSES,
+  CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
   assertClinicAggregateRecord,
   normalizeClinicLocation,
@@ -81,6 +82,7 @@ describe('clinic entity model', () => {
       forms: 9,
       impressions: 12800,
       landing_page_visits: 211,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       qualified_inquiries: 21,
       spend: 1860,
     })
@@ -111,6 +113,7 @@ describe('clinic entity model', () => {
       missed_calls: 6,
       no_response_leads: 3,
       not_booked_reasons: [{ count: 4, reason: 'No available slot' }],
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       total_calls: 43,
     })
   })
@@ -131,6 +134,7 @@ describe('clinic entity model', () => {
       google_rating: 4.7,
       negative_reviews: 2,
       provider_profile_completeness: 0.86,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       review_count: 286,
       review_request_sent: 142,
       review_response_drafts: 3,
@@ -151,6 +155,7 @@ describe('clinic entity model', () => {
       limited_ads: 2,
       open_issues: 3,
       pending_approvals: 4,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
     })
 
@@ -165,6 +170,7 @@ describe('clinic entity model', () => {
           version: 'v2',
         },
       ],
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       status: CLINIC_APPROVAL_STATUSES.APPROVED,
       version: ' v2 ',
     })).toMatchObject({

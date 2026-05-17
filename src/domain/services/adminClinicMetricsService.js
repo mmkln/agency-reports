@@ -3,6 +3,8 @@ import {
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_ACQUISITION_CHANNEL_META,
   assertClinicAggregateRecord,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
   normalizeCallBookingMetric,
   normalizeClinicLocation,
   normalizeClinicServiceLine,
@@ -122,6 +124,14 @@ function updateTimestamped(existingRecord, record, timestamp) {
   }
 }
 
+function preservePublishState(existingRecord) {
+  return {
+    publish_state: existingRecord?.publish_state ?? CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    published_at: existingRecord?.published_at ?? null,
+    published_by: existingRecord?.published_by ?? null,
+  }
+}
+
 function getClinicFoundation({ clientId, repositories }) {
   const locations = repositories.clinicLocations
     .listByClientId(clientId)
@@ -205,6 +215,7 @@ function buildPatientAcquisitionRecord({
     period_end: requireText(input.period_end, 'Patient acquisition period end'),
     period_label: requireText(input.period_label, 'Patient acquisition period label'),
     period_start: requireText(input.period_start, 'Patient acquisition period start'),
+    ...preservePublishState(existingRecord),
     qualified_inquiries: normalizeNumber(input.qualified_inquiries, 'Qualified inquiries'),
     service_line_id: serviceLineId,
     spend: normalizeNumber(input.spend, 'Spend'),
@@ -251,6 +262,7 @@ function buildCallBookingMetricRecord({
     period_end: requireText(input.period_end, 'Call booking period end'),
     period_label: requireText(input.period_label, 'Call booking period label'),
     period_start: requireText(input.period_start, 'Call booking period start'),
+    ...preservePublishState(existingRecord),
     service_line_id: serviceLineId,
     summary: normalizeOptionalText(input.summary),
     total_calls: normalizeNumber(input.total_calls, 'Total calls'),
@@ -265,6 +277,37 @@ function requireIdGenerator(idGenerator) {
   if (!idGenerator) {
     throw new Error('idGenerator is required.')
   }
+}
+
+function publishClinicMetricRecord({
+  clientId,
+  id,
+  normalize,
+  now = () => new Date().toISOString(),
+  repository,
+  repositories,
+  viewer,
+}) {
+  getEditableClinicClient({ clientId, repositories, viewer })
+
+  const existingRecord = repository.findById(id)
+
+  if (!existingRecord || existingRecord.client_id !== clientId) {
+    throw new Error('Clinic metric record was not found.')
+  }
+
+  const timestamp = now()
+  const normalizedRecord = normalize(existingRecord)
+
+  repository.upsert(normalize({
+    ...normalizedRecord,
+    publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+    published_at: normalizedRecord.published_at ?? timestamp,
+    published_by: normalizedRecord.published_by ?? viewer.userId ?? null,
+    updated_at: timestamp,
+  }))
+
+  return getAdminClinicMetricsPage({ clientId, repositories, viewer })
 }
 
 export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
@@ -283,6 +326,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
       .listByClientId(clientId)
       .map(normalizePatientAcquisitionSnapshot)
       .sort(sortByPeriodDesc),
+    publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
     status: 'ready',
   }
@@ -348,4 +392,22 @@ export function saveAdminClinicMetrics({
   })
 
   return getAdminClinicMetricsPage({ clientId, repositories, viewer })
+}
+
+export function publishPatientAcquisitionSnapshot(args) {
+  return publishClinicMetricRecord({
+    ...args,
+    id: args.snapshotId ?? args.id,
+    normalize: normalizePatientAcquisitionSnapshot,
+    repository: args.repositories.patientAcquisitionSnapshots,
+  })
+}
+
+export function publishCallBookingMetric(args) {
+  return publishClinicMetricRecord({
+    ...args,
+    id: args.metricId ?? args.id,
+    normalize: normalizeCallBookingMetric,
+    repository: args.repositories.callBookingMetrics,
+  })
 }

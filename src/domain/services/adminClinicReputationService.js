@@ -1,6 +1,8 @@
 import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
 import {
   assertClinicAggregateRecord,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
   normalizeClinicLocation,
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
@@ -126,6 +128,14 @@ function updateTimestamped(existingRecord, record, timestamp) {
   }
 }
 
+function preservePublishState(existingRecord) {
+  return {
+    publish_state: existingRecord?.publish_state ?? CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    published_at: existingRecord?.published_at ?? null,
+    published_by: existingRecord?.published_by ?? null,
+  }
+}
+
 function getLocations({ clientId, repositories }) {
   return repositories.clinicLocations
     .listByClientId(clientId)
@@ -190,6 +200,7 @@ function buildReputationSnapshotRecord({
       input.provider_profile_completeness,
       'Provider profile completeness',
     ),
+    ...preservePublishState(existingRecord),
     review_count: normalizeNumber(input.review_count, 'Review count'),
     review_request_sent: normalizeNumber(input.review_request_sent, 'Review requests sent'),
     review_response_drafts: normalizeNumber(input.review_response_drafts, 'Review response drafts'),
@@ -209,6 +220,35 @@ function requireIdGenerator(idGenerator) {
   }
 }
 
+function publishReputationRecord({
+  clientId,
+  id,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  getEditableClinicClient({ clientId, repositories, viewer })
+
+  const existingRecord = repositories.reputationSnapshots.findById(id)
+
+  if (!existingRecord || existingRecord.client_id !== clientId) {
+    throw new Error('Reputation snapshot was not found.')
+  }
+
+  const timestamp = now()
+  const normalizedRecord = normalizeReputationSnapshot(existingRecord)
+
+  repositories.reputationSnapshots.upsert(normalizeReputationSnapshot({
+    ...normalizedRecord,
+    publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+    published_at: normalizedRecord.published_at ?? timestamp,
+    published_by: normalizedRecord.published_by ?? viewer.userId ?? null,
+    updated_at: timestamp,
+  }))
+
+  return getAdminClinicReputationPage({ clientId, repositories, viewer })
+}
+
 export function getAdminClinicReputationPage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const locations = getLocations({ clientId, repositories })
@@ -216,6 +256,7 @@ export function getAdminClinicReputationPage({ clientId, repositories, viewer })
   return {
     client: mapClient(client),
     locations,
+    publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     reputationSnapshots: repositories.reputationSnapshots
       .listByClientId(clientId)
       .map(normalizeReputationSnapshot)
@@ -263,4 +304,11 @@ export function saveAdminClinicReputation({
   })
 
   return getAdminClinicReputationPage({ clientId, repositories, viewer })
+}
+
+export function publishReputationSnapshot(args) {
+  return publishReputationRecord({
+    ...args,
+    id: args.snapshotId ?? args.id,
+  })
 }
