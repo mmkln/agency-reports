@@ -128,6 +128,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientOverviewPageHeader,
     iconName: 'layoutDashboard',
+    navOrder: 10,
     element: <ClientOverviewPageRoute />,
   },
   {
@@ -151,6 +152,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientActionNeededPageHeader,
     iconName: 'bell',
+    navOrder: 20,
     element: <ClientActionNeededPageRoute />,
   },
   {
@@ -174,6 +176,13 @@ export const routeDefinitions = [
     header: ClientPatientAcquisitionPageHeader,
     iconName: 'target',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navGroup: {
+      id: 'client-performance-group',
+      label: 'Performance',
+      iconName: 'barChart',
+      order: 30,
+    },
+    navLabel: 'Acquisition',
     element: <ClientPatientAcquisitionPageRoute />,
   },
   {
@@ -185,6 +194,13 @@ export const routeDefinitions = [
     header: ClientCallsBookingsPageHeader,
     iconName: 'phone',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navGroup: {
+      id: 'client-performance-group',
+      label: 'Performance',
+      iconName: 'barChart',
+      order: 30,
+    },
+    navLabel: 'Calls',
     element: <ClientCallsBookingsPageRoute />,
   },
   {
@@ -197,6 +213,7 @@ export const routeDefinitions = [
     header: ClientProjectsPageHeader,
     iconName: 'checkCircle2',
     excludeClientTypes: [CLIENT_TYPES.CLINIC],
+    navOrder: 30,
     element: <ClientProjectsPageRoute />,
   },
   {
@@ -209,6 +226,13 @@ export const routeDefinitions = [
     header: ClientServiceLinesPageHeader,
     iconName: 'stethoscope',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navGroup: {
+      id: 'client-performance-group',
+      label: 'Performance',
+      iconName: 'barChart',
+      order: 30,
+    },
+    navLabel: 'Services',
     element: <ClientServiceLinesPageRoute />,
   },
   {
@@ -221,6 +245,12 @@ export const routeDefinitions = [
     header: ClientReputationPageHeader,
     iconName: 'messageSquare',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navGroup: {
+      id: 'client-performance-group',
+      label: 'Performance',
+      iconName: 'barChart',
+      order: 30,
+    },
     element: <ClientReputationPageRoute />,
   },
   {
@@ -233,17 +263,24 @@ export const routeDefinitions = [
     header: ClientComplianceApprovalsPageHeader,
     iconName: 'shieldCheck',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navGroup: {
+      id: 'client-resources-group',
+      label: 'Resources',
+      iconName: 'fileText',
+      order: 60,
+    },
     element: <ClientComplianceApprovalsPageRoute />,
   },
   {
     path: '/client/reports-dashboards',
     id: 'client-reports-dashboards',
-    label: 'Reports & Dashboards',
+    label: 'Reports',
     pageTitle: 'Reports & Dashboards',
     allowedRoles: [USER_ROLES.CLIENT_USER],
     contentWidth: 'content',
     header: ClientReportsDashboardsPageHeader,
     iconName: 'barChart',
+    navOrder: 40,
     element: <ClientReportsDashboardsPageRoute />,
   },
   {
@@ -255,6 +292,13 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientFilesLinksPageHeader,
     iconName: 'fileText',
+    navGroup: {
+      id: 'client-resources-group',
+      label: 'Resources',
+      iconName: 'fileText',
+      order: 60,
+    },
+    navLabel: 'Files',
     element: <ClientFilesLinksPageRoute />,
   },
   {
@@ -266,6 +310,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientRequestsPageHeader,
     iconName: 'messageSquare',
+    navOrder: 50,
     element: <ClientRequestsPageRoute />,
   },
   {
@@ -277,6 +322,12 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientUpdatesPageHeader,
     iconName: 'clock',
+    navGroup: {
+      id: 'client-resources-group',
+      label: 'Resources',
+      iconName: 'fileText',
+      order: 60,
+    },
     element: <ClientUpdatesPageRoute />,
   },
   {
@@ -288,6 +339,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientSettingsPageHeader,
     iconName: 'user',
+    navOrder: 70,
     element: <ClientSettingsPageRoute />,
   },
   {

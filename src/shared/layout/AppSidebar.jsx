@@ -1,4 +1,27 @@
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+  useSidebar,
+} from '@/components/ui/sidebar'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { BrandLogo } from '../ui'
+import { Icon } from '../icons'
 import { AccountMenu } from './AccountMenu'
 import {
   roleMeta,
@@ -6,6 +29,117 @@ import {
 import { NotificationsMenu } from './NotificationsMenu'
 import { SidebarNavItem } from './SidebarNavItem'
 import { SidebarSearch } from './SidebarSearch'
+
+function createSidebarNavItems(routes) {
+  const groups = new Map()
+  const items = []
+
+  routes.forEach((route, index) => {
+    if (!route.navGroup) {
+      items.push({
+        id: route.id,
+        order: route.navOrder ?? index,
+        route,
+        type: 'route',
+      })
+      return
+    }
+
+    let group = groups.get(route.navGroup.id)
+
+    if (!group) {
+      group = {
+        children: [],
+        iconName: route.navGroup.iconName,
+        id: route.navGroup.id,
+        label: route.navGroup.label,
+        order: route.navGroup.order ?? route.navOrder ?? index,
+        type: 'group',
+      }
+      groups.set(route.navGroup.id, group)
+      items.push(group)
+    }
+
+    group.children.push(route)
+  })
+
+  return items
+    .filter((item) => item.type !== 'group' || item.children.length > 0)
+    .sort((a, b) => a.order - b.order)
+}
+
+function SidebarToggleItem() {
+  const { state, toggleSidebar } = useSidebar()
+  const label = state === 'collapsed' ? 'Expand sidebar' : 'Collapse sidebar'
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        aria-label={label}
+        onClick={toggleSidebar}
+        title={label}
+        tooltip={label}
+        type="button"
+        variant="quiet"
+      >
+        <Icon className="text-current" name="menu" size={18} />
+        <span>{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
+function SidebarNavGroup({ activeRoute, group, isExpanded, onExpandedChange }) {
+  const isActive = group.children.some((route) => route.id === activeRoute.id)
+  const isOpen = isActive || isExpanded
+
+  return (
+    <Collapsible onOpenChange={onExpandedChange} open={isOpen}>
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton
+            aria-expanded={isOpen}
+            isActive={isActive}
+            tooltip={group.label}
+            type="button"
+          >
+            <Icon className="text-current" name={group.iconName} size={18} />
+            <span className="flex min-w-0 items-center justify-between gap-item">
+              <span className="truncate">{group.label}</span>
+              <Icon
+                className={`shrink-0 text-text-quaternary transition-transform duration-motion-fast ease-motion-standard ${isOpen ? 'rotate-180' : ''}`}
+                name="chevronDown"
+                size={14}
+              />
+            </span>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {group.children.map((route) => {
+              const label = route.navLabel ?? route.label
+              const childActive = route.id === activeRoute.id
+
+              return (
+                <SidebarMenuSubItem key={route.id}>
+                  <SidebarMenuSubButton asChild isActive={childActive}>
+                    <Link
+                      aria-current={childActive ? 'page' : undefined}
+                      title={label}
+                      to={route.path}
+                    >
+                      <span>{label}</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  )
+}
 
 export function AppSidebar({
   activeRoute,
@@ -19,41 +153,87 @@ export function AppSidebar({
     label: viewer.role,
     searchPlaceholder: 'Search...',
   }
+  const navItems = useMemo(() => createSidebarNavItems(routes), [routes])
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set())
+
+  function setGroupExpanded(groupId, isExpanded) {
+    setExpandedGroups((current) => {
+      const next = new Set(current)
+
+      if (isExpanded) {
+        next.add(groupId)
+      } else {
+        next.delete(groupId)
+      }
+
+      return next
+    })
+  }
 
   return (
-    <aside className="group/app-sidebar fixed inset-y-0 left-0 z-30 flex w-sidebar-collapsed flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-motion-disclosure ease-motion-emphasized sm:hover:w-sidebar-expanded sm:focus-within:w-sidebar-expanded">
-      <div className="relative h-control-xl">
-        <BrandLogo
-          className="relative h-full min-w-0 gap-0 [&>span:first-child]:absolute [&>span:first-child]:left-[calc((var(--spacing-sidebar-collapsed)-var(--spacing-control-small))/2)] [&>span:first-child]:top-1/2 [&>span:first-child]:-translate-y-1/2 [&>span:last-child]:ml-[calc(var(--spacing-sidebar-collapsed)-var(--spacing-item))] [&>span:last-child]:whitespace-nowrap [&>span:last-child]:opacity-0 [&>span:last-child]:transition-opacity [&>span:last-child]:duration-motion-fast [&>span:last-child]:ease-motion-standard sm:group-hover/app-sidebar:[&>span:last-child]:opacity-100 sm:group-focus-within/app-sidebar:[&>span:last-child]:opacity-100"
-          href="/"
-          size="sm"
-          variant="static"
-        />
-      </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Agency Reports">
+              <BrandLogo
+                className="[&>span:last-child]:whitespace-nowrap"
+                href="/"
+                size="sm"
+                variant="static"
+              />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarToggleItem />
+        </SidebarMenu>
+      </SidebarHeader>
 
-      <div className="py-item">
-        <SidebarSearch placeholder={activeRole.searchPlaceholder} />
-      </div>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarSearch placeholder={activeRole.searchPlaceholder} />
+          </SidebarMenu>
+        </SidebarGroup>
 
-      <nav aria-label="Primary navigation" className="flex-1 overflow-y-auto py-item">
-        <div className="grid gap-micro">
-          {routes.map((route) => {
-            const isActive = route.id === activeRoute.id
+        <SidebarGroup>
+          <SidebarMenu aria-label="Primary navigation">
+            {navItems.map((item) => {
+              if (item.type === 'group') {
+                return (
+                  <SidebarNavGroup
+                    activeRoute={activeRoute}
+                    group={item}
+                    isExpanded={expandedGroups.has(item.id)}
+                    key={item.id}
+                    onExpandedChange={(isExpanded) => setGroupExpanded(item.id, isExpanded)}
+                  />
+                )
+              }
 
-            return <SidebarNavItem isActive={isActive} key={route.id} route={route} />
-          })}
-        </div>
-      </nav>
+              return (
+                <SidebarNavItem
+                  isActive={item.route.id === activeRoute.id}
+                  key={item.route.id}
+                  route={item.route}
+                />
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <div className="grid gap-micro border-t border-sidebar-border py-item">
-        <NotificationsMenu />
-        <AccountMenu
-          activeRole={activeRole}
-          hasUnsavedChanges={hasUnsavedChanges}
-          onAuthChange={onAuthChange}
-          viewer={viewer}
-        />
-      </div>
-    </aside>
+      <SidebarFooter>
+        <SidebarMenu>
+          <NotificationsMenu />
+          <AccountMenu
+            activeRole={activeRole}
+            hasUnsavedChanges={hasUnsavedChanges}
+            onAuthChange={onAuthChange}
+            viewer={viewer}
+          />
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }
