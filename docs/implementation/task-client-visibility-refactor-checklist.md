@@ -608,6 +608,7 @@ client_user must not read Task directly as the client-facing work contract.
 - [ ] Remove deprecated task visibility assumptions from docs.
   - [x] Mark UC-001 acceptance/implementation docs as historical where they describe task-based client visibility.
   - [x] Update UC-001 use-case language from client-visible task decisions to client work item publishing.
+  - [x] Update MVP scope positioning, permissions, and acceptance language to published client-facing work.
 - [ ] Keep legacy compatibility only where tests prove it is needed.
 - [ ] Add a migration note for localStorage seed/reset behavior.
 

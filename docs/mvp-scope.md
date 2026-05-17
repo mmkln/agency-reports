@@ -7,7 +7,7 @@ This product is **not** an AgencyAnalytics / Whatagraph / Databox clone.
 It is a **client-facing portal layer** for a marketing agency that aggregates:
 
 * project progress
-* client-visible tasks
+* published client-facing work items
 * current agency work
 * marketing dashboard embeds
 * monthly summaries
@@ -139,7 +139,7 @@ Permissions:
 ```text
 - view own overview
 - view own progress
-- view own client-visible tasks
+- view own published client-facing work
 - view own dashboard
 - view own reports
 - view own files/links
@@ -209,7 +209,7 @@ Client Name
 Current Status
 Current Focus
 Progress Summary
-Active Tasks
+Active Work
 Latest Update
 Needed From Client
 Marketing Dashboard Embed
@@ -242,7 +242,7 @@ Progress:
 - Landing Page Updates: 60%
 - Reporting: 40%
 
-Active Tasks:
+Active Work:
 - Review new ad creatives — Waiting for client
 - Connect GA4 conversion event — In progress
 - Prepare monthly report — In progress
@@ -284,6 +284,7 @@ ClientWorkItem.publish_state is the mature source of truth for client-facing act
 Project
 Milestone
 Task
+ClientWorkItem
 Update
 ```
 
@@ -320,6 +321,26 @@ created_at
 updated_at
 ```
 
+### ClientWorkItem Fields
+
+```text
+id
+client_id
+project_id
+source_task_id
+title
+summary
+status
+target_date
+sort_order
+publish_state
+published_at
+published_by
+last_reviewed_at
+created_at
+updated_at
+```
+
 ### Task Statuses
 
 ```text
@@ -331,6 +352,8 @@ done
 ```
 
 ### Visibility Values
+
+Legacy task visibility migration values:
 
 ```text
 internal
@@ -696,6 +719,26 @@ created_at
 updated_at
 ```
 
+### client_work_items
+
+```text
+id
+client_id
+project_id
+source_task_id
+title
+summary
+status
+target_date
+sort_order
+publish_state
+published_at
+published_by
+last_reviewed_at
+created_at
+updated_at
+```
+
 ### updates
 
 ```text
@@ -973,7 +1016,7 @@ client login
 client isolation
 client overview page
 project progress
-client-visible tasks
+published client-facing work
 latest update
 needed from client
 embedded dashboard
@@ -1083,7 +1126,7 @@ The MVP is successful if:
 2. Agency can invite a client user.
 3. Client sees only their own portal.
 4. Agency can add project progress manually.
-5. Agency can add client-visible tasks.
+5. Agency can publish client-facing work items.
 6. Agency can add latest updates.
 7. Agency can show what is needed from the client.
 8. Agency can embed a Looker Studio dashboard.
@@ -1096,7 +1139,7 @@ The MVP is successful if:
 ## 20. Core Product Statement
 
 ```text
-A branded client portal for marketing agencies that aggregates project progress, client-visible tasks, marketing dashboard embeds, monthly summaries, and client-needed actions into one simple client-facing experience.
+A branded client portal for marketing agencies that aggregates project progress, published client-facing work, marketing dashboard embeds, monthly summaries, and client-needed actions into one simple client-facing experience.
 ```
 
 The product should not try to replace reporting platforms, analytics tools, project management tools, or CRMs in V1.
