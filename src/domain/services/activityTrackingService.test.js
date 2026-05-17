@@ -4,7 +4,9 @@ import { CLIENT_STATUSES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   ACTIVITY_EVENT_TYPES,
+  isActivityEventVisibleToClient,
   listClientActivityEvents,
+  listClientVisibleActivityEvents,
   recordActivityEvent,
 } from './activityTrackingService'
 
@@ -169,6 +171,94 @@ describe('activityTrackingService', () => {
       repositories,
       viewer: createClientViewer(),
     })).toThrow('Only agency users can read client activity.')
+  })
+
+  it('lists only curated client-visible activity without internal metadata', () => {
+    const repositories = createRepositories()
+    const generatedIds = [
+      IDS.EVENT_A,
+      IDS.EVENT_B,
+      '99999999-9999-4999-8999-999999999991',
+      '99999999-9999-4999-8999-999999999992',
+    ]
+
+    recordActivityEvent({
+      clientId: IDS.CLIENT_A,
+      eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW,
+      idGenerator: () => generatedIds.shift(),
+      metadata: {
+        sourceTaskId: 'internal-task',
+        title: 'Internal review item',
+        workItemId: 'work-1',
+      },
+      now: () => '2026-05-12T09:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+    recordActivityEvent({
+      clientId: IDS.CLIENT_A,
+      eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED,
+      idGenerator: () => generatedIds.shift(),
+      metadata: {
+        sourceTaskId: 'internal-task',
+        title: 'Published work',
+        workItemId: 'work-1',
+      },
+      now: () => '2026-05-12T10:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+    recordActivityEvent({
+      clientId: IDS.CLIENT_A,
+      eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_ANSWERED,
+      idGenerator: () => generatedIds.shift(),
+      metadata: {
+        actionId: 'action-1',
+        internalNote: 'Private agency note.',
+        relatedTaskId: 'internal-task',
+        status: 'answered',
+      },
+      now: () => '2026-05-12T11:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+    recordActivityEvent({
+      clientId: IDS.CLIENT_A,
+      eventType: ACTIVITY_EVENT_TYPES.REPORT_OPENED,
+      idGenerator: () => generatedIds.shift(),
+      metadata: {
+        reportId: 'report-1',
+      },
+      now: () => '2026-05-12T12:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    const events = listClientVisibleActivityEvents({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(events.map((event) => event.eventType)).toEqual([
+      ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_ANSWERED,
+      ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED,
+    ])
+    expect(JSON.stringify(events)).not.toContain('CLIENT_WORK_ITEM_READY_FOR_REVIEW')
+    expect(JSON.stringify(events)).not.toContain('sourceTaskId')
+    expect(JSON.stringify(events)).not.toContain('relatedTaskId')
+    expect(JSON.stringify(events)).not.toContain('Private agency note')
+    expect(events[0].metadata).toEqual({
+      actionId: 'action-1',
+      status: 'answered',
+    })
+  })
+
+  it('keeps internal review events out of the client-visible activity policy', () => {
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW)).toBe(false)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.OVERVIEW_OPENED)).toBe(false)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED)).toBe(true)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_RESOLVED)).toBe(true)
   })
 
   it('rejects invalid event types and inaccessible clients', () => {

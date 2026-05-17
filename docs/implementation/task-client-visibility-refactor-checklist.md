@@ -569,19 +569,19 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `client_request_created`
   - [x] `client_request_answered`
   - [x] `client_request_resolved`
-- [ ] Decide which events are client-visible.
-- [ ] Ensure client activity feed includes only client-visible events.
+- [x] Decide which events are client-visible.
+- [x] Ensure client activity feed includes only client-visible events.
 - [x] Ensure admin activity/audit includes internal publish workflow events.
 - [ ] Add tests:
   - [x] publish event created.
   - [x] archive event created.
   - [x] client response event created.
-  - [ ] internal events hidden from client feed.
+  - [x] internal events hidden from client feed.
 
 ### Completion Criteria
 
 - [x] Publish workflow is auditable.
-- [ ] Client activity remains curated, not a raw internal event log.
+- [x] Client activity remains curated, not a raw internal event log.
 
 ## Phase 13 - Legacy Coupling Cleanup
 

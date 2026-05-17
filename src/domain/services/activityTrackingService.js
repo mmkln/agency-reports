@@ -17,6 +17,23 @@ export const ACTIVITY_EVENT_TYPES = Object.freeze({
 })
 
 const VALID_ACTIVITY_EVENT_TYPES = new Set(Object.values(ACTIVITY_EVENT_TYPES))
+const CLIENT_VISIBLE_ACTIVITY_EVENT_TYPES = new Set([
+  ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_ANSWERED,
+  ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CREATED,
+  ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_RESOLVED,
+  ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED,
+  ACTIVITY_EVENT_TYPES.NEEDED_ACTION_ANSWERED,
+])
+const CLIENT_VISIBLE_METADATA_KEYS = new Set([
+  'actionId',
+  'dashboardId',
+  'publishState',
+  'reportId',
+  'status',
+  'title',
+  'type',
+  'workItemId',
+])
 
 function assertUuidGenerator(idGenerator) {
   if (!idGenerator) {
@@ -36,6 +53,18 @@ function normalizeMetadata(metadata) {
   }
 
   return { ...metadata }
+}
+
+function normalizeClientVisibleMetadata(metadata) {
+  return Object.fromEntries(
+    Object.entries(normalizeMetadata(metadata))
+      .filter(([key]) => CLIENT_VISIBLE_METADATA_KEYS.has(key)),
+  )
+}
+
+export function isActivityEventVisibleToClient(eventOrType) {
+  const eventType = typeof eventOrType === 'string' ? eventOrType : eventOrType?.event_type
+  return CLIENT_VISIBLE_ACTIVITY_EVENT_TYPES.has(eventType)
 }
 
 function assertCanRecordActivity({ clientId, repositories, viewer }) {
@@ -90,6 +119,16 @@ function mapActivityEvent({ event, repositories }) {
   }
 }
 
+function mapClientVisibleActivityEvent(event) {
+  return {
+    clientId: event.client_id,
+    createdAt: event.created_at,
+    eventType: event.event_type,
+    id: event.id,
+    metadata: normalizeClientVisibleMetadata(event.metadata),
+  }
+}
+
 export function recordActivityEvent({
   clientId,
   eventType,
@@ -120,6 +159,23 @@ export function recordActivityEvent({
   repositories.activityEvents.upsert(event)
 
   return event
+}
+
+export function listClientVisibleActivityEvents({
+  clientId,
+  limit = 10,
+  repositories,
+  viewer,
+}) {
+  assertActivityRepository(repositories)
+  assertCanRecordActivity({ clientId, repositories, viewer })
+
+  return repositories.activityEvents
+    .listByClientId(clientId)
+    .filter(isActivityEventVisibleToClient)
+    .sort(sortActivityDesc)
+    .slice(0, limit)
+    .map(mapClientVisibleActivityEvent)
 }
 
 export function listClientActivityEvents({
