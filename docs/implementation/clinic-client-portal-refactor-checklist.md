@@ -299,29 +299,29 @@ Mark items as complete only after code, tests, and documentation for that item a
 ## Phase 12 - Integrations Readiness
 
 - [x] Keep MVP manual/import-first.
-- [ ] Define import contracts for:
-  - [ ] patient acquisition metrics
-  - [ ] calls/bookings metrics
-  - [ ] service line performance
-  - [ ] reputation snapshot
-  - [ ] compliance review items
-- [ ] Add future connector notes for:
-  - [ ] Google Ads
-  - [ ] Meta Ads
-  - [ ] GA4
-  - [ ] Google Search Console
-  - [ ] CallRail / Nimbata / WhatConverts
-  - [ ] booking/scheduling source
-  - [ ] Google Business Profile / reviews
-  - [ ] CRM/practice management with aggregate-data boundaries
-- [ ] Document explicitly deferred integrations:
-  - [ ] EHR/EMR
-  - [ ] patient records
-  - [ ] diagnosis tracking
-  - [ ] raw PHI attribution
-  - [ ] doctor schedule management
-  - [ ] patient portal
-  - [ ] automated remarketing without compliance layer
+- [x] Define import contracts for:
+  - [x] patient acquisition metrics
+  - [x] calls/bookings metrics
+  - [x] service line performance
+  - [x] reputation snapshot
+  - [x] compliance review items
+- [x] Add future connector notes for:
+  - [x] Google Ads
+  - [x] Meta Ads
+  - [x] GA4
+  - [x] Google Search Console
+  - [x] CallRail / Nimbata / WhatConverts
+  - [x] booking/scheduling source
+  - [x] Google Business Profile / reviews
+  - [x] CRM/practice management with aggregate-data boundaries
+- [x] Document explicitly deferred integrations:
+  - [x] EHR/EMR
+  - [x] patient records
+  - [x] diagnosis tracking
+  - [x] raw PHI attribution
+  - [x] doctor schedule management
+  - [x] patient portal
+  - [x] automated remarketing without compliance layer
 
 ## Phase 13 - Tests And Verification
 
