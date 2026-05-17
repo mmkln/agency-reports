@@ -15,7 +15,7 @@ function HeaderActions({ page }) {
   )
 }
 
-export function ClientReportsDashboardsPageHeader({ routeParams = {}, runtime }) {
+export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
   const performancePeriodId = routeParams.performancePeriodId ?? routeParams.periodId
@@ -34,17 +34,18 @@ export function ClientReportsDashboardsPageHeader({ routeParams = {}, runtime })
   const page = pageResource.data
 
   if (pageResource.status === 'loading' || !page) {
-    return <PageHeader title="Reports & Dashboards" />
+    return <PageHeader title="Reports & Dashboards" width={activeRoute?.contentWidth} />
   }
 
   if (pageResource.status === 'error' || page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<HeaderActions page={page} />}
       title="Reports & Dashboards"
+      width={activeRoute?.contentWidth}
     />
   )
 }

@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   ConfirmationDialog,
+  DataTableSurface,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  PrimitiveCard as Card,
   Table,
   TableActionCell,
   TableActionHead,
@@ -60,24 +60,24 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
 
   return (
     <>
-      <Card className="border-control-border bg-block py-0 shadow-none">
+      <DataTableSurface>
         <Table className="min-w-[980px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="px-6 py-3">Client</TableHead>
-              <TableHead className="px-6 py-3">Project Status</TableHead>
-              <TableHead className="px-6 py-3">Primary Contact</TableHead>
-              <TableHead className="px-6 py-3">Created</TableHead>
-              <TableActionHead className="px-6 py-3">Actions</TableActionHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Client</TableHead>
+              <TableHead>Project Status</TableHead>
+              <TableHead>Primary Contact</TableHead>
+              <TableHead>Created</TableHead>
+              <TableActionHead>Actions</TableActionHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-separator">
+          <TableBody>
             {clients.map((client) => {
               const pendingInvite = getPendingInvite(client, repositories)
 
               return (
-                  <TableRow className="transition-colors hover:bg-block-subtle" key={client.id}>
-                    <TableCell className="px-6 py-4">
+                  <TableRow key={client.id}>
+                    <TableCell>
                       <div className="flex min-w-0 items-center gap-3">
                         <ClientAvatar client={client} />
                         <div className="min-w-0">
@@ -89,15 +89,15 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4">
+                    <TableCell>
                       <ClientStatusBadge status={client.status} />
                     </TableCell>
-                    <TableCell className="px-6 py-4">
+                    <TableCell>
                       <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
                       <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
                     </TableCell>
-                    <TableCell className="px-6 py-4 text-text-muted">{formatDate(client.created_at)}</TableCell>
-                    <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">
+                    <TableCell className="text-text-muted">{formatDate(client.created_at)}</TableCell>
+                    <TableActionCell>
                       <div className="flex justify-end gap-1.5">
                         <Button asChild size="sm" variant="outline">
                           <Link to={`/admin/client-overview?clientId=${client.id}`}>
@@ -152,7 +152,7 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
             })}
           </TableBody>
         </Table>
-      </Card>
+      </DataTableSurface>
 
       <ConfirmationDialog
         confirmLabel="Delete client"

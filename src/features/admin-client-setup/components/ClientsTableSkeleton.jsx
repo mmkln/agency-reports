@@ -1,12 +1,12 @@
-import { PrimitiveCard as Card, Skeleton } from '@/shared/ui'
+import { DataTableSurface, Skeleton } from '@/shared/ui'
 
 export function ClientsTableSkeleton() {
   return (
-    <Card className="border-control-border bg-block py-0 shadow-none">
-      <Skeleton className="h-12 rounded-none border-b border-control-border bg-surface-subtle" />
+    <DataTableSurface>
+      <Skeleton className="h-target rounded-none border-b border-separator bg-surface-subtle" />
       <div className="divide-y divide-separator">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div className="grid grid-cols-[minmax(280px,1.4fr)_minmax(170px,0.8fr)_minmax(220px,1fr)_minmax(140px,0.7fr)_140px] items-center gap-6 px-6 py-5" key={index}>
+          <div className="grid grid-cols-[minmax(280px,1.4fr)_minmax(170px,0.8fr)_minmax(220px,1fr)_minmax(140px,0.7fr)_140px] items-center gap-component px-component py-control" key={index}>
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-control" />
               <div className="grid gap-2">
@@ -24,6 +24,6 @@ export function ClientsTableSkeleton() {
           </div>
         ))}
       </div>
-    </Card>
+    </DataTableSurface>
   )
 }

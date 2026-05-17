@@ -15,7 +15,7 @@ import { AdminClientUpdatesWorkspace } from '../../../widgets/admin-client-updat
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -25,7 +25,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -62,9 +62,10 @@ export function AdminClientUpdatesPage({ routeParams = {}, runtime }) {
         client={workflow.client}
         currentPage="updates"
         eyebrow="Client updates"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientUpdatesWorkspace
           counts={workflow.counts}
           onEdit={workflow.openEditDialog}

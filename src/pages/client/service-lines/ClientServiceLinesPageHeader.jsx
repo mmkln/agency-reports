@@ -16,7 +16,7 @@ function HeaderActions({ locationCount, serviceLineCount }) {
   )
 }
 
-export function ClientServiceLinesPageHeader({ routeParams = {}, runtime }) {
+export function ClientServiceLinesPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:service-lines-header:${clientId}`,
@@ -29,11 +29,11 @@ export function ClientServiceLinesPageHeader({ routeParams = {}, runtime }) {
   const page = pageResource.data
 
   if (pageResource.status === 'loading' || !page) {
-    return <PageHeader title="Service Lines" />
+    return <PageHeader title="Service Lines" width={activeRoute?.contentWidth} />
   }
 
   if (pageResource.status === 'error' || page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
@@ -45,6 +45,7 @@ export function ClientServiceLinesPageHeader({ routeParams = {}, runtime }) {
         />
       )}
       title="Service Lines"
+      width={activeRoute?.contentWidth}
     />
   )
 }

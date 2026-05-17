@@ -30,6 +30,7 @@ export function ClientRequestsPageHeader({ activeRoute, routeParams = {}, runtim
         to: getNewRequestPath({ activeRoute, routeParams, runtime }),
       }}
       title="Requests"
+      width={activeRoute?.contentWidth}
     />
   )
 }

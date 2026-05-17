@@ -133,6 +133,7 @@ export function AdminClientWorkspaceHeader({
   eyebrow = 'Client workspace',
   onStatusChange,
   primaryAction,
+  width = 'full',
 }) {
   const clientId = client?.id
   const portalSlug = getClientField(client, 'portalSlug', 'portal_slug')
@@ -143,7 +144,7 @@ export function AdminClientWorkspaceHeader({
 
   return (
     <header className="sticky top-0 z-20 border-b border-separator bg-surface">
-      <PageShell className="gap-control px-app-gutter py-control">
+      <PageShell className="gap-control px-app-gutter py-control" width={width}>
         <PageHeader
           actions={(
             <>

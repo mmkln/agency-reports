@@ -1,5 +1,6 @@
 export {
   CompanySettingsSection,
+  ClientSettingsWorkspace,
   ProfileSettingsSection,
   TeamMembersSection,
   UnavailableSettingsSection,

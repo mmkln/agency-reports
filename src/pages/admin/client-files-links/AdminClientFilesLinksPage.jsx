@@ -15,7 +15,7 @@ import { AdminClientFilesLinksWorkspace } from '../../../widgets/admin-client-fi
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -25,7 +25,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -62,9 +62,10 @@ export function AdminClientFilesLinksPage({ routeParams = {}, runtime }) {
         client={workflow.client}
         currentPage="files-links"
         eyebrow="Files & Links"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientFilesLinksWorkspace
           counts={workflow.counts}
           fileLinks={workflow.filteredFileLinks}

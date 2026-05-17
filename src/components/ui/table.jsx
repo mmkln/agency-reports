@@ -23,7 +23,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-surface-subtle text-label text-text-secondary uppercase [&_tr]:border-b", className)}
+      className={cn("bg-block text-label text-text-muted [&_tr]:border-b", className)}
       {...props} />
   );
 }
@@ -75,7 +75,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-target px-component text-left align-middle font-semibold whitespace-nowrap text-text-secondary [&:has([role=checkbox])]:pr-0",
+        "h-target px-component text-left align-middle font-medium whitespace-nowrap text-text-muted [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -104,7 +104,7 @@ function TableActionHead({
   return (
     <TableHead
       className={cn(
-        "sticky right-0 z-30 bg-surface-subtle text-right shadow-sticky-edge-header",
+        "sticky right-0 z-30 bg-block text-right",
         className
       )}
       {...props} />
@@ -118,7 +118,7 @@ function TableActionCell({
   return (
     <TableCell
       className={cn(
-        "sticky right-0 z-20 bg-block text-right shadow-sticky-edge-cell group-hover/table-row:bg-control-hover",
+        "sticky right-0 z-20 bg-block text-right group-hover/table-row:bg-control-hover",
         className
       )}
       {...props} />

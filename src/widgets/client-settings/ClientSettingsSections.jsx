@@ -9,8 +9,71 @@ import {
   PanelBody,
   PanelHeader,
   PropertyGrid,
+  SectionNav,
   UnavailableState,
 } from '@/shared/ui'
+import { useLocation } from 'react-router-dom'
+
+const settingsSections = [
+  {
+    id: 'general',
+    iconName: 'user',
+    label: 'General',
+  },
+  {
+    id: 'team',
+    iconName: 'users',
+    label: 'Team',
+  },
+  {
+    id: 'notifications',
+    iconName: 'bell',
+    label: 'Notifications',
+  },
+  {
+    id: 'security',
+    iconName: 'lock',
+    label: 'Security',
+  },
+]
+
+function getSelectedSection(sectionId) {
+  return settingsSections.some((section) => section.id === sectionId) ? sectionId : 'general'
+}
+
+function getSectionHref(sectionId, routeParams = {}, pathname = '/client/settings') {
+  const nextParams = new URLSearchParams()
+
+  Object.entries(routeParams).forEach(([key, value]) => {
+    if (key !== 'section' && value != null && value !== '') {
+      nextParams.set(key, value)
+    }
+  })
+
+  if (sectionId !== 'general') {
+    nextParams.set('section', sectionId)
+  }
+
+  const search = nextParams.toString()
+
+  return `${pathname}${search ? `?${search}` : ''}`
+}
+
+function ClientSettingsNavigation({ routeParams, selectedSection }) {
+  const location = useLocation()
+
+  return (
+    <SectionNav
+      ariaLabel="Settings sections"
+      className="lg:sticky lg:top-control-xl"
+      items={settingsSections.map((section) => ({
+        ...section,
+        to: getSectionHref(section.id, routeParams, location.pathname),
+      }))}
+      selectedId={selectedSection}
+    />
+  )
+}
 
 export function ProfileSettingsSection({ membership, profile }) {
   return (
@@ -114,15 +177,63 @@ export function TeamMembersSection({ members }) {
 
 export function UnavailableSettingsSection({ iconName, section, title }) {
   return (
-    <Panel>
-      <PanelHeader title={title} />
-      <PanelBody>
+    <Panel className="min-h-[360px]">
+      <PanelBody className="flex min-h-[360px] items-center justify-center">
         <UnavailableState
+          className="bg-transparent p-0"
           description={section.message}
           iconName={iconName}
-          title={`${title} unavailable`}
+          title={title}
         />
       </PanelBody>
     </Panel>
+  )
+}
+
+function GeneralSettingsSection({ page }) {
+  return (
+    <div className="grid gap-card">
+      <ProfileSettingsSection membership={page.currentMembership} profile={page.profile} />
+      <CompanySettingsSection client={page.client} />
+    </div>
+  )
+}
+
+function SelectedSettingsSection({ page, selectedSection }) {
+  if (selectedSection === 'team') {
+    return <TeamMembersSection members={page.members} />
+  }
+
+  if (selectedSection === 'notifications') {
+    return (
+      <UnavailableSettingsSection
+        iconName="bell"
+        section={page.sections.notifications}
+        title="Notification Settings"
+      />
+    )
+  }
+
+  if (selectedSection === 'security') {
+    return (
+      <UnavailableSettingsSection
+        iconName="lock"
+        section={page.sections.security}
+        title="Security and Authorization"
+      />
+    )
+  }
+
+  return <GeneralSettingsSection page={page} />
+}
+
+export function ClientSettingsWorkspace({ page, routeParams = {} }) {
+  const selectedSection = getSelectedSection(routeParams.section)
+
+  return (
+    <div className="grid items-start gap-card lg:grid-cols-[240px_minmax(0,1fr)]">
+      <ClientSettingsNavigation routeParams={routeParams} selectedSection={selectedSection} />
+      <SelectedSettingsSection page={page} selectedSection={selectedSection} />
+    </div>
   )
 }

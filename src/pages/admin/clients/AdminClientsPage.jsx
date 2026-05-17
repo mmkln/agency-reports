@@ -12,6 +12,7 @@ import {
 } from '../../../features/admin-client-setup'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
+import { ErrorBlock } from '@/shared/ui'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -78,9 +79,9 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
       {clientsResource.status === 'loading' ? (
         <ClientsTableSkeleton />
       ) : clientsResource.status === 'error' ? (
-        <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
+        <ErrorBlock title="Clients could not be loaded">
           {clientsResource.error}
-        </div>
+        </ErrorBlock>
       ) : clients.length > 0 ? (
         <ClientsTable
           clients={clients}

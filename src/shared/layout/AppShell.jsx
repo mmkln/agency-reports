@@ -1,4 +1,4 @@
-import { PageHeader } from '@/shared/ui'
+import { getPageShellWidthClass, PageHeader } from '@/shared/ui'
 import { AppSidebar } from './AppSidebar'
 
 export function AppShell({
@@ -13,7 +13,10 @@ export function AppShell({
 }) {
   const navRoutes = routes.filter((route) => route.showInNav !== false)
   const RouteHeader = activeRoute.header
-  const routeKey = `${activeRoute.id}:${JSON.stringify(routeParams)}`
+  const routeKey = activeRoute.remountOnParamsChange
+    ? `${activeRoute.id}:${JSON.stringify(routeParams)}`
+    : activeRoute.id
+  const contentWidth = activeRoute.contentWidth ?? 'full'
 
   return (
     <main className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
@@ -31,13 +34,17 @@ export function AppShell({
           ) : (
             <PageHeader
               title={activeRoute.pageTitle ?? activeRoute.label}
+              width={contentWidth}
             />
           )
         )}
         {activeRoute.fullBleedContent ? (
           <div key={routeKey}>{children}</div>
         ) : (
-          <div className="grid w-full gap-card px-app-gutter py-content-gutter" key={routeKey}>
+          <div
+            className={`grid w-full gap-card px-app-gutter py-content-gutter ${getPageShellWidthClass(contentWidth)}`}
+            key={routeKey}
+          >
             {children}
           </div>
         )}

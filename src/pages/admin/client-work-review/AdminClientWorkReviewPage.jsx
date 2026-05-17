@@ -16,7 +16,7 @@ import { Icon } from '../../../shared/icons'
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -26,7 +26,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -64,9 +64,10 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
         client={workflow.client}
         currentPage="projects"
         eyebrow="Client projects"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientWorkReviewWorkspace
           onArchive={workflow.setPendingArchive}
           onArchiveConfirm={workflow.archiveWorkItem}

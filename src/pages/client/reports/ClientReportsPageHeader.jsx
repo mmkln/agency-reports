@@ -1,5 +1,5 @@
 import { PageHeader } from '@/shared/ui'
 
-export function ClientReportsPageHeader() {
-  return <PageHeader title="Reports & Dashboards" />
+export function ClientReportsPageHeader({ activeRoute }) {
+  return <PageHeader title="Reports & Dashboards" width={activeRoute?.contentWidth} />
 }

@@ -3,10 +3,7 @@ import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import {
-  CompanySettingsSection,
-  ProfileSettingsSection,
-  TeamMembersSection,
-  UnavailableSettingsSection,
+  ClientSettingsWorkspace,
 } from '../../../widgets/client-settings'
 
 export function ClientSettingsPage({ routeParams = {}, runtime }) {
@@ -33,23 +30,5 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
     return <AccessDeniedState />
   }
 
-  return (
-    <div className="grid gap-6">
-      <ProfileSettingsSection membership={page.currentMembership} profile={page.profile} />
-      <CompanySettingsSection client={page.client} />
-      <TeamMembersSection members={page.members} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <UnavailableSettingsSection
-          iconName="bell"
-          section={page.sections.notifications}
-          title="Notifications"
-        />
-        <UnavailableSettingsSection
-          iconName="lock"
-          section={page.sections.security}
-          title="Security"
-        />
-      </div>
-    </div>
-  )
+  return <ClientSettingsWorkspace page={page} routeParams={routeParams} />
 }

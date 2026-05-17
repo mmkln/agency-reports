@@ -1,3 +1,5 @@
+import { ErrorBlock } from '@/shared/ui'
+
 import { useAdminReportsWorkspace, useReportForm } from '../model'
 import { EmptyFilteredReportsState, EmptyReportsState } from './EmptyReportsState'
 import { ReportModal } from './ReportModal'
@@ -43,9 +45,9 @@ export function AdminReportsWorkspace({ routeParams = {}, runtime }) {
 
   if (workspace.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
+      <ErrorBlock title="Reports could not be loaded">
         {workspace.error}
-      </div>
+      </ErrorBlock>
     )
   }
 

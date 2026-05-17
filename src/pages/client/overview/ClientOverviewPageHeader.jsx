@@ -31,7 +31,7 @@ function ProjectStatusAction({ client }) {
   )
 }
 
-export function ClientOverviewPageHeader({ routeParams = {}, runtime }) {
+export function ClientOverviewPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = routeParams.preview === 'draft' ? 'draft' : 'published'
   const overviewResource = useAsyncResource({
@@ -46,17 +46,18 @@ export function ClientOverviewPageHeader({ routeParams = {}, runtime }) {
   const overview = overviewResource.data
 
   if (overviewResource.status === 'loading' || !overview) {
-    return <PageHeader title="Overview" />
+    return <PageHeader title="Overview" width={activeRoute?.contentWidth} />
   }
 
   if (overviewResource.status === 'error' || overview.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<ProjectStatusAction client={overview.client} />}
       title={overview.client.name}
+      width={activeRoute?.contentWidth}
     />
   )
 }

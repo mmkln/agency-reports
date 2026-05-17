@@ -19,6 +19,7 @@ import {
 } from '../../../features/admin-performance-dashboards'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
+import { ErrorBlock } from '@/shared/ui'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -123,9 +124,9 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
 
   if (dashboardsResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
+      <ErrorBlock title="Performance dashboards could not be loaded">
         {dashboardsResource.error}
-      </div>
+      </ErrorBlock>
     )
   }
 
