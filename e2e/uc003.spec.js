@@ -201,6 +201,34 @@ test('client report reader shows narrative hierarchy and link fallbacks', async 
   await expect(page.getByRole('heading', { name: 'Next steps' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible()
   await expect(page.getByText('PDF version is not available yet. Read the summary inside the portal.')).toBeVisible()
+
+  const reportOpenedEvent = await page.evaluate(({ portalKey, reportId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    return portalData.activity_events.find((event) => (
+      event.event_type === 'report_opened'
+      && event.metadata?.reportId === reportId
+      && event.metadata?.source === 'client_reports_dashboards'
+    ))
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    reportId: SEED_IDS.REPORT_APRIL_2026,
+  })
+
+  expect(reportOpenedEvent).toBeTruthy()
+})
+
+test('legacy client reports route redirects to Reports & Dashboards', async ({ page }) => {
+  await signInAsClient(page)
+  await page.goto(
+    `/client/reports?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${SEED_IDS.REPORT_APRIL_2026}`,
+    { waitUntil: 'domcontentloaded' },
+  )
+
+  await expect(page).toHaveURL(/\/client\/reports-dashboards/)
+  await expect(page).toHaveURL(new RegExp(`reportId=${SEED_IDS.REPORT_APRIL_2026}`))
+  await expect(page.locator('h1').getByText('Reports & Dashboards')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
 })
 
 test('agency admin can duplicate a published report into a hidden draft', async ({ page }) => {

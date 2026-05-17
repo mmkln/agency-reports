@@ -90,7 +90,6 @@ High-risk files by size and local component count:
 
 | File | Lines | Component declarations | Recommended action |
 | --- | ---: | ---: | --- |
-| `src/pages/client/reports/ClientReportsPage.jsx` | 715 | 22 | Extract archive/list/reader widgets and report entity UI. |
 | `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 426 | 5 | Extract import preview and issue list sections if touched. |
 | `src/features/admin-client-setup/components/CreateClientModal.jsx` | 396 | 10 | Extract form field groups and validation display. |
 | `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 383 | 1 | Move workflow state to a hook, as done for overview editor. |
@@ -102,6 +101,9 @@ Recently resolved:
 | `src/features/admin-performance-dashboards/components/editor/AdminPerformanceDashboardEditorSections.jsx` | 1171 lines, 21 local components | 18-line export facade plus focused section files. |
 | `src/pages/client/performance/ClientPerformancePage.jsx` | 1142-line route/UI hybrid with 38 local components | 34-line route shell plus `widgets/client-performance` section files. |
 | `src/pages/admin/client-requests/AdminClientRequestsPage.jsx` | 780-line route/UI/workflow mix with 11 local components | 116-line route shell plus request widget, feature dialogs, and feature workflow hook. |
+| `src/pages/client/reports/ClientReportsPage.jsx` | 651-line duplicate archive/reader implementation | 27-line legacy redirect bridge into mature Reports & Dashboards. |
+| `src/widgets/client-reports-dashboards/ReportsDashboardsSections.jsx` | 477-line multi-section widget | 6-line export facade plus focused section files. |
+| `src/widgets/client-projects/ClientProjectsSections.jsx` | 379-line list/detail widget | 2-line export facade plus focused list/detail files. |
 
 Fix direction:
 
@@ -163,17 +165,7 @@ Arbitrary Tailwind utilities are expected in some primitive files, but active fe
 | `src/features/tasks/import-task-markdown/components/TaskMarkdownImportModal.jsx` | 4 |
 | `src/features/admin-reports/components/ReportModal.jsx` | 3 |
 
-Typography drift hotspots:
-
-| File | Raw type utilities |
-| --- | ---: |
-| `src/pages/client/reports/ClientReportsPage.jsx` | 4 |
-
-Spacing/chrome drift hotspots:
-
-| File | Spacing utility count | Chrome utility count |
-| --- | ---: | ---: |
-| `src/pages/client/reports/ClientReportsPage.jsx` | 74 | 71 |
+The previous typography and spacing/chrome drift in `src/pages/client/reports/ClientReportsPage.jsx` is resolved by routing the legacy page to the mature Reports & Dashboards destination.
 
 Fix direction:
 
@@ -202,7 +194,7 @@ Keep this invariant:
 
 ### P1: Structural Cleanup
 
-1. Refactor `ClientReportsPage.jsx` into report archive/list/reader widgets.
+The previous P1 client reports duplication is resolved. Continue applying the same split-or-redirect rule when hidden legacy routes start owning duplicated mature-destination UI.
 
 ### P2: Primitive Extraction Candidates
 

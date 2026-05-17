@@ -20,8 +20,10 @@ Reports are persisted through the current repository adapter. In this project st
 | `/admin/reports?newReport=true` | Admin modal for creating a monthly report |
 | `/admin/reports?clientId=...` | Client-scoped admin reports workspace |
 | `/admin/client-report-preview?clientId=...&reportId=...` | Admin preview of a report, including draft and ready reports |
-| `/client/reports?clientId=...` | Client-facing report archive and latest report reader |
-| `/client/reports?clientId=...&reportId=...` | Client-facing single report reader |
+| `/client/reports-dashboards?clientId=...` | Mature client-facing Reports & Dashboards destination with report archive |
+| `/client/reports-dashboards?clientId=...&reportId=...` | Client-facing single report reader inside Reports & Dashboards |
+| `/client/reports?clientId=...` | Legacy hidden bridge that redirects to Reports & Dashboards / Report Archive |
+| `/client/reports?clientId=...&reportId=...` | Legacy hidden bridge that redirects to the selected report in Reports & Dashboards |
 | `/client/overview` | Latest Monthly Summary entry point on the client status hub |
 
 ## Main Implementation Files
@@ -33,7 +35,7 @@ Reports are persisted through the current repository adapter. In this project st
 | Visibility policy | `src/domain/policies/visibilityPolicy.js` |
 | Domain tests | `src/domain/services/adminReportService.test.js`, `src/domain/services/clientReportsService.test.js`, `src/domain/services/clientOverviewService.test.js`, `src/domain/policies/visibilityPolicy.test.js` |
 | Admin UI | `src/pages/admin/reports/*`, `src/features/admin-reports/*` |
-| Client UI | `src/pages/client/reports/*`, `src/widgets/client-overview/ClientOverviewBlocks.jsx` |
+| Client UI | `src/pages/client/reports-dashboards/*`, `src/widgets/client-reports-dashboards/*`, `src/pages/client/reports/*`, `src/widgets/client-overview/ClientOverviewBlocks.jsx` |
 | Routing | `src/app/routing/routeDefinitions.jsx`, `src/app/routing/router.jsx` |
 | Browser tests | `e2e/uc003.spec.js` |
 
@@ -51,8 +53,8 @@ Reports are persisted through the current repository adapter. In this project st
 | `agency_admin` can preview report as `client_user` | Reports table provides Preview report for every status. `/admin/client-report-preview` can load draft/ready reports and shows a Preview only notice for hidden reports. |
 | `agency_admin` can publish report | Reports table status actions call `updateAdminReportStatus`; published reports receive `published_at` and become client-visible. |
 | Published report appears in Client Overview as Latest Monthly Summary | `clientOverviewService` selects visible reports by period and the overview block links to the report. |
-| Published report appears in Reports Archive | `ClientReportsPage` lists published/archived reports in the archive. |
-| `client_user` can open report | `/client/reports?clientId=...&reportId=...` renders the selected report when visible and accessible. |
+| Published report appears in Reports Archive | `ClientReportsDashboardsPage` lists published/archived reports in the archive. |
+| `client_user` can open report | `/client/reports-dashboards?clientId=...&reportId=...` renders the selected report when visible and accessible. Legacy `/client/reports` links redirect there. |
 | `client_user` can only see reports for their own `client_id` | `clientReportsService` calls `canAccessClient`; tests cover cross-client denial indirectly through the same client access policy. |
 | Archived reports remain accessible in archive | `archived` is client-visible. E2E covers archiving a published report and reading it from the client archive. |
 | `client_user` can understand what happened, why it matters, and what happens next | `ReportReader` groups content into Executive summary, What happened, Performance context, Next steps, Dashboard, and PDF/file fallback sections. |
@@ -87,6 +89,8 @@ UC-003 browser coverage includes:
 - admin previews a draft report without exposing it to clients
 - client report archive hides draft reports
 - client report reader shows narrative hierarchy and link fallbacks
+- legacy `/client/reports` redirects into mature Reports & Dashboards
+- mature Reports & Dashboards records client report-open activity
 - admin duplicates a published report into a hidden draft
 - admin filters monthly reports
 - admin archives a published report and client can still read it in the archive

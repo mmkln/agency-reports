@@ -307,7 +307,9 @@ Primary files:
 
 ```text
 docs/use-cases/UC-003-monthly-summary-report-archive.md
-src/pages/client/reports/
+src/pages/client/reports-dashboards/
+src/widgets/client-reports-dashboards/
+src/pages/client/reports/      # legacy redirect bridge
 src/pages/admin/reports/
 src/widgets/reports/
 src/entities/report/
