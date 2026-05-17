@@ -20,8 +20,6 @@ import {
 import { Icon } from '@/shared/icons'
 import { USER_ROLES } from '@/entities/profile'
 import { getTaskStatusMeta, TASK_STATUSES } from '@/entities/task'
-import { TaskVisibilityBadge } from '@/entities/task/ui'
-import { VISIBILITY } from '@/entities/update'
 
 const createTaskTextareaClass = 'resize-none border-transparent bg-control px-component py-control text-body shadow-none hover:bg-control-hover focus-visible:border-ring focus-visible:bg-block focus-visible:ring-2 focus-visible:ring-ring/25'
 
@@ -35,7 +33,6 @@ function FieldError({ children }) {
 
 export function CreateTaskDialog({
   error,
-  filters,
   isOpen,
   onChange,
   onClose,
@@ -47,7 +44,6 @@ export function CreateTaskDialog({
 }) {
   const selectedClientProjects = taskData.projects
     .filter((project) => project.client_id === taskDraft.clientId)
-  const canCreateClientVisibleTasks = taskData.canCreateClientVisibleTasks
 
   return (
     <Dialog onOpenChange={(open) => {
@@ -145,46 +141,26 @@ export function CreateTaskDialog({
                 </label>
               </div>
 
-              <div className="grid gap-component sm:grid-cols-2">
-                <label className="grid gap-2">
-                  <Label>Status</Label>
-                  <Select
-                    onValueChange={(status) => onChange({ ...taskDraft, status })}
-                    value={taskDraft.status}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(TASK_STATUSES).map((status) => (
-                        <SelectItem key={status} value={status}>{getTaskStatusMeta(status).label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
+              <label className="grid gap-2">
+                <Label>Status</Label>
+                <Select
+                  onValueChange={(status) => onChange({ ...taskDraft, status })}
+                  value={taskDraft.status}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(TASK_STATUSES).map((status) => (
+                      <SelectItem key={status} value={status}>{getTaskStatusMeta(status).label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
 
-                <label className="grid gap-2">
-                  <Label>Visibility</Label>
-                  {canCreateClientVisibleTasks ? (
-                    <Select
-                      onValueChange={(visibility) => onChange({ ...taskDraft, visibility })}
-                      value={taskDraft.visibility}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Visibility" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
-                        <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="flex h-target items-center gap-2 rounded-control bg-control px-component text-ui text-text-secondary">
-                      <Icon name="lock" size={15} />
-                      <TaskVisibilityBadge visibility={VISIBILITY.INTERNAL} />
-                    </div>
-                  )}
-                </label>
+              <div className="flex items-start gap-2 rounded-control bg-control px-component py-control text-ui text-text-secondary">
+                <Icon className="mt-0.5 shrink-0" name="lock" size={15} />
+                <span>Internal task</span>
               </div>
 
               <label className="grid gap-2">
@@ -209,11 +185,6 @@ export function CreateTaskDialog({
                 />
               </label>
 
-              {filters.visibility === VISIBILITY.CLIENT_VISIBLE && !canCreateClientVisibleTasks ? (
-                <p className="rounded-control bg-control px-component py-control text-ui text-text-secondary">
-                  Team-created tasks are saved as internal and can be made client-visible by an admin.
-                </p>
-              ) : null}
             </div>
           </OverlayBody>
           <OverlayFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

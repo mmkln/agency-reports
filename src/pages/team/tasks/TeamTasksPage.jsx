@@ -120,7 +120,6 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
       </div>
       <CreateTaskDialog
         error={createTaskWorkflow.error}
-        filters={filters}
         isOpen={isCreateTaskOpen}
         onChange={createTaskWorkflow.changeDraft}
         onClose={createTaskWorkflow.close}

@@ -127,10 +127,8 @@ describe('taskWorkspaceService', () => {
     })
 
     expect(adminResult.clients.map((client) => client.id)).toEqual([IDS.CLIENT_A, IDS.CLIENT_B])
-    expect(adminResult.canCreateClientVisibleTasks).toBe(true)
     expect(adminResult.canCreateClientWorkItems).toBe(true)
     expect(teamResult.clients.map((client) => client.id)).toEqual([IDS.CLIENT_A])
-    expect(teamResult.canCreateClientVisibleTasks).toBe(false)
   })
 
   it('adds linked client work item state to task read models', () => {
@@ -155,7 +153,7 @@ describe('taskWorkspaceService', () => {
     })
   })
 
-  it('lets admins create client-visible tasks for agency clients', () => {
+  it('creates internal tasks for agency clients', () => {
     const repositories = createRepositories()
 
     const task = createTask({
@@ -167,7 +165,6 @@ describe('taskWorkspaceService', () => {
         projectId: IDS.PROJECT_A,
         status: TASK_STATUSES.TODO,
         title: 'Create landing page QA checklist',
-        visibility: VISIBILITY.CLIENT_VISIBLE,
       },
       now: () => '2026-05-14T09:00:00.000Z',
       repositories,
@@ -177,13 +174,13 @@ describe('taskWorkspaceService', () => {
     expect(task).toMatchObject({
       assignee_name: 'Leo Brooks',
       client_id: IDS.CLIENT_A,
-      client_visible: true,
+      client_visible: false,
       due_date: '2026-05-20',
       id: IDS.NEW_TASK,
       project_id: IDS.PROJECT_A,
       sort_order: 20,
       title: 'Create landing page QA checklist',
-      visibility: VISIBILITY.CLIENT_VISIBLE,
+      visibility: VISIBILITY.INTERNAL,
     })
   })
 
@@ -207,7 +204,7 @@ describe('taskWorkspaceService', () => {
     })
   })
 
-  it('blocks team-created client-visible tasks', () => {
+  it('blocks direct client-visible task creation', () => {
     expect(() => createTask({
       idGenerator: () => IDS.NEW_TASK,
       input: {
@@ -216,8 +213,8 @@ describe('taskWorkspaceService', () => {
         visibility: VISIBILITY.CLIENT_VISIBLE,
       },
       repositories: createRepositories(),
-      viewer: createTeamViewer(),
-    })).toThrow('Team-created tasks must stay internal')
+      viewer: createAdminViewer(),
+    })).toThrow('New tasks are internal')
   })
 
   it('lets admins update task visibility without status-transition limits', () => {

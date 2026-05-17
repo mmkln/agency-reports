@@ -230,7 +230,6 @@ export function listTaskWorkspace({
     }))
 
   return {
-    canCreateClientVisibleTasks: viewer.role === USER_ROLES.AGENCY_ADMIN,
     canCreateClientWorkItems: viewer.role === USER_ROLES.AGENCY_ADMIN,
     canUseMineFilter: viewer.role === USER_ROLES.AGENCY_TEAM,
     clients,
@@ -310,8 +309,8 @@ export function createTask({
     throw new Error('Task visibility is invalid.')
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_TEAM && requestedVisibility !== VISIBILITY.INTERNAL) {
-    throw new Error('Team-created tasks must stay internal until an admin publishes them.')
+  if (requestedVisibility !== VISIBILITY.INTERNAL) {
+    throw new Error('New tasks are internal. Publish client-facing work through the review workflow.')
   }
 
   const status = input.status ?? TASK_STATUSES.TODO
@@ -321,7 +320,6 @@ export function createTask({
   }
 
   const timestamp = now()
-  const visibility = viewer.role === USER_ROLES.AGENCY_TEAM ? VISIBILITY.INTERNAL : requestedVisibility
   const assigneeName = viewer.role === USER_ROLES.AGENCY_TEAM
     ? viewer.name
     : normalizeText(input.assigneeName)
@@ -331,7 +329,7 @@ export function createTask({
     blocker_note: normalizeText(input.blockerNote),
     client_id: client.id,
     client_safe_summary: normalizeText(input.clientSafeSummary),
-    client_visible: visibility === VISIBILITY.CLIENT_VISIBLE,
+    client_visible: false,
     created_at: timestamp,
     description: normalizeText(input.description),
     due_date: normalizeOptionalDate(input.dueDate, 'Task due date'),
@@ -346,7 +344,7 @@ export function createTask({
     status,
     title,
     updated_at: timestamp,
-    visibility,
+    visibility: VISIBILITY.INTERNAL,
   }
 
   repositories.tasks.upsert(task)

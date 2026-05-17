@@ -505,8 +505,8 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] allow mark ready for review where allowed.
   - [x] show that admin publishes final client-facing content.
 - [ ] Update create task flow:
-  - [ ] keep new tasks internal by default.
-  - [ ] avoid asking for client-facing lifecycle choices unless creating a client work item intentionally.
+  - [x] keep new tasks internal by default.
+  - [x] avoid asking for client-facing lifecycle choices unless creating a client work item intentionally.
 - [ ] Add task list indicators:
   - [x] has client work item.
   - [x] ready for review.
