@@ -49,9 +49,11 @@ Current baseline from the latest verification run:
 
 ```text
 Unit tests: 229 passed
-Full e2e: 29/30 passed on the latest parallel run; the failed navigation-abort case passed when rerun individually.
+Full e2e: 32 passed with `npx playwright test --workers=1`
 Build: passed
 ```
+
+Note: the default parallel `npm run e2e` run hit timing flakes in older admin import/report/performance specs; each failed spec passed when rerun individually, and the full serial run passed.
 
 ## Current Client IA Status
 
@@ -89,14 +91,14 @@ The current frontend architecture expects:
 Recommended next step:
 
 ```text
-Continue with the remaining Client Control Center admin-alignment and polish items.
+Start the next refactor track from the backend/integration readiness plan or harden the remaining flaky parallel e2e admin specs.
 ```
 
 Reason:
 
 ```text
-The UC-001 through UC-005 frontend/localStorage MVP path is implemented, and the mature client product destinations are now the primary client IA.
-The next major product move is admin-side control and preview coverage for every client-visible surface.
+The UC-001 through UC-005 frontend/localStorage MVP path is implemented, the mature Client Control Center checklist is closed, and the client/admin surfaces now use the mature destination model.
+The next major product move is either replacing localStorage with backend-ready adapters or reducing parallel e2e flake in legacy admin flows.
 ```
 
 Primary planning tracker:
