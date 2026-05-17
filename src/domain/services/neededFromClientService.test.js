@@ -17,7 +17,9 @@ const IDS = Object.freeze({
   ACTION: '11111111-1111-4111-8111-111111111111',
   AGENCY: '44444444-4444-4444-8444-444444444444',
   CLIENT: '22222222-2222-4222-8222-222222222222',
+  TASK: '55555555-5555-4555-8555-555555555555',
   USER: '33333333-3333-4333-8333-333333333333',
+  WORK_ITEM: '66666666-6666-4666-8666-666666666666',
 })
 
 function createRepository(record) {
@@ -138,6 +140,8 @@ describe('neededFromClientService', () => {
         ownerName: 'Sarah Johnson',
         priority: 'high',
         relatedLink: 'https://example.com/creative',
+        relatedTaskId: IDS.TASK,
+        relatedWorkItemId: IDS.WORK_ITEM,
         title: 'Approve creatives',
       },
       now: () => '2026-05-09T10:00:00.000Z',
@@ -155,6 +159,8 @@ describe('neededFromClientService', () => {
       owner_name: 'Sarah Johnson',
       priority: 'high',
       related_link: 'https://example.com/creative',
+      related_task_id: IDS.TASK,
+      related_work_item_id: IDS.WORK_ITEM,
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Approve creatives',
     })
@@ -269,6 +275,8 @@ describe('neededFromClientService', () => {
         ownerName: 'Sarah Johnson',
         priority: 'high',
         relatedLink: 'https://example.com/request',
+        relatedTaskId: IDS.TASK,
+        relatedWorkItemId: IDS.WORK_ITEM,
         title: 'Updated request',
       },
       now: () => '2026-05-10T10:00:00.000Z',
@@ -287,6 +295,8 @@ describe('neededFromClientService', () => {
       owner_name: 'Sarah Johnson',
       priority: 'high',
       related_link: 'https://example.com/request',
+      related_task_id: IDS.TASK,
+      related_work_item_id: IDS.WORK_ITEM,
       status: NEEDED_ACTION_STATUSES.PENDING,
       title: 'Updated request',
       updated_at: '2026-05-10T10:00:00.000Z',

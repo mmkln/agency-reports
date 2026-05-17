@@ -91,6 +91,8 @@ export function normalizeNeededAction(action = {}) {
     owner_name: normalizeText(action.owner_name),
     priority: normalizePriority(action.priority),
     related_link: normalizeText(action.related_link),
+    related_task_id: normalizeNullableText(action.related_task_id),
+    related_work_item_id: normalizeNullableText(action.related_work_item_id),
     resolved_at: action.resolved_at ?? null,
     resolved_by: action.resolved_by ?? null,
     response_history: Array.isArray(action.response_history) ? action.response_history : [],

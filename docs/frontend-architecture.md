@@ -36,6 +36,7 @@ src/
 
   entities/
     client/
+    client-work-item/
     profile/
     project/
     task/
@@ -131,6 +132,7 @@ Entities for MVP:
 
 ```text
 client
+client-work-item
 profile
 project
 task
@@ -178,7 +180,8 @@ Treat the main admin product surfaces as ownership boundaries:
 ```text
 Client workspace = client-scoped container and navigation context
 Overview = authored client-facing communication and publish state
-Tasks = agency execution workflow
+Tasks = agency internal execution workflow
+Client Work Items = curated client-facing representation of selected work
 Requests = client dependency workflow
 Dashboards = external dashboard links and embed state
 Reports = monthly report publishing and archive
@@ -191,6 +194,9 @@ Rules:
 ```text
 - Client-scoped pages should share the client workspace header/tabs so context does not reset between surfaces.
 - Overview editors can reference tasks, requests, dashboards, and reports, but full management belongs to the owning surface.
+- Internal tasks are not the client-facing work contract. Mature client-facing active work is represented by `ClientWorkItem` records that may reference a source task but own their own safe title, summary, status, target date, and publish state.
+- `ClientWorkItem.publish_state` is the source of truth for whether work appears in client-facing active work. Existing task `visibility` / `client_visible` fields are legacy migration hints and internal filtering aids, not the mature client-facing publish contract.
+- Client requests / needed-from-client records may reference internal tasks and client work items, but client responses must not mutate internal task status directly.
 - Workflow records remain live source records in their repositories/services. Do not copy them into overview draft/publish snapshots unless a use case explicitly requires a frozen historical artifact.
 - Draft/publish state belongs to authored overview content and report content, not to operational workflow records by default.
 - If a workflow has status transitions, responses, history, filters, creation, or destructive actions, model it as a feature/domain service and route-level surface rather than an embedded section in another page.
@@ -272,11 +278,12 @@ src/domain/policies/reportPolicy.js
 ```text
 1. client_user must only see records for their own client_id.
 2. Internal tasks, internal updates, internal notes, and draft reports must never render for client_user.
-3. Dashboard embeds are external links/iframes only in V1.
-4. Reports are human-written summaries in MVP; do not build AI report generation first.
-5. Overview page aggregates status, progress, needed actions, dashboard, and latest report; it should not become a full analytics page.
-6. Domain services return safe data to UI.
-7. Shared UI stays product-agnostic.
+3. Client-facing active work must come from published `ClientWorkItem` records in the mature architecture, not directly from `Task`.
+4. Dashboard embeds are external links/iframes only in V1.
+5. Reports are human-written summaries in MVP; do not build AI report generation first.
+6. Overview page aggregates status, progress, needed actions, dashboard, and latest report; it should not become a full analytics page.
+7. Domain services return safe data to UI.
+8. Shared UI stays product-agnostic.
 ```
 
 ## Legacy Pages

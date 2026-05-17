@@ -1,3 +1,9 @@
+import {
+  CLIENT_WORK_ITEM_PUBLISH_STATE_META,
+  CLIENT_WORK_ITEM_PUBLISH_STATES,
+  CLIENT_WORK_ITEM_STATUS_META,
+  normalizeClientWorkItem,
+} from '../../entities/client-work-item'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -65,6 +71,73 @@ function getStatusMeta(status) {
   }
 }
 
+function getMeta(status, registry) {
+  return registry[status] ?? {
+    label: status,
+    tone: 'neutral',
+  }
+}
+
+function getClientWorkItemsBySourceTaskId({ clientIds, repositories }) {
+  if (!repositories.clientWorkItems?.list) {
+    return new Map()
+  }
+
+  const clientIdSet = new Set(clientIds)
+  const priority = {
+    [CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED]: 0,
+    [CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW]: 1,
+    [CLIENT_WORK_ITEM_PUBLISH_STATES.DRAFT]: 2,
+    [CLIENT_WORK_ITEM_PUBLISH_STATES.ARCHIVED]: 3,
+  }
+  const workItemsByTaskId = new Map()
+
+  repositories.clientWorkItems
+    .list()
+    .filter((item) => clientIdSet.has(item.client_id))
+    .map(normalizeClientWorkItem)
+    .filter((item) => item.source_task_id)
+    .sort((a, b) => (priority[a.publish_state] ?? 4) - (priority[b.publish_state] ?? 4))
+    .forEach((item) => {
+      if (!workItemsByTaskId.has(item.source_task_id)) {
+        workItemsByTaskId.set(item.source_task_id, item)
+      }
+    })
+
+  return workItemsByTaskId
+}
+
+function mapClientWorkItemState(workItem) {
+  if (!workItem) {
+    return {
+      clientWorkItem: null,
+      hasClientWorkItem: false,
+      isMissingClientSummary: false,
+      isPublishedToClient: false,
+      isReadyForClientReview: false,
+    }
+  }
+
+  const summaryStatus = workItem.summary ? 'ready' : 'missing'
+
+  return {
+    clientWorkItem: {
+      id: workItem.id,
+      publishState: workItem.publish_state,
+      publishStateMeta: getMeta(workItem.publish_state, CLIENT_WORK_ITEM_PUBLISH_STATE_META),
+      status: workItem.status,
+      statusMeta: getMeta(workItem.status, CLIENT_WORK_ITEM_STATUS_META),
+      summaryStatus,
+      title: workItem.title,
+      updatedAt: workItem.updated_at,
+    },
+    hasClientWorkItem: true,
+    isMissingClientSummary: summaryStatus === 'missing',
+    isPublishedToClient: workItem.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+    isReadyForClientReview: workItem.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+  }
+}
+
 function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
 }
@@ -85,8 +158,9 @@ function matchesSearch(task, clientsById, projectsById, searchValue) {
   ].some((value) => normalizeText(value).toLowerCase().includes(normalizedSearch))
 }
 
-function mapTask({ clientsById, projectsById, task, viewer }) {
+function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, viewer }) {
   const isAssignedToViewer = task.assignee_name === viewer.name
+  const clientWorkItemState = mapClientWorkItemState(clientWorkItemsByTaskId.get(task.id))
 
   return {
     assigneeName: task.assignee_name,
@@ -107,6 +181,7 @@ function mapTask({ clientsById, projectsById, task, viewer }) {
     title: task.title,
     updatedAt: task.updated_at,
     visibility: task.visibility,
+    ...clientWorkItemState,
   }
 }
 
@@ -122,6 +197,10 @@ export function listTaskWorkspace({
     .list()
     .filter((project) => clientIds.includes(project.client_id))
   const projectsById = new Map(projects.map((project) => [project.id, project]))
+  const clientWorkItemsByTaskId = getClientWorkItemsBySourceTaskId({
+    clientIds,
+    repositories,
+  })
 
   const tasks = repositories.tasks
     .list()
@@ -142,10 +221,17 @@ export function listTaskWorkspace({
 
       return (a.sort_order ?? 0) - (b.sort_order ?? 0)
     })
-    .map((task) => mapTask({ clientsById, projectsById, task, viewer }))
+    .map((task) => mapTask({
+      clientWorkItemsByTaskId,
+      clientsById,
+      projectsById,
+      task,
+      viewer,
+    }))
 
   return {
     canCreateClientVisibleTasks: viewer.role === USER_ROLES.AGENCY_ADMIN,
+    canCreateClientWorkItems: viewer.role === USER_ROLES.AGENCY_ADMIN,
     canUseMineFilter: viewer.role === USER_ROLES.AGENCY_TEAM,
     clients,
     filters: {

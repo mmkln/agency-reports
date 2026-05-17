@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { CLIENT_WORK_ITEM_PUBLISH_STATES, CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -13,6 +14,7 @@ const IDS = Object.freeze({
   TASK_A: '55555555-5555-4555-8555-555555555555',
   TASK_B: '66666666-6666-4666-8666-666666666666',
   TASK_OTHER_CLIENT: '77777777-7777-4777-8777-777777777777',
+  WORK_A: '88888888-8888-4888-8888-888888888888',
 })
 
 function createEntityRepository(initialRecords = []) {
@@ -54,6 +56,18 @@ function createRepositories() {
         agency_id: IDS.AGENCY,
         id: IDS.CLIENT_B,
         name: 'Client B',
+      },
+    ]),
+    clientWorkItems: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+        source_task_id: IDS.TASK_A,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summary: '',
+        title: 'Review active work',
+        updated_at: '2026-05-12T09:00:00.000Z',
       },
     ]),
     projects: createEntityRepository([
@@ -125,6 +139,16 @@ describe('teamTaskService', () => {
         TASK_STATUSES.WAITING_CLIENT,
       ],
       clientName: 'Client A',
+      clientWorkItem: {
+        id: IDS.WORK_A,
+        publishState: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+        summaryStatus: 'missing',
+        title: 'Review active work',
+      },
+      hasClientWorkItem: true,
+      isMissingClientSummary: true,
+      isPublishedToClient: false,
+      isReadyForClientReview: true,
       projectName: 'Project A',
     })
   })

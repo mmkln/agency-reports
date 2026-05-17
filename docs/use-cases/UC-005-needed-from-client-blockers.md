@@ -52,6 +52,7 @@ The portal is responsible for:
 
 ```text
 - showing client-visible requested actions
+- linking requested actions to internal tasks or client-facing work items when useful
 - collecting simple client responses
 - showing status and due dates
 - keeping internal notes private
@@ -200,13 +201,21 @@ The object exists in UC-001 already. UC-005 formalizes its lifecycle and workflo
 ```text
 id
 client_id
+related_task_id
+related_work_item_id
+type
 title
 description
+why_needed
+impact_if_delayed
 status
 priority
 due_date
 related_link
+agency_owner
+client_owner
 owner_name
+last_reminded_at
 client_response
 client_responded_at
 client_responded_by
@@ -234,6 +243,8 @@ updated_at
 ```
 
 New frontend/localStorage fields can be added incrementally without changing the workflow ownership.
+
+`related_task_id` references internal agency execution. `related_work_item_id` references a published or draft client-facing work item. Client users interact with the request record, not the internal task.
 
 ## 11. Statuses
 
@@ -272,6 +283,7 @@ Rules:
 - client_user can move pending -> answered only by submitting a response
 - agency_admin can move any active request to resolved or cancelled
 - agency_team may resolve/process only if allowed by permissions
+- client responses do not directly mutate linked internal task status
 - cancelled requests are hidden from client-facing summary blocks
 - internal notes never change client-visible status copy
 ```
@@ -354,7 +366,8 @@ Flow:
 6. client_user submits response.
 7. Request status changes from pending to answered.
 8. client_response and client_responded_at are saved.
-9. Agency can process the response.
+9. Linked internal tasks remain unchanged until the agency processes the response.
+10. Agency can process the response and update internal work deliberately.
 ```
 
 Success state:
@@ -554,7 +567,8 @@ UC-005 is complete when:
 13. Client Overview shows active requests compactly.
 14. Client Performance Dashboard can reference active requests without owning the workflow.
 15. internal notes never appear in client-facing routes.
-16. e2e tests cover create, client response, resolve, cancel, and access denial.
+16. linked internal task status is not changed directly by a client response.
+17. e2e tests cover create, client response, resolve, cancel, and access denial.
 ```
 
 ## 21. Out Of Scope For UC-005

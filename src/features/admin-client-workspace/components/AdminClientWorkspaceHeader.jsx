@@ -22,6 +22,12 @@ const tabs = [
     route: '/admin/tasks',
   },
   {
+    id: 'review',
+    iconName: 'eye',
+    label: 'Review',
+    route: '/admin/client-work-review',
+  },
+  {
     id: 'requests',
     iconName: 'messageSquare',
     label: 'Requests',

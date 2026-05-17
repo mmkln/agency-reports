@@ -151,6 +151,11 @@ function normalizePriority(priority) {
   return VALID_NEEDED_ACTION_PRIORITIES.has(priority) ? priority : NEEDED_ACTION_PRIORITIES.MEDIUM
 }
 
+function normalizeOptionalId(value = '') {
+  const normalizedValue = normalizeText(value)
+  return normalizedValue || null
+}
+
 function normalizeEditableActionFields(input = {}) {
   return {
     description: normalizeText(input.description),
@@ -159,6 +164,8 @@ function normalizeEditableActionFields(input = {}) {
     owner_name: normalizeText(input.ownerName),
     priority: normalizePriority(input.priority),
     related_link: normalizeOptionalUrl(input.relatedLink, 'Request related link'),
+    related_task_id: normalizeOptionalId(input.relatedTaskId ?? input.related_task_id),
+    related_work_item_id: normalizeOptionalId(input.relatedWorkItemId ?? input.related_work_item_id),
     title: requireText(input.title, 'Request title'),
   }
 }
@@ -179,6 +186,8 @@ function mapNeededAction({ action, client }) {
     ownerName: normalizedAction.owner_name,
     priority: normalizedAction.priority,
     relatedLink: normalizedAction.related_link,
+    relatedTaskId: normalizedAction.related_task_id,
+    relatedWorkItemId: normalizedAction.related_work_item_id,
     respondedAt: normalizedAction.client_responded_at,
     respondedBy: normalizedAction.client_responded_by,
     resolutionNote: normalizedAction.resolution_note ?? '',
@@ -202,6 +211,8 @@ function mapClientNeededAction(action) {
     priority: normalizedAction.priority,
     priorityMeta: NEEDED_ACTION_PRIORITY_META[normalizedAction.priority],
     relatedLink: normalizedAction.related_link,
+    relatedTaskId: normalizedAction.related_task_id,
+    relatedWorkItemId: normalizedAction.related_work_item_id,
     respondedAt: normalizedAction.client_responded_at,
     responseHistory: normalizedAction.response_history,
     status: normalizedAction.status,
@@ -373,7 +384,17 @@ export function updateNeededAction({
     ...normalizeEditableActionFields(input),
     response_history: appendHistory(action, createHistoryEvent({
       metadata: {
-        fields: ['title', 'description', 'due_date', 'related_link', 'priority', 'owner_name', 'internal_notes'],
+        fields: [
+          'title',
+          'description',
+          'due_date',
+          'related_link',
+          'related_task_id',
+          'related_work_item_id',
+          'priority',
+          'owner_name',
+          'internal_notes',
+        ],
       },
       now,
       type: 'admin_updated',

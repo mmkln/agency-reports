@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { CLIENT_WORK_ITEM_PUBLISH_STATES, CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -13,6 +14,7 @@ const IDS = Object.freeze({
   NEW_TASK: '55555555-5555-4555-8555-555555555555',
   PROJECT_A: '66666666-6666-4666-8666-666666666666',
   TASK_A: '77777777-7777-4777-8777-777777777777',
+  WORK_A: '88888888-8888-4888-8888-888888888888',
 })
 
 function createEntityRepository(initialRecords = []) {
@@ -59,6 +61,18 @@ function createRepositories() {
         agency_id: 'other-agency',
         id: IDS.OTHER_AGENCY_CLIENT,
         name: 'Other Client',
+      },
+    ]),
+    clientWorkItems: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_A,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        source_task_id: IDS.TASK_A,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summary: 'Published client-safe work summary.',
+        title: 'Published active work',
+        updated_at: '2026-05-12T09:00:00.000Z',
       },
     ]),
     projects: createEntityRepository([
@@ -114,8 +128,31 @@ describe('taskWorkspaceService', () => {
 
     expect(adminResult.clients.map((client) => client.id)).toEqual([IDS.CLIENT_A, IDS.CLIENT_B])
     expect(adminResult.canCreateClientVisibleTasks).toBe(true)
+    expect(adminResult.canCreateClientWorkItems).toBe(true)
     expect(teamResult.clients.map((client) => client.id)).toEqual([IDS.CLIENT_A])
     expect(teamResult.canCreateClientVisibleTasks).toBe(false)
+  })
+
+  it('adds linked client work item state to task read models', () => {
+    const result = listTaskWorkspace({
+      repositories: createRepositories(),
+      viewer: createAdminViewer(),
+    })
+    const task = result.tasks.find((item) => item.id === IDS.TASK_A)
+
+    expect(task).toMatchObject({
+      clientWorkItem: {
+        id: IDS.WORK_A,
+        publishState: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        summaryStatus: 'ready',
+        title: 'Published active work',
+      },
+      hasClientWorkItem: true,
+      isMissingClientSummary: false,
+      isPublishedToClient: true,
+      isReadyForClientReview: false,
+    })
   })
 
   it('lets admins create client-visible tasks for agency clients', () => {

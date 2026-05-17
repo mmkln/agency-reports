@@ -269,6 +269,15 @@ This is **not** a full ClickUp / Asana replacement.
 
 Only implement client-visible progress.
 
+Mature refactor note:
+
+```text
+Task is the internal execution record.
+ClientWorkItem is the curated client-facing representation of selected work.
+Task.visibility / client_visible are legacy migration hints during the refactor.
+ClientWorkItem.publish_state is the mature source of truth for client-facing active work.
+```
+
 ### Required Entities
 
 ```text
@@ -597,6 +606,7 @@ clients
 client_memberships
 projects
 tasks
+client_work_items
 updates
 dashboard_links
 reports

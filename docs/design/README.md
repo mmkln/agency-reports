@@ -21,6 +21,7 @@ Before changing UI components, layouts, copy, tables, metrics, charts, or page s
 
 ## Research References
 
+- [Agency Task Visibility And Client Status Research](../research/agency-task-visibility-and-client-status-research.md): required research-derived reference before changing task visibility, admin review/publish, client-facing active work, client status, or needed-from-client workflows.
 - [Client Analytics Dashboard UI Recommendations](../research/client-analytics-dashboard-ui-recommendations.md): required research-derived reference before designing or implementing client-facing analytics dashboards, KPI cards, goal progress, funnel views, channel sections, dashboard insights, and dashboard drill-downs.
 
 ## Product Principles

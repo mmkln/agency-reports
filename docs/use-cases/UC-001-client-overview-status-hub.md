@@ -29,7 +29,7 @@ The Client Overview / Status Hub gives each client one simple page where they ca
 ```text
 1. What the agency is doing now
 2. What progress has been made
-3. What tasks are currently active
+3. What client-facing work is currently active
 4. What is blocked
 5. What results are coming from marketing work
 6. What the agency needs from the client
@@ -65,7 +65,7 @@ The portal is responsible for:
 
 ```text
 - organizing client-facing progress
-- showing client-visible tasks
+- showing curated client-facing work items
 - displaying current agency work
 - showing client blockers / needed actions
 - embedding existing dashboards
@@ -146,7 +146,7 @@ Responsibilities:
 - view current status
 - understand current agency work
 - view progress
-- view active client-visible tasks
+- view active client-facing work
 - view needed actions
 - open dashboard
 - open monthly report
@@ -182,7 +182,7 @@ Client Name
 Current Status
 Current Focus
 Progress Summary
-Active Tasks
+Active Work
 Latest Update
 Needed From Client
 Marketing Dashboard Embed
@@ -207,11 +207,12 @@ Progress Summary:
 - Completed work
 - Current stage
 
-Active Tasks:
-- Task title
+Active Work:
+- Client-facing work title
+- Client-safe summary
 - Status
-- Due date
-- Owner / responsible team member if needed
+- Target date
+- Related project or campaign
 
 Latest Update:
 Short human-written agency update
@@ -247,7 +248,7 @@ Progress Summary:
 - Landing Page Updates: 60%
 - Reporting Setup: 40%
 
-Active Tasks:
+Active Work:
 - Review new ad creatives - Waiting for client
 - Connect GA4 conversion event - In progress
 - Prepare monthly report - In progress
@@ -282,7 +283,7 @@ A new client needs access to the portal, or an existing client needs an updated 
 5. agency_admin invites client_user.
 6. agency_admin creates the first Project.
 7. agency_admin adds Milestones.
-8. agency_admin adds client-visible Tasks.
+8. agency_admin creates or publishes client-facing work items from selected internal work.
 9. agency_admin writes the Latest Update.
 10. agency_admin adds Needed From Client items.
 11. agency_admin adds Dashboard Embed link.
@@ -366,7 +367,7 @@ The client wants to check progress, results, blockers, or reports.
 4. client_user sees Current Status.
 5. client_user reads Current Focus.
 6. client_user checks Progress Summary.
-7. client_user reviews Active Tasks.
+7. client_user reviews Active Work.
 8. client_user reads Latest Update.
 9. client_user checks Needed From Client.
 10. client_user opens Marketing Dashboard if needed.
@@ -380,7 +381,7 @@ The client wants to check progress, results, blockers, or reports.
 | --- | --- |
 | What are you doing now? | Current Focus |
 | What has been completed? | Progress Summary |
-| What is active? | Active Tasks |
+| What is active? | Active Work |
 | What is blocked? | Current Status / Needed From Client |
 | What results are we getting? | Marketing Dashboard |
 | What do you need from me? | Needed From Client |
@@ -479,7 +480,29 @@ created_at
 updated_at
 ```
 
-### 11.6 updates
+Tasks are internal execution records. In the mature architecture, client-facing active work is represented by `client_work_items` rather than directly exposing tasks.
+
+### 11.6 client_work_items
+
+```text
+id
+client_id
+project_id
+source_task_id
+title
+summary
+status
+target_date
+sort_order
+publish_state
+published_at
+published_by
+last_reviewed_at
+created_at
+updated_at
+```
+
+### 11.7 updates
 
 ```text
 id
@@ -591,10 +614,14 @@ client_user can only see data connected to their own client_id.
 
 ### 13.2 Internal vs Client-Visible
 
+MVP task visibility fields are legacy migration hints during the mature refactor.
+
+In the mature architecture:
+
 ```text
-Every task and update must support visibility:
-- internal
-- client_visible
+Task = internal execution.
+ClientWorkItem = client-facing active work.
+ClientWorkItem.publish_state controls whether the client can see the work.
 ```
 
 ### 13.3 Client Cannot Edit Agency Work
@@ -626,7 +653,7 @@ ClientHeader
 StatusBadge
 CurrentFocusBlock
 ProgressSummaryBlock
-ActiveTasksBlock
+ActiveWorkBlock
 LatestUpdateBlock
 NeededFromClientBlock
 DashboardEmbedBlock
@@ -641,7 +668,7 @@ Editable components:
 ClientStatusEditor
 CurrentFocusEditor
 ProgressSummaryEditor
-VisibleTasksManager
+ClientWorkReviewManager
 LatestUpdateEditor
 NeededFromClientManager
 DashboardLinkManager
@@ -680,7 +707,7 @@ Do not render an empty iframe.
 Show:
 
 ```text
-No active client-visible tasks right now.
+No active client-facing work right now.
 ```
 
 Do not show an empty task table.
@@ -747,7 +774,7 @@ UC-001 is complete when:
 5. agency_admin can set client status.
 6. agency_admin can add current focus.
 7. agency_admin can create projects.
-8. agency_admin can create client-visible tasks.
+8. agency_admin can publish selected work as client-facing active work.
 9. agency_team can update assigned task status.
 10. internal tasks are hidden from client_user.
 11. internal notes are hidden from client_user.
@@ -822,7 +849,7 @@ Future use cases:
 ```text
 UC-002 - Embedded Marketing Dashboard
 UC-003 - Monthly Summary / Report Archive
-UC-004 - Client-Visible Tasks / Progress
+UC-004 - Client-Facing Work / Progress
 UC-005 - Needed From Client / Blockers
 UC-006 - Approval Lite
 UC-007 - Files & Links Hub
@@ -885,7 +912,7 @@ When implementing this use case, verify:
 
 ```text
 - The client overview answers the seven main client questions.
-- Every client-facing task/update/report has a visibility rule.
+- Every client-facing work item/update/report has a visibility rule.
 - Internal tasks, notes, draft reports, and unfinished dashboard links are never rendered for client_user.
 - Empty states are useful and explicit.
 - Dashboard blocks do not render empty iframes.
