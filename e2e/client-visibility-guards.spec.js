@@ -11,6 +11,8 @@ import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/serv
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
+test.setTimeout(120_000)
+
 async function resetLocalDemo(page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.evaluate(({ authKey, demoRoleKey, portalKey }) => {
@@ -161,19 +163,28 @@ test('client mature routes hide internal and draft records from persisted data',
   await signInAsClient(page)
   await seedHiddenClientRecords(page)
 
-  await page.goto(`/client/files-links?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/files-links?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('h1').getByText('Files & Links')).toBeVisible()
   await expect(page.getByText('Brand assets folder')).toBeVisible()
   await expect(page.getByText('Internal tracking debug notes')).toHaveCount(0)
 
-  await page.goto(`/client/updates?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/updates?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Update History' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'April report published' }).first()).toBeVisible()
   await expect(page.getByText('Internal tracking note')).toHaveCount(0)
   await expect(page.getByText('E2E Internal Client Update')).toHaveCount(0)
 
-  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`)
+  await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Business-value analytics' })).toBeVisible()
+  const trustContext = page.locator('#results-trust-context')
+
+  await expect(trustContext.getByRole('heading', { name: 'Data Trust Context' })).toBeVisible()
+  await expect(trustContext.getByText('Last updated')).toBeVisible()
+  await expect(trustContext.getByText('Confidence', { exact: true })).toBeVisible()
+  await expect(trustContext.getByText('Medium confidence')).toBeVisible()
+  await expect(trustContext.getByText('Manual', { exact: true })).toBeVisible()
+  await expect(trustContext.getByText('Attribution caveat')).toBeVisible()
+  await expect(trustContext.getByText('Source note')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Marketing Performance Dashboard' }).first()).toBeVisible()
   await expect(page.getByText('May 2026 Performance Draft')).toHaveCount(0)

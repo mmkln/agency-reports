@@ -56,7 +56,7 @@ test('agency admin creates a draft performance dashboard and enters structured d
   const title = `E2E Structured Dashboard ${suffix}`
 
   await signInAsAdmin(page)
-  await page.goto('/admin/performance-dashboards')
+  await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Performance Dashboards' })).toBeVisible()
 
   await page.getByRole('link', { name: 'New Dashboard' }).click()
@@ -178,7 +178,7 @@ test('client can view published performance dashboard but cannot view draft or a
 
 test('invalid performance dashboard JSON stays in the import modal with validation errors', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/performance-dashboards')
+  await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Import JSON' }).click()
 
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
@@ -194,7 +194,7 @@ test('invalid performance dashboard JSON stays in the import modal with validati
 
 test('performance dashboard JSON with missing required fields stays in the import modal', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/performance-dashboards')
+  await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Import JSON' }).click()
 
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
@@ -250,7 +250,7 @@ test('agency admin imports campaign execution JSON and publishes it for the clie
   const campaignTitle = 'June 2026 Patient Reactivation Campaign'
 
   await signInAsAdmin(page)
-  await page.goto('/admin/performance-dashboards')
+  await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Import JSON' }).click()
 
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()

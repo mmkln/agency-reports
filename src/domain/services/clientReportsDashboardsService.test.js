@@ -91,6 +91,7 @@ function createRepositories(overrides = {}) {
           },
           kpi_cards: [],
         },
+        attribution_note: 'Manual report compiled from CRM and ad exports.',
         data_confidence: PERFORMANCE_DATA_CONFIDENCE.HIGH,
         data_mode: PERFORMANCE_DATA_MODES.MANUAL,
         id: IDS.PERIOD_PUBLISHED,
@@ -98,6 +99,7 @@ function createRepositories(overrides = {}) {
         period_end: '2026-04-30',
         period_start: '2026-04-01',
         status: PERFORMANCE_DASHBOARD_STATUSES.PUBLISHED,
+        source_summary: 'CRM export, ad platform exports, and Looker Studio.',
         title: 'April Performance',
       },
       {
@@ -124,7 +126,7 @@ function createRepositories(overrides = {}) {
         id: IDS.REPORT_PUBLISHED,
         period_end: '2026-04-30',
         period_start: '2026-04-01',
-        status: REPORT_STATUSES.PUBLISHED,
+      status: REPORT_STATUSES.PUBLISHED,
         summary: 'April report summary.',
         title: 'April Report',
       },
@@ -172,8 +174,94 @@ describe('getClientReportsDashboardsPage', () => {
       name: 'Live Looker Dashboard',
     })
     expect(page.reportsPage.reports.map((report) => report.title)).toEqual(['April Report'])
+    expect(page.trustContext).toMatchObject({
+      attributionNote: 'Manual report compiled from CRM and ad exports.',
+      dataConfidence: PERFORMANCE_DATA_CONFIDENCE.HIGH,
+      dataMode: PERFORMANCE_DATA_MODES.MANUAL,
+      latestReport: {
+        id: IDS.REPORT_PUBLISHED,
+      },
+      performancePeriod: {
+        id: IDS.PERIOD_PUBLISHED,
+      },
+      sourceDashboard: {
+        id: IDS.DASHBOARD_ACTIVE,
+      },
+      sourceSummary: 'CRM export, ad platform exports, and Looker Studio.',
+    })
+    expect(page.trustContext.caveats.map((caveat) => caveat.id)).toEqual([
+      'source-summary',
+      'attribution',
+    ])
     expect(JSON.stringify(page)).not.toContain('Draft Dashboard')
     expect(JSON.stringify(page)).not.toContain('May Draft Performance')
+  })
+
+  it('surfaces stale and low-confidence trust context without using hidden draft analytics', () => {
+    const page = getClientReportsDashboardsPage({
+      clientId: IDS.CLIENT_A,
+      now: () => new Date('2026-06-10T09:00:00.000Z'),
+      repositories: createRepositories({
+        performanceDashboardPeriods: createEntityRepository([
+          {
+            attribution_note: 'Directional estimate only.',
+            client_id: IDS.CLIENT_A,
+            content: {
+              executive_summary: {
+                narrative: 'Published low confidence dashboard narrative.',
+              },
+              hero_metric: {
+                label: 'Qualified Leads',
+                value: 42,
+              },
+              kpi_cards: [],
+            },
+            data_confidence: PERFORMANCE_DATA_CONFIDENCE.LOW,
+            data_mode: PERFORMANCE_DATA_MODES.JSON_IMPORT,
+            id: IDS.PERIOD_PUBLISHED,
+            last_updated_at: '2026-05-16T09:00:00.000Z',
+            period_end: '2026-04-30',
+            period_start: '2026-04-01',
+            status: PERFORMANCE_DASHBOARD_STATUSES.PUBLISHED,
+            title: 'April Performance',
+          },
+          {
+            client_id: IDS.CLIENT_A,
+            content: {
+              executive_summary: {
+                narrative: 'Hidden draft should not affect trust context.',
+              },
+            },
+            data_confidence: PERFORMANCE_DATA_CONFIDENCE.HIGH,
+            data_mode: PERFORMANCE_DATA_MODES.INTEGRATION,
+            id: IDS.PERIOD_DRAFT,
+            last_updated_at: '2026-06-09T09:00:00.000Z',
+            period_end: '2026-05-31',
+            period_start: '2026-05-01',
+            status: PERFORMANCE_DASHBOARD_STATUSES.DRAFT,
+            title: 'May Draft Performance',
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.trustContext.dataFreshness).toMatchObject({
+      ageDays: 25,
+      isStale: true,
+    })
+    expect(page.trustContext.dataConfidenceMeta).toMatchObject({
+      label: 'Low confidence',
+    })
+    expect(page.trustContext.dataModeMeta).toMatchObject({
+      label: 'JSON Import',
+    })
+    expect(page.trustContext.performancePeriod).toMatchObject({
+      id: IDS.PERIOD_PUBLISHED,
+    })
+    expect(JSON.stringify(page.trustContext)).not.toContain('May Draft Performance')
+    expect(JSON.stringify(page.trustContext)).not.toContain('Integration')
   })
 
   it('keeps draft analytics available only in admin preview mode', () => {

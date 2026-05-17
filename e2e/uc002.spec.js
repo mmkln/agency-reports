@@ -55,7 +55,7 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   const dashboardName = `E2E Marketing Dashboard ${Date.now()}`
 
   await signInAsAdmin(page)
-  await page.goto('/admin/dashboard-links')
+  await page.goto('/admin/dashboard-links', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Dashboard Links' })).toBeVisible()
 
   await page.getByRole('link', { name: 'New Dashboard' }).click()
@@ -106,7 +106,7 @@ test('client can open their active dashboard and cannot open another client dash
 
 test('unavailable dashboard shows a controlled client fallback', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/dashboard-links')
+  await page.goto('/admin/dashboard-links', { waitUntil: 'domcontentloaded' })
 
   const dashboardRow = page.getByRole('row').filter({ hasText: 'Marketing Performance Dashboard' })
   await dashboardRow.getByLabel('Dashboard actions').click()

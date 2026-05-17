@@ -65,7 +65,7 @@ test('agency admin can publish a monthly report and client can read it in the ar
   const needed = `E2E needed from client ${suffix}`
 
   await signInAsAdmin(page)
-  await page.goto('/admin/reports')
+  await page.goto('/admin/reports', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()
 
   await page.getByRole('link', { name: 'New Report' }).click()
@@ -134,27 +134,41 @@ test('client report archive hides draft reports', async ({ page }) => {
   const reportTitle = `E2E Hidden Draft ${Date.now()}`
 
   await signInAsAdmin(page)
-  await page.goto('/admin/reports')
-  await page.getByRole('link', { name: 'New Report' }).click()
-  await page.getByLabel('Report title *').fill(reportTitle)
-  await page.getByLabel('Period start *').fill('2026-06-01')
-  await page.getByLabel('Period end *').fill('2026-06-30')
-  await page.getByLabel('Executive summary').fill('Draft only summary')
-  await page.getByRole('button', { name: 'Create report' }).click()
-
-  await expect(page.getByRole('row').filter({ hasText: reportTitle })).toBeVisible()
-  const draftReportId = await page.evaluate(({ portalKey, title }) => {
+  const draftReportId = await page.evaluate(({ clientId, portalKey, title }) => {
     const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const draftReport = {
+      client_decisions_needed: '',
+      client_id: clientId,
+      created_at: '2026-06-01T09:00:00.000Z',
+      dashboard_url: '',
+      id: crypto.randomUUID(),
+      next_actions: '',
+      pdf_url: '',
+      period_end: '2026-06-30',
+      period_start: '2026-06-01',
+      problems: '',
+      published_at: null,
+      status: 'draft',
+      summary: 'Draft only summary',
+      title,
+      updated_at: '2026-06-01T09:00:00.000Z',
+      wins: '',
+    }
 
-    return portalData.reports.find((report) => report.title === title).id
+    portalData.reports.push(draftReport)
+    window.localStorage.setItem(portalKey, JSON.stringify(portalData))
+
+    return draftReport.id
   }, {
+    clientId: SEED_IDS.CLIENT_GREEN_DENTAL,
     portalKey: PORTAL_STORAGE_KEY,
     title: reportTitle,
   })
 
-  const draftRow = page.getByRole('row').filter({ hasText: reportTitle })
-  await draftRow.getByLabel('Report actions').click()
-  await page.getByRole('menuitem', { name: 'Preview report' }).click()
+  await page.goto(
+    `/admin/client-report-preview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&reportId=${draftReportId}`,
+    { waitUntil: 'domcontentloaded' },
+  )
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
   await expect(page.getByText('Preview only. This report is not visible to the client.')).toBeVisible()
@@ -191,7 +205,7 @@ test('client report reader shows narrative hierarchy and link fallbacks', async 
 
 test('agency admin can duplicate a published report into a hidden draft', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/reports')
+  await page.goto('/admin/reports', { waitUntil: 'domcontentloaded' })
 
   const sourceRow = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
   await sourceRow.getByLabel('Report actions').click()
@@ -214,7 +228,7 @@ test('agency admin can duplicate a published report into a hidden draft', async 
 
 test('agency admin can filter monthly reports', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/reports')
+  await page.goto('/admin/reports', { waitUntil: 'domcontentloaded' })
 
   const sourceReport = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
   await expect(sourceReport).toBeVisible()
@@ -239,7 +253,7 @@ test('agency admin can filter monthly reports', async ({ page }) => {
 
 test('agency admin can archive a published report and client still sees it in the archive', async ({ page }) => {
   await signInAsAdmin(page)
-  await page.goto('/admin/reports')
+  await page.goto('/admin/reports', { waitUntil: 'domcontentloaded' })
 
   const sourceReport = page.getByRole('row').filter({ hasText: 'April 2026 Monthly Summary' })
   await expect(sourceReport).toBeVisible()

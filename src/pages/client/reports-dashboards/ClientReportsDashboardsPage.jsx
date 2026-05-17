@@ -7,6 +7,7 @@ import {
   CurrentPerformanceSection,
   ReportArchiveSection,
   ResultsHeader,
+  ResultsTrustContext,
   SelectedReportSection,
   SourceDashboardSection,
 } from '../../../widgets/client-reports-dashboards'
@@ -45,6 +46,7 @@ export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
     <div className="grid gap-6">
       <ResultsHeader page={page} />
       <CurrentPerformanceSection mode={mode} performancePage={page.performancePage} />
+      <ResultsTrustContext trustContext={page.trustContext} />
       <SourceDashboardSection clientId={clientId} dashboardPage={page.dashboardPage} />
       <SelectedReportSection clientId={clientId} reportsPage={page.reportsPage} />
       <ReportArchiveSection clientId={clientId} reportsPage={page.reportsPage} />

@@ -83,7 +83,7 @@ Mark items as complete only after the code, tests, and documentation for that it
 - [x] Build `CurrentPerformanceSection` from UC-004 data.
 - [x] Build `SourceDashboardSection` from UC-002 data.
 - [x] Build `ReportArchiveSection` from UC-003 data.
-- [ ] Build `ResultsTrustContext`.
+- [x] Build `ResultsTrustContext`.
 - [x] Move or reuse executive summary, hero metric, KPI cards, goals, trend, funnel/channel breakdown, insights, what-we-did, and next-action UI from `widgets/client-performance`.
 - [x] Move or reuse iframe/fallback/open-link UI from `widgets/dashboard-embed`.
 - [x] Move or reuse latest report/archive UI from the client reports implementation.
@@ -296,6 +296,7 @@ Implemented domain coverage so far:
 - [x] Mature client navigation route metadata and browser sidebar exclude legacy Dashboard, Performance, and Reports destinations.
 - [x] Client users are blocked from admin Client Control Center workspace routes.
 - [x] Browser visibility guard covers internal files/links, internal updates, draft reports, draft source dashboards, and draft performance periods on mature client routes.
+- [x] Reports & Dashboards trust context covers data freshness, confidence, source mode, source dashboard status, latest report period, source notes, and attribution caveats.
 - [x] Dashboard, performance, and report preview routes now render the mature Reports & Dashboards destination instead of separate legacy client pages.
 - [x] Client-initiated requests remain separate from agency Action Needed records and do not create internal tasks directly.
 - [x] Admin request triage updates client-submitted request status and agency response with audit history.
@@ -315,7 +316,7 @@ Implemented domain coverage so far:
 - [x] Overview is a compact control home.
 - [x] Action Needed owns client obligations.
 - [x] Projects owns visible workstreams.
-- [ ] Reports & Dashboards owns current performance, source dashboard, and report archive.
+- [x] Reports & Dashboards owns current performance, source dashboard, and report archive.
 - [ ] Files & Links owns deliverables/resources.
 - [ ] Requests owns client-initiated asks.
 - [ ] Updates owns curated history.

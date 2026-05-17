@@ -1,6 +1,7 @@
 export {
   CurrentPerformanceSection,
   ReportArchiveSection,
+  ResultsTrustContext,
   ResultsHeader,
   SelectedReportSection,
   SourceDashboardSection,
