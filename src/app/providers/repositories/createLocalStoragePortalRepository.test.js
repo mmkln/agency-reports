@@ -13,6 +13,7 @@ const seedData = Object.freeze({
       name: 'Seed Client',
     },
   ],
+  call_booking_metrics: [],
   client_file_links: [],
   client_invitations: [],
   client_memberships: [],
@@ -96,6 +97,7 @@ describe('createLocalStoragePortalRepository', () => {
             name: 'Existing Client',
           },
         ],
+        call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
         client_memberships: [],
@@ -142,6 +144,7 @@ describe('createLocalStoragePortalRepository', () => {
       [PORTAL_STORAGE_KEY]: JSON.stringify({
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
         clients: [],
+        call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
         client_memberships: [],
@@ -346,6 +349,25 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.patientAcquisitionSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
     expect(reloadedRepository.patientAcquisitionSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
+  it('persists call booking metrics through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const metric = {
+      booked_from_calls: 12,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '12121212-1212-4212-8212-121212121212',
+      missed_calls: 3,
+      period_label: 'May 2026',
+      total_calls: 24,
+    }
+
+    repository.callBookingMetrics.upsert(metric)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.callBookingMetrics.findById(metric.id)).toMatchObject(metric)
+    expect(reloadedRepository.callBookingMetrics.listByClientId(metric.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

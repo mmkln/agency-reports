@@ -51,7 +51,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `ClinicServiceLine`.
 - [x] Add `PatientAcquisitionSnapshot`.
 - [ ] Add `BookingPipelineSnapshot`.
-- [ ] Add `CallBookingMetric`.
+- [x] Add `CallBookingMetric`.
 - [ ] Add `ServiceLinePerformance`.
 - [ ] Add `LocationPerformance`.
 - [ ] Add `ReputationSnapshot`.
@@ -63,7 +63,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] multiple service lines
   - [x] at least one location
   - [x] acquisition metrics
-  - [ ] calls/bookings metrics
+  - [x] calls/bookings metrics
   - [ ] reputation snapshot
   - [ ] compliance review items
   - [ ] clinic action needed items
@@ -126,22 +126,22 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 5 - Calls & Bookings
 
-- [ ] Add `/client/calls-bookings` route or clinic-template destination mapping.
-- [ ] Add `getClientCallsBookingsPage` domain service.
-- [ ] Add `widgets/client-calls-bookings`.
+- [x] Add `/client/calls-bookings` route or clinic-template destination mapping.
+- [x] Add `getClientCallsBookingsPage` domain service.
+- [x] Add `widgets/client-calls-bookings`.
 - [ ] Build metrics:
-  - [ ] total calls
-  - [ ] first-time caller calls
-  - [ ] answered calls
-  - [ ] missed calls
-  - [ ] answered rate
-  - [ ] booked from calls
-  - [ ] form leads
-  - [ ] average response time
-  - [ ] no-response leads
-  - [ ] not-booked reasons
+  - [x] total calls
+  - [x] first-time caller calls
+  - [x] answered calls
+  - [x] missed calls
+  - [x] answered rate
+  - [x] booked from calls
+  - [x] form leads
+  - [x] average response time
+  - [x] no-response leads
+  - [x] not-booked reasons
   - [ ] peak call times
-- [ ] Add booking leakage summary.
+- [x] Add booking leakage summary.
 - [ ] Add clinic action creation/linking for missed-call or slow-response issues.
 - [ ] Add tests that missed-call insights do not expose patient-level data.
 
@@ -321,7 +321,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 - [x] Add unit tests for clinic entity normalization.
 - [x] Add domain tests for patient acquisition client isolation.
-- [ ] Add domain tests for calls/bookings aggregate safety.
+- [x] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
 - [ ] Add domain tests for reputation visibility.
 - [ ] Add domain tests for compliance approval transitions.

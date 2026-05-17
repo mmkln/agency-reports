@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../providers/auth/useAuth'
 import { ClientActionNeededPage } from '../../pages/client/action-needed/ClientActionNeededPage'
 import { ClientActionNeededPageHeader } from '../../pages/client/action-needed/ClientActionNeededPageHeader'
+import { ClientCallsBookingsPage } from '../../pages/client/calls-bookings/ClientCallsBookingsPage'
+import { ClientCallsBookingsPageHeader } from '../../pages/client/calls-bookings/ClientCallsBookingsPageHeader'
 import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPage'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboardPage'
@@ -77,6 +79,10 @@ export const ClientOverviewPageRoute = withPageProps(ClientOverviewPage, ClientO
 export const ClientActionNeededPageRoute = withPageProps(
   ClientActionNeededPage,
   ClientActionNeededPageHeader,
+)
+export const ClientCallsBookingsPageRoute = withPageProps(
+  ClientCallsBookingsPage,
+  ClientCallsBookingsPageHeader,
 )
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
 export const ClientFilesLinksPageRoute = withPageProps(ClientFilesLinksPage, ClientFilesLinksPageHeader)

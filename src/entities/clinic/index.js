@@ -9,5 +9,6 @@ export {
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizeCallBookingMetric,
   normalizePatientAcquisitionSnapshot,
 } from './model'

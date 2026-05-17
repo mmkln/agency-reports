@@ -10,6 +10,7 @@ import { USER_ROLES } from '../../entities/profile'
 import {
   getClientClinicFoundationPage,
   getClientClinicServiceLinesPage,
+  getClientCallsBookingsPage,
   getClientPatientAcquisitionPage,
 } from './clinicClientService'
 
@@ -22,6 +23,7 @@ const IDS = Object.freeze({
   PROFILE: '55555555-5555-4555-8555-555555555555',
   SERVICE_LINE: '66666666-6666-4666-8666-666666666666',
   SNAPSHOT: '77777777-7777-4777-8777-777777777777',
+  CALL_BOOKING: '88888888-8888-4888-8888-888888888888',
 })
 
 function createEntityRepository(records = []) {
@@ -102,6 +104,29 @@ function createRepositories(overrides = {}) {
         primary_channel: 'google_ads',
         status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
         target_monthly_bookings: 24,
+      },
+    ]),
+    callBookingMetrics: createEntityRepository([
+      {
+        answered_calls: 37,
+        average_response_seconds: 92,
+        booked_from_calls: 24,
+        client_id: IDS.CLIENT_A,
+        first_time_calls: 31,
+        follow_up_needed_count: 5,
+        form_leads: 14,
+        id: IDS.CALL_BOOKING,
+        location_id: IDS.LOCATION,
+        missed_calls: 6,
+        no_response_leads: 3,
+        not_booked_reasons: [
+          { count: 4, reason: 'No available slot' },
+          { count: 3, reason: 'Needed pricing details' },
+        ],
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        service_line_id: IDS.SERVICE_LINE,
+        total_calls: 43,
       },
     ]),
     patientAcquisitionSnapshots: createEntityRepository([
@@ -232,8 +257,49 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('returns aggregate call and booking performance data', () => {
+    const page = getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.totals).toMatchObject({
+      answeredCalls: 37,
+      answeredRate: 37 / 43,
+      averageResponseSeconds: 92,
+      bookedFromCalls: 24,
+      callBookingRate: 24 / 43,
+      missedCalls: 6,
+      missedRate: 6 / 43,
+      totalCalls: 43,
+    })
+    expect(page.metrics[0]).toMatchObject({
+      location: expect.objectContaining({ name: 'Main Clinic' }),
+      serviceLine: expect.objectContaining({ name: 'Dental Implants' }),
+    })
+    expect(page.notBookedReasons).toEqual([
+      { count: 4, reason: 'No available slot' },
+      { count: 3, reason: 'Needed pricing details' },
+    ])
+  })
+
   it('denies cross-client patient acquisition access', () => {
     const page = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_B,
+      repositories: createRepositories(),
+      viewer: createClientViewer(IDS.CLIENT_A),
+    })
+
+    expect(page).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
+  })
+
+  it('denies cross-client calls and bookings access', () => {
+    const page = getClientCallsBookingsPage({
       clientId: IDS.CLIENT_B,
       repositories: createRepositories(),
       viewer: createClientViewer(IDS.CLIENT_A),
@@ -348,5 +414,24 @@ describe('clinicClientService', () => {
       repositories,
       viewer: createClientViewer(),
     })).toThrow('Patient acquisition snapshot must stay aggregate-only')
+  })
+
+  it('blocks patient-level fields from call booking metrics', () => {
+    const repositories = createRepositories({
+      callBookingMetrics: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.CALL_BOOKING,
+          patient_email: 'jane@example.com',
+          total_calls: 1,
+        },
+      ]),
+    })
+
+    expect(() => getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })).toThrow('Call booking metric must stay aggregate-only')
   })
 })

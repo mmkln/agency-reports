@@ -223,3 +223,46 @@ export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
     updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
   }
 }
+
+function normalizeReasonBreakdown(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      count: normalizeNumber(item?.count),
+      reason: normalizeText(item?.reason),
+    }))
+    .filter((item) => item.reason && item.count > 0)
+}
+
+export function normalizeCallBookingMetric(metric = {}) {
+  assertClinicAggregateRecord(metric, 'Call booking metric')
+
+  return {
+    answered_calls: normalizeNumber(metric.answered_calls),
+    average_response_seconds: normalizeNumber(metric.average_response_seconds),
+    booked_from_calls: normalizeNumber(metric.booked_from_calls),
+    client_id: normalizeText(metric.client_id),
+    created_at: metric.created_at ?? null,
+    data_source: normalizeNullableText(metric.data_source),
+    first_time_calls: normalizeNumber(metric.first_time_calls),
+    follow_up_needed_count: normalizeNumber(metric.follow_up_needed_count),
+    form_leads: normalizeNumber(metric.form_leads),
+    id: normalizeText(metric.id),
+    insight: normalizeText(metric.insight),
+    last_updated_at: metric.last_updated_at ?? metric.updated_at ?? metric.created_at ?? null,
+    location_id: normalizeNullableText(metric.location_id),
+    missed_calls: normalizeNumber(metric.missed_calls),
+    no_response_leads: normalizeNumber(metric.no_response_leads),
+    not_booked_reasons: normalizeReasonBreakdown(metric.not_booked_reasons),
+    period_end: normalizeText(metric.period_end),
+    period_label: normalizeText(metric.period_label),
+    period_start: normalizeText(metric.period_start),
+    service_line_id: normalizeNullableText(metric.service_line_id),
+    summary: normalizeText(metric.summary),
+    total_calls: normalizeNumber(metric.total_calls),
+    updated_at: metric.updated_at ?? metric.created_at ?? null,
+  }
+}

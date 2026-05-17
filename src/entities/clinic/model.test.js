@@ -8,6 +8,7 @@ import {
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizeCallBookingMetric,
   normalizePatientAcquisitionSnapshot,
 } from './model'
 
@@ -76,6 +77,35 @@ describe('clinic entity model', () => {
       landing_page_visits: 211,
       qualified_inquiries: 21,
       spend: 1860,
+    })
+  })
+
+  it('normalizes aggregate call and booking metrics', () => {
+    expect(normalizeCallBookingMetric({
+      answered_calls: '37',
+      average_response_seconds: '92',
+      booked_from_calls: '24',
+      first_time_calls: '31',
+      follow_up_needed_count: '5',
+      form_leads: '14',
+      missed_calls: '6',
+      no_response_leads: '3',
+      not_booked_reasons: [
+        { count: '4', reason: 'No available slot' },
+        { count: 0, reason: 'Ignored zero' },
+      ],
+      total_calls: '43',
+    })).toMatchObject({
+      answered_calls: 37,
+      average_response_seconds: 92,
+      booked_from_calls: 24,
+      first_time_calls: 31,
+      follow_up_needed_count: 5,
+      form_leads: 14,
+      missed_calls: 6,
+      no_response_leads: 3,
+      not_booked_reasons: [{ count: 4, reason: 'No available slot' }],
+      total_calls: 43,
     })
   })
 

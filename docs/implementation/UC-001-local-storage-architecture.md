@@ -33,6 +33,7 @@ clinicProfiles
 clinicLocations
 clinicServiceLines
 patientAcquisitionSnapshots
+callBookingMetrics
 neededFromClient
 dashboardLinks
 reports
@@ -104,6 +105,7 @@ clinic_profiles -> repositories.clinicProfiles
 clinic_locations -> repositories.clinicLocations
 clinic_service_lines -> repositories.clinicServiceLines
 patient_acquisition_snapshots -> repositories.patientAcquisitionSnapshots
+call_booking_metrics -> repositories.callBookingMetrics
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports

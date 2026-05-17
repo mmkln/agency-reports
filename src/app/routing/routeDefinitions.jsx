@@ -10,6 +10,7 @@ import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/per
 import { AdminPerformanceDashboardsPageHeader } from '../../pages/admin/performance-dashboards/AdminPerformanceDashboardsPageHeader'
 import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { ClientActionNeededPageHeader } from '../../pages/client/action-needed/ClientActionNeededPageHeader'
+import { ClientCallsBookingsPageHeader } from '../../pages/client/calls-bookings/ClientCallsBookingsPageHeader'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientFilesLinksPageHeader } from '../../pages/client/files-links/ClientFilesLinksPageHeader'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
@@ -46,6 +47,7 @@ import {
   AdminReportsPageRoute,
   AdminTasksPageRoute,
   ClientActionNeededPageRoute,
+  ClientCallsBookingsPageRoute,
   ClientDashboardPageRoute,
   ClientFilesLinksPageRoute,
   ClientOverviewPageRoute,
@@ -163,6 +165,17 @@ export const routeDefinitions = [
     iconName: 'target',
     clientTypes: [CLIENT_TYPES.CLINIC],
     element: <ClientPatientAcquisitionPageRoute />,
+  },
+  {
+    path: '/client/calls-bookings',
+    id: 'client-calls-bookings',
+    label: 'Calls & Bookings',
+    pageTitle: 'Calls & Bookings',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientCallsBookingsPageHeader,
+    iconName: 'phone',
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    element: <ClientCallsBookingsPageRoute />,
   },
   {
     path: '/client/projects',

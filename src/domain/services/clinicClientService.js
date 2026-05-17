@@ -3,6 +3,7 @@ import {
   CLINIC_ACQUISITION_CHANNEL_META,
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_SERVICE_LINE_STATUS_META,
+  normalizeCallBookingMetric,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
@@ -159,6 +160,84 @@ function buildAcquisitionFunnel(totals) {
   ]
 }
 
+function mapCallBookingMetric(metric, { locationsById, serviceLinesById }) {
+  const normalizedMetric = normalizeCallBookingMetric(metric)
+
+  return {
+    answeredCalls: normalizedMetric.answered_calls,
+    answeredRate: divide(normalizedMetric.answered_calls, normalizedMetric.total_calls),
+    averageResponseSeconds: normalizedMetric.average_response_seconds,
+    bookedFromCalls: normalizedMetric.booked_from_calls,
+    callBookingRate: divide(normalizedMetric.booked_from_calls, normalizedMetric.total_calls),
+    clientId: normalizedMetric.client_id,
+    dataSource: normalizedMetric.data_source,
+    firstTimeCalls: normalizedMetric.first_time_calls,
+    followUpNeededCount: normalizedMetric.follow_up_needed_count,
+    formLeads: normalizedMetric.form_leads,
+    id: normalizedMetric.id,
+    insight: normalizedMetric.insight,
+    lastUpdatedAt: normalizedMetric.last_updated_at,
+    location: normalizedMetric.location_id ? locationsById.get(normalizedMetric.location_id) ?? null : null,
+    locationId: normalizedMetric.location_id,
+    missedCalls: normalizedMetric.missed_calls,
+    missedRate: divide(normalizedMetric.missed_calls, normalizedMetric.total_calls),
+    noResponseLeads: normalizedMetric.no_response_leads,
+    notBookedReasons: normalizedMetric.not_booked_reasons,
+    periodEnd: normalizedMetric.period_end,
+    periodLabel: normalizedMetric.period_label,
+    periodStart: normalizedMetric.period_start,
+    serviceLine: normalizedMetric.service_line_id
+      ? serviceLinesById.get(normalizedMetric.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedMetric.service_line_id,
+    summary: normalizedMetric.summary,
+    totalCalls: normalizedMetric.total_calls,
+  }
+}
+
+function createEmptyCallBookingTotals() {
+  return {
+    answeredCalls: 0,
+    bookedFromCalls: 0,
+    firstTimeCalls: 0,
+    followUpNeededCount: 0,
+    formLeads: 0,
+    missedCalls: 0,
+    noResponseLeads: 0,
+    responseSecondsWeightedTotal: 0,
+    totalCalls: 0,
+  }
+}
+
+function addCallBookingTotals(total, metric) {
+  return {
+    answeredCalls: total.answeredCalls + metric.answeredCalls,
+    bookedFromCalls: total.bookedFromCalls + metric.bookedFromCalls,
+    firstTimeCalls: total.firstTimeCalls + metric.firstTimeCalls,
+    followUpNeededCount: total.followUpNeededCount + metric.followUpNeededCount,
+    formLeads: total.formLeads + metric.formLeads,
+    missedCalls: total.missedCalls + metric.missedCalls,
+    noResponseLeads: total.noResponseLeads + metric.noResponseLeads,
+    responseSecondsWeightedTotal: total.responseSecondsWeightedTotal
+      + (metric.averageResponseSeconds * metric.totalCalls),
+    totalCalls: total.totalCalls + metric.totalCalls,
+  }
+}
+
+function aggregateNotBookedReasons(metrics) {
+  const reasonsByName = new Map()
+
+  metrics.forEach((metric) => {
+    metric.notBookedReasons.forEach((item) => {
+      reasonsByName.set(item.reason, (reasonsByName.get(item.reason) ?? 0) + item.count)
+    })
+  })
+
+  return [...reasonsByName.entries()]
+    .map(([reason, count]) => ({ count, reason }))
+    .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason))
+}
+
 function canReadClinicClient({ client, clientId, viewer }) {
   if (!client || client.type !== CLIENT_TYPES.CLINIC) {
     return false
@@ -264,6 +343,47 @@ export function getClientPatientAcquisitionPage(input) {
       bookingRate: divide(totals.bookedAppointments, inquiries),
       costPerBookedAppointment: divide(totals.spend, totals.bookedAppointments),
       inquiries,
+    },
+  }
+}
+
+export function getClientCallsBookingsPage(input) {
+  const foundationPage = getClientClinicFoundationPage(input)
+
+  if (foundationPage.status === 'error') {
+    return foundationPage
+  }
+
+  const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
+  const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
+  const metrics = (input.repositories.callBookingMetrics?.listByClientId(input.clientId) ?? [])
+    .map((metric) => mapCallBookingMetric(metric, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
+    ))
+  const rawTotals = metrics.reduce(addCallBookingTotals, createEmptyCallBookingTotals())
+
+  return {
+    client: foundationPage.client,
+    isEmpty: metrics.length === 0,
+    latestUpdatedAt: metrics
+      .map((metric) => metric.lastUpdatedAt)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null,
+    locations: foundationPage.locations,
+    metrics,
+    notBookedReasons: aggregateNotBookedReasons(metrics),
+    profile: foundationPage.profile,
+    serviceLines: foundationPage.serviceLines,
+    status: 'ready',
+    totals: {
+      ...rawTotals,
+      answeredRate: divide(rawTotals.answeredCalls, rawTotals.totalCalls),
+      averageResponseSeconds: divide(rawTotals.responseSecondsWeightedTotal, rawTotals.totalCalls),
+      callBookingRate: divide(rawTotals.bookedFromCalls, rawTotals.totalCalls),
+      missedRate: divide(rawTotals.missedCalls, rawTotals.totalCalls),
     },
   }
 }
