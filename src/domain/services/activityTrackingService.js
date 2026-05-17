@@ -2,6 +2,14 @@ import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 
 export const ACTIVITY_EVENT_TYPES = Object.freeze({
+  CLIENT_REQUEST_ANSWERED: 'client_request_answered',
+  CLIENT_REQUEST_CANCELLED: 'client_request_cancelled',
+  CLIENT_REQUEST_CREATED: 'client_request_created',
+  CLIENT_REQUEST_RESOLVED: 'client_request_resolved',
+  CLIENT_WORK_ITEM_ARCHIVED: 'client_work_item_archived',
+  CLIENT_WORK_ITEM_CREATED: 'client_work_item_created',
+  CLIENT_WORK_ITEM_PUBLISHED: 'client_work_item_published',
+  CLIENT_WORK_ITEM_READY_FOR_REVIEW: 'client_work_item_ready_for_review',
   DASHBOARD_OPENED: 'dashboard_opened',
   NEEDED_ACTION_ANSWERED: 'needed_action_answered',
   OVERVIEW_OPENED: 'overview_opened',

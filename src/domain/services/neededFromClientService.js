@@ -8,6 +8,10 @@ import {
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
   canAgencyProcessNeededAction,
@@ -19,6 +23,36 @@ const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSE
 const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
 const VALID_NEEDED_ACTION_TYPES = new Set(Object.values(NEEDED_ACTION_TYPES))
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function recordNeededActionActivity({
+  action,
+  activityIdGenerator,
+  eventType,
+  now,
+  repositories,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId: action.client_id,
+    eventType,
+    idGenerator: activityIdGenerator,
+    metadata: {
+      actionId: action.id,
+      relatedTaskId: action.related_task_id,
+      relatedWorkItemId: action.related_work_item_id,
+      status: action.status,
+      title: action.title,
+      type: action.type,
+    },
+    now,
+    repositories,
+    viewer,
+  })
+}
 
 function requireText(value, fieldName) {
   const normalizedValue = String(value ?? '').trim()
@@ -386,6 +420,7 @@ export function listClientNeededActions({
 }
 
 export function createNeededAction({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -431,11 +466,20 @@ export function createNeededAction({
   }
 
   repositories.neededFromClient.upsert(action)
+  recordNeededActionActivity({
+    action,
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CREATED,
+    now,
+    repositories,
+    viewer,
+  })
 
   return action
 }
 
 export function createNeededActionFromTask({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -446,6 +490,7 @@ export function createNeededActionFromTask({
   const task = getAdminTask({ repositories, taskId, viewer })
 
   return createNeededAction({
+    activityIdGenerator,
     idGenerator,
     input: Object.assign({}, input, {
       clientId: task.client_id,
@@ -465,6 +510,7 @@ export function createNeededActionFromTask({
 }
 
 export function createNeededActionFromWorkItem({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -475,6 +521,7 @@ export function createNeededActionFromWorkItem({
   const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
 
   return createNeededAction({
+    activityIdGenerator,
     idGenerator,
     input: Object.assign({}, input, {
       clientId: workItem.client_id,
@@ -682,6 +729,7 @@ export function listWaitingClientTasksWithoutRequests({
 }
 
 export function answerNeededAction({
+  activityIdGenerator,
   actionId,
   message = '',
   now = () => new Date().toISOString(),
@@ -720,11 +768,20 @@ export function answerNeededAction({
   }
 
   repositories.neededFromClient.upsert(updatedAction)
+  recordNeededActionActivity({
+    action: updatedAction,
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_ANSWERED,
+    now,
+    repositories,
+    viewer,
+  })
 
   return updatedAction
 }
 
 export function resolveNeededAction({
+  activityIdGenerator,
   actionId,
   note = '',
   now = () => new Date().toISOString(),
@@ -762,11 +819,20 @@ export function resolveNeededAction({
   }
 
   repositories.neededFromClient.upsert(updatedAction)
+  recordNeededActionActivity({
+    action: updatedAction,
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_RESOLVED,
+    now,
+    repositories,
+    viewer,
+  })
 
   return updatedAction
 }
 
 export function cancelNeededAction({
+  activityIdGenerator,
   actionId,
   note = '',
   now = () => new Date().toISOString(),
@@ -804,6 +870,14 @@ export function cancelNeededAction({
   }
 
   repositories.neededFromClient.upsert(updatedAction)
+  recordNeededActionActivity({
+    action: updatedAction,
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CANCELLED,
+    now,
+    repositories,
+    viewer,
+  })
 
   return updatedAction
 }

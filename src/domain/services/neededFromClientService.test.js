@@ -6,6 +6,7 @@ import {
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
+import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
   answerNeededAction,
   cancelNeededAction,
@@ -116,6 +117,7 @@ function createWorkflowRepositories(overrides = {}) {
         title: 'Launch setup',
       },
     ]),
+    activityEvents: createEntityRepository([]),
     neededFromClient: createEntityRepository([]),
     tasks: createEntityRepository([
       {
@@ -603,6 +605,49 @@ describe('neededFromClientService', () => {
 
     expect(repositories.tasks.findById(IDS.TASK)).toMatchObject({
       status: TASK_STATUSES.WAITING_CLIENT,
+    })
+  })
+
+  it('records audit events for client request lifecycle changes when configured', () => {
+    const repositories = createWorkflowRepositories()
+    const activityIds = [
+      '99999999-9999-4999-8999-999999999991',
+      '99999999-9999-4999-8999-999999999992',
+      '99999999-9999-4999-8999-999999999993',
+    ]
+
+    createNeededActionFromTask({
+      activityIdGenerator: () => activityIds.shift(),
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      taskId: IDS.TASK,
+      viewer: createAdminViewer(),
+    })
+    answerNeededAction({
+      actionId: IDS.ACTION,
+      activityIdGenerator: () => activityIds.shift(),
+      message: 'Access confirmed.',
+      repositories,
+      viewer: createClientViewer(),
+    })
+    resolveNeededAction({
+      actionId: IDS.ACTION,
+      activityIdGenerator: () => activityIds.shift(),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(repositories.activityEvents.list().map((event) => event.event_type)).toEqual([
+      ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CREATED,
+      ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_ANSWERED,
+      ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_RESOLVED,
+    ])
+    expect(repositories.activityEvents.list()[0]).toMatchObject({
+      client_id: IDS.CLIENT,
+      metadata: {
+        actionId: IDS.ACTION,
+        relatedTaskId: IDS.TASK,
+      },
     })
   })
 

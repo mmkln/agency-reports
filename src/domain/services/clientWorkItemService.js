@@ -8,6 +8,10 @@ import {
 } from '../../entities/client-work-item'
 import { USER_ROLES } from '../../entities/profile'
 import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
+import {
   canAgencyViewClientWorkItem,
   canClientViewClientWorkItem,
   canManageClientWorkItem,
@@ -21,6 +25,34 @@ import { canAccessClient } from '../policies/accessPolicy'
 const VALID_STATUSES = new Set(Object.values(CLIENT_WORK_ITEM_STATUSES))
 const VALID_PUBLISH_STATES = new Set(Object.values(CLIENT_WORK_ITEM_PUBLISH_STATES))
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function recordClientWorkItemActivity({
+  activityIdGenerator,
+  eventType,
+  item,
+  now,
+  repositories,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId: item.client_id,
+    eventType,
+    idGenerator: activityIdGenerator,
+    metadata: {
+      publishState: item.publish_state,
+      sourceTaskId: item.source_task_id,
+      title: item.title,
+      workItemId: item.id,
+    },
+    now,
+    repositories,
+    viewer,
+  })
+}
 
 function assertUuidGenerator(idGenerator) {
   if (!idGenerator) {
@@ -318,6 +350,7 @@ export function listPublishedClientWorkItems({
 }
 
 export function createClientWorkItem({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -345,6 +378,16 @@ export function createClientWorkItem({
   }
 
   repositories.clientWorkItems.upsert(item)
+  recordClientWorkItemActivity({
+    activityIdGenerator,
+    eventType: item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW
+      ? ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW
+      : ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_CREATED,
+    item,
+    now,
+    repositories,
+    viewer,
+  })
 
   return mapAdminWorkItem({
     client,
@@ -355,6 +398,7 @@ export function createClientWorkItem({
 }
 
 export function createClientWorkItemFromTask({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -369,6 +413,7 @@ export function createClientWorkItemFromTask({
   }
 
   return createClientWorkItem({
+    activityIdGenerator,
     idGenerator,
     input: {
       ...input,
@@ -387,6 +432,7 @@ export function createClientWorkItemFromTask({
 }
 
 export function suggestClientWorkItemFromTask({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -445,6 +491,14 @@ export function suggestClientWorkItemFromTask({
   }
 
   repositories.clientWorkItems.upsert(item)
+  recordClientWorkItemActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW,
+    item,
+    now,
+    repositories,
+    viewer,
+  })
 
   return mapAdminWorkItem({
     client,
@@ -488,6 +542,7 @@ export function updateClientWorkItem({
 }
 
 export function markClientWorkItemReadyForReview({
+  activityIdGenerator,
   now = () => new Date().toISOString(),
   repositories,
   viewer,
@@ -520,11 +575,20 @@ export function markClientWorkItemReadyForReview({
   }
 
   repositories.clientWorkItems.upsert(updatedItem)
+  recordClientWorkItemActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW,
+    item: updatedItem,
+    now,
+    repositories,
+    viewer,
+  })
 
   return normalizeClientWorkItem(updatedItem)
 }
 
 export function publishClientWorkItem({
+  activityIdGenerator,
   now = () => new Date().toISOString(),
   repositories,
   viewer,
@@ -556,6 +620,14 @@ export function publishClientWorkItem({
   }
 
   repositories.clientWorkItems.upsert(updatedItem)
+  recordClientWorkItemActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED,
+    item: updatedItem,
+    now,
+    repositories,
+    viewer,
+  })
 
   return mapAdminWorkItem({
     client,
@@ -566,6 +638,7 @@ export function publishClientWorkItem({
 }
 
 export function archiveClientWorkItem({
+  activityIdGenerator,
   now = () => new Date().toISOString(),
   repositories,
   viewer,
@@ -585,6 +658,14 @@ export function archiveClientWorkItem({
   }
 
   repositories.clientWorkItems.upsert(updatedItem)
+  recordClientWorkItemActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_ARCHIVED,
+    item: updatedItem,
+    now,
+    repositories,
+    viewer,
+  })
 
   return mapAdminWorkItem({
     client,

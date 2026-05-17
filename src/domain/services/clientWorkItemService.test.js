@@ -6,7 +6,9 @@ import {
 } from '../../entities/client-work-item'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
+import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
+  archiveClientWorkItem,
   createClientWorkItem,
   createClientWorkItemFromTask,
   listAdminClientWorkItems,
@@ -68,6 +70,7 @@ function createRepositories(overrides = {}) {
         name: 'Client B',
       },
     ]),
+    activityEvents: createEntityRepository([]),
     clientWorkItems: createEntityRepository([
       {
         client_id: IDS.CLIENT,
@@ -487,5 +490,50 @@ describe('clientWorkItemService', () => {
       viewer: createAdminViewer(),
       workItemId: IDS.WORK,
     })).toThrow('Client work item summary is required before publishing.')
+  })
+
+  it('records audit events when client work is published and archived', () => {
+    const repositories = createRepositories({
+      clientWorkItems: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.WORK,
+          publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+          status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+          summary: 'Safe summary.',
+          title: 'Review work',
+        },
+      ]),
+    })
+    const activityIds = [
+      '99999999-9999-4999-8999-999999999991',
+      '99999999-9999-4999-8999-999999999992',
+    ]
+
+    publishClientWorkItem({
+      activityIdGenerator: () => activityIds.shift(),
+      now: () => '2026-05-17T11:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+      workItemId: IDS.WORK,
+    })
+    archiveClientWorkItem({
+      activityIdGenerator: () => activityIds.shift(),
+      now: () => '2026-05-17T12:00:00.000Z',
+      repositories,
+      viewer: createAdminViewer(),
+      workItemId: IDS.WORK,
+    })
+
+    expect(repositories.activityEvents.list().map((event) => event.event_type)).toEqual([
+      ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED,
+      ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_ARCHIVED,
+    ])
+    expect(repositories.activityEvents.list()[0]).toMatchObject({
+      client_id: IDS.CLIENT,
+      metadata: {
+        workItemId: IDS.WORK,
+      },
+    })
   })
 })

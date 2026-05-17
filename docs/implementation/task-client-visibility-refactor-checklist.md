@@ -561,26 +561,26 @@ client_user must not read Task directly as the client-facing work contract.
 
 ### Tasks
 
-- [ ] Extend activity model or activity service with events:
-  - [ ] `client_work_item_created`
-  - [ ] `client_work_item_ready_for_review`
-  - [ ] `client_work_item_published`
-  - [ ] `client_work_item_archived`
-  - [ ] `client_request_created`
-  - [ ] `client_request_answered`
-  - [ ] `client_request_resolved`
+- [x] Extend activity model or activity service with events:
+  - [x] `client_work_item_created`
+  - [x] `client_work_item_ready_for_review`
+  - [x] `client_work_item_published`
+  - [x] `client_work_item_archived`
+  - [x] `client_request_created`
+  - [x] `client_request_answered`
+  - [x] `client_request_resolved`
 - [ ] Decide which events are client-visible.
 - [ ] Ensure client activity feed includes only client-visible events.
-- [ ] Ensure admin activity/audit includes internal publish workflow events.
+- [x] Ensure admin activity/audit includes internal publish workflow events.
 - [ ] Add tests:
-  - [ ] publish event created.
-  - [ ] archive event created.
-  - [ ] client response event created.
+  - [x] publish event created.
+  - [x] archive event created.
+  - [x] client response event created.
   - [ ] internal events hidden from client feed.
 
 ### Completion Criteria
 
-- [ ] Publish workflow is auditable.
+- [x] Publish workflow is auditable.
 - [ ] Client activity remains curated, not a raw internal event log.
 
 ## Phase 13 - Legacy Coupling Cleanup
