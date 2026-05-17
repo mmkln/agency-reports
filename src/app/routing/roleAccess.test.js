@@ -147,6 +147,7 @@ describe('route role access', () => {
     const adminWorkspaceRouteIds = [
       'admin-client-overview',
       'admin-clinic-metrics',
+      'admin-clinic-reputation',
       'admin-clinic-setup',
       'admin-client-requests',
       'admin-client-submitted-requests',

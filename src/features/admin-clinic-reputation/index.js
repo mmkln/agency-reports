@@ -1,0 +1,1 @@
+export { AdminClinicReputationWorkspace } from './components'

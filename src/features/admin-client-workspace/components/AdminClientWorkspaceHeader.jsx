@@ -31,6 +31,13 @@ const tabs = [
     route: '/admin/clinic-metrics',
   },
   {
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    id: 'clinic-reputation',
+    iconName: 'messageSquare',
+    label: 'Reputation',
+    route: '/admin/clinic-reputation',
+  },
+  {
     id: 'projects',
     iconName: 'checkCircle2',
     label: 'Projects',
