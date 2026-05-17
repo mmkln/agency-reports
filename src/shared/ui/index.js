@@ -63,6 +63,7 @@ export {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 export { EmptyState } from './EmptyState'
+export { FilterTabs } from './FilterTabs'
 export { FormField } from './FormField'
 export { GoalCard } from './GoalCard'
 export { IconButton } from './IconButton'
@@ -139,6 +140,7 @@ export {
 export { Tabs } from './Tabs'
 export { TaskItem } from './TaskItem'
 export { Textarea } from '@/components/ui/textarea'
+export { Timeline, TimelineItem } from './Timeline'
 export { ToggleGroup } from './ToggleGroup'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip'
 export { TooltipIconButton } from './TooltipIconButton'

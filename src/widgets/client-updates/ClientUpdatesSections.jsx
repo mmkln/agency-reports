@@ -2,14 +2,11 @@ import { useMemo, useState } from 'react'
 
 import {
   Badge,
-  Button,
   EmptyState,
-  ListPanel,
-  ListRow,
-  Panel,
-  PanelBody,
-  PanelHeader,
+  FilterTabs,
   StatusBadge,
+  Timeline,
+  TimelineItem,
 } from '@/shared/ui'
 
 import { CLIENT_UPDATE_TYPES } from '../../entities/update'
@@ -48,42 +45,8 @@ function getFilterCount({ counts, value }) {
   return value === 'all' ? counts.all : counts[value]
 }
 
-function UpdateFilters({ activeFilter, counts, onChange }) {
-  return (
-    <div className="-mx-1 overflow-x-auto px-1">
-      <div className="flex min-w-max items-center gap-tag">
-        {filters.map((filter) => {
-          const selected = activeFilter === filter.value
-          const count = getFilterCount({
-            counts,
-            value: filter.value,
-          })
-
-          return (
-            <Button
-              aria-pressed={selected}
-              key={filter.value}
-              onClick={() => onChange(filter.value)}
-              size="sm"
-              type="button"
-              variant={selected ? 'secondary' : 'ghost'}
-            >
-              {filter.label}
-              <span className="ml-1 text-label font-normal opacity-75">{count ?? 0}</span>
-            </Button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 function RelatedLinks({ update }) {
-  const relatedItems = [
-    update.projectName ? update.projectName : null,
-    update.relatedReportTitle ? update.relatedReportTitle : null,
-    update.relatedFileLinkTitle ? update.relatedFileLinkTitle : null,
-  ].filter(Boolean)
+  const relatedItems = getRelatedItems(update)
 
   if (!relatedItems.length) {
     return null
@@ -98,6 +61,18 @@ function RelatedLinks({ update }) {
   )
 }
 
+function getRelatedItems(update) {
+  return [
+    update.projectName ? update.projectName : null,
+    update.relatedReportTitle ? update.relatedReportTitle : null,
+    update.relatedFileLinkTitle ? update.relatedFileLinkTitle : null,
+  ].filter(Boolean)
+}
+
+function hasUpdateMetadata(update) {
+  return Boolean(update.whatNext || getRelatedItems(update).length)
+}
+
 function UpdateMetadata({ update }) {
   return (
     <div className="grid gap-item">
@@ -107,22 +82,36 @@ function UpdateMetadata({ update }) {
         </p>
       ) : null}
 
-      {update.clientActionNeeded ? (
-        <div className="rounded-control bg-warning-muted px-3 py-2 text-label font-normal text-warning-foreground">
-          <div className="flex items-start gap-2">
-            <Icon className="mt-0.5 shrink-0" name="bell" size={14} />
-            <p>{update.clientActionNeeded}</p>
-          </div>
-        </div>
-      ) : null}
-
       <RelatedLinks update={update} />
+    </div>
+  )
+}
+
+function UpdateNotice({ update }) {
+  if (!update.clientActionNeeded) {
+    return null
+  }
+
+  return (
+    <div className="rounded-control bg-warning-muted px-3 py-2 text-label font-normal text-warning-foreground">
+      <div className="flex items-start gap-2">
+        <Icon className="mt-0.5 shrink-0" name="bell" size={14} />
+        <p>{update.clientActionNeeded}</p>
+      </div>
     </div>
   )
 }
 
 export function UpdatesTimeline({ counts, updates }) {
   const [activeFilter, setActiveFilter] = useState('all')
+  const filterItems = useMemo(() => filters.map((filter) => ({
+    count: getFilterCount({
+      counts,
+      value: filter.value,
+    }) ?? 0,
+    label: filter.label,
+    value: filter.value,
+  })), [counts])
   const filteredUpdates = useMemo(() => (
     activeFilter === 'all'
       ? updates
@@ -130,44 +119,43 @@ export function UpdatesTimeline({ counts, updates }) {
   ), [activeFilter, updates])
 
   return (
-    <Panel>
-      <PanelHeader
-        action={<Badge tone="neutral">{updates.length} update{updates.length === 1 ? '' : 's'}</Badge>}
-        divided
-        title="Update History"
-      />
-      <PanelBody className="p-0">
-        <div className="px-card py-component">
-          <UpdateFilters
-            activeFilter={activeFilter}
-            counts={counts}
-            onChange={setActiveFilter}
+    <section className="grid gap-card">
+      <div className="flex flex-col gap-component sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <FilterTabs
+            ariaLabel="Update type filters"
+            items={filterItems}
+            onValueChange={setActiveFilter}
+            value={activeFilter}
           />
         </div>
+        <Badge className="w-fit" tone="neutral">{updates.length} update{updates.length === 1 ? '' : 's'}</Badge>
+      </div>
 
-        {filteredUpdates.length ? (
-          <ListPanel className="border-t border-separator">
-            {filteredUpdates.map((update) => (
-              <ListRow
-                description={update.body || update.whatChanged || 'No details published yet.'}
-                key={update.id}
-                leading={<StatusBadge meta={update.typeMeta} />}
-                metadata={<UpdateMetadata update={update} />}
-                title={update.title}
-                titleAs="h2"
-                trailing={<span className="text-label font-normal text-text-muted">{formatDate(update.publishedAt)}</span>}
-              />
-            ))}
-          </ListPanel>
-        ) : (
-          <EmptyState
-            className="m-card"
-            description="No published client updates match this view."
-            iconName="target"
-            title="No updates here"
-          />
-        )}
-      </PanelBody>
-    </Panel>
+      {filteredUpdates.length ? (
+        <Timeline ariaLabel="Published updates">
+          {filteredUpdates.map((update) => (
+            <TimelineItem
+              badge={<StatusBadge meta={update.typeMeta} />}
+              date={formatDate(update.publishedAt)}
+              description={update.body || update.whatChanged || 'No details published yet.'}
+              iconName={update.typeMeta.icon}
+              iconTone={update.typeMeta.tone}
+              key={update.id}
+              links={hasUpdateMetadata(update) ? <UpdateMetadata update={update} /> : null}
+              notice={update.clientActionNeeded ? <UpdateNotice update={update} /> : null}
+              title={update.title}
+              titleAs="h2"
+            />
+          ))}
+        </Timeline>
+      ) : (
+        <EmptyState
+          description="No published client updates match this view."
+          iconName="target"
+          title="No updates here"
+        />
+      )}
+    </section>
   )
 }
