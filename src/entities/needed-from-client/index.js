@@ -3,5 +3,6 @@ export {
   NEEDED_ACTION_PRIORITY_META,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_STATUS_META,
+  NEEDED_ACTION_TYPES,
   normalizeNeededAction,
 } from './model'

@@ -356,41 +356,41 @@ client_user must not read Task directly as the client-facing work contract.
 
 ### Tasks
 
-- [ ] Extend `needed_from_client` model if needed:
-  - [ ] `related_task_id`
-  - [ ] `related_work_item_id`
-  - [ ] `type`
-  - [ ] `why_needed`
-  - [ ] `impact_if_delayed`
-  - [ ] `client_owner`
-  - [ ] `agency_owner`
-  - [ ] `last_reminded_at`
-- [ ] Add action types:
-  - [ ] approval.
-  - [ ] access.
-  - [ ] asset.
-  - [ ] feedback.
-  - [ ] decision.
-  - [ ] other.
+- [x] Extend `needed_from_client` model if needed:
+  - [x] `related_task_id`
+  - [x] `related_work_item_id`
+  - [x] `type`
+  - [x] `why_needed`
+  - [x] `impact_if_delayed`
+  - [x] `client_owner`
+  - [x] `agency_owner`
+  - [x] `last_reminded_at`
+- [x] Add action types:
+  - [x] approval.
+  - [x] access.
+  - [x] asset.
+  - [x] feedback.
+  - [x] decision.
+  - [x] other.
 - [ ] Update `neededFromClientService.js`:
-  - [ ] create request from task.
-  - [ ] create request from client work item.
-  - [ ] link existing request to task.
-  - [ ] link existing request to work item.
-  - [ ] list open requests for work item.
-  - [ ] list waiting-client tasks without requests.
-- [ ] Ensure client response does not mutate internal `Task.status` directly.
+  - [x] create request from task.
+  - [x] create request from client work item.
+  - [x] link existing request to task.
+  - [x] link existing request to work item.
+  - [x] list open requests for work item.
+  - [x] list waiting-client tasks without requests.
+- [x] Ensure client response does not mutate internal `Task.status` directly.
 - [ ] Add admin/team processing flow:
   - [ ] client responds.
   - [ ] agency reviews/processes response.
   - [ ] agency resolves request.
   - [ ] agency manually updates linked internal task if work can continue.
 - [ ] Add tests:
-  - [ ] waiting-client task can be linked to request.
-  - [ ] request can be linked to client work item.
-  - [ ] client sees own pending/answered requests only.
-  - [ ] client response leaves task status unchanged.
-  - [ ] resolving request is agency-owned.
+  - [x] waiting-client task can be linked to request.
+  - [x] request can be linked to client work item.
+  - [x] client sees own pending/answered requests only.
+  - [x] client response leaves task status unchanged.
+  - [x] resolving request is agency-owned.
 
 ### Completion Criteria
 

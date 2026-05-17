@@ -11,6 +11,15 @@ export const NEEDED_ACTION_PRIORITIES = Object.freeze({
   MEDIUM: 'medium',
 })
 
+export const NEEDED_ACTION_TYPES = Object.freeze({
+  ACCESS: 'access',
+  APPROVAL: 'approval',
+  ASSET: 'asset',
+  DECISION: 'decision',
+  FEEDBACK: 'feedback',
+  OTHER: 'other',
+})
+
 export const NEEDED_ACTION_STATUS_META = Object.freeze({
   [NEEDED_ACTION_STATUSES.PENDING]: {
     icon: 'clock',
@@ -54,6 +63,7 @@ export const NEEDED_ACTION_PRIORITY_META = Object.freeze({
 
 const validStatuses = new Set(Object.values(NEEDED_ACTION_STATUSES))
 const validPriorities = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
+const validTypes = new Set(Object.values(NEEDED_ACTION_TYPES))
 
 function normalizeText(value = '') {
   return String(value ?? '').trim()
@@ -72,6 +82,10 @@ function normalizePriority(priority) {
   return validPriorities.has(priority) ? priority : NEEDED_ACTION_PRIORITIES.MEDIUM
 }
 
+function normalizeType(type) {
+  return validTypes.has(type) ? type : NEEDED_ACTION_TYPES.OTHER
+}
+
 export function normalizeNeededAction(action = {}) {
   const clientRespondedAt = action.client_responded_at ?? action.responded_at ?? null
   const clientRespondedBy = action.client_responded_by ?? action.responded_by ?? null
@@ -80,6 +94,7 @@ export function normalizeNeededAction(action = {}) {
     cancelled_at: action.cancelled_at ?? null,
     cancelled_by: action.cancelled_by ?? null,
     client_id: normalizeText(action.client_id),
+    client_owner: normalizeText(action.client_owner),
     client_response: normalizeText(action.client_response),
     client_responded_at: clientRespondedAt,
     client_responded_by: clientRespondedBy,
@@ -87,7 +102,9 @@ export function normalizeNeededAction(action = {}) {
     description: normalizeText(action.description),
     due_date: normalizeText(action.due_date),
     id: normalizeText(action.id),
+    impact_if_delayed: normalizeText(action.impact_if_delayed),
     internal_notes: normalizeText(action.internal_notes),
+    last_reminded_at: action.last_reminded_at ?? null,
     owner_name: normalizeText(action.owner_name),
     priority: normalizePriority(action.priority),
     related_link: normalizeText(action.related_link),
@@ -98,9 +115,12 @@ export function normalizeNeededAction(action = {}) {
     response_history: Array.isArray(action.response_history) ? action.response_history : [],
     status: normalizeStatus(action.status),
     title: normalizeText(action.title),
+    type: normalizeType(action.type),
     updated_at: action.updated_at ?? action.created_at ?? null,
+    why_needed: normalizeText(action.why_needed),
 
     // Legacy aliases kept while existing UI/tests migrate to canonical UC-005 names.
+    agency_owner: normalizeText(action.agency_owner ?? action.owner_name),
     responded_at: clientRespondedAt,
     responded_by: clientRespondedBy,
     cancellation_note: normalizeNullableText(action.cancellation_note),

@@ -3,9 +3,11 @@ import {
   NEEDED_ACTION_PRIORITY_META,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_STATUS_META,
+  NEEDED_ACTION_TYPES,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
+import { TASK_STATUSES } from '../../entities/task'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
   canAgencyProcessNeededAction,
@@ -15,6 +17,7 @@ import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
 const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
+const VALID_NEEDED_ACTION_TYPES = new Set(Object.values(NEEDED_ACTION_TYPES))
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function requireText(value, fieldName) {
@@ -151,22 +154,34 @@ function normalizePriority(priority) {
   return VALID_NEEDED_ACTION_PRIORITIES.has(priority) ? priority : NEEDED_ACTION_PRIORITIES.MEDIUM
 }
 
+function normalizeType(type) {
+  return VALID_NEEDED_ACTION_TYPES.has(type) ? type : NEEDED_ACTION_TYPES.OTHER
+}
+
 function normalizeOptionalId(value = '') {
   const normalizedValue = normalizeText(value)
   return normalizedValue || null
 }
 
 function normalizeEditableActionFields(input = {}) {
+  const ownerName = normalizeText(input.ownerName ?? input.owner_name)
+
   return {
+    agency_owner: normalizeText(input.agencyOwner ?? input.agency_owner ?? ownerName),
+    client_owner: normalizeText(input.clientOwner ?? input.client_owner),
     description: normalizeText(input.description),
     due_date: normalizeOptionalDate(input.dueDate, 'Request due date'),
+    impact_if_delayed: normalizeText(input.impactIfDelayed ?? input.impact_if_delayed),
     internal_notes: normalizeText(input.internalNotes),
-    owner_name: normalizeText(input.ownerName),
+    last_reminded_at: input.lastRemindedAt ?? input.last_reminded_at ?? null,
+    owner_name: ownerName,
     priority: normalizePriority(input.priority),
     related_link: normalizeOptionalUrl(input.relatedLink, 'Request related link'),
     related_task_id: normalizeOptionalId(input.relatedTaskId ?? input.related_task_id),
     related_work_item_id: normalizeOptionalId(input.relatedWorkItemId ?? input.related_work_item_id),
     title: requireText(input.title, 'Request title'),
+    type: normalizeType(input.type),
+    why_needed: normalizeText(input.whyNeeded ?? input.why_needed),
   }
 }
 
@@ -174,15 +189,19 @@ function mapNeededAction({ action, client }) {
   const normalizedAction = normalizeNeededAction(action)
 
   return {
+    agencyOwner: normalizedAction.agency_owner,
     cancellationNote: normalizedAction.cancellation_note ?? '',
     cancelledAt: normalizedAction.cancelled_at,
     clientId: normalizedAction.client_id,
     clientName: client?.name ?? 'Unknown client',
+    clientOwner: normalizedAction.client_owner,
     clientResponse: normalizedAction.client_response,
     description: normalizedAction.description,
     dueDate: normalizedAction.due_date,
     id: normalizedAction.id,
+    impactIfDelayed: normalizedAction.impact_if_delayed,
     internalNotes: normalizedAction.internal_notes,
+    lastRemindedAt: normalizedAction.last_reminded_at,
     ownerName: normalizedAction.owner_name,
     priority: normalizedAction.priority,
     relatedLink: normalizedAction.related_link,
@@ -196,7 +215,9 @@ function mapNeededAction({ action, client }) {
     responseHistory: normalizedAction.response_history,
     status: getNeededActionStatusMeta(normalizedAction.status),
     title: normalizedAction.title,
+    type: normalizedAction.type,
     updatedAt: normalizedAction.updated_at,
+    whyNeeded: normalizedAction.why_needed,
   }
 }
 
@@ -204,10 +225,12 @@ function mapClientNeededAction(action) {
   const normalizedAction = normalizeNeededAction(action)
 
   return {
+    clientOwner: normalizedAction.client_owner,
     clientResponse: normalizedAction.client_response,
     description: normalizedAction.description,
     dueDate: normalizedAction.due_date,
     id: normalizedAction.id,
+    impactIfDelayed: normalizedAction.impact_if_delayed,
     priority: normalizedAction.priority,
     priorityMeta: NEEDED_ACTION_PRIORITY_META[normalizedAction.priority],
     relatedLink: normalizedAction.related_link,
@@ -218,12 +241,57 @@ function mapClientNeededAction(action) {
     status: normalizedAction.status,
     statusMeta: NEEDED_ACTION_STATUS_META[normalizedAction.status],
     title: normalizedAction.title,
+    type: normalizedAction.type,
     updatedAt: normalizedAction.updated_at,
+    whyNeeded: normalizedAction.why_needed,
   }
 }
 
 function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
+}
+
+function getAdminTask({ repositories, taskId, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const task = repositories.tasks?.findById(taskId)
+
+  if (!task) {
+    throw new Error('Source task was not found.')
+  }
+
+  getAdminClient({
+    clientId: task.client_id,
+    repositories,
+    viewer,
+  })
+
+  return task
+}
+
+function getAdminWorkItem({ repositories, viewer, workItemId }) {
+  assertAgencyAdmin(viewer)
+
+  const workItem = repositories.clientWorkItems?.findById(workItemId)
+
+  if (!workItem) {
+    throw new Error('Client work item was not found.')
+  }
+
+  getAdminClient({
+    clientId: workItem.client_id,
+    repositories,
+    viewer,
+  })
+
+  return workItem
+}
+
+function isOpenNeededAction(action) {
+  return ![
+    NEEDED_ACTION_STATUSES.CANCELLED,
+    NEEDED_ACTION_STATUSES.RESOLVED,
+  ].includes(action.status)
 }
 
 export function listNeededActionsWorkspace({
@@ -367,6 +435,65 @@ export function createNeededAction({
   return action
 }
 
+export function createNeededActionFromTask({
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  taskId,
+  viewer,
+}) {
+  const task = getAdminTask({ repositories, taskId, viewer })
+
+  return createNeededAction({
+    idGenerator,
+    input: Object.assign({}, input, {
+      clientId: task.client_id,
+      description: input.description ?? task.client_safe_summary ?? task.blocker_note ?? `Please respond to unblock ${task.title}.`,
+      dueDate: input.dueDate ?? task.due_date ?? '',
+      impactIfDelayed: input.impactIfDelayed ?? task.blocker_note ?? '',
+      priority: input.priority ?? NEEDED_ACTION_PRIORITIES.MEDIUM,
+      relatedTaskId: task.id,
+      title: input.title ?? `Action needed: ${task.title}`,
+      type: input.type ?? NEEDED_ACTION_TYPES.OTHER,
+      whyNeeded: input.whyNeeded ?? task.client_safe_summary ?? task.blocker_note ?? '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromWorkItem({
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
+
+  return createNeededAction({
+    idGenerator,
+    input: Object.assign({}, input, {
+      clientId: workItem.client_id,
+      description: input.description ?? workItem.summary ?? `Please respond to unblock ${workItem.title}.`,
+      dueDate: input.dueDate ?? workItem.target_date ?? '',
+      impactIfDelayed: input.impactIfDelayed ?? '',
+      priority: input.priority ?? NEEDED_ACTION_PRIORITIES.MEDIUM,
+      relatedTaskId: input.relatedTaskId ?? workItem.source_task_id ?? '',
+      relatedWorkItemId: workItem.id,
+      title: input.title ?? `Action needed: ${workItem.title}`,
+      type: input.type ?? NEEDED_ACTION_TYPES.OTHER,
+      whyNeeded: input.whyNeeded ?? workItem.summary ?? '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
 export function updateNeededAction({
   actionId,
   input = {},
@@ -406,6 +533,152 @@ export function updateNeededAction({
   repositories.neededFromClient.upsert(updatedAction)
 
   return updatedAction
+}
+
+export function linkNeededActionToTask({
+  actionId,
+  now = () => new Date().toISOString(),
+  repositories,
+  taskId,
+  viewer,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const action = getAction({ actionId, repositories, viewer })
+  const task = getAdminTask({ repositories, taskId, viewer })
+
+  if (action.client_id !== task.client_id) {
+    throw new Error('Source task is not available for this request.')
+  }
+
+  const timestamp = now()
+  const updatedAction = {
+    ...action,
+    related_task_id: task.id,
+    response_history: appendHistory(action, createHistoryEvent({
+      metadata: {
+        related_task_id: task.id,
+      },
+      now,
+      type: 'admin_linked_task',
+      viewer,
+    })),
+    updated_at: timestamp,
+  }
+
+  repositories.neededFromClient.upsert(updatedAction)
+
+  return updatedAction
+}
+
+export function linkNeededActionToWorkItem({
+  actionId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  assertAgencyAdmin(viewer)
+
+  const action = getAction({ actionId, repositories, viewer })
+  const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
+
+  if (action.client_id !== workItem.client_id) {
+    throw new Error('Client work item is not available for this request.')
+  }
+
+  const timestamp = now()
+  const updatedAction = {
+    ...action,
+    related_work_item_id: workItem.id,
+    response_history: appendHistory(action, createHistoryEvent({
+      metadata: {
+        related_work_item_id: workItem.id,
+      },
+      now,
+      type: 'admin_linked_work_item',
+      viewer,
+    })),
+    updated_at: timestamp,
+  }
+
+  repositories.neededFromClient.upsert(updatedAction)
+
+  return updatedAction
+}
+
+export function listOpenNeededActionsForWorkItem({
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
+  const client = repositories.clients.findById(workItem.client_id)
+  const actions = repositories.neededFromClient
+    .listByClientId(workItem.client_id)
+    .filter((action) => action.related_work_item_id === workItem.id)
+    .filter(isOpenNeededAction)
+    .map((action) => mapNeededAction({ action, client }))
+
+  return {
+    actions,
+    status: 'ready',
+  }
+}
+
+export function listWaitingClientTasksWithoutRequests({
+  clientId = '',
+  repositories,
+  viewer,
+}) {
+  const clients = getAdminClients({ repositories, viewer })
+    .filter((client) => !clientId || client.id === clientId)
+  const clientIds = new Set(clients.map((client) => client.id))
+  const openRequestTaskIds = new Set(
+    repositories.neededFromClient
+      .list()
+      .filter((action) => clientIds.has(action.client_id))
+      .filter(isOpenNeededAction)
+      .map((action) => action.related_task_id)
+      .filter(Boolean),
+  )
+  const openRequestWorkItemIds = new Set(
+    repositories.neededFromClient
+      .list()
+      .filter((action) => clientIds.has(action.client_id))
+      .filter(isOpenNeededAction)
+      .map((action) => action.related_work_item_id)
+      .filter(Boolean),
+  )
+  const linkedWorkItemsByTaskId = new Map()
+
+  for (const workItem of repositories.clientWorkItems?.list?.() ?? []) {
+    if (!clientIds.has(workItem.client_id) || !workItem.source_task_id) {
+      continue
+    }
+
+    const taskWorkItems = linkedWorkItemsByTaskId.get(workItem.source_task_id) ?? []
+    taskWorkItems.push(workItem)
+    linkedWorkItemsByTaskId.set(workItem.source_task_id, taskWorkItems)
+  }
+
+  const tasks = repositories.tasks
+    .list()
+    .filter((task) => clientIds.has(task.client_id))
+    .filter((task) => task.status === TASK_STATUSES.WAITING_CLIENT)
+    .filter((task) => {
+      if (openRequestTaskIds.has(task.id)) {
+        return false
+      }
+
+      return !(linkedWorkItemsByTaskId.get(task.id) ?? [])
+        .some((workItem) => openRequestWorkItemIds.has(workItem.id))
+    })
+
+  return {
+    status: 'ready',
+    tasks,
+  }
 }
 
 export function answerNeededAction({
