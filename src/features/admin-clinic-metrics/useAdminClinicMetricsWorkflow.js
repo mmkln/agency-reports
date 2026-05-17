@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 
 import {
   getAdminClinicMetricsPage,
+  publishCallBookingMetric,
+  publishPatientAcquisitionSnapshot,
   saveAdminClinicMetrics,
 } from '../../domain/services/adminClinicMetricsService'
 import { useToast } from '../../shared/notifications'
@@ -25,6 +27,11 @@ function createInitialState() {
     status: 'loading',
   }
 }
+
+const PUBLISH_SERVICES = Object.freeze({
+  call_booking: publishCallBookingMetric,
+  patient_acquisition: publishPatientAcquisitionSnapshot,
+})
 
 export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
   const toast = useToast()
@@ -141,11 +148,49 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
     setSaveState('')
   }
 
+  function publishMetricRecord({ id, type }) {
+    const service = PUBLISH_SERVICES[type]
+
+    if (!service) {
+      throw new Error('Clinic metric publish type is invalid.')
+    }
+
+    setSaveState('Publishing...')
+
+    runtime.dataClient.write((repositories) => service({
+      clientId,
+      id,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Published')
+        toast.success('Clinic metric published', `${page.client.name}'s metric record is now client-visible.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Clinic metric was not published', caughtError.message)
+      })
+  }
+
   return {
     draft: state.draft,
     error: state.error,
     isDirty,
     page: state.page,
+    publishMetricRecord,
     resetDraft,
     saveDraft,
     saveState,

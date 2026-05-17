@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import {
   approveMedicalApproval,
   getAdminClinicCompliancePage,
+  publishComplianceReview,
+  publishMedicalApproval,
   rejectMedicalApproval,
   requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
@@ -33,6 +35,10 @@ const APPROVAL_DECISION_SERVICES = Object.freeze({
   approve: approveMedicalApproval,
   reject: rejectMedicalApproval,
   request_changes: requestChangesForMedicalApproval,
+})
+const PUBLISH_SERVICES = Object.freeze({
+  approval: publishMedicalApproval,
+  review: publishComplianceReview,
 })
 
 export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
@@ -191,12 +197,50 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
       })
   }
 
+  function publishComplianceRecord({ id, type }) {
+    const service = PUBLISH_SERVICES[type]
+
+    if (!service) {
+      throw new Error('Clinic compliance publish type is invalid.')
+    }
+
+    setSaveState('Publishing...')
+
+    runtime.dataClient.write((repositories) => service({
+      clientId,
+      id,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Published')
+        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now client-visible.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Clinic compliance record was not published', caughtError.message)
+      })
+  }
+
   return {
     applyApprovalDecision,
     draft: state.draft,
     error: state.error,
     isDirty,
     page: state.page,
+    publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,

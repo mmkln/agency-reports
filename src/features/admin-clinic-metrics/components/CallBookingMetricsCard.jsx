@@ -1,5 +1,9 @@
 import { Button } from '@/shared/ui'
 
+import {
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
+} from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
   NotesField,
@@ -32,7 +36,26 @@ function createBlankMetric() {
   }
 }
 
-export function CallBookingMetricsCard({ draft, locations, onUpdate, serviceLines }) {
+function getPublishLabel(record) {
+  return CLINIC_RECORD_PUBLISH_STATE_META[
+    record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
+  ].label
+}
+
+function canPublishRecord(record, isDirty) {
+  return Boolean(record.id)
+    && !isDirty
+    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
+}
+
+export function CallBookingMetricsCard({
+  draft,
+  isDirty,
+  locations,
+  onPublish,
+  onUpdate,
+  serviceLines,
+}) {
   function updateMetric(index, fieldName, value) {
     onUpdate((currentDraft) => ({
       ...currentDraft,
@@ -80,12 +103,29 @@ export function CallBookingMetricsCard({ draft, locations, onUpdate, serviceLine
         {draft.callBookingMetrics.map((metric, index) => (
           <section className="grid gap-component rounded-control bg-surface-subtle p-3" key={metric.id || `new-call-metric-${index}`}>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-label font-semibold text-text-primary">
-                Calls snapshot {index + 1}
-              </p>
-              <Button onClick={() => removeMetric(index)} size="sm" type="button" variant="ghost">
-                Remove
-              </Button>
+              <div className="grid gap-1">
+                <p className="text-label font-semibold text-text-primary">
+                  Calls snapshot {index + 1}
+                </p>
+                <p className="text-label text-text-muted">
+                  {getPublishLabel(metric)}
+                  {metric.published_at ? ` at ${metric.published_at}` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={!canPublishRecord(metric, isDirty)}
+                  onClick={() => onPublish({ id: metric.id, type: 'call_booking' })}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Publish
+                </Button>
+                <Button onClick={() => removeMetric(index)} size="sm" type="button" variant="ghost">
+                  Remove
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-component md:grid-cols-3">

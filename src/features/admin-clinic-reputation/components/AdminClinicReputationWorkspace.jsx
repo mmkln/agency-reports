@@ -36,6 +36,7 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
     error,
     isDirty,
     page,
+    publishReputationRecord,
     resetDraft,
     saveDraft,
     saveState,
@@ -94,7 +95,9 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
 
           <ReputationSnapshotsCard
             draft={draft}
+            isDirty={isDirty}
             locations={page.locations}
+            onPublish={publishReputationRecord}
             onUpdate={updateDraft}
           />
         </form>

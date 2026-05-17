@@ -293,6 +293,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add compliance review management.
 - [x] Add medical approval request management.
 - [x] Add admin clinic compliance workspace route.
+- [x] Add record-level publish actions for clinic metrics, reputation, compliance, and approvals.
 - [ ] Add preview-as-clinic-client actions.
 
 ## Phase 12 - Integrations Readiness

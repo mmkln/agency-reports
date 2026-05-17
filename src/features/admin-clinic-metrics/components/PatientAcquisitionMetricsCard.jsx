@@ -3,6 +3,8 @@ import { Button } from '@/shared/ui'
 import {
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_ACQUISITION_CHANNEL_META,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
@@ -37,7 +39,26 @@ function createBlankSnapshot() {
   }
 }
 
-export function PatientAcquisitionMetricsCard({ draft, locations, onUpdate, serviceLines }) {
+function getPublishLabel(record) {
+  return CLINIC_RECORD_PUBLISH_STATE_META[
+    record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
+  ].label
+}
+
+function canPublishRecord(record, isDirty) {
+  return Boolean(record.id)
+    && !isDirty
+    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
+}
+
+export function PatientAcquisitionMetricsCard({
+  draft,
+  isDirty,
+  locations,
+  onPublish,
+  onUpdate,
+  serviceLines,
+}) {
   function updateSnapshot(index, fieldName, value) {
     onUpdate((currentDraft) => ({
       ...currentDraft,
@@ -87,12 +108,29 @@ export function PatientAcquisitionMetricsCard({ draft, locations, onUpdate, serv
         {draft.patientAcquisitionSnapshots.map((snapshot, index) => (
           <section className="grid gap-component rounded-control bg-surface-subtle p-3" key={snapshot.id || `new-acquisition-${index}`}>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-label font-semibold text-text-primary">
-                Snapshot {index + 1}
-              </p>
-              <Button onClick={() => removeSnapshot(index)} size="sm" type="button" variant="ghost">
-                Remove
-              </Button>
+              <div className="grid gap-1">
+                <p className="text-label font-semibold text-text-primary">
+                  Snapshot {index + 1}
+                </p>
+                <p className="text-label text-text-muted">
+                  {getPublishLabel(snapshot)}
+                  {snapshot.published_at ? ` at ${snapshot.published_at}` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={!canPublishRecord(snapshot, isDirty)}
+                  onClick={() => onPublish({ id: snapshot.id, type: 'patient_acquisition' })}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Publish
+                </Button>
+                <Button onClick={() => removeSnapshot(index)} size="sm" type="button" variant="ghost">
+                  Remove
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-component md:grid-cols-3">

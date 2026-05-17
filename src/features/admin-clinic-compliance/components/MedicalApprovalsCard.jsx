@@ -5,6 +5,8 @@ import {
   CLINIC_APPROVAL_STATUS_META,
   CLINIC_APPROVAL_TYPES,
   CLINIC_APPROVAL_TYPE_META,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { getMedicalApprovalDecisionCapabilities } from '../../../domain/services/adminClinicComplianceService'
 import { WorkspaceCard } from '../../admin-client-workspace'
@@ -51,11 +53,24 @@ function getDecisionTimestampSummary(approval) {
   return 'No decision timestamp yet'
 }
 
+function getPublishLabel(record) {
+  return CLINIC_RECORD_PUBLISH_STATE_META[
+    record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
+  ].label
+}
+
+function canPublishRecord(record, isDirty) {
+  return Boolean(record.id)
+    && !isDirty
+    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
+}
+
 export function MedicalApprovalsCard({
   draft,
   isDirty,
   locations,
   onApplyDecision,
+  onPublish,
   onUpdate,
   serviceLines,
 }) {
@@ -120,6 +135,7 @@ export function MedicalApprovalsCard({
             key={approval.id || `new-approval-${index}`}
             locations={locations}
             onApplyDecision={applyDecision}
+            onPublish={onPublish}
             onRemove={removeApproval}
             onUpdate={updateApproval}
             serviceLines={serviceLines}
@@ -136,6 +152,7 @@ function ApprovalEditor({
   isDirty,
   locations,
   onApplyDecision,
+  onPublish,
   onRemove,
   onUpdate,
   serviceLines,
@@ -153,10 +170,25 @@ function ApprovalEditor({
           <p className="text-label text-text-muted">
             Status: {getStatusLabel(approval.status)}
           </p>
+          <p className="text-label text-text-muted">
+            {getPublishLabel(approval)}
+            {approval.published_at ? ` at ${approval.published_at}` : ''}
+          </p>
         </div>
-        <Button onClick={() => onRemove(index)} size="sm" type="button" variant="ghost">
-          Remove
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            disabled={!canPublishRecord(approval, isDirty)}
+            onClick={() => onPublish({ id: approval.id, type: 'approval' })}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Publish
+          </Button>
+          <Button onClick={() => onRemove(index)} size="sm" type="button" variant="ghost">
+            Remove
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-component md:grid-cols-3">

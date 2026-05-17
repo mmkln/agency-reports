@@ -38,6 +38,7 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
     error,
     isDirty,
     page,
+    publishMetricRecord,
     resetDraft,
     saveDraft,
     saveState,
@@ -96,13 +97,17 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
 
           <PatientAcquisitionMetricsCard
             draft={draft}
+            isDirty={isDirty}
             locations={page.locations}
+            onPublish={publishMetricRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
           <CallBookingMetricsCard
             draft={draft}
+            isDirty={isDirty}
             locations={page.locations}
+            onPublish={publishMetricRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />

@@ -3,6 +3,8 @@ import { Button } from '@/shared/ui'
 import {
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_COMPLIANCE_STATUS_META,
+  CLINIC_RECORD_PUBLISH_STATE_META,
+  CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
@@ -31,7 +33,26 @@ function createBlankReview() {
   }
 }
 
-export function ComplianceReviewsCard({ draft, locations, onUpdate, serviceLines }) {
+function getPublishLabel(record) {
+  return CLINIC_RECORD_PUBLISH_STATE_META[
+    record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
+  ].label
+}
+
+function canPublishRecord(record, isDirty) {
+  return Boolean(record.id)
+    && !isDirty
+    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
+}
+
+export function ComplianceReviewsCard({
+  draft,
+  isDirty,
+  locations,
+  onPublish,
+  onUpdate,
+  serviceLines,
+}) {
   function updateReview(index, fieldName, value) {
     onUpdate((currentDraft) => ({
       ...currentDraft,
@@ -79,12 +100,29 @@ export function ComplianceReviewsCard({ draft, locations, onUpdate, serviceLines
         {draft.complianceReviews.map((review, index) => (
           <section className="grid gap-component rounded-control bg-surface-subtle p-3" key={review.id || `new-review-${index}`}>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-label font-semibold text-text-primary">
-                Review {index + 1}
-              </p>
-              <Button onClick={() => removeReview(index)} size="sm" type="button" variant="ghost">
-                Remove
-              </Button>
+              <div className="grid gap-1">
+                <p className="text-label font-semibold text-text-primary">
+                  Review {index + 1}
+                </p>
+                <p className="text-label text-text-muted">
+                  {getPublishLabel(review)}
+                  {review.published_at ? ` at ${review.published_at}` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={!canPublishRecord(review, isDirty)}
+                  onClick={() => onPublish({ id: review.id, type: 'review' })}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Publish
+                </Button>
+                <Button onClick={() => removeReview(index)} size="sm" type="button" variant="ghost">
+                  Remove
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-component md:grid-cols-3">

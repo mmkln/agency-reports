@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import {
   getAdminClinicReputationPage,
+  publishReputationSnapshot,
   saveAdminClinicReputation,
 } from '../../domain/services/adminClinicReputationService'
 import { useToast } from '../../shared/notifications'
@@ -140,11 +141,43 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
     setSaveState('')
   }
 
+  function publishReputationRecord({ id }) {
+    setSaveState('Publishing...')
+
+    runtime.dataClient.write((repositories) => publishReputationSnapshot({
+      clientId,
+      repositories,
+      snapshotId: id,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Published')
+        toast.success('Reputation snapshot published', `${page.client.name}'s reputation snapshot is now client-visible.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Reputation snapshot was not published', caughtError.message)
+      })
+  }
+
   return {
     draft: state.draft,
     error: state.error,
     isDirty,
     page: state.page,
+    publishReputationRecord,
     resetDraft,
     saveDraft,
     saveState,

@@ -39,6 +39,7 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
     error,
     isDirty,
     page,
+    publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,
@@ -97,7 +98,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
 
           <ComplianceReviewsCard
             draft={draft}
+            isDirty={isDirty}
             locations={page.locations}
+            onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
@@ -106,6 +109,7 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
             isDirty={isDirty}
             locations={page.locations}
             onApplyDecision={applyApprovalDecision}
+            onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
