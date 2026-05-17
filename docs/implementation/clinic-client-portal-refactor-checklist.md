@@ -55,8 +55,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Add `ServiceLinePerformance`.
 - [ ] Add `LocationPerformance`.
 - [x] Add `ReputationSnapshot`.
-- [ ] Add `ComplianceReview`.
-- [ ] Add `MedicalApproval`.
+- [x] Add `ComplianceReview`.
+- [x] Add `MedicalApproval`.
 - [ ] Add `ClinicAction` or extend `NeededFromClient` with clinic-specific action metadata.
 - [x] Add repository adapter methods for clinic entities.
 - [ ] Add seed data for at least one clinic with:
@@ -65,7 +65,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] acquisition metrics
   - [x] calls/bookings metrics
   - [x] reputation snapshot
-  - [ ] compliance review items
+  - [x] compliance review items
   - [ ] clinic action needed items
 - [x] Add schema/version migration handling for new localStorage records.
 
@@ -196,37 +196,37 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 8 - Compliance & Approvals
 
-- [ ] Add `/client/compliance-approvals` route or clinic-template destination mapping.
-- [ ] Add `getClientComplianceApprovalsPage` domain service.
-- [ ] Add `widgets/client-compliance-approvals`.
-- [ ] Add approval item types:
-  - [ ] medical claims
-  - [ ] ad copy
-  - [ ] landing pages
-  - [ ] doctor bios
-  - [ ] service descriptions
-  - [ ] before/after images
-  - [ ] testimonials
-  - [ ] treatment pricing
-  - [ ] consent language
-  - [ ] privacy/cookie/tracking setup
-- [ ] Add approval statuses:
-  - [ ] pending_medical_review
-  - [ ] changes_requested
-  - [ ] approved
-  - [ ] rejected
-  - [ ] expired
-- [ ] Add compliance statuses:
-  - [ ] not_reviewed
-  - [ ] in_review
-  - [ ] approved
-  - [ ] risk_flagged
-  - [ ] blocked
-  - [ ] limited_by_policy
-- [ ] Build approval history with version, approver, timestamp, and decision comment.
+- [x] Add `/client/compliance-approvals` route or clinic-template destination mapping.
+- [x] Add `getClientComplianceApprovalsPage` domain service.
+- [x] Add `widgets/client-compliance-approvals`.
+- [x] Add approval item types:
+  - [x] medical claims
+  - [x] ad copy
+  - [x] landing pages
+  - [x] doctor bios
+  - [x] service descriptions
+  - [x] before/after images
+  - [x] testimonials
+  - [x] treatment pricing
+  - [x] consent language
+  - [x] privacy/cookie/tracking setup
+- [x] Add approval statuses:
+  - [x] pending_medical_review
+  - [x] changes_requested
+  - [x] approved
+  - [x] rejected
+  - [x] expired
+- [x] Add compliance statuses:
+  - [x] not_reviewed
+  - [x] in_review
+  - [x] approved
+  - [x] risk_flagged
+  - [x] blocked
+  - [x] limited_by_policy
+- [x] Build approval history with version, approver, timestamp, and decision comment.
 - [ ] Add rejected/limited ad policy issue log.
-- [ ] Add tracking/privacy setup status.
-- [ ] Add tests for approval history and hidden draft compliance items.
+- [x] Add tracking/privacy setup status.
+- [ ] Add tests for hidden draft compliance items.
 
 ## Phase 9 - Clinic Action Needed
 
@@ -324,6 +324,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for calls/bookings aggregate safety.
 - [ ] Add domain tests for service line/location filtering.
 - [x] Add domain tests for reputation visibility.
+- [x] Add domain tests for compliance approval read model and approval history.
 - [ ] Add domain tests for compliance approval transitions.
 - [ ] Add domain tests for clinic Action Needed type mapping.
 - [ ] Add e2e for clinic Overview.
@@ -345,7 +346,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [ ] Calls & Bookings is first-class.
 - [ ] Campaigns / Service Lines is first-class.
 - [x] Reputation is first-class.
-- [ ] Compliance & Approvals is first-class.
+- [x] Compliance & Approvals is first-class.
 - [ ] Action Needed includes clinic operations and medical/compliance actions.
 - [ ] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
 - [ ] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.

@@ -3,12 +3,17 @@ import { describe, expect, it } from 'vitest'
 import {
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_ACQUISITION_CHANNELS,
+  CLINIC_APPROVAL_STATUSES,
+  CLINIC_APPROVAL_TYPES,
+  CLINIC_COMPLIANCE_STATUSES,
   CLINIC_SERVICE_LINE_STATUSES,
   assertClinicAggregateRecord,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
   normalizeCallBookingMetric,
+  normalizeComplianceReview,
+  normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
 } from './model'
@@ -134,6 +139,48 @@ describe('clinic entity model', () => {
     })
   })
 
+  it('normalizes compliance reviews and medical approvals', () => {
+    expect(normalizeComplianceReview({
+      blocked_items: '1',
+      limited_ads: '2',
+      open_issues: '3',
+      pending_approvals: '4',
+      status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    })).toMatchObject({
+      blocked_items: 1,
+      limited_ads: 2,
+      open_issues: 3,
+      pending_approvals: 4,
+      status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    })
+
+    expect(normalizeMedicalApproval({
+      approval_type: CLINIC_APPROVAL_TYPES.LANDING_PAGE,
+      history: [
+        {
+          actor_label: 'Dr. Kim',
+          comment: 'Approved wording.',
+          decision: 'approved',
+          decided_at: '2026-05-08T09:00:00.000Z',
+          version: 'v2',
+        },
+      ],
+      status: CLINIC_APPROVAL_STATUSES.APPROVED,
+      version: ' v2 ',
+    })).toMatchObject({
+      approval_type: CLINIC_APPROVAL_TYPES.LANDING_PAGE,
+      history: [
+        expect.objectContaining({
+          actor_label: 'Dr. Kim',
+          decision: 'approved',
+          version: 'v2',
+        }),
+      ],
+      status: CLINIC_APPROVAL_STATUSES.APPROVED,
+      version: 'v2',
+    })
+  })
+
   it('falls back to safe defaults for unknown clinic enum values', () => {
     expect(normalizeClinicProfile({
       specialty: 'hospital',
@@ -146,6 +193,18 @@ describe('clinic entity model', () => {
     expect(normalizePatientAcquisitionSnapshot({
       channel: 'print',
     }).channel).toBe(CLINIC_ACQUISITION_CHANNELS.OTHER)
+
+    expect(normalizeComplianceReview({
+      status: 'legal_hold',
+    }).status).toBe(CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED)
+
+    expect(normalizeMedicalApproval({
+      approval_type: 'unknown',
+      status: 'waiting',
+    })).toMatchObject({
+      approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+      status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    })
   })
 
   it('rejects patient-level keys anywhere in clinic aggregate records', () => {

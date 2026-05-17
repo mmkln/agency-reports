@@ -46,6 +46,110 @@ export const CLINIC_ACQUISITION_CHANNEL_META = Object.freeze({
   [CLINIC_ACQUISITION_CHANNELS.OTHER]: { label: 'Other' },
 })
 
+export const CLINIC_COMPLIANCE_STATUSES = Object.freeze({
+  APPROVED: 'approved',
+  BLOCKED: 'blocked',
+  IN_REVIEW: 'in_review',
+  LIMITED_BY_POLICY: 'limited_by_policy',
+  NOT_REVIEWED: 'not_reviewed',
+  RISK_FLAGGED: 'risk_flagged',
+})
+
+export const CLINIC_COMPLIANCE_STATUS_META = Object.freeze({
+  [CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED]: {
+    icon: 'circle',
+    label: 'Not reviewed',
+    tone: 'neutral',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.IN_REVIEW]: {
+    icon: 'clock',
+    label: 'In review',
+    tone: 'blue',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.APPROVED]: {
+    icon: 'shieldCheck',
+    label: 'Approved',
+    tone: 'green',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED]: {
+    icon: 'triangleAlert',
+    label: 'Risk flagged',
+    tone: 'yellow',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.BLOCKED]: {
+    icon: 'circleAlert',
+    label: 'Blocked',
+    tone: 'red',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY]: {
+    icon: 'triangleAlert',
+    label: 'Limited by policy',
+    tone: 'yellow',
+  },
+})
+
+export const CLINIC_APPROVAL_STATUSES = Object.freeze({
+  APPROVED: 'approved',
+  CHANGES_REQUESTED: 'changes_requested',
+  EXPIRED: 'expired',
+  PENDING_MEDICAL_REVIEW: 'pending_medical_review',
+  REJECTED: 'rejected',
+})
+
+export const CLINIC_APPROVAL_STATUS_META = Object.freeze({
+  [CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW]: {
+    icon: 'clock',
+    label: 'Pending medical review',
+    tone: 'blue',
+  },
+  [CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED]: {
+    icon: 'triangleAlert',
+    label: 'Changes requested',
+    tone: 'yellow',
+  },
+  [CLINIC_APPROVAL_STATUSES.APPROVED]: {
+    icon: 'checkCircle2',
+    label: 'Approved',
+    tone: 'green',
+  },
+  [CLINIC_APPROVAL_STATUSES.REJECTED]: {
+    icon: 'circleAlert',
+    label: 'Rejected',
+    tone: 'red',
+  },
+  [CLINIC_APPROVAL_STATUSES.EXPIRED]: {
+    icon: 'clock',
+    label: 'Expired',
+    tone: 'neutral',
+  },
+})
+
+export const CLINIC_APPROVAL_TYPES = Object.freeze({
+  AD_COPY: 'ad_copy',
+  BEFORE_AFTER_IMAGE: 'before_after_image',
+  CONSENT_LANGUAGE: 'consent_language',
+  DOCTOR_BIO: 'doctor_bio',
+  LANDING_PAGE: 'landing_page',
+  MEDICAL_CLAIM: 'medical_claim',
+  PRIVACY_TRACKING: 'privacy_tracking',
+  SERVICE_DESCRIPTION: 'service_description',
+  TESTIMONIAL: 'testimonial',
+  TREATMENT_PRICING: 'treatment_pricing',
+})
+
+export const CLINIC_APPROVAL_TYPE_META = Object.freeze({
+  [CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM]: { label: 'Medical claim' },
+  [CLINIC_APPROVAL_TYPES.AD_COPY]: { label: 'Ad copy' },
+  [CLINIC_APPROVAL_TYPES.LANDING_PAGE]: { label: 'Landing page' },
+  [CLINIC_APPROVAL_TYPES.DOCTOR_BIO]: { label: 'Doctor bio' },
+  [CLINIC_APPROVAL_TYPES.SERVICE_DESCRIPTION]: { label: 'Service description' },
+  [CLINIC_APPROVAL_TYPES.BEFORE_AFTER_IMAGE]: { label: 'Before/after image' },
+  [CLINIC_APPROVAL_TYPES.TESTIMONIAL]: { label: 'Testimonial' },
+  [CLINIC_APPROVAL_TYPES.TREATMENT_PRICING]: { label: 'Treatment pricing' },
+  [CLINIC_APPROVAL_TYPES.CONSENT_LANGUAGE]: { label: 'Consent language' },
+  [CLINIC_APPROVAL_TYPES.PRIVACY_TRACKING]: { label: 'Privacy/tracking' },
+})
+
 export const CLINIC_SERVICE_LINE_STATUS_META = Object.freeze({
   [CLINIC_SERVICE_LINE_STATUSES.PLANNED]: {
     icon: 'circle',
@@ -293,5 +397,84 @@ export function normalizeReputationSnapshot(snapshot = {}) {
     summary: normalizeText(snapshot.summary),
     unanswered_reviews: normalizeNumber(snapshot.unanswered_reviews),
     updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}
+
+function normalizeApprovalHistory(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      actor_label: normalizeText(item?.actor_label),
+      comment: normalizeText(item?.comment),
+      decision: normalizeText(item?.decision),
+      decided_at: item?.decided_at ?? null,
+      version: normalizeText(item?.version),
+    }))
+    .filter((item) => item.decision || item.comment || item.decided_at)
+}
+
+export function normalizeComplianceReview(review = {}) {
+  assertClinicAggregateRecord(review, 'Compliance review')
+
+  return {
+    blocked_items: normalizeNumber(review.blocked_items),
+    client_id: normalizeText(review.client_id),
+    created_at: review.created_at ?? null,
+    data_source: normalizeNullableText(review.data_source),
+    id: normalizeText(review.id),
+    last_updated_at: review.last_updated_at ?? review.updated_at ?? review.created_at ?? null,
+    limited_ads: normalizeNumber(review.limited_ads),
+    location_id: normalizeNullableText(review.location_id),
+    next_action: normalizeText(review.next_action),
+    open_issues: normalizeNumber(review.open_issues),
+    pending_approvals: normalizeNumber(review.pending_approvals),
+    platform: normalizeText(review.platform),
+    risk_note: normalizeText(review.risk_note),
+    service_line_id: normalizeNullableText(review.service_line_id),
+    status: normalizeEnum(
+      review.status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    summary: normalizeText(review.summary),
+    title: normalizeText(review.title),
+    updated_at: review.updated_at ?? review.created_at ?? null,
+  }
+}
+
+export function normalizeMedicalApproval(approval = {}) {
+  assertClinicAggregateRecord(approval, 'Medical approval')
+
+  return {
+    approval_type: normalizeEnum(
+      approval.approval_type,
+      CLINIC_APPROVAL_TYPES,
+      CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+    ),
+    approved_at: approval.approved_at ?? null,
+    approver_label: normalizeText(approval.approver_label),
+    changes_requested_at: approval.changes_requested_at ?? null,
+    client_id: normalizeText(approval.client_id),
+    created_at: approval.created_at ?? null,
+    decision_comment: normalizeText(approval.decision_comment),
+    due_date: normalizeNullableText(approval.due_date),
+    history: normalizeApprovalHistory(approval.history),
+    id: normalizeText(approval.id),
+    instructions: normalizeText(approval.instructions),
+    last_updated_at: approval.last_updated_at ?? approval.updated_at ?? approval.created_at ?? null,
+    location_id: normalizeNullableText(approval.location_id),
+    requested_by_label: normalizeText(approval.requested_by_label),
+    service_line_id: normalizeNullableText(approval.service_line_id),
+    status: normalizeEnum(
+      approval.status,
+      CLINIC_APPROVAL_STATUSES,
+      CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    ),
+    title: normalizeText(approval.title),
+    updated_at: approval.updated_at ?? approval.created_at ?? null,
+    version: normalizeText(approval.version),
   }
 }

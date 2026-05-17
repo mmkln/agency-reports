@@ -20,10 +20,12 @@ const seedData = Object.freeze({
   client_requests: [],
   client_work_items: [],
   clinic_locations: [],
+  compliance_reviews: [],
   clinic_profiles: [],
   clinic_service_lines: [],
   dashboard_links: [],
   needed_from_client: [],
+  medical_approvals: [],
   performance_dashboard_periods: [],
   patient_acquisition_snapshots: [],
   profiles: [],
@@ -105,10 +107,12 @@ describe('createLocalStoragePortalRepository', () => {
         client_requests: [],
         client_work_items: [],
         clinic_locations: [],
+        compliance_reviews: [],
         clinic_profiles: [],
         clinic_service_lines: [],
         dashboard_links: [],
         needed_from_client: [],
+        medical_approvals: [],
         performance_dashboard_periods: [],
         patient_acquisition_snapshots: [],
         profiles: [],
@@ -153,10 +157,12 @@ describe('createLocalStoragePortalRepository', () => {
         client_requests: [],
         client_work_items: [],
         clinic_locations: [],
+        compliance_reviews: [],
         clinic_profiles: [],
         clinic_service_lines: [],
         dashboard_links: [],
         needed_from_client: [],
+        medical_approvals: [],
         performance_dashboard_periods: [
           {
             client_id: '11111111-1111-4111-8111-111111111111',
@@ -390,6 +396,36 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.reputationSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
     expect(reloadedRepository.reputationSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
+  it('persists compliance reviews and medical approvals through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const clientId = '11111111-1111-4111-8111-111111111111'
+    const review = {
+      client_id: clientId,
+      id: '14141414-1414-4414-8414-141414141414',
+      open_issues: 2,
+      status: 'risk_flagged',
+      title: 'Google Ads medical claims',
+    }
+    const approval = {
+      approval_type: 'medical_claim',
+      client_id: clientId,
+      id: '15151515-1515-4515-8515-151515151515',
+      status: 'pending_medical_review',
+      title: 'Implant claim wording',
+      version: 'v1',
+    }
+
+    repository.complianceReviews.upsert(review)
+    repository.medicalApprovals.upsert(approval)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.complianceReviews.findById(review.id)).toMatchObject(review)
+    expect(reloadedRepository.complianceReviews.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.medicalApprovals.findById(approval.id)).toMatchObject(approval)
+    expect(reloadedRepository.medicalApprovals.listByClientId(clientId)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

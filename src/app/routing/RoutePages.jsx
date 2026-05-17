@@ -6,6 +6,12 @@ import { ClientActionNeededPage } from '../../pages/client/action-needed/ClientA
 import { ClientActionNeededPageHeader } from '../../pages/client/action-needed/ClientActionNeededPageHeader'
 import { ClientCallsBookingsPage } from '../../pages/client/calls-bookings/ClientCallsBookingsPage'
 import { ClientCallsBookingsPageHeader } from '../../pages/client/calls-bookings/ClientCallsBookingsPageHeader'
+import {
+  ClientComplianceApprovalsPage,
+} from '../../pages/client/compliance-approvals/ClientComplianceApprovalsPage'
+import {
+  ClientComplianceApprovalsPageHeader,
+} from '../../pages/client/compliance-approvals/ClientComplianceApprovalsPageHeader'
 import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPage'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboardPage'
@@ -85,6 +91,10 @@ export const ClientActionNeededPageRoute = withPageProps(
 export const ClientCallsBookingsPageRoute = withPageProps(
   ClientCallsBookingsPage,
   ClientCallsBookingsPageHeader,
+)
+export const ClientComplianceApprovalsPageRoute = withPageProps(
+  ClientComplianceApprovalsPage,
+  ClientComplianceApprovalsPageHeader,
 )
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
 export const ClientFilesLinksPageRoute = withPageProps(ClientFilesLinksPage, ClientFilesLinksPageHeader)

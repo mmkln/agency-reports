@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_TYPES } from '../../entities/client'
 import {
+  CLINIC_APPROVAL_STATUSES,
+  CLINIC_APPROVAL_TYPES,
+  CLINIC_COMPLIANCE_STATUSES,
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_SERVICE_LINE_STATUSES,
@@ -11,6 +14,7 @@ import {
   getClientClinicFoundationPage,
   getClientClinicServiceLinesPage,
   getClientCallsBookingsPage,
+  getClientComplianceApprovalsPage,
   getClientPatientAcquisitionPage,
   getClientReputationPage,
 } from './clinicClientService'
@@ -26,6 +30,8 @@ const IDS = Object.freeze({
   SNAPSHOT: '77777777-7777-4777-8777-777777777777',
   CALL_BOOKING: '88888888-8888-4888-8888-888888888888',
   REPUTATION: '99999999-9999-4999-8999-999999999999',
+  COMPLIANCE_REVIEW: 'abababab-abab-4bab-8bab-abababababab',
+  MEDICAL_APPROVAL: 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
 })
 
 function createEntityRepository(records = []) {
@@ -171,6 +177,50 @@ function createRepositories(overrides = {}) {
         review_response_drafts: 3,
         reviews_gained: 18,
         unanswered_reviews: 3,
+      },
+    ]),
+    complianceReviews: createEntityRepository([
+      {
+        blocked_items: 1,
+        client_id: IDS.CLIENT_A,
+        id: IDS.COMPLIANCE_REVIEW,
+        last_updated_at: '2026-05-08T09:00:00.000Z',
+        limited_ads: 2,
+        location_id: IDS.LOCATION,
+        next_action: 'Doctor approval is needed before launch.',
+        open_issues: 3,
+        pending_approvals: 1,
+        platform: 'Google Ads',
+        risk_note: 'Avoid guaranteed outcome language.',
+        service_line_id: IDS.SERVICE_LINE,
+        status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+        summary: 'Medical claim needs review.',
+        title: 'Ad claims review',
+      },
+    ]),
+    medicalApprovals: createEntityRepository([
+      {
+        approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+        approver_label: 'Dr. Patel',
+        client_id: IDS.CLIENT_A,
+        due_date: '2026-05-14',
+        history: [
+          {
+            actor_label: 'Dr. Patel',
+            comment: 'Needs softer claim.',
+            decision: 'changes_requested',
+            decided_at: '2026-05-08T09:00:00.000Z',
+            version: 'v1',
+          },
+        ],
+        id: IDS.MEDICAL_APPROVAL,
+        instructions: 'Review the claim.',
+        last_updated_at: '2026-05-08T09:00:00.000Z',
+        requested_by_label: 'GrowthLab',
+        service_line_id: IDS.SERVICE_LINE,
+        status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+        title: 'Implant claim wording',
+        version: 'v1',
       },
     ]),
     ...overrides,
@@ -332,6 +382,44 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('returns compliance reviews and medical approval history', () => {
+    const page = getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.totals).toMatchObject({
+      blockedItems: 1,
+      limitedAds: 2,
+      openIssues: 3,
+      pendingApprovals: 1,
+      reviewCount: 1,
+      riskFlaggedReviews: 1,
+    })
+    expect(page.reviews[0]).toMatchObject({
+      serviceLine: expect.objectContaining({ name: 'Dental Implants' }),
+      statusMeta: {
+        label: 'Risk flagged',
+      },
+    })
+    expect(page.approvals[0]).toMatchObject({
+      approvalTypeMeta: {
+        label: 'Medical claim',
+      },
+      history: [
+        expect.objectContaining({
+          actor_label: 'Dr. Patel',
+          decision: 'changes_requested',
+        }),
+      ],
+      statusMeta: {
+        label: 'Pending medical review',
+      },
+    })
+  })
+
   it('denies cross-client patient acquisition access', () => {
     const page = getClientPatientAcquisitionPage({
       clientId: IDS.CLIENT_B,
@@ -360,6 +448,19 @@ describe('clinicClientService', () => {
 
   it('denies cross-client reputation access', () => {
     const page = getClientReputationPage({
+      clientId: IDS.CLIENT_B,
+      repositories: createRepositories(),
+      viewer: createClientViewer(IDS.CLIENT_A),
+    })
+
+    expect(page).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
+  })
+
+  it('denies cross-client compliance and approvals access', () => {
+    const page = getClientComplianceApprovalsPage({
       clientId: IDS.CLIENT_B,
       repositories: createRepositories(),
       viewer: createClientViewer(IDS.CLIENT_A),
@@ -512,5 +613,42 @@ describe('clinicClientService', () => {
       repositories,
       viewer: createClientViewer(),
     })).toThrow('Reputation snapshot must stay aggregate-only')
+  })
+
+  it('blocks patient-level fields from compliance and approval records', () => {
+    const complianceRepositories = createRepositories({
+      complianceReviews: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.COMPLIANCE_REVIEW,
+          patient_id: 'patient-a',
+          title: 'Unsafe compliance review',
+        },
+      ]),
+    })
+
+    expect(() => getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: complianceRepositories,
+      viewer: createClientViewer(),
+    })).toThrow('Compliance review must stay aggregate-only')
+
+    const approvalRepositories = createRepositories({
+      complianceReviews: createEntityRepository([]),
+      medicalApprovals: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.MEDICAL_APPROVAL,
+          patient_email: 'jane@example.com',
+          title: 'Unsafe approval',
+        },
+      ]),
+    })
+
+    expect(() => getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: approvalRepositories,
+      viewer: createClientViewer(),
+    })).toThrow('Medical approval must stay aggregate-only')
   })
 })

@@ -11,6 +11,9 @@ import { AdminPerformanceDashboardsPageHeader } from '../../pages/admin/performa
 import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPageHeader'
 import { ClientActionNeededPageHeader } from '../../pages/client/action-needed/ClientActionNeededPageHeader'
 import { ClientCallsBookingsPageHeader } from '../../pages/client/calls-bookings/ClientCallsBookingsPageHeader'
+import {
+  ClientComplianceApprovalsPageHeader,
+} from '../../pages/client/compliance-approvals/ClientComplianceApprovalsPageHeader'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
 import { ClientFilesLinksPageHeader } from '../../pages/client/files-links/ClientFilesLinksPageHeader'
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
@@ -49,6 +52,7 @@ import {
   AdminTasksPageRoute,
   ClientActionNeededPageRoute,
   ClientCallsBookingsPageRoute,
+  ClientComplianceApprovalsPageRoute,
   ClientDashboardPageRoute,
   ClientFilesLinksPageRoute,
   ClientOverviewPageRoute,
@@ -214,6 +218,18 @@ export const routeDefinitions = [
     iconName: 'messageSquare',
     clientTypes: [CLIENT_TYPES.CLINIC],
     element: <ClientReputationPageRoute />,
+  },
+  {
+    path: '/client/compliance-approvals',
+    id: 'client-compliance-approvals',
+    label: 'Compliance',
+    pageTitle: 'Compliance & Approvals',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    contentWidth: 'content',
+    header: ClientComplianceApprovalsPageHeader,
+    iconName: 'shieldCheck',
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    element: <ClientComplianceApprovalsPageRoute />,
   },
   {
     path: '/client/reports-dashboards',

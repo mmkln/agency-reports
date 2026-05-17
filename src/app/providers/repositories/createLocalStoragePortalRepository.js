@@ -11,6 +11,7 @@ const TABLE_NAMES = Object.freeze([
   'client_work_items',
   'call_booking_metrics',
   'clinic_locations',
+  'compliance_reviews',
   'clinic_profiles',
   'clinic_service_lines',
   'dashboard_links',
@@ -21,6 +22,7 @@ const TABLE_NAMES = Object.freeze([
   'projects',
   'reputation_snapshots',
   'reports',
+  'medical_approvals',
   'tasks',
   'updates',
 ])
@@ -226,6 +228,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     clinicLocations: createEntityRepository('clinic_locations', readSnapshot, writeSnapshot),
     clinicProfiles: createEntityRepository('clinic_profiles', readSnapshot, writeSnapshot),
     clinicServiceLines: createEntityRepository('clinic_service_lines', readSnapshot, writeSnapshot),
+    complianceReviews: createEntityRepository('compliance_reviews', readSnapshot, writeSnapshot),
     dashboardLinks: createEntityRepository('dashboard_links', readSnapshot, writeSnapshot),
     neededFromClient: createEntityRepository('needed_from_client', readSnapshot, writeSnapshot),
     performanceDashboardPeriods: createEntityRepository('performance_dashboard_periods', readSnapshot, writeSnapshot),
@@ -239,6 +242,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     projects: createEntityRepository('projects', readSnapshot, writeSnapshot),
     reputationSnapshots: createEntityRepository('reputation_snapshots', readSnapshot, writeSnapshot),
     reports: createEntityRepository('reports', readSnapshot, writeSnapshot),
+    medicalApprovals: createEntityRepository('medical_approvals', readSnapshot, writeSnapshot),
     reset() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)
       return readSnapshot()

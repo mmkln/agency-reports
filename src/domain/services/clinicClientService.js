@@ -1,12 +1,17 @@
 import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
 import {
   CLINIC_ACQUISITION_CHANNEL_META,
+  CLINIC_APPROVAL_STATUS_META,
+  CLINIC_APPROVAL_TYPE_META,
+  CLINIC_COMPLIANCE_STATUS_META,
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_SERVICE_LINE_STATUS_META,
   normalizeCallBookingMetric,
+  normalizeComplianceReview,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
@@ -284,6 +289,77 @@ function summarizeReputationSnapshots(snapshots) {
   }
 }
 
+function mapComplianceReview(review, { locationsById, serviceLinesById }) {
+  const normalizedReview = normalizeComplianceReview(review)
+
+  return {
+    blockedItems: normalizedReview.blocked_items,
+    clientId: normalizedReview.client_id,
+    dataSource: normalizedReview.data_source,
+    id: normalizedReview.id,
+    lastUpdatedAt: normalizedReview.last_updated_at,
+    limitedAds: normalizedReview.limited_ads,
+    location: normalizedReview.location_id ? locationsById.get(normalizedReview.location_id) ?? null : null,
+    locationId: normalizedReview.location_id,
+    nextAction: normalizedReview.next_action,
+    openIssues: normalizedReview.open_issues,
+    pendingApprovals: normalizedReview.pending_approvals,
+    platform: normalizedReview.platform,
+    riskNote: normalizedReview.risk_note,
+    serviceLine: normalizedReview.service_line_id
+      ? serviceLinesById.get(normalizedReview.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedReview.service_line_id,
+    status: normalizedReview.status,
+    statusMeta: CLINIC_COMPLIANCE_STATUS_META[normalizedReview.status],
+    summary: normalizedReview.summary,
+    title: normalizedReview.title,
+  }
+}
+
+function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
+  const normalizedApproval = normalizeMedicalApproval(approval)
+
+  return {
+    approvalType: normalizedApproval.approval_type,
+    approvalTypeMeta: CLINIC_APPROVAL_TYPE_META[normalizedApproval.approval_type],
+    approvedAt: normalizedApproval.approved_at,
+    approverLabel: normalizedApproval.approver_label,
+    changesRequestedAt: normalizedApproval.changes_requested_at,
+    clientId: normalizedApproval.client_id,
+    decisionComment: normalizedApproval.decision_comment,
+    dueDate: normalizedApproval.due_date,
+    history: normalizedApproval.history,
+    id: normalizedApproval.id,
+    instructions: normalizedApproval.instructions,
+    lastUpdatedAt: normalizedApproval.last_updated_at,
+    location: normalizedApproval.location_id ? locationsById.get(normalizedApproval.location_id) ?? null : null,
+    locationId: normalizedApproval.location_id,
+    requestedByLabel: normalizedApproval.requested_by_label,
+    serviceLine: normalizedApproval.service_line_id
+      ? serviceLinesById.get(normalizedApproval.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedApproval.service_line_id,
+    status: normalizedApproval.status,
+    statusMeta: CLINIC_APPROVAL_STATUS_META[normalizedApproval.status],
+    title: normalizedApproval.title,
+    version: normalizedApproval.version,
+  }
+}
+
+function summarizeCompliance({ approvals, reviews }) {
+  return {
+    approvedApprovals: approvals.filter((approval) => approval.status === 'approved').length,
+    blockedItems: reviews.reduce((total, review) => total + review.blockedItems, 0),
+    limitedAds: reviews.reduce((total, review) => total + review.limitedAds, 0),
+    openIssues: reviews.reduce((total, review) => total + review.openIssues, 0),
+    pendingApprovals: approvals.filter((approval) => approval.status === 'pending_medical_review').length,
+    rejectedApprovals: approvals.filter((approval) => approval.status === 'rejected').length,
+    reviewCount: reviews.length,
+    riskFlaggedReviews: reviews.filter((review) => ['risk_flagged', 'blocked', 'limited_by_policy'].includes(review.status)).length,
+  }
+}
+
 function canReadClinicClient({ client, clientId, viewer }) {
   if (!client || client.type !== CLIENT_TYPES.CLINIC) {
     return false
@@ -464,5 +540,45 @@ export function getClientReputationPage(input) {
     snapshots,
     status: 'ready',
     totals: summarizeReputationSnapshots(snapshots),
+  }
+}
+
+export function getClientComplianceApprovalsPage(input) {
+  const foundationPage = getClientClinicFoundationPage(input)
+
+  if (foundationPage.status === 'error') {
+    return foundationPage
+  }
+
+  const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
+  const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
+  const reviews = (input.repositories.complianceReviews?.listByClientId(input.clientId) ?? [])
+    .map((review) => mapComplianceReview(review, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      right.openIssues - left.openIssues
+      || left.title.localeCompare(right.title)
+    ))
+  const approvals = (input.repositories.medicalApprovals?.listByClientId(input.clientId) ?? [])
+    .map((approval) => mapMedicalApproval(approval, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      new Date(left.dueDate ?? '9999-12-31').getTime() - new Date(right.dueDate ?? '9999-12-31').getTime()
+      || left.title.localeCompare(right.title)
+    ))
+
+  return {
+    approvals,
+    client: foundationPage.client,
+    isEmpty: reviews.length === 0 && approvals.length === 0,
+    latestUpdatedAt: [...reviews, ...approvals]
+      .map((item) => item.lastUpdatedAt)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null,
+    locations: foundationPage.locations,
+    profile: foundationPage.profile,
+    reviews,
+    serviceLines: foundationPage.serviceLines,
+    status: 'ready',
+    totals: summarizeCompliance({ approvals, reviews }),
   }
 }
