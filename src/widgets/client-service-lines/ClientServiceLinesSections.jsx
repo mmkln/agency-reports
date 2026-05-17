@@ -8,6 +8,8 @@ import {
   StatusBadge,
 } from '@/shared/ui'
 
+import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+
 function formatCurrency(value) {
   if (!value) {
     return 'Not set'
@@ -171,6 +173,41 @@ function ClinicProfilePanel({ page }) {
 export function ClientServiceLinesView({ page }) {
   return (
     <div className="grid gap-card">
+      <ClinicAnalyticsFilterBar
+        controls={[
+          {
+            allLabel: 'All locations',
+            key: 'location_id',
+            label: 'Location',
+            options: page.filters?.availableLocations,
+          },
+          {
+            allLabel: 'All service lines',
+            key: 'service_line_id',
+            label: 'Service line',
+            options: page.filters?.availableServiceLines,
+          },
+          {
+            allLabel: 'All campaign statuses',
+            key: 'campaign_status',
+            label: 'Campaign status',
+            options: page.filters?.availableCampaignStatuses,
+          },
+          {
+            allLabel: 'All compliance statuses',
+            key: 'compliance_status',
+            label: 'Compliance status',
+            options: page.filters?.availableComplianceStatuses,
+          },
+          {
+            allLabel: 'All reporting periods',
+            key: 'period_label',
+            label: 'Reporting period',
+            options: page.filters?.availablePeriods,
+          },
+        ]}
+        filters={page.filters}
+      />
       <ClinicProfilePanel page={page} />
       <Panel>
         <PanelHeader

@@ -115,14 +115,14 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] booked appointments
   - [x] attended appointments, optional
 - [ ] Add filters:
-  - [ ] location
-  - [ ] service line
+  - [x] location
+  - [x] service line
   - [ ] campaign
-  - [ ] channel
-  - [ ] date range / reporting period
+  - [x] channel
+  - [x] date range / reporting period
 - [x] Add leakage insight section.
 - [ ] Add source/dashboard links when available.
-- [ ] Add tests for filtering and client isolation.
+- [x] Add tests for filtering and client isolation.
 
 ## Phase 5 - Calls & Bookings
 
@@ -173,7 +173,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] paused
   - [x] completed
 - [x] Decide whether generic `Projects` remains as secondary detail or redirects for clinic clients.
-- [ ] Add tests for service line/location filtering.
+- [x] Add tests for service line/location filtering.
 
 ## Phase 7 - Reputation
 
@@ -328,7 +328,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add unit tests for clinic entity normalization.
 - [x] Add domain tests for patient acquisition client isolation.
 - [x] Add domain tests for calls/bookings aggregate safety.
-- [ ] Add domain tests for service line/location filtering.
+- [x] Add domain tests for service line/location filtering.
 - [x] Add domain tests for admin clinic metrics permissions and aggregate-only saves.
 - [x] Add domain tests for admin clinic reputation permissions and aggregate-only saves.
 - [x] Add domain tests for admin clinic compliance permissions, refs, history, and aggregate-only saves.

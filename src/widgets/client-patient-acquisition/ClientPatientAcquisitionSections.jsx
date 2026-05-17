@@ -8,6 +8,8 @@ import {
   PropertyGrid,
 } from '@/shared/ui'
 
+import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+
 function formatCurrency(value) {
   if (!value) {
     return '$0'
@@ -146,16 +148,77 @@ function SourceContext({ page }) {
 export function ClientPatientAcquisitionView({ page }) {
   if (page.isEmpty) {
     return (
-      <EmptyState
-        description="Aggregate acquisition metrics will appear after the agency publishes clinic-safe reporting data."
-        iconName="target"
-        title="No patient acquisition data yet"
-      />
+      <div className="grid gap-card">
+        <ClinicAnalyticsFilterBar
+          controls={[
+            {
+              allLabel: 'All locations',
+              key: 'location_id',
+              label: 'Location',
+              options: page.filters?.availableLocations,
+            },
+            {
+              allLabel: 'All service lines',
+              key: 'service_line_id',
+              label: 'Service line',
+              options: page.filters?.availableServiceLines,
+            },
+            {
+              allLabel: 'All channels',
+              key: 'channel',
+              label: 'Channel',
+              options: page.filters?.availableChannels,
+            },
+            {
+              allLabel: 'All reporting periods',
+              key: 'period_label',
+              label: 'Reporting period',
+              options: page.filters?.availablePeriods,
+            },
+          ]}
+          filters={page.filters}
+        />
+        <EmptyState
+          description="Aggregate acquisition metrics will appear after the agency publishes clinic-safe reporting data or the current filters are cleared."
+          iconName="target"
+          title="No patient acquisition data found"
+        />
+      </div>
     )
   }
 
   return (
     <div className="grid gap-card">
+      <ClinicAnalyticsFilterBar
+        controls={[
+          {
+            allLabel: 'All locations',
+            key: 'location_id',
+            label: 'Location',
+            options: page.filters?.availableLocations,
+          },
+          {
+            allLabel: 'All service lines',
+            key: 'service_line_id',
+            label: 'Service line',
+            options: page.filters?.availableServiceLines,
+          },
+          {
+            allLabel: 'All channels',
+            key: 'channel',
+            label: 'Channel',
+            options: page.filters?.availableChannels,
+          },
+          {
+            allLabel: 'All reporting periods',
+            key: 'period_label',
+            label: 'Reporting period',
+            options: page.filters?.availablePeriods,
+          },
+        ]}
+        filters={page.filters}
+      />
+
       <section className="grid gap-card md:grid-cols-2 xl:grid-cols-4" aria-label="Patient acquisition summary">
         <SummaryMetric
           helper="Calls, forms, and chats"

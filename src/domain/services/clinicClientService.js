@@ -117,6 +117,92 @@ function createEmptyAcquisitionTotals() {
   }
 }
 
+function normalizeOptionalFilterValue(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function normalizeClinicAnalyticsFilters(filters = {}) {
+  return {
+    campaignStatus: normalizeOptionalFilterValue(filters.campaignStatus ?? filters.campaign_status),
+    channel: normalizeOptionalFilterValue(filters.channel),
+    complianceStatus: normalizeOptionalFilterValue(filters.complianceStatus ?? filters.compliance_status),
+    locationId: normalizeOptionalFilterValue(filters.locationId ?? filters.location_id),
+    periodLabel: normalizeOptionalFilterValue(filters.periodLabel ?? filters.period_label),
+    serviceLineId: normalizeOptionalFilterValue(filters.serviceLineId ?? filters.service_line_id),
+  }
+}
+
+function matchesClinicRecordFilters(record, filters) {
+  if (filters.locationId && record.locationId !== filters.locationId) {
+    return false
+  }
+
+  if (filters.serviceLineId && record.serviceLineId !== filters.serviceLineId) {
+    return false
+  }
+
+  if (filters.periodLabel && record.periodLabel !== filters.periodLabel) {
+    return false
+  }
+
+  return true
+}
+
+function createFilterOption(value, label = value, meta = null) {
+  return {
+    label: label || value,
+    meta,
+    value,
+  }
+}
+
+function buildOptionsFromRecords(records, getValue, getLabel, getMeta = () => null) {
+  const optionsByValue = new Map()
+
+  records.forEach((record) => {
+    const value = getValue(record)
+
+    if (!value || optionsByValue.has(value)) {
+      return
+    }
+
+    optionsByValue.set(value, createFilterOption(value, getLabel(record), getMeta(record)))
+  })
+
+  return [...optionsByValue.values()].sort((left, right) => left.label.localeCompare(right.label))
+}
+
+function buildClinicFilterOptions({ foundationPage, records, selected, extra = {} }) {
+  const availableLocations = foundationPage.locations
+    .filter((location) => !selected.serviceLineId || foundationPage.serviceLines.some((serviceLine) => (
+      serviceLine.id === selected.serviceLineId && serviceLine.locationIds.includes(location.id)
+    )))
+    .map((location) => createFilterOption(location.id, location.name))
+  const availableServiceLines = foundationPage.serviceLines
+    .filter((serviceLine) => !selected.locationId || serviceLine.locationIds.includes(selected.locationId))
+    .map((serviceLine) => createFilterOption(serviceLine.id, serviceLine.name, serviceLine.statusMeta))
+  const availablePeriods = buildOptionsFromRecords(
+    records,
+    (record) => record.periodLabel,
+    (record) => record.periodLabel,
+  )
+
+  return {
+    ...extra,
+    availableLocations,
+    availablePeriods,
+    availableServiceLines,
+    selected: {
+      campaign_status: selected.campaignStatus,
+      channel: selected.channel,
+      compliance_status: selected.complianceStatus,
+      location_id: selected.locationId,
+      period_label: selected.periodLabel,
+      service_line_id: selected.serviceLineId,
+    },
+  }
+}
+
 function mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesById }) {
   const normalizedSnapshot = normalizePatientAcquisitionSnapshot(snapshot)
   const inquiries = normalizedSnapshot.calls + normalizedSnapshot.forms + normalizedSnapshot.chats
@@ -275,6 +361,34 @@ function attachPerformanceToServiceLines(serviceLines, performanceRecords) {
         costPerInquiry: divide(totals.spend, totals.inquiries),
       },
     }
+  })
+}
+
+function filterServiceLinesForSelection(serviceLines, performanceRecords, filters) {
+  const requiresPerformanceMatch = Boolean(
+    filters.campaignStatus || filters.complianceStatus || filters.periodLabel,
+  )
+
+  return serviceLines.filter((serviceLine) => {
+    if (filters.serviceLineId && serviceLine.id !== filters.serviceLineId) {
+      return false
+    }
+
+    if (
+      requiresPerformanceMatch
+      && !performanceRecords.some((performance) => performance.serviceLineId === serviceLine.id)
+    ) {
+      return false
+    }
+
+    if (!filters.locationId) {
+      return true
+    }
+
+    return serviceLine.locationIds.includes(filters.locationId)
+      || performanceRecords.some((performance) => (
+        performance.serviceLineId === serviceLine.id && performance.locationId === filters.locationId
+      ))
   })
 }
 
@@ -516,9 +630,10 @@ export function getClientClinicServiceLinesPage(input) {
     return foundationPage
   }
 
+  const filters = normalizeClinicAnalyticsFilters(input.filters)
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const performanceRecords = listClientVisibleClinicRecords({
+  const allPerformanceRecords = listClientVisibleClinicRecords({
     clientId: input.clientId,
     repository: input.repositories.serviceLinePerformance,
     source: foundationPage.source,
@@ -528,11 +643,40 @@ export function getClientClinicServiceLinesPage(input) {
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
       || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
     ))
-  const serviceLines = attachPerformanceToServiceLines(foundationPage.serviceLines, performanceRecords)
+  const performanceRecords = allPerformanceRecords.filter((performance) => (
+    matchesClinicRecordFilters(performance, filters)
+      && (!filters.campaignStatus || performance.campaignStatus === filters.campaignStatus)
+      && (!filters.complianceStatus || performance.complianceStatus === filters.complianceStatus)
+  ))
+  const filteredFoundationServiceLines = filterServiceLinesForSelection(
+    foundationPage.serviceLines,
+    performanceRecords,
+    filters,
+  )
+  const serviceLines = attachPerformanceToServiceLines(filteredFoundationServiceLines, performanceRecords)
   const totals = performanceRecords.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
 
   return {
     client: foundationPage.client,
+    filters: buildClinicFilterOptions({
+      extra: {
+        availableCampaignStatuses: buildOptionsFromRecords(
+          allPerformanceRecords,
+          (record) => record.campaignStatus,
+          (record) => record.campaignStatusMeta?.label ?? record.campaignStatus,
+          (record) => record.campaignStatusMeta,
+        ),
+        availableComplianceStatuses: buildOptionsFromRecords(
+          allPerformanceRecords,
+          (record) => record.complianceStatus,
+          (record) => record.complianceStatusMeta?.label ?? record.complianceStatus,
+          (record) => record.complianceStatusMeta,
+        ),
+      },
+      foundationPage,
+      records: allPerformanceRecords,
+      selected: filters,
+    }),
     isEmpty: serviceLines.length === 0,
     locations: foundationPage.locations,
     performanceRecords,
@@ -556,9 +700,10 @@ export function getClientPatientAcquisitionPage(input) {
     return foundationPage
   }
 
+  const filters = normalizeClinicAnalyticsFilters(input.filters)
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const snapshots = listClientVisibleClinicRecords({
+  const allSnapshots = listClientVisibleClinicRecords({
     clientId: input.clientId,
     repository: input.repositories.patientAcquisitionSnapshots,
     source: foundationPage.source,
@@ -569,11 +714,28 @@ export function getClientPatientAcquisitionPage(input) {
       || left.channel.localeCompare(right.channel)
       || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
     ))
+  const snapshots = allSnapshots.filter((snapshot) => (
+    matchesClinicRecordFilters(snapshot, filters)
+      && (!filters.channel || snapshot.channel === filters.channel)
+  ))
   const totals = snapshots.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
   const inquiries = totals.calls + totals.forms + totals.chats
 
   return {
     client: foundationPage.client,
+    filters: buildClinicFilterOptions({
+      extra: {
+        availableChannels: buildOptionsFromRecords(
+          allSnapshots,
+          (record) => record.channel,
+          (record) => record.channelMeta?.label ?? record.channel,
+          (record) => record.channelMeta,
+        ),
+      },
+      foundationPage,
+      records: allSnapshots,
+      selected: filters,
+    }),
     funnel: buildAcquisitionFunnel(totals),
     isEmpty: snapshots.length === 0,
     latestUpdatedAt: snapshots
@@ -603,9 +765,10 @@ export function getClientCallsBookingsPage(input) {
     return foundationPage
   }
 
+  const filters = normalizeClinicAnalyticsFilters(input.filters)
   const serviceLinesById = new Map(foundationPage.serviceLines.map((serviceLine) => [serviceLine.id, serviceLine]))
   const locationsById = new Map(foundationPage.locations.map((location) => [location.id, location]))
-  const metrics = listClientVisibleClinicRecords({
+  const allMetrics = listClientVisibleClinicRecords({
     clientId: input.clientId,
     repository: input.repositories.callBookingMetrics,
     source: foundationPage.source,
@@ -615,10 +778,16 @@ export function getClientCallsBookingsPage(input) {
       new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
       || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
     ))
+  const metrics = allMetrics.filter((metric) => matchesClinicRecordFilters(metric, filters))
   const rawTotals = metrics.reduce(addCallBookingTotals, createEmptyCallBookingTotals())
 
   return {
     client: foundationPage.client,
+    filters: buildClinicFilterOptions({
+      foundationPage,
+      records: allMetrics,
+      selected: filters,
+    }),
     isEmpty: metrics.length === 0,
     latestUpdatedAt: metrics
       .map((metric) => metric.lastUpdatedAt)

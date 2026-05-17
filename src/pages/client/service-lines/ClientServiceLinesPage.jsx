@@ -3,15 +3,19 @@ import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import { ClientServiceLinesView } from '../../../widgets/client-service-lines'
+import { getClinicAnalyticsFilterKey, getClinicAnalyticsFilters } from '../clinicAnalyticsFilters'
 import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 export function ClientServiceLinesPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = getClinicPreviewSource(routeParams)
+  const filters = getClinicAnalyticsFilters(routeParams)
+  const filterKey = getClinicAnalyticsFilterKey(filters)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-service-lines:${clientId}:${previewSource}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-service-lines:${clientId}:${previewSource}:${filterKey}`,
     load: () => runtime.dataClient.read((repositories) => getClientClinicServiceLinesPage({
       clientId,
+      filters,
       repositories,
       source: previewSource,
       viewer: runtime.viewer,

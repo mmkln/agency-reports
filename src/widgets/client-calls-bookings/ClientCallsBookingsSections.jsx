@@ -8,6 +8,8 @@ import {
   PropertyGrid,
 } from '@/shared/ui'
 
+import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(value || 0))
 }
@@ -171,16 +173,65 @@ function SourceContext({ page }) {
 export function ClientCallsBookingsView({ page }) {
   if (page.isEmpty) {
     return (
-      <EmptyState
-        description="Aggregate call and booking metrics will appear after the agency imports clinic-safe call tracking data."
-        iconName="phone"
-        title="No calls and bookings data yet"
-      />
+      <div className="grid gap-card">
+        <ClinicAnalyticsFilterBar
+          controls={[
+            {
+              allLabel: 'All locations',
+              key: 'location_id',
+              label: 'Location',
+              options: page.filters?.availableLocations,
+            },
+            {
+              allLabel: 'All service lines',
+              key: 'service_line_id',
+              label: 'Service line',
+              options: page.filters?.availableServiceLines,
+            },
+            {
+              allLabel: 'All reporting periods',
+              key: 'period_label',
+              label: 'Reporting period',
+              options: page.filters?.availablePeriods,
+            },
+          ]}
+          filters={page.filters}
+        />
+        <EmptyState
+          description="Aggregate call and booking metrics will appear after the agency imports clinic-safe call tracking data or the current filters are cleared."
+          iconName="phone"
+          title="No calls and bookings data found"
+        />
+      </div>
     )
   }
 
   return (
     <div className="grid gap-card">
+      <ClinicAnalyticsFilterBar
+        controls={[
+          {
+            allLabel: 'All locations',
+            key: 'location_id',
+            label: 'Location',
+            options: page.filters?.availableLocations,
+          },
+          {
+            allLabel: 'All service lines',
+            key: 'service_line_id',
+            label: 'Service line',
+            options: page.filters?.availableServiceLines,
+          },
+          {
+            allLabel: 'All reporting periods',
+            key: 'period_label',
+            label: 'Reporting period',
+            options: page.filters?.availablePeriods,
+          },
+        ]}
+        filters={page.filters}
+      />
+
       <section className="grid gap-card md:grid-cols-2 xl:grid-cols-4" aria-label="Calls and bookings summary">
         <SummaryMetric
           helper="Tracked inbound phone demand"

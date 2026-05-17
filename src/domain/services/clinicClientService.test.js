@@ -27,14 +27,19 @@ const IDS = Object.freeze({
   CLIENT_B: '22222222-2222-4222-8222-222222222222',
   GENERIC_CLIENT: '33333333-3333-4333-8333-333333333333',
   LOCATION: '44444444-4444-4444-8444-444444444444',
+  LOCATION_B: '45454545-4545-4545-8545-454545454545',
   PROFILE: '55555555-5555-4555-8555-555555555555',
   SERVICE_LINE: '66666666-6666-4666-8666-666666666666',
+  SERVICE_LINE_B: '67676767-6767-4767-8767-676767676767',
   SNAPSHOT: '77777777-7777-4777-8777-777777777777',
+  SNAPSHOT_B: '78787878-7878-4788-8788-787878787878',
   CALL_BOOKING: '88888888-8888-4888-8888-888888888888',
+  CALL_BOOKING_B: '89898989-8989-4899-8899-898989898989',
   REPUTATION: '99999999-9999-4999-8999-999999999999',
   COMPLIANCE_REVIEW: 'abababab-abab-4bab-8bab-abababababab',
   MEDICAL_APPROVAL: 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
   SERVICE_PERFORMANCE: 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
+  SERVICE_PERFORMANCE_B: 'dededede-dede-4ede-8ede-dededededede',
 })
 
 function createEntityRepository(records = []) {
@@ -283,6 +288,141 @@ function createOtherAgencyAdminViewer() {
   }
 }
 
+function createFilteringRepositories() {
+  return createRepositories({
+    clinicLocations: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        display_order: 10,
+        id: IDS.LOCATION,
+        is_active: true,
+        name: 'Main Clinic',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        display_order: 20,
+        id: IDS.LOCATION_B,
+        is_active: true,
+        name: 'North Clinic',
+      },
+    ]),
+    clinicServiceLines: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        display_order: 10,
+        id: IDS.SERVICE_LINE,
+        location_ids: [IDS.LOCATION],
+        name: 'Dental Implants',
+        primary_channel: 'google_ads',
+        status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        display_order: 20,
+        id: IDS.SERVICE_LINE_B,
+        location_ids: [IDS.LOCATION_B],
+        name: 'Veneers',
+        primary_channel: 'meta_ads',
+        status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+      },
+    ]),
+    callBookingMetrics: createEntityRepository([
+      {
+        answered_calls: 20,
+        booked_from_calls: 12,
+        client_id: IDS.CLIENT_A,
+        id: IDS.CALL_BOOKING,
+        location_id: IDS.LOCATION,
+        missed_calls: 3,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE,
+        total_calls: 23,
+      },
+      {
+        answered_calls: 8,
+        booked_from_calls: 4,
+        client_id: IDS.CLIENT_A,
+        id: IDS.CALL_BOOKING_B,
+        location_id: IDS.LOCATION_B,
+        missed_calls: 5,
+        period_label: 'June 2026',
+        period_start: '2026-06-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE_B,
+        total_calls: 13,
+      },
+    ]),
+    patientAcquisitionSnapshots: createEntityRepository([
+      {
+        booked_appointments: 14,
+        calls: 18,
+        channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
+        chats: 3,
+        client_id: IDS.CLIENT_A,
+        forms: 9,
+        id: IDS.SNAPSHOT,
+        location_id: IDS.LOCATION,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        qualified_inquiries: 21,
+        service_line_id: IDS.SERVICE_LINE,
+        spend: 1860,
+      },
+      {
+        booked_appointments: 5,
+        calls: 8,
+        channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
+        chats: 1,
+        client_id: IDS.CLIENT_A,
+        forms: 4,
+        id: IDS.SNAPSHOT_B,
+        location_id: IDS.LOCATION_B,
+        period_label: 'June 2026',
+        period_start: '2026-06-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        qualified_inquiries: 9,
+        service_line_id: IDS.SERVICE_LINE_B,
+        spend: 900,
+      },
+    ]),
+    serviceLinePerformance: createEntityRepository([
+      {
+        booked_appointments: 18,
+        campaign_name: 'Implants search',
+        campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
+        client_id: IDS.CLIENT_A,
+        compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+        id: IDS.SERVICE_PERFORMANCE,
+        inquiries: 27,
+        location_id: IDS.LOCATION,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE,
+        spend: 2250,
+      },
+      {
+        booked_appointments: 6,
+        campaign_name: 'Veneers social',
+        campaign_status: CLINIC_CAMPAIGN_STATUSES.LIMITED_BY_POLICY,
+        client_id: IDS.CLIENT_A,
+        compliance_status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+        id: IDS.SERVICE_PERFORMANCE_B,
+        inquiries: 14,
+        location_id: IDS.LOCATION_B,
+        period_label: 'June 2026',
+        period_start: '2026-06-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE_B,
+        spend: 1200,
+      },
+    ]),
+  })
+}
+
 describe('clinicClientService', () => {
   it('returns clinic profile, locations, and service lines for an authorized clinic client', () => {
     const page = getClientClinicFoundationPage({
@@ -431,6 +571,40 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('filters patient acquisition by clinic dimensions and keeps available filter options', () => {
+    const page = getClientPatientAcquisitionPage({
+      clientId: IDS.CLIENT_A,
+      filters: {
+        channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
+        location_id: IDS.LOCATION_B,
+        period_label: 'June 2026',
+        service_line_id: IDS.SERVICE_LINE_B,
+      },
+      repositories: createFilteringRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.snapshots).toHaveLength(1)
+    expect(page.snapshots[0]).toMatchObject({
+      channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
+      locationId: IDS.LOCATION_B,
+      serviceLineId: IDS.SERVICE_LINE_B,
+    })
+    expect(page.totals).toMatchObject({
+      bookedAppointments: 5,
+      inquiries: 13,
+      spend: 900,
+    })
+    expect(page.filters.selected).toMatchObject({
+      channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
+      location_id: IDS.LOCATION_B,
+      period_label: 'June 2026',
+      service_line_id: IDS.SERVICE_LINE_B,
+    })
+    expect(page.filters.availableChannels.map((option) => option.label)).toEqual(['Google Ads', 'Meta Ads'])
+    expect(page.filters.availablePeriods.map((option) => option.value)).toEqual(['June 2026', 'May 2026'])
+  })
+
   it('hides draft clinic metrics from client users', () => {
     const repositories = createRepositories({
       callBookingMetrics: createEntityRepository([
@@ -524,6 +698,70 @@ describe('clinicClientService', () => {
     expect(page.notBookedReasons).toEqual([
       { count: 4, reason: 'No available slot' },
       { count: 3, reason: 'Needed pricing details' },
+    ])
+  })
+
+  it('filters calls and bookings by location, service line, and reporting period', () => {
+    const page = getClientCallsBookingsPage({
+      clientId: IDS.CLIENT_A,
+      filters: {
+        location_id: IDS.LOCATION_B,
+        period_label: 'June 2026',
+        service_line_id: IDS.SERVICE_LINE_B,
+      },
+      repositories: createFilteringRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.metrics).toHaveLength(1)
+    expect(page.metrics[0]).toMatchObject({
+      locationId: IDS.LOCATION_B,
+      serviceLineId: IDS.SERVICE_LINE_B,
+      totalCalls: 13,
+    })
+    expect(page.totals).toMatchObject({
+      bookedFromCalls: 4,
+      missedCalls: 5,
+      totalCalls: 13,
+    })
+    expect(page.filters.availableLocations.map((option) => option.label)).toEqual(['North Clinic'])
+    expect(page.filters.availableServiceLines.map((option) => option.label)).toEqual(['Veneers'])
+  })
+
+  it('filters service line performance by status, compliance, location, service line, and period', () => {
+    const page = getClientClinicServiceLinesPage({
+      clientId: IDS.CLIENT_A,
+      filters: {
+        campaign_status: CLINIC_CAMPAIGN_STATUSES.LIMITED_BY_POLICY,
+        compliance_status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+        location_id: IDS.LOCATION_B,
+        period_label: 'June 2026',
+        service_line_id: IDS.SERVICE_LINE_B,
+      },
+      repositories: createFilteringRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.performanceRecords).toHaveLength(1)
+    expect(page.performanceRecords[0]).toMatchObject({
+      campaignStatus: CLINIC_CAMPAIGN_STATUSES.LIMITED_BY_POLICY,
+      complianceStatus: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+      locationId: IDS.LOCATION_B,
+      serviceLineId: IDS.SERVICE_LINE_B,
+    })
+    expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Veneers'])
+    expect(page.serviceLines[0].performanceTotals).toMatchObject({
+      bookedAppointments: 6,
+      inquiries: 14,
+      spend: 1200,
+    })
+    expect(page.filters.availableCampaignStatuses.map((option) => option.label)).toEqual([
+      'Limited by policy',
+      'Live',
+    ])
+    expect(page.filters.availableComplianceStatuses.map((option) => option.label)).toEqual([
+      'Approved',
+      'Risk flagged',
     ])
   })
 

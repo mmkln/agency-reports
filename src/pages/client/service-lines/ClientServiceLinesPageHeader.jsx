@@ -2,6 +2,7 @@ import { Badge, PageHeader } from '@/shared/ui'
 
 import { getClientClinicServiceLinesPage } from '../../../domain/services/clinicClientService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicAnalyticsFilterKey, getClinicAnalyticsFilters } from '../clinicAnalyticsFilters'
 import { getClinicPreviewSource } from '../clinicPreviewSource'
 
 function HeaderActions({ locationCount, serviceLineCount }) {
@@ -20,10 +21,13 @@ function HeaderActions({ locationCount, serviceLineCount }) {
 export function ClientServiceLinesPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const previewSource = getClinicPreviewSource(routeParams)
+  const filters = getClinicAnalyticsFilters(routeParams)
+  const filterKey = getClinicAnalyticsFilterKey(filters)
   const pageResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:service-lines-header:${clientId}:${previewSource}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:service-lines-header:${clientId}:${previewSource}:${filterKey}`,
     load: () => runtime.dataClient.read((repositories) => getClientClinicServiceLinesPage({
       clientId,
+      filters,
       repositories,
       source: previewSource,
       viewer: runtime.viewer,
