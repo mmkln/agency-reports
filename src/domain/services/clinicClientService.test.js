@@ -6,7 +6,10 @@ import {
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
-import { getClientClinicFoundationPage } from './clinicClientService'
+import {
+  getClientClinicFoundationPage,
+  getClientClinicServiceLinesPage,
+} from './clinicClientService'
 
 const IDS = Object.freeze({
   AGENCY: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -154,6 +157,19 @@ describe('clinicClientService', () => {
       },
       targetMonthlyBookings: 24,
     })
+  })
+
+  it('returns a service-lines page read model from clinic foundation data', () => {
+    const page = getClientClinicServiceLinesPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.isEmpty).toBe(false)
+    expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Dental Implants'])
+    expect(page.locations.map((location) => location.name)).toEqual(['Main Clinic'])
   })
 
   it('denies cross-client clinic access', () => {

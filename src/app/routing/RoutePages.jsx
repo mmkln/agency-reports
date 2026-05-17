@@ -22,6 +22,8 @@ import { ClientReportsPage } from '../../pages/client/reports/ClientReportsPage'
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
 import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
+import { ClientServiceLinesPage } from '../../pages/client/service-lines/ClientServiceLinesPage'
+import { ClientServiceLinesPageHeader } from '../../pages/client/service-lines/ClientServiceLinesPageHeader'
 import { ClientUpdatesPage } from '../../pages/client/updates/ClientUpdatesPage'
 import { ClientUpdatesPageHeader } from '../../pages/client/updates/ClientUpdatesPageHeader'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
@@ -83,6 +85,7 @@ export const ClientReportsDashboardsPageRoute = withPageProps(
 )
 export const ClientReportsPageRoute = withPageProps(ClientReportsPage, ClientReportsPageHeader)
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, ClientSettingsPageHeader)
+export const ClientServiceLinesPageRoute = withPageProps(ClientServiceLinesPage, ClientServiceLinesPageHeader)
 export const ClientUpdatesPageRoute = withPageProps(ClientUpdatesPage, ClientUpdatesPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)

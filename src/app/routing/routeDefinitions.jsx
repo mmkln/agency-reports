@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react'
+import { CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
@@ -18,6 +19,7 @@ import { ClientReportsDashboardsPageHeader } from '../../pages/client/reports-da
 import { ClientReportsPageHeader } from '../../pages/client/reports/ClientReportsPageHeader'
 import { ClientRequestsPageHeader } from '../../pages/client/requests/ClientRequestsPageHeader'
 import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
+import { ClientServiceLinesPageHeader } from '../../pages/client/service-lines/ClientServiceLinesPageHeader'
 import { ClientUpdatesPageHeader } from '../../pages/client/updates/ClientUpdatesPageHeader'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
@@ -50,6 +52,7 @@ import {
   ClientReportsPageRoute,
   ClientRequestsPageRoute,
   ClientSettingsPageRoute,
+  ClientServiceLinesPageRoute,
   ClientUpdatesPageRoute,
   TeamTasksPageRoute,
 } from './RoutePages'
@@ -150,7 +153,19 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.CLIENT_USER],
     header: ClientProjectsPageHeader,
     iconName: 'checkCircle2',
+    excludeClientTypes: [CLIENT_TYPES.CLINIC],
     element: <ClientProjectsPageRoute />,
+  },
+  {
+    path: '/client/service-lines',
+    id: 'client-service-lines',
+    label: 'Service Lines',
+    pageTitle: 'Service Lines',
+    allowedRoles: [USER_ROLES.CLIENT_USER],
+    header: ClientServiceLinesPageHeader,
+    iconName: 'stethoscope',
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    element: <ClientServiceLinesPageRoute />,
   },
   {
     path: '/client/reports-dashboards',

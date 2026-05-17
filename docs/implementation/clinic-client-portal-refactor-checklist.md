@@ -147,11 +147,11 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 6 - Campaigns / Service Lines
 
-- [ ] Add `/client/service-lines` or `/client/campaigns-service-lines` route.
-- [ ] Add `getClientServiceLinesPage` domain service.
-- [ ] Add `widgets/client-service-lines`.
+- [x] Add `/client/service-lines` or `/client/campaigns-service-lines` route.
+- [x] Add `getClientServiceLinesPage` domain service.
+- [x] Add `widgets/client-service-lines`.
 - [ ] Build service line cards/table with:
-  - [ ] status
+  - [x] status
   - [ ] spend
   - [ ] inquiries
   - [ ] booked appointments
@@ -161,8 +161,8 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [ ] landing page status
   - [ ] ad approval status
   - [ ] compliance status
-  - [ ] capacity note
-  - [ ] location breakdown
+  - [x] capacity note
+  - [x] location breakdown
 - [ ] Add campaign statuses:
   - [ ] planned
   - [ ] waiting_clinic_approval
@@ -172,7 +172,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [ ] optimizing
   - [ ] paused
   - [ ] completed
-- [ ] Decide whether generic `Projects` remains as secondary detail or redirects for clinic clients.
+- [x] Decide whether generic `Projects` remains as secondary detail or redirects for clinic clients.
 - [ ] Add tests for service line/location filtering.
 
 ## Phase 7 - Reputation

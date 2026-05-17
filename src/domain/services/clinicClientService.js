@@ -120,3 +120,20 @@ export function getClientClinicFoundationPage({
     status: 'ready',
   }
 }
+
+export function getClientClinicServiceLinesPage(input) {
+  const foundationPage = getClientClinicFoundationPage(input)
+
+  if (foundationPage.status === 'error') {
+    return foundationPage
+  }
+
+  return {
+    client: foundationPage.client,
+    isEmpty: foundationPage.serviceLines.length === 0,
+    locations: foundationPage.locations,
+    profile: foundationPage.profile,
+    serviceLines: foundationPage.serviceLines,
+    status: 'ready',
+  }
+}
