@@ -106,7 +106,7 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
         eyebrow="Reports & Dashboards"
         primaryAction={{
           children: 'New Performance',
-          to: `/admin/performance-dashboards?clientId=${client.id}&newPerformanceDashboard=true`,
+          to: `/admin/performance-dashboards?clientId=${client.id}&createPerformanceDashboard=true`,
         }}
         width="content"
       />
