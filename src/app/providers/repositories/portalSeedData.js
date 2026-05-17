@@ -1562,6 +1562,49 @@ export const portalSeedData = Object.freeze({
     {
       client_decisions_needed: 'Approve the next creative batch and confirm final offer wording.',
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      clinic_sections: {
+        agency_work_completed: [
+          'Launched the first paid acquisition structure for implants and emergency appointments.',
+          'Connected aggregate call tracking and manual booked-appointment reporting.',
+          'Prepared whitening offer copy for medical review before scale-up.',
+        ],
+        booking_leakage: {
+          follow_up_needed: 8,
+          missed_calls: 9,
+          no_response_leads: 5,
+          summary: 'Emergency demand is strong, but missed calls and slow follow-up are the clearest leakage point before budget scaling.',
+        },
+        clinic_actions_needed: [
+          'Confirm whitening offer terms before Meta scaling.',
+          'Approve the next ad copy batch after medical review.',
+          'Confirm front-desk follow-up process for missed emergency calls.',
+        ],
+        compliance: {
+          limited_ads: 1,
+          open_issues: 2,
+          pending_approvals: 2,
+          summary: 'Tracking is approved for aggregate reporting. Offer wording and medical claims still need conservative approval before broader paid promotion.',
+        },
+        next_month_plan: [
+          'Scale implant search only while consult capacity remains available.',
+          'Reduce emergency missed-call leakage before increasing spend.',
+          'Publish approved whitening offer tests after claim review.',
+        ],
+        patient_acquisition: {
+          booked_appointments: 51,
+          cost_per_booked_appointment: 97,
+          inquiries: 127,
+          summary: 'Google Ads is producing the strongest booked appointment volume, with implants driving high-value consults and emergency campaigns driving volume.',
+          top_locations: ['Green Dental Main Clinic'],
+          top_service_lines: ['Emergency Dental Appointments', 'Dental Implants'],
+        },
+        reputation: {
+          google_rating: 4.7,
+          reviews_gained: 18,
+          summary: 'Review generation is supporting local trust, but unanswered reviews should be closed before the next growth push.',
+          unanswered_reviews: 3,
+        },
+      },
       created_at: '2026-05-01T09:00:00.000Z',
       dashboard_url: 'https://lookerstudio.google.com/reporting/demo-green-dental',
       id: SEED_IDS.REPORT_APRIL_2026,

@@ -258,23 +258,23 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 10 - Clinic Reports
 
-- [ ] Update report model or report content schema for clinic sections.
-- [ ] Add clinic report sections:
-  - [ ] patient acquisition summary
-  - [ ] booked appointments
-  - [ ] cost per booked appointment
-  - [ ] service line winners and losers
-  - [ ] location performance
-  - [ ] missed call / booking leakage
-  - [ ] reputation changes
-  - [ ] compliance issues
-  - [ ] agency work completed
-  - [ ] clinic actions needed
-  - [ ] next month plan
+- [x] Update report model or report content schema for clinic sections.
+- [x] Add clinic report sections:
+  - [x] patient acquisition summary
+  - [x] booked appointments
+  - [x] cost per booked appointment
+  - [x] service line winners and losers
+  - [x] location performance
+  - [x] missed call / booking leakage
+  - [x] reputation changes
+  - [x] compliance issues
+  - [x] agency work completed
+  - [x] clinic actions needed
+  - [x] next month plan
 - [ ] Update admin report editor for clinic template content.
-- [ ] Update client report reader to render clinic sections.
-- [ ] Preserve generic report rendering for non-clinic clients if templates coexist.
-- [ ] Add tests for draft/published clinic report visibility.
+- [x] Update client report reader to render clinic sections.
+- [x] Preserve generic report rendering for non-clinic clients if templates coexist.
+- [x] Add tests for draft/published clinic report visibility.
 
 ## Phase 11 - Admin Clinic Setup
 
@@ -348,7 +348,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Reputation is first-class.
 - [x] Compliance & Approvals is first-class.
 - [x] Action Needed includes clinic operations and medical/compliance actions.
-- [ ] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
+- [x] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
 - [ ] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.
 - [ ] Admins can manage clinic setup, service lines, metrics, reputation, compliance, approvals, and preview-as-client.
 - [ ] Documentation, tests, and build are updated.
