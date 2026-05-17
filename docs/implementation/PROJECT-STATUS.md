@@ -24,6 +24,20 @@ It should help each client understand:
 
 It is not intended to become a full analytics platform, CRM, project management tool, chat system, or file manager during the MVP stage.
 
+Clinic vertical planning update:
+
+```text
+If clinics are the primary ICP, the next product direction is a clinic-specific control center:
+patient acquisition, calls/bookings, service lines, reputation, compliance, approvals, and reports.
+```
+
+Primary clinic planning references:
+
+```text
+docs/research/clinic-client-portal-information-architecture.md
+docs/implementation/clinic-client-portal-refactor-checklist.md
+```
+
 ## Implemented Use Cases
 
 | Use case | Status | Main implementation docs |
@@ -91,19 +105,20 @@ The current frontend architecture expects:
 Recommended next step:
 
 ```text
-Start the next refactor track from the backend/integration readiness plan or harden the remaining flaky parallel e2e admin specs.
+Start the clinic vertical refactor if clinics are confirmed as the primary ICP; otherwise continue backend/integration readiness or e2e hardening.
 ```
 
 Reason:
 
 ```text
 The UC-001 through UC-005 frontend/localStorage MVP path is implemented, the mature Client Control Center checklist is closed, and the client/admin surfaces now use the mature destination model.
-The next major product move is either replacing localStorage with backend-ready adapters or reducing parallel e2e flake in legacy admin flows.
+The next major product move is either pivoting the product surface to the clinic vertical, replacing localStorage with backend-ready adapters, or reducing parallel e2e flake in legacy admin flows.
 ```
 
 Primary planning tracker:
 
 ```text
+docs/implementation/clinic-client-portal-refactor-checklist.md
 docs/implementation/client-control-center-refactor-checklist.md
 docs/implementation/task-client-visibility-refactor-checklist.md
 ```
