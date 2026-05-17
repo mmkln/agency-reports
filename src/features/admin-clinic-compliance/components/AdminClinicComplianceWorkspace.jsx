@@ -38,6 +38,7 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const {
     applyApprovalDecision,
+    applyReviewStatus,
     draft,
     error,
     isDirty,
@@ -117,6 +118,7 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
+            onApplyStatus={applyReviewStatus}
             onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}

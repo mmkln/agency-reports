@@ -7,6 +7,7 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
+import { ComplianceReviewStatusActions } from './ComplianceReviewStatusActions'
 import { PolicyIssuesEditor } from './PolicyIssuesEditor'
 import {
   NotesField,
@@ -51,6 +52,7 @@ export function ComplianceReviewsCard({
   draft,
   isDirty,
   locations,
+  onApplyStatus = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -220,6 +222,12 @@ export function ComplianceReviewsCard({
                 value={review.next_action}
               />
             </div>
+
+            <ComplianceReviewStatusActions
+              isDirty={isDirty}
+              onApplyStatus={onApplyStatus}
+              review={review}
+            />
 
             <PolicyIssuesEditor
               onUpdate={onUpdate}

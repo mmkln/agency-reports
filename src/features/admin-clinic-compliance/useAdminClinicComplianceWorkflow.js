@@ -8,6 +8,7 @@ import {
   rejectMedicalApproval,
   requestChangesForMedicalApproval,
   saveAdminClinicCompliance,
+  transitionComplianceReviewStatus,
 } from '../../domain/services/adminClinicComplianceService'
 import { useToast } from '../../shared/notifications'
 
@@ -197,6 +198,38 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
       })
   }
 
+  function applyReviewStatus({ nextStatus, reviewId }) {
+    setSaveState('Updating status...')
+
+    runtime.dataClient.write((repositories) => transitionComplianceReviewStatus({
+      clientId,
+      nextStatus,
+      repositories,
+      reviewId,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Status updated')
+        toast.success('Compliance status updated', `${page.client.name}'s compliance review status was recorded.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Compliance status was not updated', caughtError.message)
+      })
+  }
+
   function publishComplianceRecord({ id, type }) {
     const service = PUBLISH_SERVICES[type]
 
@@ -236,6 +269,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
 
   return {
     applyApprovalDecision,
+    applyReviewStatus,
     draft: state.draft,
     error: state.error,
     isDirty,
