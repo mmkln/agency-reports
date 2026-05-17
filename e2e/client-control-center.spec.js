@@ -83,6 +83,23 @@ test('client user cannot open admin Client Control Center workspaces', async ({ 
   )
 })
 
+test('client settings owns account context without agency admin controls', async ({ page }) => {
+  await signInAsClient(page)
+  await page.goto(`/client/settings?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  await expect(page.locator('h1').getByText('Settings')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Company' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Team Members' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Security' })).toBeVisible()
+  await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'client@greendental.example' })).toBeVisible()
+  await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'Green Dental Clinic' })).toBeVisible()
+  await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'sarah@greendental.example' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'New Client' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Publish|Archive|Invite/i })).toHaveCount(0)
+})
+
 test('client can approve an action without mutating linked internal task status', async ({ page }) => {
   await signInAsClient(page)
   await page.goto(`/client/action-needed?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })

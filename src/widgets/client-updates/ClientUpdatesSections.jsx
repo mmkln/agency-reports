@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react'
 
 import {
+  Badge,
   Button,
   EmptyState,
+  ListPanel,
+  ListRow,
   Panel,
   PanelBody,
   PanelHeader,
@@ -58,11 +61,12 @@ function UpdateFilters({ activeFilter, counts, onChange }) {
 
           return (
             <Button
+              aria-pressed={selected}
               key={filter.value}
               onClick={() => onChange(filter.value)}
               size="sm"
               type="button"
-              variant={selected ? 'primary' : 'ghost'}
+              variant={selected ? 'secondary' : 'ghost'}
             >
               {filter.label}
               <span className="ml-1 text-label font-normal opacity-75">{count ?? 0}</span>
@@ -86,7 +90,7 @@ function RelatedLinks({ update }) {
   }
 
   return (
-    <div className="mt-4 flex flex-wrap gap-2 text-label font-normal text-text-muted">
+    <div className="flex flex-wrap gap-2 text-label font-normal text-text-muted">
       {relatedItems.map((item) => (
         <span className="rounded-control bg-control px-2 py-1" key={item}>{item}</span>
       ))}
@@ -94,63 +98,26 @@ function RelatedLinks({ update }) {
   )
 }
 
-function UpdateCard({ update }) {
+function UpdateMetadata({ update }) {
   return (
-    <article className="rounded-block border border-control-border bg-block-subtle p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge meta={update.typeMeta} />
-            <span className="text-label font-normal text-text-muted">{formatDate(update.publishedAt)}</span>
-          </div>
-          <h2 className="mt-3 text-heading text-text-primary">{update.title}</h2>
-          {update.body ? <p className="mt-2 max-w-readable text-body text-text-secondary">{update.body}</p> : null}
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <div>
-          <p className="text-label text-text-muted">What changed</p>
-          <p className="mt-1 text-body text-text-secondary">{update.whatChanged || 'No details published yet.'}</p>
-        </div>
-        <div>
-          <p className="text-label text-text-muted">What happens next</p>
-          <p className="mt-1 text-body text-text-secondary">{update.whatNext || 'Next step pending.'}</p>
-        </div>
-      </div>
+    <div className="grid gap-item">
+      {update.whatNext ? (
+        <p className="text-label font-normal text-text-muted">
+          Next: <span className="text-text-secondary">{update.whatNext}</span>
+        </p>
+      ) : null}
 
       {update.clientActionNeeded ? (
-        <div className="mt-5 rounded-control bg-warning-muted px-3 py-2 text-ui text-warning-foreground">
+        <div className="rounded-control bg-warning-muted px-3 py-2 text-label font-normal text-warning-foreground">
           <div className="flex items-start gap-2">
-            <Icon className="mt-0.5 shrink-0" name="bell" size={15} />
+            <Icon className="mt-0.5 shrink-0" name="bell" size={14} />
             <p>{update.clientActionNeeded}</p>
           </div>
         </div>
       ) : null}
 
       <RelatedLinks update={update} />
-    </article>
-  )
-}
-
-export function UpdatesSummary({ latestUpdate, updateCount }) {
-  return (
-    <Panel>
-      <PanelBody className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-        <div className="min-w-0">
-          <p className="text-label text-text-muted">Updates</p>
-          <h2 className="mt-2 text-heading text-text-primary">
-            {latestUpdate ? latestUpdate.title : 'No client-facing updates yet'}
-          </h2>
-          <p className="mt-2 max-w-readable text-body text-text-secondary">
-            Curated account history: what changed, what happens next, and what the client needs to know.
-          </p>
-        </div>
-        <div className="rounded-control bg-control px-3 py-2 text-label text-text-secondary">
-          {updateCount} update{updateCount === 1 ? '' : 's'}
-        </div>
-      </PanelBody>
-    </Panel>
+    </div>
   )
 }
 
@@ -165,24 +132,36 @@ export function UpdatesTimeline({ counts, updates }) {
   return (
     <Panel>
       <PanelHeader
-        subtitle="Curated published updates only. Internal activity and operational notes stay hidden."
+        action={<Badge tone="neutral">{updates.length} update{updates.length === 1 ? '' : 's'}</Badge>}
+        divided
         title="Update History"
       />
-      <PanelBody className="grid gap-4">
-        <UpdateFilters
-          activeFilter={activeFilter}
-          counts={counts}
-          onChange={setActiveFilter}
-        />
+      <PanelBody className="p-0">
+        <div className="px-card py-component">
+          <UpdateFilters
+            activeFilter={activeFilter}
+            counts={counts}
+            onChange={setActiveFilter}
+          />
+        </div>
 
         {filteredUpdates.length ? (
-          <div className="grid gap-3">
+          <ListPanel className="border-t border-separator">
             {filteredUpdates.map((update) => (
-              <UpdateCard key={update.id} update={update} />
+              <ListRow
+                description={update.body || update.whatChanged || 'No details published yet.'}
+                key={update.id}
+                leading={<StatusBadge meta={update.typeMeta} />}
+                metadata={<UpdateMetadata update={update} />}
+                title={update.title}
+                titleAs="h2"
+                trailing={<span className="text-label font-normal text-text-muted">{formatDate(update.publishedAt)}</span>}
+              />
             ))}
-          </div>
+          </ListPanel>
         ) : (
           <EmptyState
+            className="m-card"
             description="No published client updates match this view."
             iconName="target"
             title="No updates here"

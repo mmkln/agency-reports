@@ -11,6 +11,7 @@ export function ListRow({
   leading,
   metadata,
   title,
+  titleAs: TitleComp = 'p',
   trailing,
   ...props
 }) {
@@ -29,7 +30,7 @@ export function ListRow({
       <div className="flex min-w-0 items-center gap-control">
         {leading ? <div className="shrink-0">{leading}</div> : null}
         <div className="min-w-0">
-          {title ? <p className="truncate text-ui text-text-primary">{title}</p> : null}
+          {title ? <TitleComp className="truncate text-ui text-text-primary">{title}</TitleComp> : null}
           {description ? <p className="mt-micro truncate text-label font-normal text-text-muted">{description}</p> : null}
           {metadata ? <div className="mt-tag">{metadata}</div> : null}
           {children}

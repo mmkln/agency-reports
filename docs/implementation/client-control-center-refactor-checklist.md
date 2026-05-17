@@ -313,15 +313,15 @@ Implemented domain coverage so far:
 
 ## Definition Of Done
 
-- [ ] Client navigation matches the Client Control Center IA.
+- [x] Client navigation matches the Client Control Center IA.
 - [x] Overview is a compact control home.
 - [x] Action Needed owns client obligations.
 - [x] Projects owns visible workstreams.
 - [x] Reports & Dashboards owns current performance, source dashboard, and report archive.
 - [x] Files & Links owns deliverables/resources.
 - [x] Requests owns client-initiated asks.
-- [ ] Updates owns curated history.
-- [ ] Settings owns client account controls.
+- [x] Updates owns curated history.
+- [x] Settings owns client account controls.
 - [x] No client route exposes internal notes, draft reports, WIP dashboards, internal task noise, workload, time spent, or profitability.
 - [x] Domain services provide client-safe read models per page.
 - [x] Pages are thin route composition layers.
