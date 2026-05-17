@@ -13,8 +13,7 @@ import {
 
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../../entities/report'
 import { Icon } from '../../../shared/icons'
-
-export const REPORT_FILTER_ALL = 'all'
+import { REPORT_FILTER_ALL } from '../model'
 
 function FilterField({ children, label }) {
   return (

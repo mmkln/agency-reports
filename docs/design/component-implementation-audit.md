@@ -106,6 +106,7 @@ Recently resolved:
 | `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 405-line modal with embedded JSON examples | 171-line modal plus model-owned import examples. |
 | `src/features/admin-client-setup/components/CreateClientModal.jsx` | 359-line modal with 10 local components | 149-line modal shell plus field components and model validation helpers. |
 | `src/features/admin-reports/components/ReportModal.jsx` | 318-line report editor modal | 84-line modal shell plus report section components. |
+| `src/pages/admin/reports/AdminReportsPage.jsx` | 356-line route/workflow mix with local filters, mutations, and modal orchestration | 5-line route shell plus `AdminReportsWorkspace`, `useAdminReportsWorkspace`, and model-owned report filter helpers. |
 
 Fix direction:
 
