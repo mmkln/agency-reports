@@ -104,6 +104,7 @@ function UpdateNotice({ update }) {
 
 export function UpdatesTimeline({ counts, updates }) {
   const [activeFilter, setActiveFilter] = useState('all')
+  const hasUpdates = updates.length > 0
   const filterItems = useMemo(() => filters.map((filter) => ({
     count: getFilterCount({
       counts,
@@ -151,9 +152,12 @@ export function UpdatesTimeline({ counts, updates }) {
         </Timeline>
       ) : (
         <EmptyState
-          description="No published client updates match this view."
+          className="bg-block-subtle"
+          description={hasUpdates
+            ? 'No published client updates match this view.'
+            : 'Published client updates will appear here when the agency shares them.'}
           iconName="target"
-          title="No updates here"
+          title={hasUpdates ? 'No updates here' : 'No updates yet'}
         />
       )}
     </section>
