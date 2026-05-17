@@ -602,6 +602,7 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Document which legacy references are migration support vs cleanup targets.
 - [ ] Remove or migrate client-facing task filters from client services.
   - [x] Migrate admin overview connected workflow summary from client-visible task counts to client work item review/publish counts.
+  - [x] Migrate performance dashboard work summary from client-visible tasks to published client work items.
 - [ ] Rename components where needed:
   - [ ] `ActiveTasksBlock` -> `ActiveWorkBlock` or equivalent.
   - [ ] `VisibleTasksManager` -> review/work-item language.

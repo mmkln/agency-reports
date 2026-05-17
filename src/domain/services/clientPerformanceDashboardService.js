@@ -4,12 +4,16 @@ import {
   PERFORMANCE_DATA_MODE_META,
 } from '../../entities/performance-dashboard'
 import {
+  CLIENT_WORK_ITEM_PUBLISH_STATES,
+  CLIENT_WORK_ITEM_STATUSES,
+  CLIENT_WORK_ITEM_STATUS_META,
+} from '../../entities/client-work-item'
+import {
   NEEDED_ACTION_PRIORITY_META,
   NEEDED_ACTION_STATUS_META,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { TASK_STATUSES, TASK_STATUS_META } from '../../entities/task'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
@@ -17,7 +21,6 @@ import {
   isNeededActionVisibleToClient,
   isPerformanceDashboardPeriodVisibleToClient,
   isReportVisibleToClient,
-  isTaskVisibleToClient,
   isUpdateVisibleToClient,
 } from '../policies/visibilityPolicy'
 
@@ -141,15 +144,14 @@ function mapNeededAction(action) {
   }
 }
 
-function mapWorkTask(task) {
+function mapWorkItem(item) {
   return {
-    assigneeName: task.assignee_name ?? '',
-    dueDate: task.due_date ?? '',
-    id: task.id,
-    status: task.status,
-    statusMeta: getStatusMeta(task.status, TASK_STATUS_META),
-    title: task.title,
-    updatedAt: task.updated_at ?? task.created_at ?? '',
+    dueDate: item.target_date ?? '',
+    id: item.id,
+    status: item.status,
+    statusMeta: getStatusMeta(item.status, CLIENT_WORK_ITEM_STATUS_META),
+    title: item.title,
+    updatedAt: item.updated_at ?? item.created_at ?? '',
   }
 }
 
@@ -163,17 +165,17 @@ function mapClientVisibleUpdate(update) {
 }
 
 function createWorkSummary({ repositories, clientId }) {
-  const visibleTasks = (repositories.tasks?.listByClientId(clientId) ?? [])
-    .filter(isTaskVisibleToClient)
+  const publishedWorkItems = (repositories.clientWorkItems?.listByClientId(clientId) ?? [])
+    .filter((item) => item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED)
     .sort(sortByUpdatedDesc)
-  const completedTasks = visibleTasks
-    .filter((task) => task.status === TASK_STATUSES.DONE)
+  const completedTasks = publishedWorkItems
+    .filter((item) => item.status === CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
-    .map(mapWorkTask)
-  const activeTasks = visibleTasks
-    .filter((task) => task.status !== TASK_STATUSES.DONE)
+    .map(mapWorkItem)
+  const activeTasks = publishedWorkItems
+    .filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
-    .map(mapWorkTask)
+    .map(mapWorkItem)
   const recentUpdates = (repositories.updates?.listByClientId(clientId) ?? [])
     .filter(isUpdateVisibleToClient)
     .sort(sortByUpdatedDesc)

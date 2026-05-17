@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
+import {
+  CLIENT_WORK_ITEM_PUBLISH_STATES,
+  CLIENT_WORK_ITEM_STATUSES,
+} from '../../entities/client-work-item'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import {
   NEEDED_ACTION_STATUSES,
@@ -31,6 +35,9 @@ const IDS = Object.freeze({
   TASK_DONE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   TASK_INTERNAL: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
   TASK_ACTIVE: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  WORK_DONE: '12121212-1212-4212-8212-121212121212',
+  WORK_DRAFT: '34343434-3434-4434-8434-343434343434',
+  WORK_ACTIVE: '56565656-5656-4565-8565-565656565656',
   UPDATE_CLIENT_VISIBLE: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   UPDATE_INTERNAL: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
   USER_CLIENT: '99999999-9999-4999-8999-999999999999',
@@ -83,6 +90,32 @@ function createRepositories() {
         public_url: 'https://example.com/dashboard',
         status: DASHBOARD_LINK_STATUSES.ACTIVE,
         visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+    ]),
+    clientWorkItems: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_DONE,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        status: CLIENT_WORK_ITEM_STATUSES.DELIVERED,
+        title: 'Launch first campaign structure',
+        updated_at: '2026-05-01T10:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_ACTIVE,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        title: 'Monitor CPL stability',
+        updated_at: '2026-05-03T10:00:00.000Z',
+      },
+      {
+        client_id: IDS.CLIENT_A,
+        id: IDS.WORK_DRAFT,
+        publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.DRAFT,
+        status: CLIENT_WORK_ITEM_STATUSES.IN_PROGRESS,
+        title: 'Draft client work item',
+        updated_at: '2026-05-04T10:00:00.000Z',
       },
     ]),
     neededFromClient: createEntityRepository([
@@ -284,6 +317,7 @@ describe('clientPerformanceDashboardService', () => {
       IDS.PERIOD_ARCHIVED,
     ])
     expect(JSON.stringify(page)).not.toContain('May Draft')
+    expect(JSON.stringify(page)).not.toContain('Draft client work item')
     expect(JSON.stringify(page)).not.toContain('Cancelled request')
     expect(JSON.stringify(page)).not.toContain('Internal update')
     expect(JSON.stringify(page)).not.toContain('Debug internal attribution issue')
