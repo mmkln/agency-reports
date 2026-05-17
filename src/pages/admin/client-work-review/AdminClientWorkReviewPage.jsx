@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import {
   ClientWorkItemReviewDialog,
   useAdminClientWorkReviewWorkflow,
@@ -5,10 +7,12 @@ import {
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
 import { AdminClientWorkReviewWorkspace } from '../../../widgets/admin-client-work-review'
 import {
+  Button,
   CardContent,
   PageShell,
   PrimitiveCard as Card,
 } from '@/shared/ui'
+import { Icon } from '../../../shared/icons'
 
 function WorkspaceLoadingState() {
   return (
@@ -49,6 +53,14 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
   return (
     <>
       <AdminClientWorkspaceHeader
+        actions={(
+          <Button asChild size="sm" type="button" variant="outline">
+            <Link to={`/admin/client-preview?clientId=${workflow.client.id}`}>
+              <Icon name="eye" size={14} />
+              Preview published client version
+            </Link>
+          </Button>
+        )}
         client={workflow.client}
         currentPage="review"
         eyebrow="Client-facing work review"

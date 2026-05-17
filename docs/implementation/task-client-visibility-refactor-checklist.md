@@ -477,8 +477,8 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] publish.
   - [x] archive.
   - [x] create needed-from-client request.
-  - [ ] preview as client.
-- [ ] Use shared `PageHeader`, `PageShell`, controls, and design tokens.
+  - [x] preview as client.
+- [x] Use shared `PageHeader`, `PageShell`, controls, and design tokens.
 - [ ] Add UI tests or e2e:
   - [ ] admin publishes client work item.
   - [ ] client sees it after publish.
