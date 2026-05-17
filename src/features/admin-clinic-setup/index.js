@@ -1,0 +1,1 @@
+export { AdminClinicSetupWorkspace } from './components'

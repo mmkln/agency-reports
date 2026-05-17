@@ -278,11 +278,13 @@ Mark items as complete only after code, tests, and documentation for that item a
 
 ## Phase 11 - Admin Clinic Setup
 
-- [ ] Add client type selection to client setup/editing.
-- [ ] Add clinic specialty fields.
-- [ ] Add clinic locations management.
-- [ ] Add service lines management.
-- [ ] Add capacity notes.
+- [x] Add client type selection to client setup/editing.
+- [x] Add clinic specialty fields.
+- [x] Add clinic locations management.
+- [x] Add service lines management.
+- [x] Add capacity notes.
+- [x] Add admin clinic setup workspace route.
+- [x] Add aggregate-only domain validation for admin clinic setup saves.
 - [ ] Add metric entry/import workflow for patient acquisition.
 - [ ] Add metric entry/import workflow for calls/bookings.
 - [ ] Add reputation snapshot entry/import workflow.
@@ -327,6 +329,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for compliance approval read model and approval history.
 - [ ] Add domain tests for compliance approval transitions.
 - [x] Add domain tests for clinic Action Needed type mapping.
+- [x] Add domain tests for admin clinic setup permissions and aggregate-only saves.
 - [ ] Add e2e for clinic Overview.
 - [ ] Add e2e for Patient Acquisition.
 - [ ] Add e2e for Calls & Bookings.

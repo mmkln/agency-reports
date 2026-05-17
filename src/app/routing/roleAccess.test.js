@@ -146,6 +146,7 @@ describe('route role access', () => {
   it('keeps admin workspace routes inaccessible to client users', () => {
     const adminWorkspaceRouteIds = [
       'admin-client-overview',
+      'admin-clinic-setup',
       'admin-client-requests',
       'admin-client-submitted-requests',
       'admin-client-reports-dashboards',

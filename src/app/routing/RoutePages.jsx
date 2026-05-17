@@ -50,6 +50,7 @@ import { AdminClientUpdatesPage } from '../../pages/admin/client-updates'
 import { AdminClientWorkReviewPage } from '../../pages/admin/client-work-review/AdminClientWorkReviewPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AdminClinicSetupPage } from '../../pages/admin/clinic-setup'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
 import { AdminPerformanceDashboardEditorPage } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPage'
@@ -135,5 +136,6 @@ export const AdminClientUpdatesPageRoute = withPageProps(AdminClientUpdatesPage,
 export const AdminClientWorkReviewPageRoute = withPageProps(AdminClientWorkReviewPage, undefined)
 export const AdminClientPreviewPageRoute = withPageProps(ClientOverviewPage, ClientOverviewPageHeader)
 export const AdminClientOverviewPageRoute = withPageProps(AdminClientOverviewPage, undefined)
+export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)
 export const AdminTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)
 export const TeamTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)

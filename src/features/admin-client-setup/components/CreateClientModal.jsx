@@ -13,11 +13,13 @@ import {
   OverlayHeader,
 } from '@/shared/ui'
 
+import { CLIENT_TYPES } from '../../../entities/client'
 import {
   getEmailIssue,
   getShortTextIssue,
 } from '../model'
 import {
+  ClientTypeSelect,
   FormField,
   LogoInput,
   ModalSection,
@@ -85,6 +87,7 @@ export function CreateClientModal({
                   value={form.portalSlug}
                 />
                 <LogoInput form={form} onFieldChange={onUpdateField} />
+                <ClientTypeSelect onFieldChange={onUpdateField} value={form.type} />
               </ModalSection>
 
               <ModalSection iconName="users" title="Primary Contact">
@@ -136,6 +139,11 @@ export function CreateClientModal({
                   <Button asChild size="sm" variant="outline">
                     <Link to={`/admin/client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</Link>
                   </Button>
+                  {lastCreatedClient.client.type === CLIENT_TYPES.CLINIC ? (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/admin/clinic-setup?clientId=${lastCreatedClient.client.id}`}>Clinic setup</Link>
+                    </Button>
+                  ) : null}
                   <Button asChild size="sm" variant="outline">
                     <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Manage access</Link>
                   </Button>

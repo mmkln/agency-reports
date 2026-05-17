@@ -5,6 +5,7 @@ import {
   PageShell,
 } from '@/shared/ui'
 
+import { CLIENT_TYPES } from '../../../entities/client'
 import { Icon } from '../../../shared/icons'
 import { ClientStatusSelector } from './ClientStatusSelector'
 
@@ -14,6 +15,13 @@ const tabs = [
     iconName: 'fileText',
     label: 'Overview',
     route: '/admin/client-overview',
+  },
+  {
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    id: 'clinic-setup',
+    iconName: 'stethoscope',
+    label: 'Clinic Setup',
+    route: '/admin/clinic-setup',
   },
   {
     id: 'projects',
@@ -81,11 +89,15 @@ function getClientField(client, camelName, snakeName) {
   return client?.[camelName] ?? client?.[snakeName] ?? ''
 }
 
-function ClientWorkspaceTabs({ clientId, currentPage }) {
+function ClientWorkspaceTabs({ client, clientId, currentPage }) {
+  const visibleTabs = tabs.filter((tab) => (
+    !tab.clientTypes?.length || tab.clientTypes.includes(client?.type)
+  ))
+
   return (
     <nav aria-label="Client workspace sections" className="-mx-1 overflow-x-auto">
       <div className="flex min-w-max items-center gap-tag px-1">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const isActive = currentPage === tab.id
 
           return (
@@ -159,7 +171,7 @@ export function AdminClientWorkspaceHeader({
           variant="inline"
         />
 
-        <ClientWorkspaceTabs clientId={clientId} currentPage={currentPage} />
+        <ClientWorkspaceTabs client={client} clientId={clientId} currentPage={currentPage} />
       </PageShell>
     </header>
   )
