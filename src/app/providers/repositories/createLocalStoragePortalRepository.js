@@ -1,34 +1,11 @@
+import {
+  PORTAL_REPOSITORY_COLLECTIONS,
+  PORTAL_TABLE_NAMES,
+} from './portalRepositoryContract'
+
 export const PORTAL_STORAGE_KEY = 'agency-reports.portal.v2'
 export const PORTAL_STORAGE_SCHEMA_VERSION = 1
 
-const TABLE_NAMES = Object.freeze([
-  'activity_events',
-  'booking_pipeline_snapshots',
-  'clients',
-  'client_invitations',
-  'client_file_links',
-  'client_memberships',
-  'client_requests',
-  'client_work_items',
-  'call_booking_metrics',
-  'clinic_locations',
-  'compliance_reviews',
-  'clinic_profiles',
-  'clinic_service_lines',
-  'dashboard_links',
-  'location_performance',
-  'needed_from_client',
-  'performance_dashboard_periods',
-  'patient_acquisition_snapshots',
-  'profiles',
-  'projects',
-  'reputation_snapshots',
-  'reports',
-  'service_line_performance',
-  'medical_approvals',
-  'tasks',
-  'updates',
-])
 const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'call_booking_metrics',
   'booking_pipeline_snapshots',
@@ -66,7 +43,7 @@ function createSeedSnapshot(seedData) {
     __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
   }
 
-  for (const tableName of TABLE_NAMES) {
+  for (const tableName of PORTAL_TABLE_NAMES) {
     if (!Array.isArray(seedSnapshot[tableName])) {
       seedSnapshot[tableName] = []
     }
@@ -153,7 +130,7 @@ function normalizeSnapshot(snapshot, seedData) {
     __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
   }
 
-  for (const tableName of TABLE_NAMES) {
+  for (const tableName of PORTAL_TABLE_NAMES) {
     const seedTableRecords = Array.isArray(seedSnapshot[tableName]) ? seedSnapshot[tableName] : []
     const tableRecords = Array.isArray(snapshot[tableName])
       ? snapshot[tableName]
@@ -238,41 +215,24 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     storageAdapter.setItem(PORTAL_STORAGE_KEY, JSON.stringify(normalizeSnapshot(snapshot, seedData)))
   }
 
+  const repositories = Object.fromEntries(
+    PORTAL_REPOSITORY_COLLECTIONS.map((collection) => [
+      collection.key,
+      createEntityRepository(collection.tableName, readSnapshot, writeSnapshot),
+    ]),
+  )
+
   return {
-    activityEvents: createEntityRepository('activity_events', readSnapshot, writeSnapshot),
-    bookingPipelineSnapshots: createEntityRepository('booking_pipeline_snapshots', readSnapshot, writeSnapshot),
-    clients: createEntityRepository('clients', readSnapshot, writeSnapshot),
-    clientFileLinks: createEntityRepository('client_file_links', readSnapshot, writeSnapshot),
-    clientInvitations: createEntityRepository('client_invitations', readSnapshot, writeSnapshot),
-    clientMemberships: createEntityRepository('client_memberships', readSnapshot, writeSnapshot),
-    clientRequests: createEntityRepository('client_requests', readSnapshot, writeSnapshot),
-    clientWorkItems: createEntityRepository('client_work_items', readSnapshot, writeSnapshot),
-    callBookingMetrics: createEntityRepository('call_booking_metrics', readSnapshot, writeSnapshot),
-    clinicLocations: createEntityRepository('clinic_locations', readSnapshot, writeSnapshot),
-    clinicProfiles: createEntityRepository('clinic_profiles', readSnapshot, writeSnapshot),
-    clinicServiceLines: createEntityRepository('clinic_service_lines', readSnapshot, writeSnapshot),
-    complianceReviews: createEntityRepository('compliance_reviews', readSnapshot, writeSnapshot),
-    dashboardLinks: createEntityRepository('dashboard_links', readSnapshot, writeSnapshot),
-    locationPerformance: createEntityRepository('location_performance', readSnapshot, writeSnapshot),
-    neededFromClient: createEntityRepository('needed_from_client', readSnapshot, writeSnapshot),
-    performanceDashboardPeriods: createEntityRepository('performance_dashboard_periods', readSnapshot, writeSnapshot),
-    patientAcquisitionSnapshots: createEntityRepository('patient_acquisition_snapshots', readSnapshot, writeSnapshot),
+    ...repositories,
     profiles: {
-      ...createEntityRepository('profiles', readSnapshot, writeSnapshot),
+      ...repositories.profiles,
       findByUserId(userId) {
         return readSnapshot().profiles.find((profile) => profile.user_id === userId) ?? null
       },
     },
-    projects: createEntityRepository('projects', readSnapshot, writeSnapshot),
-    reputationSnapshots: createEntityRepository('reputation_snapshots', readSnapshot, writeSnapshot),
-    reports: createEntityRepository('reports', readSnapshot, writeSnapshot),
-    serviceLinePerformance: createEntityRepository('service_line_performance', readSnapshot, writeSnapshot),
-    medicalApprovals: createEntityRepository('medical_approvals', readSnapshot, writeSnapshot),
     reset() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)
       return readSnapshot()
     },
-    tasks: createEntityRepository('tasks', readSnapshot, writeSnapshot),
-    updates: createEntityRepository('updates', readSnapshot, writeSnapshot),
   }
 }
