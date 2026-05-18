@@ -137,6 +137,7 @@ export function createPortalRepositoryAccessManifest() {
     return {
       accessMode,
       aggregateOnly: PORTAL_CLINIC_PUBLISH_STATE_TABLES.includes(tableSchema.tableName),
+      clientScope: tableSchema.clientScope,
       clientReadFilters: getClientReadFilters(tableSchema.tableName),
       repositoryKey: tableSchema.repositoryKey,
       rules: createAccessRules(tableSchema, accessMode),

@@ -18,6 +18,7 @@ src/app/providers/repositories/createPortalRepository.js
 src/app/providers/repositories/portalRepositoryAccessManifest.js
 src/app/providers/repositories/portalRepositoryContract.js
 src/app/providers/repositories/portalRepositorySchema.js
+src/app/providers/repositories/portalRepositoryRlsPolicyManifest.js
 ```
 
 `createPortalRepository.js` is the adapter selection boundary. The app should create repositories through this factory instead of importing a concrete adapter directly.
@@ -54,6 +55,16 @@ src/app/providers/repositories/portalRepositorySchema.js
 - token-gated invitation access
 - self-or-agency profile access
 - server audit requirement markers
+```
+
+`portalRepositoryRlsPolicyManifest.js` translates the access manifest into server policy intent for future Supabase/API implementation:
+
+```text
+- agency all-operation policies for every table
+- client membership select policies only for client-readable tables
+- record filters for published/client-visible client reads
+- profile owner select/update policies
+- token-gated invitation select policy
 ```
 
 ## Required Collection Methods
@@ -101,6 +112,7 @@ src/app/providers/repositories/portalRepositoryContract.test-support.js
 src/app/providers/repositories/createPortalRepository.test.js
 src/app/providers/repositories/portalRepositoryAccessManifest.test.js
 src/app/providers/repositories/portalRepositorySchema.test.js
+src/app/providers/repositories/portalRepositoryRlsPolicyManifest.test.js
 ```
 
 The contract tests verify:
@@ -116,9 +128,11 @@ The contract tests verify:
 - demo reset stays opt-in and outside the production repository contract
 - backend schema manifest covers every repository table
 - backend/RLS access manifest covers every repository table
+- backend/RLS policy intent covers every repository table
 - internal task/activity records are agency-only
 - client-facing records require published/client-safe filters
 - clinic aggregate tables are marked aggregate-only
+- clinic aggregate client policies carry published-state filters
 - seed records contain required backend columns
 ```
 
@@ -141,6 +155,7 @@ These hooks are still repository-backed frontend/domain behavior. The production
 - [x] Centralize repository adapter selection behind `createPortalRepository`.
 - [x] Add backend schema manifest for table scope, required columns, indexes, and clinic publish state.
 - [x] Add backend access manifest for RLS/API requirements.
+- [x] Add backend RLS policy intent manifest derived from repository access rules.
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
