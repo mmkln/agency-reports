@@ -4,6 +4,7 @@ import {
   CLIENT_WORK_ITEM_STATUS_META,
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
+import { normalizeNeededAction } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -11,6 +12,7 @@ import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../poli
 
 const VALID_TASK_STATUSES = new Set(Object.values(TASK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
+const OPEN_NEEDED_ACTION_STATUSES = new Set(['answered', 'approved', 'changes_requested', 'pending'])
 
 function assertTaskWorkspaceViewer(viewer) {
   if (
@@ -107,6 +109,26 @@ function getClientWorkItemsBySourceTaskId({ clientIds, repositories }) {
   return workItemsByTaskId
 }
 
+function getOpenNeededActionKeys({ clientIds, repositories }) {
+  if (!repositories.neededFromClient?.list) {
+    return new Set()
+  }
+
+  const clientIdSet = new Set(clientIds)
+
+  return new Set(
+    repositories.neededFromClient
+      .list()
+      .filter((action) => clientIdSet.has(action.client_id))
+      .map(normalizeNeededAction)
+      .filter((action) => OPEN_NEEDED_ACTION_STATUSES.has(action.status))
+      .flatMap((action) => [
+        action.related_task_id ? `task:${action.related_task_id}` : null,
+        action.related_work_item_id ? `work:${action.related_work_item_id}` : null,
+      ].filter(Boolean)),
+  )
+}
+
 function mapClientWorkItemState(workItem) {
   if (!workItem) {
     return {
@@ -158,9 +180,17 @@ function matchesSearch(task, clientsById, projectsById, searchValue) {
   ].some((value) => normalizeText(value).toLowerCase().includes(normalizedSearch))
 }
 
-function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, viewer }) {
+function mapTask({ clientWorkItemsByTaskId, clientsById, openNeededActionKeys, projectsById, task, viewer }) {
   const isAssignedToViewer = task.assignee_name === viewer.name
   const clientWorkItemState = mapClientWorkItemState(clientWorkItemsByTaskId.get(task.id))
+  const hasOpenNeededAction = openNeededActionKeys.has(`task:${task.id}`)
+    || (
+      clientWorkItemState.clientWorkItem?.id
+      && openNeededActionKeys.has(`work:${clientWorkItemState.clientWorkItem.id}`)
+    )
+  const isMissingClientSummary = clientWorkItemState.clientWorkItem
+    ? clientWorkItemState.isMissingClientSummary
+    : !normalizeText(task.client_safe_summary)
 
   return {
     assigneeName: task.assignee_name,
@@ -174,6 +204,7 @@ function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, vie
     id: task.id,
     internalNote: task.internal_note ?? '',
     isAssignedToViewer,
+    isWaitingOnClientWithoutRequest: task.status === TASK_STATUSES.WAITING_CLIENT && !hasOpenNeededAction,
     projectId: task.project_id,
     projectName: projectsById.get(task.project_id)?.name ?? 'General',
     status: task.status,
@@ -182,7 +213,24 @@ function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, vie
     updatedAt: task.updated_at,
     visibility: task.visibility,
     ...clientWorkItemState,
+    isMissingClientSummary,
   }
+}
+
+function matchesWorkState(task, workState) {
+  if (!workState || workState === 'all') {
+    return true
+  }
+
+  const predicates = {
+    has_work_item: () => task.hasClientWorkItem,
+    missing_summary: () => task.isMissingClientSummary,
+    published: () => task.isPublishedToClient,
+    ready_for_review: () => task.isReadyForClientReview,
+    waiting_without_request: () => task.isWaitingOnClientWithoutRequest,
+  }
+
+  return predicates[workState]?.() ?? true
 }
 
 export function listTaskWorkspace({
@@ -198,6 +246,10 @@ export function listTaskWorkspace({
     .filter((project) => clientIds.includes(project.client_id))
   const projectsById = new Map(projects.map((project) => [project.id, project]))
   const clientWorkItemsByTaskId = getClientWorkItemsBySourceTaskId({
+    clientIds,
+    repositories,
+  })
+  const openNeededActionKeys = getOpenNeededActionKeys({
     clientIds,
     repositories,
   })
@@ -224,10 +276,12 @@ export function listTaskWorkspace({
     .map((task) => mapTask({
       clientWorkItemsByTaskId,
       clientsById,
+      openNeededActionKeys,
       projectsById,
       task,
       viewer,
     }))
+    .filter((task) => matchesWorkState(task, filters.workState))
 
   return {
     canCreateClientWorkItems: viewer.role === USER_ROLES.AGENCY_ADMIN,
@@ -240,6 +294,7 @@ export function listTaskWorkspace({
       scope: filters.scope ?? 'all',
       status: filters.status ?? 'all',
       visibility: filters.visibility ?? 'all',
+      workState: filters.workState ?? 'all',
     },
     projects,
     status: 'ready',

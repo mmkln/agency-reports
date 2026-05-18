@@ -8,6 +8,7 @@ export function normalizeTeamTaskFilters(routeParams = {}) {
     scope: routeParams.scope || 'all',
     status: routeParams.status || 'all',
     visibility: routeParams.visibility || 'all',
+    workState: routeParams.workState || 'all',
   }
 }
 

@@ -499,34 +499,34 @@ client_user must not read Task directly as the client-facing work contract.
 
 ### Tasks
 
-- [ ] Update task detail panel:
+- [x] Update task detail panel:
   - [x] show linked client work item state.
   - [x] allow proposed client summary where allowed.
   - [x] allow mark ready for review where allowed.
   - [x] show that admin publishes final client-facing content.
-- [ ] Update create task flow:
+- [x] Update create task flow:
   - [x] keep new tasks internal by default.
   - [x] avoid asking for client-facing lifecycle choices unless creating a client work item intentionally.
-- [ ] Add task list indicators:
+- [x] Add task list indicators:
   - [x] has client work item.
   - [x] ready for review.
   - [x] published.
-  - [ ] missing client summary.
-  - [ ] waiting on client without request.
-- [ ] Update filters:
-  - [ ] client work state if useful.
-  - [ ] ready for review if available to team.
-  - [ ] waiting on client without request if useful.
+  - [x] missing client summary.
+  - [x] waiting on client without request.
+- [x] Update filters:
+  - [x] client work state if useful.
+  - [x] ready for review if available to team.
+  - [x] waiting on client without request if useful.
 - [x] Ensure agency_team cannot publish unless explicitly allowed.
-- [ ] Add tests:
+- [x] Add tests:
   - [x] team can draft/propose.
   - [x] team cannot publish by default.
   - [x] admin can publish proposed work.
 
 ### Completion Criteria
 
-- [ ] Team task workflow supports client-safe drafting without client exposure.
-- [ ] Team task UI makes client-facing state visible but not editable beyond permissions.
+- [x] Team task workflow supports client-safe drafting without client exposure.
+- [x] Team task UI makes client-facing state visible but not editable beyond permissions.
 
 ## Phase 11 - Client Projects / Active Work Alignment
 

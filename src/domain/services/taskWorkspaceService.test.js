@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_WORK_ITEM_PUBLISH_STATES, CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
+import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
@@ -14,7 +15,9 @@ const IDS = Object.freeze({
   NEW_TASK: '55555555-5555-4555-8555-555555555555',
   PROJECT_A: '66666666-6666-4666-8666-666666666666',
   TASK_A: '77777777-7777-4777-8777-777777777777',
+  TASK_WAITING: '99999999-9999-4999-8999-999999999999',
   WORK_A: '88888888-8888-4888-8888-888888888888',
+  ACTION_A: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
 })
 
 function createEntityRepository(initialRecords = []) {
@@ -75,6 +78,7 @@ function createRepositories() {
         updated_at: '2026-05-12T09:00:00.000Z',
       },
     ]),
+    neededFromClient: createEntityRepository([]),
     projects: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -232,6 +236,69 @@ describe('taskWorkspaceService', () => {
       client_safe_summary: 'Proposed client-facing summary for review.',
       status: TASK_STATUSES.DONE,
     })
+  })
+
+  it('flags tasks missing client summary and waiting-client tasks without a client request', () => {
+    const repositories = createRepositories()
+
+    repositories.tasks.upsert({
+      assignee_name: 'Mia Carter',
+      client_id: IDS.CLIENT_A,
+      due_date: '2026-05-14',
+      id: IDS.TASK_WAITING,
+      project_id: IDS.PROJECT_A,
+      sort_order: 20,
+      status: TASK_STATUSES.WAITING_CLIENT,
+      title: 'Waiting task without request',
+      visibility: VISIBILITY.INTERNAL,
+    })
+
+    const result = listTaskWorkspace({
+      filters: {
+        workState: 'waiting_without_request',
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result.tasks.map((task) => task.title)).toEqual(['Waiting task without request'])
+    expect(result.tasks[0]).toMatchObject({
+      isMissingClientSummary: true,
+      isWaitingOnClientWithoutRequest: true,
+    })
+  })
+
+  it('does not flag waiting-client tasks when a linked client request exists', () => {
+    const repositories = createRepositories()
+
+    repositories.tasks.upsert({
+      assignee_name: 'Mia Carter',
+      client_id: IDS.CLIENT_A,
+      due_date: '2026-05-14',
+      id: IDS.TASK_WAITING,
+      project_id: IDS.PROJECT_A,
+      sort_order: 20,
+      status: TASK_STATUSES.WAITING_CLIENT,
+      title: 'Waiting task with request',
+      visibility: VISIBILITY.INTERNAL,
+    })
+    repositories.neededFromClient.upsert({
+      client_id: IDS.CLIENT_A,
+      id: IDS.ACTION_A,
+      related_task_id: IDS.TASK_WAITING,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Answer launch question',
+    })
+
+    const result = listTaskWorkspace({
+      filters: {
+        workState: 'waiting_without_request',
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result.tasks.map((task) => task.title)).not.toContain('Waiting task with request')
   })
 
   it('blocks direct task visibility publishing during task updates', () => {

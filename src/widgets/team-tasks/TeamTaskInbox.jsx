@@ -90,6 +90,12 @@ function TeamTaskRow({ isSelected = false, onOpenTask, task }) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3 lg:justify-end">
+            {task.isMissingClientSummary ? (
+              <StatusBadge icon="messageSquare" label="Missing summary" tone="amber" />
+            ) : null}
+            {task.isWaitingOnClientWithoutRequest ? (
+              <StatusBadge icon="triangleAlert" label="No client request" tone="rose" />
+            ) : null}
             {task.clientWorkItem?.publishStateMeta ? (
               <StatusBadge meta={task.clientWorkItem.publishStateMeta} />
             ) : null}
