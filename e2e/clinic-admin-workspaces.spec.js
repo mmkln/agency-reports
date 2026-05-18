@@ -51,9 +51,15 @@ test('admin can manage clinic setup from the client workspace', async ({ page })
 
   await expect(page.locator('h1').getByText('Green Dental Clinic', { exact: true })).toBeVisible()
 
-  for (const tabName of ['Clinic Setup', 'Clinic Metrics', 'Reputation', 'Compliance', 'Reports & Dashboards']) {
+  for (const tabName of ['Clinic Setup', 'Clinic Metrics', 'Reputation', 'Compliance', 'Clinic Results']) {
     await expect(clientWorkspaceTabs(page).getByRole('link', { name: tabName })).toBeVisible()
   }
+
+  await clientWorkspaceTabs(page).getByRole('link', { name: 'Clinic Results' }).click()
+  await expect(page).toHaveURL(/\/admin\/client-reports-dashboards/)
+  await expect(page.getByText('Clinic results').first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'New Clinic Performance' })).toBeVisible()
+  await page.goto(`/admin/clinic-setup?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.getByRole('heading', { name: 'Clinic Profile' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Locations' })).toBeVisible()

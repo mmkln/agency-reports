@@ -11,6 +11,7 @@ import { listAdminClients } from '../../../domain/services/adminClientService'
 import { listAdminPerformanceDashboardPeriods } from '../../../domain/services/adminPerformanceDashboardService'
 import { listAdminReports } from '../../../domain/services/adminReportService'
 import { listAdminDashboardLinks } from '../../../domain/services/dashboardLinkService'
+import { CLIENT_TYPES } from '../../../entities/client'
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
@@ -73,6 +74,7 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
   const dashboardLinks = workspace?.dashboardLinks.filter((dashboardLink) => dashboardLink.clientId === selectedClientId) ?? []
   const periods = workspace?.periods.filter((period) => period.clientId === selectedClientId) ?? []
   const reports = workspace?.reports.filter((report) => report.clientId === selectedClientId) ?? []
+  const isClinic = client?.type === CLIENT_TYPES.CLINIC
 
   if (workspaceResource.status === 'loading') {
     return <WorkspaceLoadingState />
@@ -103,9 +105,9 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
         )}
         client={client}
         currentPage="reports-dashboards"
-        eyebrow="Reports & Dashboards"
+        eyebrow={isClinic ? 'Clinic results' : 'Reports & Dashboards'}
         primaryAction={{
-          children: 'New Performance',
+          children: isClinic ? 'New Clinic Performance' : 'New Performance',
           to: `/admin/performance-dashboards?clientId=${client.id}&createPerformanceDashboard=true`,
         }}
         width="content"

@@ -66,6 +66,9 @@ const tabs = [
     id: 'reports-dashboards',
     iconName: 'barChart',
     label: 'Reports & Dashboards',
+    labelByClientType: {
+      [CLIENT_TYPES.CLINIC]: 'Clinic Results',
+    },
     route: '/admin/client-reports-dashboards',
   },
   {
@@ -123,6 +126,7 @@ function ClientWorkspaceTabs({ client, clientId, currentPage }) {
       <div className="flex min-w-max items-center gap-tag px-1">
         {visibleTabs.map((tab) => {
           const isActive = currentPage === tab.id
+          const label = tab.labelByClientType?.[client?.type] ?? tab.label
 
           return (
             <Link
@@ -141,7 +145,7 @@ function ClientWorkspaceTabs({ client, clientId, currentPage }) {
                 name={tab.iconName}
                 size={14}
               />
-              <span>{tab.label}</span>
+              <span>{label}</span>
             </Link>
           )
         })}

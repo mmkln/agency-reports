@@ -65,6 +65,20 @@ function ResourceRow({
   )
 }
 
+function getExecutiveSummaryText(content) {
+  const summary = content?.executive_summary
+
+  if (!summary) {
+    return 'No executive summary yet.'
+  }
+
+  if (typeof summary === 'string') {
+    return summary
+  }
+
+  return summary.narrative || summary.main_win || summary.next_focus || 'No executive summary yet.'
+}
+
 function PerformanceSection({ clientId, periods }) {
   const manageHref = `/admin/performance-dashboards?clientId=${clientId}`
 
@@ -85,7 +99,7 @@ function PerformanceSection({ clientId, periods }) {
               statusMeta={period.statusMeta}
               title={period.title}
             >
-              {period.content?.executive_summary || 'No executive summary yet.'}
+              {getExecutiveSummaryText(period.content)}
             </ResourceRow>
           ))}
         </div>
