@@ -1,4 +1,5 @@
 const FILTER_KEYS = [
+  'campaign_name',
   'campaign_status',
   'channel',
   'compliance_status',

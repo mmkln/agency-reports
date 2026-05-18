@@ -258,7 +258,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] compliance risk if delayed
 - [x] Update Action Needed filters/categories for clinic actions.
 - [x] Ensure responses do not mutate internal tasks directly.
-- [ ] Add e2e for medical approval and missed-call action flows.
+- [x] Add e2e for medical approval and missed-call action flows.
 
 ## Phase 10 - Clinic Reports
 
@@ -341,28 +341,28 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add domain tests for compliance approval transitions.
 - [x] Add domain tests for clinic Action Needed type mapping.
 - [x] Add domain tests for admin clinic setup permissions and aggregate-only saves.
-- [ ] Add e2e for clinic Overview.
-- [ ] Add e2e for Patient Acquisition.
-- [ ] Add e2e for Calls & Bookings.
-- [ ] Add e2e for Campaigns / Service Lines.
-- [ ] Add e2e for Reputation.
-- [ ] Add e2e for Compliance & Approvals.
-- [ ] Add e2e for clinic Action Needed approval/response.
+- [x] Add e2e for clinic Overview.
+- [x] Add e2e for Patient Acquisition.
+- [x] Add e2e for Calls & Bookings.
+- [x] Add e2e for Campaigns / Service Lines.
+- [x] Add e2e for Reputation.
+- [x] Add e2e for Compliance & Approvals.
+- [x] Add e2e for clinic Action Needed approval/response.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
-- [ ] Run targeted e2e for clinic workflows.
+- [x] Run targeted e2e for clinic workflows.
 
 ## Definition Of Done
 
-- [ ] Clinic clients see patient acquisition and booking performance before generic project status.
+- [x] Clinic clients see patient acquisition and booking performance before generic project status.
 - [x] Clinic Overview answers new inquiries, bookings, missed calls, reputation, compliance, and actions needed.
-- [ ] Calls & Bookings is first-class.
-- [ ] Campaigns / Service Lines is first-class.
+- [x] Calls & Bookings is first-class.
+- [x] Campaigns / Service Lines is first-class.
 - [x] Reputation is first-class.
 - [x] Compliance & Approvals is first-class.
 - [x] Action Needed includes clinic operations and medical/compliance actions.
 - [x] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
-- [ ] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.
+- [x] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.
 - [ ] Admins can manage clinic setup, service lines, metrics, reputation, compliance, approvals, and preview-as-client.
-- [ ] Documentation, tests, and build are updated.
+- [x] Documentation, tests, and build are updated.
