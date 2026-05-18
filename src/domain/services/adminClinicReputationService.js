@@ -6,6 +6,11 @@ import {
   normalizeClinicLocation,
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   assertClinicPublishReady,
@@ -172,6 +177,83 @@ function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   })
 }
 
+const OPEN_NEEDED_ACTION_STATUSES = new Set([
+  NEEDED_ACTION_STATUSES.ANSWERED,
+  NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+  NEEDED_ACTION_STATUSES.PENDING,
+])
+
+function isOpenNeededAction(action) {
+  return OPEN_NEEDED_ACTION_STATUSES.has(action?.status)
+}
+
+function createReputationActionKey(snapshotId, suggestionType) {
+  return `${snapshotId}:${suggestionType}`
+}
+
+function getOpenReputationActionsBySuggestionKey({ clientId, repositories }) {
+  const actions = repositories.neededFromClient?.listByClientId?.(clientId) ?? []
+
+  return new Map(
+    actions
+      .filter((action) => isOpenNeededAction(action))
+      .filter((action) => action.related_reputation_snapshot_id && action.clinic_action_type)
+      .map((action) => [
+        createReputationActionKey(action.related_reputation_snapshot_id, action.clinic_action_type),
+        action,
+      ]),
+  )
+}
+
+function createReputationActionSuggestion({
+  actionType,
+  label,
+  openReputationActionsBySuggestionKey,
+  snapshot,
+}) {
+  const openAction = openReputationActionsBySuggestionKey.get(createReputationActionKey(snapshot.id, actionType))
+
+  return {
+    actionLabel: label,
+    defaultActionType: actionType === CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE
+      ? NEEDED_ACTION_TYPES.APPROVAL
+      : NEEDED_ACTION_TYPES.FEEDBACK,
+    hasOpenAction: Boolean(openAction),
+    openAction: openAction
+      ? {
+          id: openAction.id,
+          status: openAction.status,
+          title: openAction.title,
+        }
+      : null,
+    type: actionType,
+  }
+}
+
+function getReputationActionSuggestions({ openReputationActionsBySuggestionKey, snapshot }) {
+  const suggestions = []
+
+  if (snapshot.negative_reviews > 0 || snapshot.unanswered_reviews > 0) {
+    suggestions.push(createReputationActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      label: 'Create review response action',
+      openReputationActionsBySuggestionKey,
+      snapshot,
+    }))
+  }
+
+  if (snapshot.review_response_drafts > 0) {
+    suggestions.push(createReputationActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+      label: 'Create review approval action',
+      openReputationActionsBySuggestionKey,
+      snapshot,
+    }))
+  }
+
+  return suggestions
+}
+
 function buildReputationSnapshotRecord({
   clientId,
   existingRecord,
@@ -257,6 +339,10 @@ function publishReputationRecord({
 export function getAdminClinicReputationPage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const locations = getLocations({ clientId, repositories })
+  const openReputationActionsBySuggestionKey = getOpenReputationActionsBySuggestionKey({
+    clientId,
+    repositories,
+  })
 
   return {
     client: mapClient(client),
@@ -268,6 +354,10 @@ export function getAdminClinicReputationPage({ clientId, repositories, viewer })
       .map((record) => ({
         ...record,
         publish_readiness: getReputationSnapshotPublishReadiness(record),
+        reputation_action_suggestions: getReputationActionSuggestions({
+          openReputationActionsBySuggestionKey,
+          snapshot: record,
+        }),
       }))
       .sort(sortByPeriodDesc),
     status: 'ready',

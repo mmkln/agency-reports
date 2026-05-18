@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import {
+  createNeededActionFromClinicReputationSuggestion,
+} from '../../domain/services/neededFromClientService'
+import {
   getAdminClinicReputationPage,
   publishReputationSnapshot,
   saveAdminClinicReputation,
@@ -33,6 +36,8 @@ function createInitialState() {
 export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [createdReputationActionKeys, setCreatedReputationActionKeys] = useState(() => new Set())
+  const [creatingReputationActionKey, setCreatingReputationActionKey] = useState('')
   const [importError, setImportError] = useState('')
   const [importPlan, setImportPlan] = useState(null)
   const [importRawJson, setImportRawJson] = useState('')
@@ -50,6 +55,8 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setCreatedReputationActionKeys(new Set())
+        setCreatingReputationActionKey('')
         setImportError('')
         setImportPlan(null)
         setImportRawJson('')
@@ -243,9 +250,42 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
       })
   }
 
+  function createReputationSuggestionAction({ snapshotId, suggestionType }) {
+    const actionKey = `${snapshotId}:${suggestionType}`
+
+    setCreatingReputationActionKey(actionKey)
+    setSaveState('Creating action...')
+
+    runtime.dataClient.write((repositories) => createNeededActionFromClinicReputationSuggestion({
+      idGenerator: createUuid,
+      repositories,
+      reputationSnapshotId: snapshotId,
+      suggestionType,
+      viewer: runtime.viewer,
+    }))
+      .then((action) => {
+        setCreatedReputationActionKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(actionKey)
+          return nextKeys
+        })
+        setCreatingReputationActionKey('')
+        setSaveState('Action created')
+        toast.success('Clinic action created', action.title)
+      })
+      .catch((caughtError) => {
+        setCreatingReputationActionKey('')
+        setSaveState('')
+        toast.error('Clinic action was not created', caughtError.message)
+      })
+  }
+
   return {
     applyImport,
     closeImportDialog,
+    createdReputationActionKeys,
+    createReputationSuggestionAction,
+    creatingReputationActionKey,
     draft: state.draft,
     error: state.error,
     importError,

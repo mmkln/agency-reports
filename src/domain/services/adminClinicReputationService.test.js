@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   getAdminClinicReputationPage,
@@ -85,6 +90,7 @@ function createRepositories(overrides = {}) {
         name: 'Main Clinic',
       },
     ]),
+    neededFromClient: createRepository([]),
     reputationSnapshots: createRepository([]),
     ...overrides,
   }
@@ -127,8 +133,72 @@ describe('adminClinicReputationService', () => {
     expect(page.reputationSnapshots[0]).toMatchObject({
       google_rating: 4.7,
       location_id: IDS.LOCATION_A,
+      reputation_action_suggestions: [],
       review_count: 184,
     })
+  })
+
+  it('marks existing open reputation actions in reputation suggestions', () => {
+    const repositories = createRepositories({
+      neededFromClient: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+          id: 'action-open-review-response',
+          related_reputation_snapshot_id: IDS.SNAPSHOT_A,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Respond to negative review',
+        },
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+          id: 'action-resolved-review-approval',
+          related_reputation_snapshot_id: IDS.SNAPSHOT_A,
+          status: NEEDED_ACTION_STATUSES.RESOLVED,
+          title: 'Old review approval',
+        },
+      ]),
+      reputationSnapshots: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.SNAPSHOT_A,
+          negative_reviews: 2,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+          review_response_drafts: 3,
+          unanswered_reviews: 4,
+        },
+      ]),
+    })
+
+    const page = getAdminClinicReputationPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.reputationSnapshots[0].reputation_action_suggestions).toEqual([
+      {
+        actionLabel: 'Create review response action',
+        defaultActionType: NEEDED_ACTION_TYPES.FEEDBACK,
+        hasOpenAction: true,
+        openAction: {
+          id: 'action-open-review-response',
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Respond to negative review',
+        },
+        type: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      },
+      {
+        actionLabel: 'Create review approval action',
+        defaultActionType: NEEDED_ACTION_TYPES.APPROVAL,
+        hasOpenAction: false,
+        openAction: null,
+        type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+      },
+    ])
   })
 
   it('saves reputation snapshots as aggregate clinic data', () => {

@@ -17,6 +17,7 @@ import {
   SelectItem,
   TextField,
 } from './ReputationFields'
+import { ReputationSuggestedActionButtons } from './ReputationSuggestedActionButtons'
 
 function createBlankSnapshot() {
   return {
@@ -47,9 +48,12 @@ function getPublishLabel(record) {
 }
 
 export function ReputationSnapshotsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
 }) {
@@ -128,6 +132,13 @@ export function ReputationSnapshotsCard({
                 </Button>
               </div>
             </div>
+            <ReputationSuggestedActionButtons
+              createdActionKeys={createdActionKeys}
+              creatingActionKey={creatingActionKey}
+              isDirty={isDirty}
+              onCreateSuggestedAction={onCreateSuggestedAction}
+              snapshot={snapshot}
+            />
 
             <div className="grid gap-component md:grid-cols-3">
               <TextField

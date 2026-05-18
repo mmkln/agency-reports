@@ -36,6 +36,9 @@ function ClinicReputationErrorState({ message }) {
 export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const {
+    createdReputationActionKeys,
+    createReputationSuggestionAction,
+    creatingReputationActionKey,
     draft,
     error,
     importError,
@@ -125,9 +128,12 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
           </div>
 
           <ReputationSnapshotsCard
+            createdActionKeys={createdReputationActionKeys}
+            creatingActionKey={creatingReputationActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
+            onCreateSuggestedAction={createReputationSuggestionAction}
             onPublish={publishReputationRecord}
             onUpdate={updateDraft}
           />

@@ -4,6 +4,7 @@ import { CLIENT_TYPES } from '../../entities/client'
 import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
@@ -15,6 +16,7 @@ import {
   cancelNeededAction,
   createNeededAction,
   createNeededActionFromClinicBookingSuggestion,
+  createNeededActionFromClinicReputationSuggestion,
   createNeededActionFromTask,
   createNeededActionFromWorkItem,
   linkNeededActionToTask,
@@ -35,6 +37,7 @@ const IDS = Object.freeze({
   CLIENT: '22222222-2222-4222-8222-222222222222',
   LOCATION: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   OTHER_CLIENT: '77777777-7777-4777-8777-777777777777',
+  REPUTATION_SNAPSHOT: '88888888-8888-4888-8888-888888888888',
   SERVICE_LINE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   TASK: '55555555-5555-4555-8555-555555555555',
   USER: '33333333-3333-4333-8333-333333333333',
@@ -148,6 +151,18 @@ function createWorkflowRepositories(overrides = {}) {
     ]),
     activityEvents: createEntityRepository([]),
     neededFromClient: createEntityRepository([]),
+    reputationSnapshots: createEntityRepository([
+      {
+        client_id: IDS.CLIENT,
+        id: IDS.REPUTATION_SNAPSHOT,
+        location_id: IDS.LOCATION,
+        negative_reviews: 2,
+        period_label: 'May 2026',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        review_response_drafts: 3,
+        unanswered_reviews: 4,
+      },
+    ]),
     tasks: createEntityRepository([
       {
         blocker_note: 'Launch is paused until the client confirms access.',
@@ -584,6 +599,86 @@ describe('neededFromClientService', () => {
       suggestionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
       viewer: createAdminViewer(),
     })).toThrow('Clinic booking suggestions can only be created from published metrics.')
+  })
+
+  it('creates needed actions from clinic reputation suggestions without linking internal tasks', () => {
+    const repositories = createWorkflowRepositories()
+
+    const action = createNeededActionFromClinicReputationSuggestion({
+      idGenerator: () => IDS.ACTION,
+      input: {
+        relatedTaskId: IDS.TASK,
+        relatedWorkItemId: IDS.WORK_ITEM,
+      },
+      now: () => '2026-05-17T12:00:00.000Z',
+      repositories,
+      reputationSnapshotId: IDS.REPUTATION_SNAPSHOT,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      viewer: createAdminViewer(),
+    })
+
+    expect(action).toMatchObject({
+      client_id: IDS.CLIENT,
+      clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      compliance_risk: 'Do not include reviewer names, patient names, appointment details, or medical context in the portal response workflow.',
+      impact_if_delayed: 'Unanswered negative reviews can weaken local trust and reduce new patient conversion.',
+      patient_impact: 'Patients may avoid booking if reputation concerns appear unresolved.',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
+      related_location_id: IDS.LOCATION,
+      related_reputation_snapshot_id: IDS.REPUTATION_SNAPSHOT,
+      related_task_id: null,
+      related_work_item_id: null,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Respond to negative or unanswered reviews',
+      type: NEEDED_ACTION_TYPES.FEEDBACK,
+      why_needed: '2 negative reviews and 4 unanswered reviews were tracked in May 2026.',
+    })
+  })
+
+  it('rejects duplicate open clinic reputation suggestion actions', () => {
+    const repositories = createWorkflowRepositories({
+      neededFromClient: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+          id: IDS.ACTION,
+          related_reputation_snapshot_id: IDS.REPUTATION_SNAPSHOT,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Approve review responses',
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicReputationSuggestion({
+      idGenerator: () => '88888888-8888-4888-8888-888888888888',
+      repositories,
+      reputationSnapshotId: IDS.REPUTATION_SNAPSHOT,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+      viewer: createAdminViewer(),
+    })).toThrow('An open clinic reputation action already exists for this suggestion.')
+  })
+
+  it('rejects clinic reputation suggestion actions from draft snapshots', () => {
+    const repositories = createWorkflowRepositories({
+      reputationSnapshots: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.REPUTATION_SNAPSHOT,
+          negative_reviews: 1,
+          period_label: 'May 2026',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          unanswered_reviews: 2,
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicReputationSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      reputationSnapshotId: IDS.REPUTATION_SNAPSHOT,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      viewer: createAdminViewer(),
+    })).toThrow('Clinic reputation suggestions can only be created from published snapshots.')
   })
 
   it('links existing needed actions to a task and client work item', () => {

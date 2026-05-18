@@ -1,6 +1,7 @@
 import {
   CLINIC_RECORD_PUBLISH_STATES,
   normalizeCallBookingMetric,
+  normalizeReputationSnapshot,
 } from '../../entities/clinic'
 import {
   CLIENT_TYPES,
@@ -34,6 +35,10 @@ const VALID_CLINIC_BOOKING_SUGGESTION_TYPES = new Set([
   CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
   CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
   CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+])
+const VALID_CLINIC_REPUTATION_SUGGESTION_TYPES = new Set([
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+  CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
 ])
 const VALID_CLIENT_RESPONSE_STATUSES = new Set([
   NEEDED_ACTION_STATUSES.ANSWERED,
@@ -412,6 +417,33 @@ function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }
   return normalizedMetric
 }
 
+function getAdminReputationSnapshot({ repositories, reputationSnapshotId, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const snapshot = repositories.reputationSnapshots?.findById?.(reputationSnapshotId)
+
+  if (!snapshot) {
+    throw new Error('Clinic reputation snapshot was not found.')
+  }
+
+  const normalizedSnapshot = normalizeReputationSnapshot(snapshot)
+  const client = getAdminClient({
+    clientId: normalizedSnapshot.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (client.type !== CLIENT_TYPES.CLINIC) {
+    throw new Error('Clinic reputation suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedSnapshot.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic reputation suggestions can only be created from published snapshots.')
+  }
+
+  return normalizedSnapshot
+}
+
 function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
   const periodLabel = metric.period_label || 'the selected period'
 
@@ -468,6 +500,50 @@ function assertNoOpenClinicBookingSuggestionDuplicate({ metric, repositories, su
 
   if (duplicate) {
     throw new Error('An open clinic booking action already exists for this suggestion.')
+  }
+}
+
+function getClinicReputationSuggestionDefaults({ snapshot, suggestionType }) {
+  const periodLabel = snapshot.period_label || 'the selected period'
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW) {
+    return {
+      complianceRisk: 'Do not include reviewer names, patient names, appointment details, or medical context in the portal response workflow.',
+      description: 'Confirm who should respond to negative or unanswered reviews and what tone or escalation rule should be used.',
+      impactIfDelayed: 'Unanswered negative reviews can weaken local trust and reduce new patient conversion.',
+      patientImpact: 'Patients may avoid booking if reputation concerns appear unresolved.',
+      priority: snapshot.negative_reviews > 0
+        ? NEEDED_ACTION_PRIORITIES.HIGH
+        : NEEDED_ACTION_PRIORITIES.MEDIUM,
+      title: 'Respond to negative or unanswered reviews',
+      type: NEEDED_ACTION_TYPES.FEEDBACK,
+      whyNeeded: `${snapshot.negative_reviews} negative reviews and ${snapshot.unanswered_reviews} unanswered reviews were tracked in ${periodLabel}.`,
+    }
+  }
+
+  return {
+    complianceRisk: 'Review responses must stay general, avoid confirming patient status, and avoid unsupported medical claims.',
+    description: 'Approve the prepared review response drafts before they are published on public profiles.',
+    impactIfDelayed: 'Response drafts may stay unpublished, leaving review follow-up visibly incomplete.',
+    patientImpact: 'Clear, compliant responses help prospective patients see that the clinic handles concerns responsibly.',
+    priority: snapshot.review_response_drafts >= 3
+      ? NEEDED_ACTION_PRIORITIES.HIGH
+      : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: 'Approve review response drafts',
+    type: NEEDED_ACTION_TYPES.APPROVAL,
+    whyNeeded: `${snapshot.review_response_drafts} review response drafts are waiting for approval from ${periodLabel}.`,
+  }
+}
+
+function assertNoOpenClinicReputationSuggestionDuplicate({ repositories, snapshot, suggestionType }) {
+  const duplicate = repositories.neededFromClient
+    .listByClientId(snapshot.client_id)
+    .some((action) => isOpenNeededAction(action)
+      && action.clinic_action_type === suggestionType
+      && action.related_reputation_snapshot_id === snapshot.id)
+
+  if (duplicate) {
+    throw new Error('An open clinic reputation action already exists for this suggestion.')
   }
 }
 
@@ -726,6 +802,54 @@ export function createNeededActionFromClinicBookingSuggestion({
       relatedCampaignName: metric.campaign_name,
       relatedLocationId: metric.location_id,
       relatedServiceLineId: metric.service_line_id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicReputationSuggestion({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  reputationSnapshotId,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_REPUTATION_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic reputation suggestion type is invalid.')
+  }
+
+  const snapshot = getAdminReputationSnapshot({
+    repositories,
+    reputationSnapshotId,
+    viewer,
+  })
+
+  assertNoOpenClinicReputationSuggestionDuplicate({
+    repositories,
+    snapshot,
+    suggestionType,
+  })
+
+  const defaults = getClinicReputationSuggestionDefaults({
+    snapshot,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: snapshot.client_id,
+      clinicActionType: suggestionType,
+      relatedLocationId: snapshot.location_id,
+      relatedReputationSnapshotId: snapshot.id,
       relatedTaskId: '',
       relatedWorkItemId: '',
     }),
