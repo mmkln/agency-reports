@@ -3,11 +3,13 @@ import { expect, test } from '@playwright/test'
 import { PORTAL_STORAGE_KEY } from '../src/app/providers/repositories/createLocalStoragePortalRepository.js'
 import { SEED_IDS } from '../src/app/providers/repositories/portalSeedData.js'
 import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/services/authService.js'
+import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../src/entities/client-work-item/index.js'
 import { NEEDED_ACTION_STATUSES } from '../src/entities/needed-from-client/index.js'
 import { TASK_STATUSES } from '../src/entities/task/index.js'
 
 const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
+const TEAM_EMAIL = 'mia@growthlab.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 
 async function resetLocalDemo(page) {
@@ -52,6 +54,21 @@ async function signInAsAdmin(page) {
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page).toHaveURL(/\/admin\/clients/)
+}
+
+async function signInAsTeam(page) {
+  await page.evaluate(({ authKey, demoRoleKey }) => {
+    window.localStorage.removeItem(authKey)
+    window.localStorage.setItem(demoRoleKey, 'team')
+  }, {
+    authKey: AUTH_SESSION_STORAGE_KEY,
+    demoRoleKey: DEMO_ROLE_KEY,
+  })
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
+  await page.locator('input[name="email"]').fill(TEAM_EMAIL)
+  await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/team\/tasks/)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -184,6 +201,129 @@ test('client can approve an action without mutating linked internal task status'
   expect(persistedState).toEqual({
     actionStatus: NEEDED_ACTION_STATUSES.APPROVED,
     taskStatus: TASK_STATUSES.WAITING_CLIENT,
+  })
+})
+
+test('team prepared summaries stay hidden until admin publishes client work', async ({ page }) => {
+  const summary = `E2E team prepared client summary ${Date.now()}`
+  const taskId = '91919191-9191-4919-8919-919191919191'
+  const taskTitle = `E2E unlinked client work ${Date.now()}`
+
+  await signInAsTeam(page)
+  await page.evaluate(({ clientId, portalKey, projectId, taskId, taskTitle }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    portalData.tasks.push({
+      assignee_name: 'Mia Carter',
+      client_id: clientId,
+      client_safe_summary: '',
+      client_visible: false,
+      created_at: '2026-05-18T10:00:00.000Z',
+      description: 'E2E task starts as internal execution work only.',
+      due_date: '2026-05-25',
+      id: taskId,
+      internal_note: 'E2E private task note must never reach the client.',
+      project_id: projectId,
+      sort_order: 77,
+      status: 'in_progress',
+      title: taskTitle,
+      updated_at: '2026-05-18T10:00:00.000Z',
+      visibility: 'internal',
+    })
+
+    window.localStorage.setItem(portalKey, JSON.stringify(portalData))
+  }, {
+    clientId: SEED_IDS.CLIENT_GREEN_DENTAL,
+    portalKey: PORTAL_STORAGE_KEY,
+    projectId: SEED_IDS.PROJECT_REPORTING,
+    taskId,
+    taskTitle,
+  })
+
+  await page.goto(`/team/tasks?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  const taskRow = page.locator('article').filter({ hasText: taskTitle }).first()
+
+  await expect(taskRow).toBeVisible()
+  await taskRow.getByRole('button').first().click()
+  await page.getByLabel('Client-safe update').fill(summary)
+  await page.getByRole('button', { name: 'Save Updates' }).evaluate((button) => button.click())
+  await expect.poll(async () => page.evaluate(({ portalKey, taskId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.tasks.find((item) => item.id === taskId)?.client_safe_summary
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    taskId,
+  })).toBe(summary)
+  await expect(page.getByRole('button', { name: 'Send to Review' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Send to Review' }).click()
+  await expect(page.getByText('Sent to admin review.')).toBeVisible()
+
+  const preparedState = await page.evaluate(({ portalKey, taskId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const task = portalData.tasks.find((item) => item.id === taskId)
+    const workItem = portalData.client_work_items.find((item) => item.source_task_id === taskId)
+
+    return {
+      taskSummary: task?.client_safe_summary,
+      workItemId: workItem?.id,
+      workItemPublishState: workItem?.publish_state,
+      workItemSummary: workItem?.summary,
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    taskId,
+  })
+
+  expect(preparedState).toMatchObject({
+    taskSummary: summary,
+    workItemPublishState: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+    workItemSummary: summary,
+  })
+
+  await signInAsClient(page)
+  await page.goto(`/client/projects?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&projectId=${SEED_IDS.PROJECT_REPORTING}&filter=all`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByText(summary)).toHaveCount(0)
+  await expect(page.getByText(taskTitle)).toHaveCount(0)
+
+  await signInAsAdmin(page)
+  await page.goto(`/admin/client-work-review?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+
+  const reviewItem = page.locator('article').filter({ hasText: taskTitle }).first()
+
+  await expect(reviewItem).toBeVisible()
+  await reviewItem.getByRole('button', { name: 'Publish' }).click()
+  await expect(page.getByText('Published to client portal', { exact: true })).toBeVisible()
+  await expect.poll(async () => page.evaluate(({ portalKey, taskId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.client_work_items.find((item) => item.source_task_id === taskId)?.publish_state
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    taskId,
+  })).toBe(CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED)
+
+  await signInAsClient(page)
+  await page.goto(`/client/projects?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&projectId=${SEED_IDS.PROJECT_REPORTING}&filter=all`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByText(taskTitle)).toBeVisible()
+  await expect(page.getByText(summary)).toBeVisible()
+  await expect(page.getByText('E2E private task note must never reach the client.')).toHaveCount(0)
+
+  const publishedState = await page.evaluate(({ portalKey, taskId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const workItem = portalData.client_work_items.find((item) => item.source_task_id === taskId)
+
+    return {
+      publishState: workItem?.publish_state,
+      summary: workItem?.summary,
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    taskId,
+  })
+
+  expect(publishedState).toEqual({
+    publishState: CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED,
+    summary,
   })
 })
 

@@ -484,7 +484,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] client sees it after publish.
   - [x] client does not see it before publish.
   - [x] client read model excludes source task internals.
-- [ ] Add browser/e2e coverage after the parallel client IA routes settle.
+- [x] Add browser/e2e coverage after the parallel client IA routes settle.
 
 ### Completion Criteria
 
@@ -634,12 +634,12 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Run lint.
 - [x] Run build.
 - [ ] Add or update e2e coverage:
-  - [ ] agency_team updates internal task.
-  - [ ] agency_team prepares client-facing summary.
-  - [ ] agency_admin publishes client work item.
-  - [ ] client_user sees published active work.
-  - [ ] client_user does not see draft/review/archived work.
-  - [ ] client_user never sees internal notes.
+  - [x] agency_team updates internal task.
+  - [x] agency_team prepares client-facing summary.
+  - [x] agency_admin publishes client work item.
+  - [x] client_user sees published active work.
+  - [x] client_user does not see draft/review/archived work.
+  - [x] client_user never sees internal notes.
   - [x] waiting-client task links to needed-from-client request.
   - [ ] client response does not mutate task status directly.
 - [x] Add domain integration coverage for client-work publish boundary and safe client read models.
