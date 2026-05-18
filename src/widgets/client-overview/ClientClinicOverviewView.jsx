@@ -202,6 +202,7 @@ export function ClientClinicOverviewView({ overview }) {
             dashboard={overview.dashboard}
             performancePreview={overview.performancePreview}
             report={overview.latestReport}
+            variant="clinic"
           />
           <FilesLinksOverviewBlock
             clientId={overview.client.id}
