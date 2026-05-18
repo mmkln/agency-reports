@@ -647,6 +647,34 @@ describe('getClientOverview', () => {
     expect(serializedOverview).not.toContain('May Draft Performance')
   })
 
+  it('does not treat task visibility or waiting-client status as client-facing active work', () => {
+    const overview = getClientOverviewPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clientWorkItems: [],
+        tasks: [
+          {
+            assignee_name: 'Mia Carter',
+            client_id: IDS.CLIENT_A,
+            client_safe_summary: 'Task summary should remain only a proposal.',
+            client_visible: true,
+            due_date: '2026-05-20',
+            id: IDS.TASK_CLIENT_VISIBLE,
+            project_id: IDS.PROJECT_A,
+            status: TASK_STATUSES.WAITING_CLIENT,
+            title: 'Waiting-client task marked visible',
+            visibility: VISIBILITY.CLIENT_VISIBLE,
+          },
+        ],
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(overview.status).toBe('ready')
+    expect(overview.activeWorkItems).toEqual([])
+    expect(JSON.stringify(overview)).not.toContain('Waiting-client task marked visible')
+  })
+
   it('returns empty-state-safe values when optional overview records are missing', () => {
     const overview = getClientOverviewPage({
       clientId: IDS.CLIENT_A,

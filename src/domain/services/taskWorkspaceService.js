@@ -374,7 +374,8 @@ export function updateWorkspaceTask({
 }) {
   const task = getEditableWorkspaceTask({ repositories, taskId, viewer })
   const nextStatus = input.status ?? task.status
-  const nextVisibility = input.visibility ?? task.visibility
+  const hasVisibilityInput = Object.hasOwn(input, 'visibility')
+  const nextVisibility = hasVisibilityInput ? input.visibility : VISIBILITY.INTERNAL
 
   if (!VALID_TASK_STATUSES.has(nextStatus)) {
     throw new Error('Task status is invalid.')
@@ -392,8 +393,8 @@ export function updateWorkspaceTask({
     throw new Error('Task visibility is invalid.')
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_TEAM && nextVisibility !== VISIBILITY.INTERNAL && task.visibility === VISIBILITY.INTERNAL) {
-    throw new Error('Only admins can publish internal tasks to clients.')
+  if (hasVisibilityInput && nextVisibility !== VISIBILITY.INTERNAL) {
+    throw new Error('Task visibility no longer publishes client-facing work. Use the client work review workflow.')
   }
 
   const updatedTask = {

@@ -217,11 +217,11 @@ describe('taskWorkspaceService', () => {
     })).toThrow('New tasks are internal')
   })
 
-  it('lets admins update task visibility without status-transition limits', () => {
+  it('lets admins update internal task status and proposed client summary', () => {
     const task = updateWorkspaceTask({
       input: {
+        clientSafeSummary: 'Proposed client-facing summary for review.',
         status: TASK_STATUSES.DONE,
-        visibility: VISIBILITY.INTERNAL,
       },
       repositories: createRepositories(),
       taskId: IDS.TASK_A,
@@ -229,9 +229,19 @@ describe('taskWorkspaceService', () => {
     })
 
     expect(task).toMatchObject({
-      client_visible: false,
+      client_safe_summary: 'Proposed client-facing summary for review.',
       status: TASK_STATUSES.DONE,
-      visibility: VISIBILITY.INTERNAL,
     })
+  })
+
+  it('blocks direct task visibility publishing during task updates', () => {
+    expect(() => updateWorkspaceTask({
+      input: {
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+      repositories: createRepositories(),
+      taskId: IDS.TASK_A,
+      viewer: createAdminViewer(),
+    })).toThrow('Task visibility no longer publishes client-facing work')
   })
 })

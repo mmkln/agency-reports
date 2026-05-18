@@ -328,25 +328,25 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Update `teamTaskService.js`:
   - [x] keep internal task listing.
   - [x] expose linked client work item state if useful.
-  - [ ] stop treating task visibility as published client state.
-- [ ] Update `taskWorkspaceService.js`:
+  - [x] stop treating task visibility as published client state.
+- [x] Update `taskWorkspaceService.js`:
   - [x] create/update internal tasks.
-  - [ ] no direct client publish.
-  - [ ] optionally support proposing a client work item.
-- [ ] Update task policies:
-  - [ ] status transitions remain internal.
-  - [ ] waiting-client status does not itself publish anything to client.
-- [ ] Update task tests:
-  - [ ] task update does not make client work visible.
+  - [x] no direct client publish.
+  - [x] optionally support proposing a client work item.
+- [x] Update task policies:
+  - [x] status transitions remain internal.
+  - [x] waiting-client status does not itself publish anything to client.
+- [x] Update task tests:
+  - [x] task update does not make client work visible.
   - [x] client-safe/proposed summary can be saved without publishing.
-  - [ ] only client work item publishing affects client-visible active work.
+  - [x] only client work item publishing affects client-visible active work.
 - [x] Update task seed data to include linked/unlinked work item examples.
 
 ### Completion Criteria
 
-- [ ] Internal task changes do not automatically change client-visible active work.
+- [x] Internal task changes do not automatically change client-visible active work.
 - [x] Team task UI can show whether a client work item exists without making the task itself client-facing.
-- [ ] Task visibility is no longer the client-facing access contract.
+- [x] Task visibility is no longer the client-facing access contract.
 
 ## Phase 7 - Needed From Client / ClientRequest Integration
 

@@ -173,7 +173,6 @@ describe('teamTaskService', () => {
         clientSafeSummary: 'Client-safe progress note',
         internalNote: 'Internal implementation detail',
         status: TASK_STATUSES.DONE,
-        visibility: VISIBILITY.INTERNAL,
       },
       now: () => '2026-05-09T10:00:00.000Z',
       repositories,
@@ -189,6 +188,17 @@ describe('teamTaskService', () => {
       updated_at: '2026-05-09T10:00:00.000Z',
       visibility: VISIBILITY.INTERNAL,
     })
+  })
+
+  it('blocks direct task visibility publishing for team updates', () => {
+    expect(() => updateAssignedTask({
+      input: {
+        visibility: VISIBILITY.CLIENT_VISIBLE,
+      },
+      repositories: createRepositories(),
+      taskId: IDS.TASK_A,
+      viewer: createViewer(),
+    })).toThrow('Task visibility no longer publishes client-facing work')
   })
 
   it('reopens completed tasks back to todo', () => {

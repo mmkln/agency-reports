@@ -220,7 +220,8 @@ export function updateAssignedTask({
 }) {
   const task = getEditableTask({ repositories, taskId, viewer })
   const nextStatus = input.status ?? task.status
-  const nextVisibility = input.visibility ?? task.visibility
+  const hasVisibilityInput = Object.hasOwn(input, 'visibility')
+  const nextVisibility = hasVisibilityInput ? input.visibility : VISIBILITY.INTERNAL
 
   if (!VALID_TASK_STATUSES.has(nextStatus)) {
     throw new Error('Task status is invalid.')
@@ -232,6 +233,10 @@ export function updateAssignedTask({
 
   if (!VALID_VISIBILITY.has(nextVisibility)) {
     throw new Error('Task visibility is invalid.')
+  }
+
+  if (hasVisibilityInput && nextVisibility !== VISIBILITY.INTERNAL) {
+    throw new Error('Task visibility no longer publishes client-facing work. Use the client work review workflow.')
   }
 
   const updatedTask = {

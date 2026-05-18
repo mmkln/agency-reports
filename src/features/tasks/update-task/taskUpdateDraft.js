@@ -14,7 +14,6 @@ export function createTaskUpdateDraft(task) {
     clientSafeSummary: task.clientSafeSummary,
     internalNote: task.internalNote,
     status: task.status,
-    visibility: task.visibility,
   }
 }
 
