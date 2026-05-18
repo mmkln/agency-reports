@@ -15,6 +15,7 @@ The canonical frontend repository contract is now:
 
 ```text
 src/app/providers/repositories/createPortalRepository.js
+src/app/providers/repositories/portalRepositoryAccessManifest.js
 src/app/providers/repositories/portalRepositoryContract.js
 src/app/providers/repositories/portalRepositorySchema.js
 ```
@@ -42,6 +43,19 @@ src/app/providers/repositories/portalRepositorySchema.js
 - clinic aggregate publish-state tables
 ```
 
+`portalRepositoryAccessManifest.js` defines the backend/RLS access manifest:
+
+```text
+- agency scope required by default
+- client membership requirements for client-scoped records
+- client-safe visibility filters
+- published-state filters for client-facing records
+- aggregate-only flags for clinic growth metrics
+- token-gated invitation access
+- self-or-agency profile access
+- server audit requirement markers
+```
+
 ## Required Collection Methods
 
 Every entity collection exposed by a backend adapter should implement:
@@ -67,6 +81,7 @@ repository.reset() for local/demo environments only
 - Keep table names centralized in `portalRepositoryContract.js`.
 - Keep adapter selection centralized in `createPortalRepository.js`.
 - Keep backend table requirements centralized in `portalRepositorySchema.js`.
+- Keep backend/RLS access requirements centralized in `portalRepositoryAccessManifest.js`.
 - Keep client visibility, publish states, and workflow permissions in domain policies/services.
 - Do not move visibility filtering into UI code.
 - Client routes must read published/client-safe records only.
@@ -83,6 +98,7 @@ Current contract coverage:
 src/app/providers/repositories/portalRepositoryContract.test.js
 src/app/providers/repositories/portalRepositoryContract.test-support.js
 src/app/providers/repositories/createPortalRepository.test.js
+src/app/providers/repositories/portalRepositoryAccessManifest.test.js
 src/app/providers/repositories/portalRepositorySchema.test.js
 ```
 
@@ -97,6 +113,10 @@ The contract tests verify:
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
 - extension methods remain explicit
 - backend schema manifest covers every repository table
+- backend/RLS access manifest covers every repository table
+- internal task/activity records are agency-only
+- client-facing records require published/client-safe filters
+- clinic aggregate tables are marked aggregate-only
 - seed records contain required backend columns
 ```
 
@@ -108,6 +128,7 @@ The contract tests verify:
 - [x] Add reusable contract tests for repository adapter behavior.
 - [x] Centralize repository adapter selection behind `createPortalRepository`.
 - [x] Add backend schema manifest for table scope, required columns, indexes, and clinic publish state.
+- [x] Add backend access manifest for RLS/API requirements.
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
