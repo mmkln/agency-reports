@@ -340,6 +340,19 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] patient portal
   - [x] automated remarketing without compliance layer
 
+## Phase 12.5 - Client Trust And Overview Refinement
+
+- [x] Add a domain-owned data trust read model for client-facing clinic analytics.
+- [x] Render a unified Data trust block on Patient Acquisition, Calls & Bookings, Campaigns / Service Lines, Reputation, and Compliance & Approvals.
+- [x] Make client-facing clinic data trust explicit:
+  - [x] last updated
+  - [x] source label
+  - [x] records shown
+  - [x] published aggregate records vs agency draft preview
+  - [x] no patient-level data shown
+- [x] Expand Clinic Overview top summary so the first screen surfaces new inquiries, booked appointments, cost per booked appointment, missed calls, reviews gained, compliance issues, and action needed.
+- [x] Add domain and e2e coverage for data trust and expanded overview summary.
+
 ## Phase 13 - Tests And Verification
 
 - [x] Add unit tests for clinic entity normalization.

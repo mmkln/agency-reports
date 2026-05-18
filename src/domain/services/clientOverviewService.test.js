@@ -575,6 +575,7 @@ describe('getClientOverview', () => {
     expect(overview.client.type).toBe(CLIENT_TYPES.CLINIC)
     expect(overview.clinicOverview).toMatchObject({
       actionNeededCount: 1,
+      clientId: IDS.CLIENT_A,
       booking: {
         followUpNeededCount: 5,
         missedCalls: 6,

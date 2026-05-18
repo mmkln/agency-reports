@@ -230,6 +230,7 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
           unansweredReviews: reputation.totals.unansweredReviews,
         }
       : null,
+    clientId,
     serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
   }
 }

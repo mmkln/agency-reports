@@ -72,10 +72,13 @@ test('clinic client navigation prioritizes patient acquisition workflows over ge
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Projects' })).toHaveCount(0)
 
   await expect(page.getByRole('heading', { exact: true, name: 'Green Dental Clinic' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('New inquiries')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Booked appointments')
+  await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Cost / booked')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Missed calls')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Reviews gained')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Compliance issues')
+  await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Action Needed')
 })
 
 test('clinic analytics pages render aggregate acquisition, booking, service, reputation, and compliance views', async ({ page }) => {
