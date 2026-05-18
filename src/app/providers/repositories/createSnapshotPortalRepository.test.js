@@ -44,6 +44,7 @@ describe('createSnapshotPortalRepository', () => {
     const workspace = createPortalRepositoryFromSnapshot({
       seedData: createSeedDataForRepositoryContract(),
       snapshot: null,
+      version: 'snapshot-version-1',
     })
 
     workspace.repositories.clients.upsert({
@@ -60,5 +61,6 @@ describe('createSnapshotPortalRepository', () => {
         }),
       ],
     })
+    expect(workspace.version).toBe('snapshot-version-1')
   })
 })

@@ -56,6 +56,46 @@ describe('createSnapshotPortalDataClient', () => {
     })
   })
 
+  it('passes loaded snapshot versions to save operations for backend concurrency checks', async () => {
+    let saveContext = null
+    const dataClient = createSnapshotPortalDataClient({
+      loadSnapshot: async () => ({
+        snapshot: {
+          clients: [],
+        },
+        version: 'snapshot-version-1',
+      }),
+      saveSnapshot: async (snapshot, context) => {
+        saveContext = {
+          context,
+          snapshot,
+        }
+      },
+      seedData: createSeedDataForRepositoryContract(),
+    })
+
+    await dataClient.write((repositories) => {
+      repositories.clients.upsert({
+        agency_id: 'agency-1',
+        id: 'client-1',
+        name: 'Client 1',
+      })
+    })
+
+    expect(saveContext).toMatchObject({
+      context: {
+        version: 'snapshot-version-1',
+      },
+      snapshot: {
+        clients: [
+          expect.objectContaining({
+            id: 'client-1',
+          }),
+        ],
+      },
+    })
+  })
+
   it('requires explicit async snapshot loading and saving functions', () => {
     expect(() => createSnapshotPortalDataClient()).toThrow('loadSnapshot is required.')
     expect(() => createSnapshotPortalDataClient({

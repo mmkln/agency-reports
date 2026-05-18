@@ -175,7 +175,7 @@ export function createPortalRepositoryCollections({ readSnapshot, writeSnapshot 
   }
 }
 
-export function createPortalRepositoryFromSnapshot({ seedData, snapshot }) {
+export function createPortalRepositoryFromSnapshot({ seedData, snapshot, version = null }) {
   let workingSnapshot = normalizePortalSnapshot(snapshot, seedData)
 
   const repositories = createPortalRepositoryCollections({
@@ -192,5 +192,6 @@ export function createPortalRepositoryFromSnapshot({ seedData, snapshot }) {
       return clone(workingSnapshot)
     },
     repositories,
+    version,
   }
 }

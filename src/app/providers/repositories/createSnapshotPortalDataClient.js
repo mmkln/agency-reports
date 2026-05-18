@@ -1,6 +1,25 @@
 import { portalSeedData } from './portalSeedData'
 import { createPortalRepositoryFromSnapshot } from './createSnapshotPortalRepository'
 
+function normalizeLoadedSnapshot(loadedSnapshot) {
+  if (
+    loadedSnapshot
+    && typeof loadedSnapshot === 'object'
+    && !Array.isArray(loadedSnapshot)
+    && Object.hasOwn(loadedSnapshot, 'snapshot')
+  ) {
+    return {
+      snapshot: loadedSnapshot.snapshot,
+      version: loadedSnapshot.version ?? null,
+    }
+  }
+
+  return {
+    snapshot: loadedSnapshot,
+    version: null,
+  }
+}
+
 export function createSnapshotPortalDataClient({
   loadSnapshot,
   saveSnapshot,
@@ -15,9 +34,12 @@ export function createSnapshotPortalDataClient({
   }
 
   async function createWorkspace() {
+    const loadedSnapshot = normalizeLoadedSnapshot(await loadSnapshot())
+
     return createPortalRepositoryFromSnapshot({
       seedData,
-      snapshot: await loadSnapshot(),
+      snapshot: loadedSnapshot.snapshot,
+      version: loadedSnapshot.version,
     })
   }
 
@@ -31,7 +53,9 @@ export function createSnapshotPortalDataClient({
       const workspace = await createWorkspace()
       const result = operation(workspace.repositories)
 
-      await saveSnapshot(workspace.getSnapshot())
+      await saveSnapshot(workspace.getSnapshot(), {
+        version: workspace.version,
+      })
 
       return result
     },

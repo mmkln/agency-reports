@@ -38,6 +38,14 @@ saveSnapshot(snapshot)
 
 The data client then runs existing domain operations against a normalized in-memory repository snapshot and saves the resulting snapshot after writes. This avoids forcing every domain service to become backend-specific.
 
+`loadSnapshot()` may also return a versioned payload:
+
+```text
+{ snapshot, version }
+```
+
+When a version is provided, `createSnapshotPortalDataClient` passes it to `saveSnapshot(snapshot, { version })` so the real backend adapter can enforce optimistic concurrency with an ETag, revision id, transaction version, or equivalent compare-and-swap guard.
+
 `portalRepositoryContract.js` defines:
 
 ```text
@@ -161,7 +169,7 @@ The contract tests verify:
 - table names are unique
 - localStorage adapter implements every contract collection
 - snapshot-backed repository implements every contract collection
-- snapshot data client can load, mutate, normalize, and save backend snapshots
+- snapshot data client can load, mutate, normalize, and save backend snapshots with optional version/ETag context
 - the factory-created default adapter implements the same repository contract
 - every collection exposes required entity methods
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
