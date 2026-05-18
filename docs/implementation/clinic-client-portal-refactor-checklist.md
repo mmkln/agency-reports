@@ -277,6 +277,9 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] next month plan
 - [x] Update admin report editor for clinic template content.
 - [x] Update client report reader to render clinic sections.
+- [x] Split the clinic report reader from the generic narrative report renderer.
+- [x] Add a clinic report scoreboard for inquiries, booked appointments, cost per booked appointment, and Google rating.
+- [x] Use clinic-specific source dashboard and report-file evidence copy with safe fallbacks.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.
 
