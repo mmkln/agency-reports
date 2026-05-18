@@ -19,6 +19,7 @@ src/app/providers/repositories/portalRepositoryAccessManifest.js
 src/app/providers/repositories/portalRepositoryContract.js
 src/app/providers/repositories/portalRepositorySchema.js
 src/app/providers/repositories/portalRepositoryRlsPolicyManifest.js
+src/domain/services/serverAuditContractService.js
 ```
 
 `createPortalRepository.js` is the adapter selection boundary. The app should create repositories through this factory instead of importing a concrete adapter directly.
@@ -67,6 +68,16 @@ src/app/providers/repositories/portalRepositoryRlsPolicyManifest.js
 - token-gated invitation select policy
 ```
 
+`serverAuditContractService.js` defines critical transition audit obligations that a production backend must persist server-side:
+
+```text
+- client work item publish/archive
+- client invitation create/cancel/accept
+- client action answered/resolved/cancelled
+- clinic compliance publish/status changes
+- clinic medical approval decisions
+```
+
 ## Required Collection Methods
 
 Every entity collection exposed by a backend adapter should implement:
@@ -113,6 +124,7 @@ src/app/providers/repositories/createPortalRepository.test.js
 src/app/providers/repositories/portalRepositoryAccessManifest.test.js
 src/app/providers/repositories/portalRepositorySchema.test.js
 src/app/providers/repositories/portalRepositoryRlsPolicyManifest.test.js
+src/domain/services/serverAuditContractService.test.js
 ```
 
 The contract tests verify:
@@ -133,6 +145,7 @@ The contract tests verify:
 - client-facing records require published/client-safe filters
 - clinic aggregate tables are marked aggregate-only
 - clinic aggregate client policies carry published-state filters
+- server audit transition manifest covers publish, access, client response, and clinic compliance transitions
 - seed records contain required backend columns
 ```
 
@@ -142,6 +155,7 @@ Current domain audit hooks:
 
 ```text
 - client work item publish/archive transitions record activity events when an activity repository is configured
+- client invitation create/cancel/accept transitions record activity events when an activity repository is configured
 - client request and needed-from-client lifecycle changes record activity events when configured
 - clinic compliance publish, compliance status change, and medical approval decision transitions record internal activity events when configured
 ```
@@ -160,5 +174,6 @@ These hooks are still repository-backed frontend/domain behavior. The production
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
 - [x] Add frontend/domain audit hooks for clinic compliance publish/status/approval transitions.
+- [x] Add server audit transition contract and frontend/domain hooks for invitation lifecycle transitions.
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
 - [x] Replace demo reset behavior with environment-gated admin/dev tooling.

@@ -1,6 +1,10 @@
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import { USER_ROLES } from '../../entities/profile'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 import { setAuthSession } from './authService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -109,7 +113,36 @@ function mapInvitation(invitation, now) {
   }
 }
 
+function recordInvitationActivity({
+  activityIdGenerator,
+  eventType,
+  invitation,
+  now,
+  repositories,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId: invitation.client_id,
+    eventType,
+    idGenerator: activityIdGenerator,
+    metadata: {
+      email: invitation.email,
+      invitationId: invitation.id,
+      role: invitation.role,
+      status: invitation.status,
+    },
+    now,
+    repositories,
+    viewer,
+  })
+}
+
 export function createClientInvitation({
+  activityIdGenerator,
   clientId,
   email,
   expiresAt = null,
@@ -144,6 +177,14 @@ export function createClientInvitation({
   }
 
   repositories.clientInvitations.upsert(invitation)
+  recordInvitationActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
+    invitation,
+    now,
+    repositories,
+    viewer,
+  })
 
   return invitation
 }
@@ -182,6 +223,7 @@ export function getClientInvitationByToken({ repositories, token }) {
 }
 
 export function cancelClientInvitation({
+  activityIdGenerator,
   invitationId,
   now = () => new Date().toISOString(),
   repositories,
@@ -214,11 +256,20 @@ export function cancelClientInvitation({
   }
 
   repositories.clientInvitations.upsert(nextInvitation)
+  recordInvitationActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CANCELLED,
+    invitation: nextInvitation,
+    now,
+    repositories,
+    viewer,
+  })
 
   return mapInvitation(nextInvitation, now)
 }
 
 export function acceptClientInvitation({
+  activityIdGenerator,
   email,
   idGenerator,
   name,
@@ -294,11 +345,26 @@ export function acceptClientInvitation({
     })
   }
 
-  repositories.clientInvitations.upsert({
+  const acceptedInvitation = {
     ...invitation,
     accepted_at: timestamp,
     status: CLIENT_INVITATION_STATUSES.ACCEPTED,
     updated_at: timestamp,
+  }
+
+  repositories.clientInvitations.upsert(acceptedInvitation)
+  recordInvitationActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_ACCEPTED,
+    invitation: acceptedInvitation,
+    now,
+    repositories,
+    viewer: {
+      clientId: client.id,
+      clientIds: [client.id],
+      role: USER_ROLES.CLIENT_USER,
+      userId: profile.user_id,
+    },
   })
 
   setAuthSession(profile.user_id, storage)

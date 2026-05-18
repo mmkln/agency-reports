@@ -5,6 +5,7 @@ import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import { USER_ROLES } from '../../entities/profile'
 import { createLocalStoragePortalRepository } from '../../app/providers/repositories/createLocalStoragePortalRepository'
+import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
   acceptClientInvitation,
   cancelClientInvitation,
@@ -17,6 +18,9 @@ const IDS = Object.freeze({
   AGENCY: '11111111-1111-4111-8111-111111111111',
   CLIENT: '22222222-2222-4222-8222-222222222222',
   INVITATION: '33333333-3333-4333-8333-333333333333',
+  INVITATION_ACCEPTED_EVENT: '99999999-9999-4999-8999-999999999999',
+  INVITATION_CANCELLED_EVENT: '88888888-8888-4888-8888-888888888888',
+  INVITATION_CREATED_EVENT: '10101010-1010-4010-8010-101010101010',
   MEMBERSHIP: '44444444-4444-4444-8444-444444444444',
   PROFILE: '55555555-5555-4555-8555-555555555555',
   TOKEN: '66666666-6666-4666-8666-666666666666',
@@ -73,6 +77,7 @@ describe('clientInviteService', () => {
     const generatedIds = [IDS.INVITATION, IDS.TOKEN]
 
     const invitation = createClientInvitation({
+      activityIdGenerator: () => IDS.INVITATION_CREATED_EVENT,
       clientId: IDS.CLIENT,
       email: 'owner@example.com',
       idGenerator: () => generatedIds.shift(),
@@ -92,6 +97,19 @@ describe('clientInviteService', () => {
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: IDS.TOKEN.replace(/-/g, ''),
     })
+    expect(repositories.activityEvents.list()).toEqual([
+      expect.objectContaining({
+        client_id: IDS.CLIENT,
+        event_type: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
+        id: IDS.INVITATION_CREATED_EVENT,
+        metadata: expect.objectContaining({
+          email: 'owner@example.com',
+          invitationId: IDS.INVITATION,
+          status: CLIENT_INVITATION_STATUSES.PENDING,
+        }),
+        user_id: 'admin-user',
+      }),
+    ])
   })
 
   it('lists invitations with effective expired status and selected role', () => {
@@ -147,6 +165,7 @@ describe('clientInviteService', () => {
     })
 
     const invitation = cancelClientInvitation({
+      activityIdGenerator: () => IDS.INVITATION_CANCELLED_EVENT,
       invitationId: IDS.INVITATION,
       repositories,
       viewer: {
@@ -157,6 +176,17 @@ describe('clientInviteService', () => {
     })
 
     expect(invitation.status).toBe(CLIENT_INVITATION_STATUSES.CANCELLED)
+    expect(repositories.activityEvents.list()).toEqual([
+      expect.objectContaining({
+        event_type: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CANCELLED,
+        id: IDS.INVITATION_CANCELLED_EVENT,
+        metadata: expect.objectContaining({
+          invitationId: IDS.INVITATION,
+          status: CLIENT_INVITATION_STATUSES.CANCELLED,
+        }),
+        user_id: 'admin-user',
+      }),
+    ])
   })
 
   it('accepts an invitation, creates a client user membership, and stores a session', () => {
@@ -177,6 +207,7 @@ describe('clientInviteService', () => {
 
     const generatedIds = [IDS.PROFILE, IDS.USER, IDS.MEMBERSHIP]
     const result = acceptClientInvitation({
+      activityIdGenerator: () => IDS.INVITATION_ACCEPTED_EVENT,
       email: 'owner@example.com',
       idGenerator: () => generatedIds.shift(),
       name: 'Owner Name',
@@ -201,6 +232,18 @@ describe('clientInviteService', () => {
     expect(repositories.clientInvitations.findById(IDS.INVITATION)).toMatchObject({
       status: CLIENT_INVITATION_STATUSES.ACCEPTED,
     })
+    expect(repositories.activityEvents.list()).toEqual([
+      expect.objectContaining({
+        client_id: IDS.CLIENT,
+        event_type: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_ACCEPTED,
+        id: IDS.INVITATION_ACCEPTED_EVENT,
+        metadata: expect.objectContaining({
+          invitationId: IDS.INVITATION,
+          status: CLIENT_INVITATION_STATUSES.ACCEPTED,
+        }),
+        user_id: IDS.USER,
+      }),
+    ])
     expect(storage.getItem('agency-reports.auth-session')).toContain(IDS.USER)
   })
 
