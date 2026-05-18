@@ -80,7 +80,7 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   await dashboardRow.getByLabel('Dashboard actions').click()
   await page.getByRole('menuitem', { name: 'Preview dashboard' }).click()
   await expect(page).toHaveURL(/\/admin\/client-dashboard-preview/)
-  await expect(page.getByRole('heading', { exact: true, name: 'Reports & Dashboards' })).toBeVisible()
+  await expect(page.getByRole('heading', { exact: true, name: 'Clinic Results' })).toBeVisible()
   await expect(page.getByRole('heading', { name: dashboardName })).toBeVisible()
   await expect(page.getByText('E2E dashboard description')).toBeVisible()
 })
@@ -123,7 +123,7 @@ test('unavailable dashboard shows a controlled client fallback', async ({ page }
 
   const sourceDashboard = page.locator('#source-dashboard')
 
-  await expect(sourceDashboard.getByRole('heading', { name: 'External dashboard detail' })).toBeVisible()
+  await expect(sourceDashboard.getByRole('heading', { name: 'Patient acquisition source detail' })).toBeVisible()
   await expect(sourceDashboard.getByRole('heading', { name: 'Dashboard is temporarily unavailable' })).toBeVisible()
   await expect(sourceDashboard.getByText('Marketing dashboard is being prepared.')).toBeVisible()
   await expect(sourceDashboard.getByRole('link', { name: 'Open full dashboard' }).first()).toBeVisible()
