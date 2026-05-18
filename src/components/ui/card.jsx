@@ -34,11 +34,12 @@ function CardHeader({
 }
 
 function CardTitle({
+  as: Comp = "div",
   className,
   ...props
 }) {
   return (
-    <div
+    <Comp
       data-slot="card-title"
       className={cn(
         "font-heading text-heading text-text-primary group-data-[size=sm]/card:text-ui",

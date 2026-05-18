@@ -55,9 +55,9 @@ test('admin can manage clinic setup from the client workspace', async ({ page })
     await expect(clientWorkspaceTabs(page).getByRole('link', { name: tabName })).toBeVisible()
   }
 
-  await expect(page.getByText('Clinic Profile', { exact: true })).toBeVisible()
-  await expect(page.getByText('Locations', { exact: true }).first()).toBeVisible()
-  await expect(page.getByText('Service Lines', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Clinic Profile' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Locations' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Service Lines' })).toBeVisible()
   await expect(page.getByText('Do not enter patient-level identifiers here.')).toBeVisible()
 
   await page.getByLabel('Primary growth goal').fill('E2E increase booked implant and emergency appointments.')
@@ -80,9 +80,9 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await page.goto(`/admin/clinic-metrics?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.locator('h1').getByText('Green Dental Clinic', { exact: true })).toBeVisible()
-  await expect(page.getByText('Patient Acquisition Snapshots', { exact: true })).toBeVisible()
-  await expect(page.getByText('Calls & Bookings Snapshots', { exact: true })).toBeVisible()
-  await expect(page.getByText('Service Line Performance', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient Acquisition Snapshots' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Calls & Bookings Snapshots' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Service Line Performance' })).toBeVisible()
   await expect(page.getByText('without storing PHI.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save metrics' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Create missed-call action' }).first()).toBeVisible()
@@ -109,7 +109,7 @@ test('admin reputation and compliance workspaces expose published and draft clin
   await signInAsAdmin(page)
   await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Reputation Snapshots', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reputation Snapshots' })).toBeVisible()
   await expect(page.getByText('without storing reviewer or patient identifiers.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save reputation' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Published reputation' })).toHaveAttribute(
@@ -126,8 +126,8 @@ test('admin reputation and compliance workspaces expose published and draft clin
 
   await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Compliance Reviews', { exact: true })).toBeVisible()
-  await expect(page.getByText('Medical Approvals', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compliance Reviews' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Medical Approvals' })).toBeVisible()
   await expect(page.getByText('policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save compliance' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Approve' }).first()).toBeVisible()

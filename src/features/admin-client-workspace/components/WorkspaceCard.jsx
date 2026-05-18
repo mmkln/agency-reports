@@ -39,7 +39,7 @@ export function WorkspaceCard({ action, children, description, iconName, title }
       <CardHeader className="border-b border-separator px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-ui text-text-primary">
+            <CardTitle as="h2" className="flex items-center gap-2 text-ui text-text-primary">
               {iconName ? <Icon className="text-text-quaternary" name={iconName} size={15} /> : null}
               {title}
             </CardTitle>
