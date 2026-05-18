@@ -72,8 +72,9 @@ Current extension methods:
 
 ```text
 profiles.findByUserId(userId)
-repository.reset() for local/demo environments only
 ```
+
+Local/demo reset is deliberately not part of the production repository contract. The localStorage adapter only exposes `repository.reset()` when `createPortalRepository({ enableDemoReset: true })` opts into dev tooling.
 
 ## Adapter Rules
 
@@ -112,6 +113,7 @@ The contract tests verify:
 - every collection exposes required entity methods
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
 - extension methods remain explicit
+- demo reset stays opt-in and outside the production repository contract
 - backend schema manifest covers every repository table
 - backend/RLS access manifest covers every repository table
 - internal task/activity records are agency-only
@@ -144,4 +146,4 @@ These hooks are still repository-backed frontend/domain behavior. The production
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
 - [x] Add frontend/domain audit hooks for clinic compliance publish/status/approval transitions.
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
-- [ ] Replace demo reset behavior with environment-gated admin/dev tooling.
+- [x] Replace demo reset behavior with environment-gated admin/dev tooling.

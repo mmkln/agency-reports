@@ -513,7 +513,7 @@ describe('createLocalStoragePortalRepository', () => {
 
   it('reset removes the current snapshot and reseeds predictable QA data', () => {
     const storage = createStorage()
-    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const repository = createLocalStoragePortalRepository({ enableDemoReset: true, seedData, storage })
 
     repository.clients.upsert({
       id: '33333333-3333-4333-8333-333333333333',
@@ -522,5 +522,11 @@ describe('createLocalStoragePortalRepository', () => {
 
     expect(repository.clients.list()).toHaveLength(2)
     expect(repository.reset().clients.map((client) => client.name)).toEqual(['Seed Client'])
+  })
+
+  it('omits demo reset unless explicitly enabled', () => {
+    const repository = createLocalStoragePortalRepository({ seedData, storage: createStorage() })
+
+    expect(repository.reset).toBeUndefined()
   })
 })

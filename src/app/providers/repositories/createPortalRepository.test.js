@@ -43,6 +43,21 @@ describe('createPortalRepository', () => {
     })
   })
 
+  it('keeps demo reset disabled unless explicitly requested', () => {
+    const productionRepository = createPortalRepository({
+      adapter: PORTAL_REPOSITORY_ADAPTERS.LOCAL_STORAGE,
+      seedData: createSeedDataForRepositoryContract(),
+    })
+    const demoRepository = createPortalRepository({
+      adapter: PORTAL_REPOSITORY_ADAPTERS.LOCAL_STORAGE,
+      enableDemoReset: true,
+      seedData: createSeedDataForRepositoryContract(),
+    })
+
+    expect(productionRepository.reset).toBeUndefined()
+    expect(typeof demoRepository.reset).toBe('function')
+  })
+
   it('fails fast for unsupported adapters', () => {
     expect(() => resolvePortalRepositoryAdapter('api')).toThrow('Unsupported portal repository adapter: api')
     expect(() => createPortalRepository({ adapter: 'api' })).toThrow('Unsupported portal repository adapter: api')

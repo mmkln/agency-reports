@@ -45,7 +45,6 @@ export const PORTAL_ENTITY_REPOSITORY_METHODS = Object.freeze([
 
 export const PORTAL_REPOSITORY_EXTENSION_METHODS = Object.freeze({
   profiles: ['findByUserId'],
-  root: ['reset'],
 })
 
 export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([

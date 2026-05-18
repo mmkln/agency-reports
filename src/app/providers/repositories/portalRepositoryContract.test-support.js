@@ -37,10 +37,6 @@ function expectRepositoryShape(repository) {
   for (const method of PORTAL_REPOSITORY_EXTENSION_METHODS.profiles) {
     expect(typeof repository.profiles[method], `profiles.${method}`).toBe('function')
   }
-
-  for (const method of PORTAL_REPOSITORY_EXTENSION_METHODS.root) {
-    expect(typeof repository[method], method).toBe('function')
-  }
 }
 
 export function runPortalRepositoryContractSuite({ createRepository, name }) {
@@ -97,9 +93,6 @@ export function runPortalRepositoryContractSuite({ createRepository, name }) {
 
       expect(repository.profiles.findByUserId(profile.user_id)).toMatchObject(profile)
       expect(repository.profiles.findByUserId('missing-user')).toBeNull()
-
-      const resetSnapshot = repository.reset()
-      expect(resetSnapshot).toBeDefined()
     })
   })
 }

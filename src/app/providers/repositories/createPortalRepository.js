@@ -17,6 +17,7 @@ export function resolvePortalRepositoryAdapter(adapter) {
 
 export function createPortalRepository({
   adapter = PORTAL_REPOSITORY_ADAPTERS.LOCAL_STORAGE,
+  enableDemoReset = false,
   seedData = portalSeedData,
   storage,
 } = {}) {
@@ -24,6 +25,7 @@ export function createPortalRepository({
 
   if (resolvedAdapter === PORTAL_REPOSITORY_ADAPTERS.LOCAL_STORAGE) {
     return createLocalStoragePortalRepository({
+      enableDemoReset,
       seedData,
       storage,
     })

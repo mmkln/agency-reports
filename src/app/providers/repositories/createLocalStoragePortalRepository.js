@@ -173,7 +173,7 @@ function createEntityRepository(tableName, readSnapshot, writeSnapshot) {
   }
 }
 
-export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
+export function createLocalStoragePortalRepository({ enableDemoReset = false, seedData, storage } = {}) {
   const storageAdapter = storage ?? (typeof window !== 'undefined' ? window.localStorage : createMemoryStorage())
 
   function readSnapshot() {
@@ -212,7 +212,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     ]),
   )
 
-  return {
+  const repository = {
     ...repositories,
     profiles: {
       ...repositories.profiles,
@@ -220,9 +220,14 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
         return readSnapshot().profiles.find((profile) => profile.user_id === userId) ?? null
       },
     },
-    reset() {
+  }
+
+  if (enableDemoReset) {
+    repository.reset = function resetDemoRepository() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)
       return readSnapshot()
-    },
+    }
   }
+
+  return repository
 }
