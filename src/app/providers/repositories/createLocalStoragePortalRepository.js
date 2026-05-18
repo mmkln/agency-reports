@@ -3,6 +3,7 @@ export const PORTAL_STORAGE_SCHEMA_VERSION = 1
 
 const TABLE_NAMES = Object.freeze([
   'activity_events',
+  'booking_pipeline_snapshots',
   'clients',
   'client_invitations',
   'client_file_links',
@@ -15,6 +16,7 @@ const TABLE_NAMES = Object.freeze([
   'clinic_profiles',
   'clinic_service_lines',
   'dashboard_links',
+  'location_performance',
   'needed_from_client',
   'performance_dashboard_periods',
   'patient_acquisition_snapshots',
@@ -29,7 +31,9 @@ const TABLE_NAMES = Object.freeze([
 ])
 const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'call_booking_metrics',
+  'booking_pipeline_snapshots',
   'compliance_reviews',
+  'location_performance',
   'medical_approvals',
   'patient_acquisition_snapshots',
   'reputation_snapshots',
@@ -236,6 +240,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
 
   return {
     activityEvents: createEntityRepository('activity_events', readSnapshot, writeSnapshot),
+    bookingPipelineSnapshots: createEntityRepository('booking_pipeline_snapshots', readSnapshot, writeSnapshot),
     clients: createEntityRepository('clients', readSnapshot, writeSnapshot),
     clientFileLinks: createEntityRepository('client_file_links', readSnapshot, writeSnapshot),
     clientInvitations: createEntityRepository('client_invitations', readSnapshot, writeSnapshot),
@@ -248,6 +253,7 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
     clinicServiceLines: createEntityRepository('clinic_service_lines', readSnapshot, writeSnapshot),
     complianceReviews: createEntityRepository('compliance_reviews', readSnapshot, writeSnapshot),
     dashboardLinks: createEntityRepository('dashboard_links', readSnapshot, writeSnapshot),
+    locationPerformance: createEntityRepository('location_performance', readSnapshot, writeSnapshot),
     neededFromClient: createEntityRepository('needed_from_client', readSnapshot, writeSnapshot),
     performanceDashboardPeriods: createEntityRepository('performance_dashboard_periods', readSnapshot, writeSnapshot),
     patientAcquisitionSnapshots: createEntityRepository('patient_acquisition_snapshots', readSnapshot, writeSnapshot),

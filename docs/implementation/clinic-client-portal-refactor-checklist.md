@@ -50,10 +50,10 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `ClinicLocation`.
 - [x] Add `ClinicServiceLine`.
 - [x] Add `PatientAcquisitionSnapshot`.
-- [ ] Add `BookingPipelineSnapshot`.
+- [x] Add `BookingPipelineSnapshot`.
 - [x] Add `CallBookingMetric`.
 - [x] Add `ServiceLinePerformance`.
-- [ ] Add `LocationPerformance`.
+- [x] Add `LocationPerformance`.
 - [x] Add `ReputationSnapshot`.
 - [x] Add `ComplianceReview`.
 - [x] Add `MedicalApproval`.

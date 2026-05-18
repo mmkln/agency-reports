@@ -421,6 +421,44 @@ export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
   }
 }
 
+export function normalizeBookingPipelineSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Booking pipeline snapshot')
+
+  return {
+    attended_appointments: normalizeNumber(snapshot.attended_appointments),
+    booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    calls: normalizeNumber(snapshot.calls),
+    chats: normalizeNumber(snapshot.chats),
+    client_id: normalizeText(snapshot.client_id),
+    clicks: normalizeNumber(snapshot.clicks),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    forms: normalizeNumber(snapshot.forms),
+    id: normalizeText(snapshot.id),
+    impressions: normalizeNumber(snapshot.impressions),
+    insight: normalizeText(snapshot.insight),
+    landing_page_visits: normalizeNumber(snapshot.landing_page_visits),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    location_id: normalizeNullableText(snapshot.location_id),
+    missed_calls: normalizeNumber(snapshot.missed_calls),
+    no_response_leads: normalizeNumber(snapshot.no_response_leads),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
+    qualified_inquiries: normalizeNumber(snapshot.qualified_inquiries),
+    service_line_id: normalizeNullableText(snapshot.service_line_id),
+    summary: normalizeText(snapshot.summary),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}
+
 function normalizeReasonBreakdown(items) {
   if (!Array.isArray(items)) {
     return []
@@ -527,6 +565,46 @@ export function normalizeServiceLinePerformance(performance = {}) {
     published_at: performance.published_at ?? null,
     published_by: normalizeNullableText(performance.published_by),
     service_line_id: normalizeNullableText(performance.service_line_id),
+    spend: normalizeNumber(performance.spend),
+    summary: normalizeText(performance.summary),
+    updated_at: performance.updated_at ?? performance.created_at ?? null,
+  }
+}
+
+export function normalizeLocationPerformance(performance = {}) {
+  assertClinicAggregateRecord(performance, 'Location performance')
+
+  return {
+    answered_calls: normalizeNumber(performance.answered_calls),
+    booked_appointments: normalizeNumber(performance.booked_appointments),
+    client_id: normalizeText(performance.client_id),
+    compliance_status: normalizeEnum(
+      performance.compliance_status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    cost_per_booked_appointment: normalizeNumber(performance.cost_per_booked_appointment),
+    created_at: performance.created_at ?? null,
+    data_source: normalizeNullableText(performance.data_source),
+    google_rating: normalizeNumber(performance.google_rating),
+    id: normalizeText(performance.id),
+    inquiries: normalizeNumber(performance.inquiries),
+    insight: normalizeText(performance.insight),
+    last_updated_at: performance.last_updated_at ?? performance.updated_at ?? performance.created_at ?? null,
+    location_id: normalizeNullableText(performance.location_id),
+    missed_calls: normalizeNumber(performance.missed_calls),
+    period_end: normalizeText(performance.period_end),
+    period_label: normalizeText(performance.period_label),
+    period_start: normalizeText(performance.period_start),
+    publish_state: normalizeEnum(
+      performance.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: performance.published_at ?? null,
+    published_by: normalizeNullableText(performance.published_by),
+    review_count: normalizeNumber(performance.review_count),
+    reviews_gained: normalizeNumber(performance.reviews_gained),
     spend: normalizeNumber(performance.spend),
     summary: normalizeText(performance.summary),
     updated_at: performance.updated_at ?? performance.created_at ?? null,

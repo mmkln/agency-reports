@@ -373,6 +373,20 @@ describe('adminClientService', () => {
           name: 'Dental Implants',
         },
       ]),
+      bookingPipelineSnapshots: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '11111111-2222-4222-8222-111111111111',
+          qualified_inquiries: 21,
+        },
+      ]),
+      locationPerformance: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '22222222-3333-4333-8333-222222222222',
+          location_id: '77777777-7777-4777-8777-777777777777',
+        },
+      ]),
       serviceLinePerformance: createClientsRepository([
         {
           client_id: IDS.CLIENT_A,
@@ -392,6 +406,8 @@ describe('adminClientService', () => {
     expect(repositories.clinicProfiles.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicLocations.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicServiceLines.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.bookingPipelineSnapshots.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.locationPerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.serviceLinePerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
   })
 })

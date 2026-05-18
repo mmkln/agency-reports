@@ -293,6 +293,7 @@ function createGreenDentalReactivationCampaignExecution() {
 
 export const portalSeedData = Object.freeze({
   activity_events: [],
+  booking_pipeline_snapshots: [],
   client_invitations: [
     {
       accepted_at: null,
@@ -1201,6 +1202,7 @@ export const portalSeedData = Object.freeze({
       updated_at: '2026-05-08T09:00:00.000Z',
     },
   ],
+  location_performance: [],
   performance_dashboard_periods: [
     {
       account_manager: 'Sarah Johnson',

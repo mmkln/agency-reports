@@ -10,11 +10,13 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
   assertClinicAggregateRecord,
+  normalizeBookingPipelineSnapshot,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
   normalizeCallBookingMetric,
   normalizeComplianceReview,
+  normalizeLocationPerformance,
   normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
@@ -90,6 +92,35 @@ describe('clinic entity model', () => {
     })
   })
 
+  it('normalizes aggregate booking pipeline snapshots', () => {
+    expect(normalizeBookingPipelineSnapshot({
+      attended_appointments: '9',
+      booked_appointments: '12',
+      calls: '18',
+      chats: '2',
+      clicks: '240',
+      forms: '7',
+      impressions: '12800',
+      landing_page_visits: '211',
+      missed_calls: '4',
+      no_response_leads: '3',
+      qualified_inquiries: '20',
+    })).toMatchObject({
+      attended_appointments: 9,
+      booked_appointments: 12,
+      calls: 18,
+      chats: 2,
+      clicks: 240,
+      forms: 7,
+      impressions: 12800,
+      landing_page_visits: 211,
+      missed_calls: 4,
+      no_response_leads: 3,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+      qualified_inquiries: 20,
+    })
+  })
+
   it('normalizes aggregate call and booking metrics', () => {
     expect(normalizeCallBookingMetric({
       answered_calls: '37',
@@ -160,6 +191,33 @@ describe('clinic entity model', () => {
       inquiries: 27,
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
       spend: 2250,
+    })
+  })
+
+  it('normalizes aggregate location performance records', () => {
+    expect(normalizeLocationPerformance({
+      answered_calls: '31',
+      booked_appointments: '18',
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      cost_per_booked_appointment: '138',
+      google_rating: '4.8',
+      inquiries: '29',
+      missed_calls: '5',
+      review_count: '220',
+      reviews_gained: '12',
+      spend: '2480',
+    })).toMatchObject({
+      answered_calls: 31,
+      booked_appointments: 18,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      cost_per_booked_appointment: 138,
+      google_rating: 4.8,
+      inquiries: 29,
+      missed_calls: 5,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+      review_count: 220,
+      reviews_gained: 12,
+      spend: 2480,
     })
   })
 
@@ -256,6 +314,10 @@ describe('clinic entity model', () => {
       campaign_status: CLINIC_CAMPAIGN_STATUSES.PLANNED,
       compliance_status: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
     })
+
+    expect(normalizeLocationPerformance({
+      compliance_status: 'legal_hold',
+    }).compliance_status).toBe(CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED)
 
     expect(normalizeMedicalApproval({
       approval_type: 'unknown',

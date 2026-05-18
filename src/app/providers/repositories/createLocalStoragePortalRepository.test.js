@@ -13,6 +13,7 @@ const seedData = Object.freeze({
       name: 'Seed Client',
     },
   ],
+  booking_pipeline_snapshots: [],
   call_booking_metrics: [],
   client_file_links: [],
   client_invitations: [],
@@ -24,6 +25,7 @@ const seedData = Object.freeze({
   clinic_profiles: [],
   clinic_service_lines: [],
   dashboard_links: [],
+  location_performance: [],
   needed_from_client: [],
   medical_approvals: [],
   performance_dashboard_periods: [],
@@ -101,6 +103,7 @@ describe('createLocalStoragePortalRepository', () => {
             name: 'Existing Client',
           },
         ],
+        booking_pipeline_snapshots: [],
         call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
@@ -112,6 +115,7 @@ describe('createLocalStoragePortalRepository', () => {
         clinic_profiles: [],
         clinic_service_lines: [],
         dashboard_links: [],
+        location_performance: [],
         needed_from_client: [],
         medical_approvals: [],
         performance_dashboard_periods: [],
@@ -152,6 +156,7 @@ describe('createLocalStoragePortalRepository', () => {
       [PORTAL_STORAGE_KEY]: JSON.stringify({
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
         clients: [],
+        booking_pipeline_snapshots: [],
         call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
@@ -163,6 +168,7 @@ describe('createLocalStoragePortalRepository', () => {
         clinic_profiles: [],
         clinic_service_lines: [],
         dashboard_links: [],
+        location_performance: [],
         needed_from_client: [],
         medical_approvals: [],
         performance_dashboard_periods: [
@@ -363,6 +369,25 @@ describe('createLocalStoragePortalRepository', () => {
     expect(reloadedRepository.patientAcquisitionSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
   })
 
+  it('persists booking pipeline snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      booked_appointments: 12,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '17171717-1717-4717-8717-171717171717',
+      missed_calls: 3,
+      period_label: 'May 2026',
+      qualified_inquiries: 18,
+    }
+
+    repository.bookingPipelineSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.bookingPipelineSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.bookingPipelineSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
   it('persists call booking metrics through the local repository adapter', () => {
     const storage = createStorage()
     const repository = createLocalStoragePortalRepository({ seedData, storage })
@@ -451,6 +476,27 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.serviceLinePerformance.findById(performance.id)).toMatchObject(performance)
     expect(reloadedRepository.serviceLinePerformance.listByClientId(performance.client_id)).toHaveLength(1)
+  })
+
+  it('persists location performance through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const performance = {
+      booked_appointments: 18,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '18181818-1818-4818-8818-181818181818',
+      inquiries: 29,
+      location_id: '88888888-8888-4888-8888-888888888888',
+      period_label: 'May 2026',
+      publish_state: 'draft',
+      spend: 2480,
+    }
+
+    repository.locationPerformance.upsert(performance)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.locationPerformance.findById(performance.id)).toMatchObject(performance)
+    expect(reloadedRepository.locationPerformance.listByClientId(performance.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {
