@@ -15,6 +15,8 @@ The canonical frontend repository contract is now:
 
 ```text
 src/app/providers/repositories/createPortalRepository.js
+src/app/providers/repositories/createSnapshotPortalDataClient.js
+src/app/providers/repositories/createSnapshotPortalRepository.js
 src/app/providers/repositories/portalRepositoryAccessManifest.js
 src/app/providers/repositories/portalRepositoryContract.js
 src/app/providers/repositories/portalRepositorySchema.js
@@ -24,6 +26,17 @@ src/domain/services/serverAuditContractService.js
 ```
 
 `createPortalRepository.js` is the adapter selection boundary. The app should create repositories through this factory instead of importing a concrete adapter directly.
+
+`createSnapshotPortalRepository.js` is the adapter-neutral synchronous repository workspace. It owns snapshot normalization, seed merging, schema-version repair, collection method construction, and the `profiles.findByUserId` extension. LocalStorage uses it directly, and a future backend adapter should reuse the same snapshot workspace so domain services keep receiving the same repository contract.
+
+`createSnapshotPortalDataClient.js` is the bridge for async backends. A backend adapter can provide:
+
+```text
+loadSnapshot()
+saveSnapshot(snapshot)
+```
+
+The data client then runs existing domain operations against a normalized in-memory repository snapshot and saves the resulting snapshot after writes. This avoids forcing every domain service to become backend-specific.
 
 `portalRepositoryContract.js` defines:
 
@@ -132,6 +145,8 @@ Current contract coverage:
 src/app/providers/repositories/portalRepositoryContract.test.js
 src/app/providers/repositories/portalRepositoryContract.test-support.js
 src/app/providers/repositories/createPortalRepository.test.js
+src/app/providers/repositories/createSnapshotPortalDataClient.test.js
+src/app/providers/repositories/createSnapshotPortalRepository.test.js
 src/app/providers/repositories/portalRepositoryAccessManifest.test.js
 src/app/providers/repositories/portalRepositorySchema.test.js
 src/app/providers/repositories/portalRepositoryRlsPolicyManifest.test.js
@@ -145,6 +160,8 @@ The contract tests verify:
 - repository keys are unique
 - table names are unique
 - localStorage adapter implements every contract collection
+- snapshot-backed repository implements every contract collection
+- snapshot data client can load, mutate, normalize, and save backend snapshots
 - the factory-created default adapter implements the same repository contract
 - every collection exposes required entity methods
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
@@ -183,6 +200,7 @@ These hooks are still repository-backed frontend/domain behavior. The production
 - [x] Add backend schema manifest for table scope, required columns, indexes, and clinic publish state.
 - [x] Add backend access manifest for RLS/API requirements.
 - [x] Add backend RLS policy intent manifest derived from repository access rules.
+- [x] Add snapshot-backed repository/data-client bridge for future async API adapters.
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [x] Add server auth/session contract for viewer payload and membership-derived access semantics.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
