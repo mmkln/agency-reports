@@ -16,6 +16,7 @@ The canonical frontend repository contract is now:
 ```text
 src/app/providers/repositories/createPortalRepository.js
 src/app/providers/repositories/portalRepositoryContract.js
+src/app/providers/repositories/portalRepositorySchema.js
 ```
 
 `createPortalRepository.js` is the adapter selection boundary. The app should create repositories through this factory instead of importing a concrete adapter directly.
@@ -29,6 +30,16 @@ src/app/providers/repositories/portalRepositoryContract.js
 - PORTAL_REPOSITORY_KEYS
 - PORTAL_ENTITY_REPOSITORY_METHODS
 - PORTAL_REPOSITORY_EXTENSION_METHODS
+```
+
+`portalRepositorySchema.js` defines the backend-facing table manifest:
+
+```text
+- repository key to table mapping
+- global vs optional-client vs required-client scope
+- required columns
+- expected indexes
+- clinic aggregate publish-state tables
 ```
 
 ## Required Collection Methods
@@ -55,6 +66,7 @@ repository.reset() for local/demo environments only
 - Keep repository keys stable; pages and domain services should not know table names.
 - Keep table names centralized in `portalRepositoryContract.js`.
 - Keep adapter selection centralized in `createPortalRepository.js`.
+- Keep backend table requirements centralized in `portalRepositorySchema.js`.
 - Keep client visibility, publish states, and workflow permissions in domain policies/services.
 - Do not move visibility filtering into UI code.
 - Client routes must read published/client-safe records only.
@@ -71,6 +83,7 @@ Current contract coverage:
 src/app/providers/repositories/portalRepositoryContract.test.js
 src/app/providers/repositories/portalRepositoryContract.test-support.js
 src/app/providers/repositories/createPortalRepository.test.js
+src/app/providers/repositories/portalRepositorySchema.test.js
 ```
 
 The contract tests verify:
@@ -83,6 +96,8 @@ The contract tests verify:
 - every collection exposes required entity methods
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
 - extension methods remain explicit
+- backend schema manifest covers every repository table
+- seed records contain required backend columns
 ```
 
 `portalRepositoryContract.test-support.js` exports a reusable suite. Any future API/Supabase adapter must run through the same suite before product workflows are switched to it.
@@ -92,6 +107,7 @@ The contract tests verify:
 - [ ] Add a real API/Supabase adapter that implements `PORTAL_REPOSITORY_COLLECTIONS`.
 - [x] Add reusable contract tests for repository adapter behavior.
 - [x] Centralize repository adapter selection behind `createPortalRepository`.
+- [x] Add backend schema manifest for table scope, required columns, indexes, and clinic publish state.
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
