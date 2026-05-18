@@ -1,3 +1,5 @@
+import { Navigate } from 'react-router-dom'
+
 import { getClientPerformanceDashboardPage } from '../../../domain/services/clientPerformanceDashboardService'
 import { USER_ROLES } from '../../../entities/profile'
 import { AccessDeniedState } from '../../../widgets/client-overview'
@@ -18,6 +20,10 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
 
   if (page.status === 'error') {
     return <AccessDeniedState />
+  }
+
+  if (page.redirectTo) {
+    return <Navigate replace to={page.redirectTo} />
   }
 
   if (!page.performanceDashboard) {

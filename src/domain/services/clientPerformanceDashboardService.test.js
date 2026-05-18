@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
@@ -63,7 +63,7 @@ function createEntityRepository(records) {
   }
 }
 
-function createRepositories() {
+function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
   return {
     clients: createEntityRepository([
       {
@@ -72,6 +72,7 @@ function createRepositories() {
         name: 'Client A',
         portal_slug: 'client-a',
         status: CLIENT_STATUSES.ON_TRACK,
+        type: clientType,
       },
       {
         agency_id: 'agency-a',
@@ -79,6 +80,7 @@ function createRepositories() {
         name: 'Client B',
         portal_slug: 'client-b',
         status: CLIENT_STATUSES.ON_TRACK,
+        type: CLIENT_TYPES.GENERIC,
       },
     ]),
     dashboardLinks: createEntityRepository([
@@ -302,10 +304,12 @@ describe('clientPerformanceDashboardService', () => {
     })
 
     expect(page.status).toBe('ready')
+    expect(page.client.type).toBe(CLIENT_TYPES.GENERIC)
     expect(page.performanceDashboard).toMatchObject({
       id: IDS.PERIOD_PUBLISHED,
       title: 'April Dashboard',
     })
+    expect(page.redirectTo).toBeNull()
     expect(page.sourceLinks).toHaveLength(1)
     expect(page.latestReport.title).toBe('April Report')
     expect(page.neededFromClient.map((item) => item.title)).toEqual(['Approve creative batch'])
@@ -323,6 +327,23 @@ describe('clientPerformanceDashboardService', () => {
     expect(JSON.stringify(page)).not.toContain('Cancelled request')
     expect(JSON.stringify(page)).not.toContain('Internal update')
     expect(JSON.stringify(page)).not.toContain('Debug internal attribution issue')
+  })
+
+  it('redirects clinic clients from the legacy performance surface to current performance in Clinic Results', () => {
+    const page = getClientPerformanceDashboardPage({
+      clientId: IDS.CLIENT_A,
+      periodId: IDS.PERIOD_ARCHIVED,
+      repositories: createRepositories(CLIENT_TYPES.CLINIC),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.client.type).toBe(CLIENT_TYPES.CLINIC)
+    expect(page.performanceDashboard).toMatchObject({
+      id: IDS.PERIOD_ARCHIVED,
+      title: 'March Dashboard',
+    })
+    expect(page.redirectTo).toBe(`/client/reports-dashboards?clientId=${IDS.CLIENT_A}&performancePeriodId=${IDS.PERIOD_ARCHIVED}#current-performance`)
   })
 
   it('allows a client to open an archived dashboard period for their own client', () => {

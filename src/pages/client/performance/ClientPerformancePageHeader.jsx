@@ -31,6 +31,10 @@ export function ClientPerformancePageHeader({ activeRoute, routeParams = {}, run
     return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
+  if (page.redirectTo) {
+    return <PageHeader title="Clinic Results" width={activeRoute?.contentWidth} />
+  }
+
   return (
     <PageHeader
       actions={<HeaderActions dashboard={page.performanceDashboard} />}

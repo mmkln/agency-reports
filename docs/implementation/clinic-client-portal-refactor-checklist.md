@@ -285,6 +285,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Use clinic-specific current performance copy: Clinic Performance / Patient acquisition analytics.
 - [x] Use clinic-specific source dashboard copy for patient acquisition source detail.
 - [x] Redirect clinic users from legacy `/client/dashboard` to `Clinic Results` source dashboard context.
+- [x] Redirect clinic users from legacy `/client/performance` to `Clinic Results` current performance context.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.
 

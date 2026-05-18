@@ -161,6 +161,11 @@ test('client can view published performance dashboard but cannot view draft or a
     new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`),
   )
 
+  await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&periodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
+  await expect(page).toHaveURL(new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}#current-performance`))
+  await expect(page.getByRole('heading', { name: 'Clinic Results' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient acquisition analytics' })).toBeVisible()
+
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'April 2026 Performance Dashboard' }).first()).toBeVisible()
   await expect(page.getByText('Qualified Leads').first()).toBeVisible()
