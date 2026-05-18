@@ -9,10 +9,10 @@ import { AccessMembersPanel, InvitationsPanel } from '../../../features/admin-cl
 import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 
-function loadAdminClient(clientId, runtime) {
+function loadAdminClient({ clientId, repositories, viewer }) {
   const client = listAdminClients({
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
+    repositories,
+    viewer,
   }).find((record) => record.id === clientId)
 
   if (!client) {
@@ -49,9 +49,10 @@ export function AdminClientAccessPage({ routeParams = {}, runtime }) {
   const clientResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-client-access:${clientId ?? ''}`,
     initialData: null,
-    load: () => runtime.dataClient.read((repositories) => loadAdminClient(clientId, {
-      ...runtime,
+    load: () => runtime.dataClient.read((repositories) => loadAdminClient({
+      clientId,
       repositories,
+      viewer: runtime.viewer,
     })),
   })
 

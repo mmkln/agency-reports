@@ -31,22 +31,22 @@ export function useTaskMarkdownImportWorkflow({
   }
 
   function preview(input) {
-    try {
-      const nextPlan = previewTaskMarkdownImport({
-        ...input,
-        repositories: runtime.repositories,
-        viewer: runtime.viewer,
+    void runtime.dataClient.read((repositories) => previewTaskMarkdownImport({
+      ...input,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((nextPlan) => {
+        setPlan(nextPlan)
+        setError('')
+        setSaveState('Preview is ready.')
       })
-
-      setPlan(nextPlan)
-      setError('')
-      setSaveState('Preview is ready.')
-    } catch (caughtError) {
-      setPlan(null)
-      setError(caughtError.message)
-      setSaveState('')
-      toast.error('Import preview failed', caughtError.message)
-    }
+      .catch((caughtError) => {
+        setPlan(null)
+        setError(caughtError.message)
+        setSaveState('')
+        toast.error('Import preview failed', caughtError.message)
+      })
   }
 
   function apply() {
@@ -57,7 +57,7 @@ export function useTaskMarkdownImportWorkflow({
     setError('')
     setSaveState('Creating tasks...')
 
-    runtime.dataClient.write((repositories) => applyTaskMarkdownImport({
+    void runtime.dataClient.write((repositories) => applyTaskMarkdownImport({
       idGenerator: createUuid,
       preview: plan,
       repositories,

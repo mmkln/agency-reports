@@ -36,17 +36,12 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
-function getPendingInvite(client, repositories) {
-  if (!repositories?.clientInvitations?.listByClientId) {
-    return null
-  }
-
-  return repositories.clientInvitations
-    .listByClientId(client.id)
-    .find((invitation) => invitation.status === 'pending') ?? null
-}
-
-export function ClientsTable({ clients, onDeleteClient, onEditClient, repositories }) {
+export function ClientsTable({
+  clients,
+  onDeleteClient,
+  onEditClient,
+  pendingInvitationsByClientId = {},
+}) {
   const [clientPendingDelete, setClientPendingDelete] = useState(null)
 
   function confirmDeleteClient() {
@@ -73,81 +68,81 @@ export function ClientsTable({ clients, onDeleteClient, onEditClient, repositori
           </TableHeader>
           <TableBody>
             {clients.map((client) => {
-              const pendingInvite = getPendingInvite(client, repositories)
+              const pendingInvite = pendingInvitationsByClientId[client.id] ?? null
 
               return (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div className="flex min-w-0 items-center gap-3">
-                        <ClientAvatar client={client} />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-text-primary">{client.name}</p>
-                          <p className="mt-1 flex items-center gap-1 text-label font-normal text-text-muted">
-                            <Icon name="arrowUpRight" size={13} />
-                            <span className="truncate">/{client.portal_slug}</span>
-                          </p>
-                        </div>
+                <TableRow key={client.id}>
+                  <TableCell>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ClientAvatar client={client} />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-text-primary">{client.name}</p>
+                        <p className="mt-1 flex items-center gap-1 text-label font-normal text-text-muted">
+                          <Icon name="arrowUpRight" size={13} />
+                          <span className="truncate">/{client.portal_slug}</span>
+                        </p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <ClientStatusBadge status={client.status} />
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
-                      <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
-                    </TableCell>
-                    <TableCell className="text-text-muted">{formatDate(client.created_at)}</TableCell>
-                    <TableActionCell>
-                      <div className="flex justify-end gap-1.5">
-                        <Button asChild size="sm" variant="outline">
-                          <Link to={`/admin/client-overview?clientId=${client.id}`}>
-                            Open
-                          </Link>
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button aria-label={`${client.name} actions`} size="icon-sm" type="button" variant="ghost">
-                              <Icon name="ellipsis" size={16} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="min-w-56">
-                            <DropdownMenuItem onClick={() => onEditClient(client)}>
-                              <Icon name="wrench" size={15} />
-                              Edit client
-                            </DropdownMenuItem>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <ClientStatusBadge status={client.status} />
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
+                    <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
+                  </TableCell>
+                  <TableCell className="text-text-muted">{formatDate(client.created_at)}</TableCell>
+                  <TableActionCell>
+                    <div className="flex justify-end gap-1.5">
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={`/admin/client-overview?clientId=${client.id}`}>
+                          Open
+                        </Link>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-label={`${client.name} actions`} size="icon-sm" type="button" variant="ghost">
+                            <Icon name="ellipsis" size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-56">
+                          <DropdownMenuItem onClick={() => onEditClient(client)}>
+                            <Icon name="wrench" size={15} />
+                            Edit client
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/client-preview?clientId=${client.id}`}>
+                              <Icon name="arrowUpRight" size={15} />
+                              Preview portal
+                            </Link>
+                          </DropdownMenuItem>
+                          {pendingInvite ? (
                             <DropdownMenuItem asChild>
-                              <Link to={`/admin/client-preview?clientId=${client.id}`}>
-                                <Icon name="arrowUpRight" size={15} />
-                                Preview portal
+                              <Link to={`/accept-invite?token=${pendingInvite.token}`}>
+                                <Icon name="mail" size={15} />
+                                Open pending invitation
                               </Link>
                             </DropdownMenuItem>
-                            {pendingInvite ? (
-                              <DropdownMenuItem asChild>
-                                <Link to={`/accept-invite?token=${pendingInvite.token}`}>
-                                  <Icon name="mail" size={15} />
-                                  Open pending invitation
-                                </Link>
-                              </DropdownMenuItem>
-                            ) : null}
-                            <DropdownMenuItem asChild>
-                              <Link to={`/admin/client-access?clientId=${client.id}`}>
-                                <Icon name="users" size={15} />
-                                Manage access
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setClientPendingDelete(client)}
-                              variant="destructive"
-                            >
-                              <Icon name="close" size={15} />
-                              Delete client
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableActionCell>
-                  </TableRow>
+                          ) : null}
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/client-access?clientId=${client.id}`}>
+                              <Icon name="users" size={15} />
+                              Manage access
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setClientPendingDelete(client)}
+                            variant="destructive"
+                          >
+                            <Icon name="close" size={15} />
+                            Delete client
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableActionCell>
+                </TableRow>
               )
             })}
           </TableBody>

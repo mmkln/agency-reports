@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { deleteAdminClient, listAdminClients } from '../../../domain/services/adminClientService'
+import {
+  deleteAdminClient,
+  listAdminClientPendingInvitations,
+  listAdminClients,
+} from '../../../domain/services/adminClientService'
 import {
   ClientsTable,
   ClientsTableSkeleton,
@@ -20,15 +24,17 @@ function createUuid() {
 
 function EditClientModalController({
   client,
+  clients,
+  dataClient,
   onClose,
   onUpdated,
-  repositories,
   viewer,
 }) {
   const editClientForm = useEditClientForm({
     client,
+    dataClient,
+    existingClients: clients,
     onUpdated,
-    repositories,
     viewer,
   })
 
@@ -53,22 +59,40 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
   const toast = useToast()
   const clientsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-clients`,
-    initialData: [],
-    load: () => runtime.dataClient.read((repositories) => listAdminClients({
-      repositories,
-      viewer: runtime.viewer,
-    })),
+    initialData: {
+      clients: [],
+      pendingInvitationsByClientId: {},
+    },
+    load: () => runtime.dataClient.read((repositories) => {
+      const clients = listAdminClients({
+        repositories,
+        viewer: runtime.viewer,
+      })
+      const pendingInvitationsByClientId = Object.fromEntries(
+        listAdminClientPendingInvitations({
+          repositories,
+          viewer: runtime.viewer,
+        }).map((invitation) => [invitation.client_id, invitation]),
+      )
+
+      return {
+        clients,
+        pendingInvitationsByClientId,
+      }
+    }),
   })
-  const clients = clientsResource.data ?? []
+  const clients = clientsResource.data?.clients ?? []
+  const pendingInvitationsByClientId = clientsResource.data?.pendingInvitationsByClientId ?? {}
   const createClientForm = useCreateClientForm({
     activityIdGenerator: createUuid,
+    dataClient: runtime.dataClient,
+    existingClients: clients,
     idGenerator: createUuid,
     onCreated: (client) => {
       void clientsResource.reload()
       toast.success('Client created', `${client.name} is ready in the admin workspace.`)
       navigate('/admin/clients', { replace: true })
     },
-    repositories: runtime.repositories,
     viewer: runtime.viewer,
   })
   function refreshClients() {
@@ -89,16 +113,21 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
           onDeleteClient={(clientId) => {
             const deletedClient = clients.find((client) => client.id === clientId)
 
-            deleteAdminClient({
+            void runtime.dataClient.write((repositories) => deleteAdminClient({
               clientId,
-              repositories: runtime.repositories,
+              repositories,
               viewer: runtime.viewer,
-            })
-            refreshClients()
-            toast.success('Client deleted', `${deletedClient?.name ?? 'Client'} was removed from local demo data.`)
+            }))
+              .then(() => {
+                refreshClients()
+                toast.success('Client deleted', `${deletedClient?.name ?? 'Client'} was removed from local demo data.`)
+              })
+              .catch((error) => {
+                toast.error('Client could not be deleted', error.message)
+              })
           }}
           onEditClient={setClientPendingEdit}
-          repositories={runtime.repositories}
+          pendingInvitationsByClientId={pendingInvitationsByClientId}
         />
       ) : (
         <EmptyClientsState />
@@ -116,6 +145,8 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
       {clientPendingEdit ? (
         <EditClientModalController
           client={clientPendingEdit}
+          clients={clients}
+          dataClient={runtime.dataClient}
           key={clientPendingEdit.id}
           onClose={() => setClientPendingEdit(null)}
           onUpdated={(client) => {
@@ -123,7 +154,6 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
             toast.success('Client updated', `${client.name} workspace details were saved.`)
             setClientPendingEdit(null)
           }}
-          repositories={runtime.repositories}
           viewer={runtime.viewer}
         />
       ) : null}

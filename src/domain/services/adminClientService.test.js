@@ -6,6 +6,8 @@ import {
   createAdminClient,
   deleteAdminClient,
   getPortalSlugIssue,
+  getPortalSlugIssueFromClients,
+  listAdminClientPendingInvitations,
   listAdminClients,
   normalizePortalSlug,
   updateAdminClient,
@@ -218,6 +220,75 @@ describe('adminClientService', () => {
       repositories,
       viewer: createAdminViewer(),
     })).toThrow('This portal slug is already used by another client.')
+  })
+
+  it('validates portal slug issues from an already-loaded client list', () => {
+    const clients = [
+      {
+        agency_id: IDS.AGENCY_A,
+        id: IDS.CLIENT_A,
+        portal_slug: 'existing-client',
+      },
+      {
+        agency_id: IDS.AGENCY_B,
+        id: IDS.CLIENT_B,
+        portal_slug: 'existing-client',
+      },
+    ]
+
+    expect(getPortalSlugIssueFromClients({
+      clients,
+      portalSlug: 'existing-client',
+      viewer: createAdminViewer(),
+    })).toBe('This portal slug is already used by another client.')
+
+    expect(getPortalSlugIssueFromClients({
+      clients,
+      ignoreClientId: IDS.CLIENT_A,
+      portalSlug: 'existing-client',
+      viewer: createAdminViewer(),
+    })).toBe('')
+  })
+
+  it('lists pending invitations only for clients owned by the admin agency', () => {
+    const repositories = createRepositories([
+      {
+        agency_id: IDS.AGENCY_A,
+        id: IDS.CLIENT_A,
+        name: 'Agency A Client',
+      },
+      {
+        agency_id: IDS.AGENCY_B,
+        id: IDS.CLIENT_B,
+        name: 'Agency B Client',
+      },
+    ], {
+      clientInvitations: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          created_at: '2026-05-10T10:00:00.000Z',
+          id: IDS.NEW_INVITATION,
+          status: 'pending',
+        },
+        {
+          client_id: IDS.CLIENT_A,
+          created_at: '2026-05-11T10:00:00.000Z',
+          id: '99999999-9999-4999-8999-999999999999',
+          status: 'accepted',
+        },
+        {
+          client_id: IDS.CLIENT_B,
+          created_at: '2026-05-12T10:00:00.000Z',
+          id: '10101010-1010-4010-8010-101010101010',
+          status: 'pending',
+        },
+      ]),
+    })
+
+    expect(listAdminClientPendingInvitations({
+      repositories,
+      viewer: createAdminViewer(),
+    }).map((invitation) => invitation.id)).toEqual([IDS.NEW_INVITATION])
   })
 
   it('updates client workspace details without treating its own portal slug as duplicate', () => {

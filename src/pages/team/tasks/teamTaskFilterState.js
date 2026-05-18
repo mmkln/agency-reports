@@ -64,10 +64,10 @@ export function getTaskExportPath(filters, basePath = '/team/tasks') {
   return `${basePath}?${params.toString()}`
 }
 
-export function loadTeamTasks(filters, runtime) {
+export function loadTeamTasks(filters, { repositories, viewer }) {
   return listTaskWorkspace({
     filters,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
+    repositories,
+    viewer,
   })
 }

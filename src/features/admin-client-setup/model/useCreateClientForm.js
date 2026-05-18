@@ -5,7 +5,7 @@ import {
 } from '../../../entities/client'
 import {
   createAdminClient,
-  getPortalSlugIssue,
+  getPortalSlugIssueFromClients,
   normalizePortalSlug,
 } from '../../../domain/services/adminClientService'
 
@@ -21,18 +21,19 @@ const emptyForm = {
 
 export function useCreateClientForm({
   activityIdGenerator,
+  dataClient,
+  existingClients = [],
   idGenerator,
   onCreated,
-  repositories,
   viewer,
 }) {
   const [error, setError] = useState('')
   const [form, setForm] = useState(emptyForm)
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
   const [lastCreatedClient, setLastCreatedClient] = useState(null)
-  const slugIssue = getPortalSlugIssue({
+  const slugIssue = getPortalSlugIssueFromClients({
+    clients: existingClients,
     portalSlug: form.portalSlug,
-    repositories,
     viewer,
   })
   const visibleSlugIssue = form.portalSlug ? slugIssue : ''
@@ -72,22 +73,22 @@ export function useCreateClientForm({
       return
     }
 
-    try {
-      const result = createAdminClient({
-        activityIdGenerator,
-        idGenerator,
-        input: form,
-        repositories,
-        viewer,
+    void dataClient.write((repositories) => createAdminClient({
+      activityIdGenerator,
+      idGenerator,
+      input: form,
+      repositories,
+      viewer,
+    }))
+      .then((result) => {
+        setForm(emptyForm)
+        setIsSlugManuallyEdited(false)
+        setLastCreatedClient(result)
+        onCreated(result.client)
       })
-
-      setForm(emptyForm)
-      setIsSlugManuallyEdited(false)
-      setLastCreatedClient(result)
-      onCreated(result.client)
-    } catch (caughtError) {
-      setError(caughtError.message)
-    }
+      .catch((caughtError) => {
+        setError(caughtError.message)
+      })
   }
 
   return {

@@ -6,6 +6,7 @@ import {
   ACTIVITY_EVENT_TYPES,
   listClientActivityEvents,
 } from '../../../domain/services/activityTrackingService'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 
@@ -58,18 +59,20 @@ function getActivityDetail(event) {
 }
 
 export function RecentClientActivityPanel({ clientId, runtime }) {
-  const [events, setEvents] = useState(() => listClientActivityEvents({
-    clientId,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }))
+  const [reloadTick, setReloadTick] = useState(0)
+  const eventsResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-activity:${clientId ?? ''}:${reloadTick}`,
+    initialData: [],
+    load: () => runtime.dataClient.read((repositories) => listClientActivityEvents({
+      clientId,
+      repositories,
+      viewer: runtime.viewer,
+    })),
+  })
+  const events = eventsResource.data ?? []
 
   function refreshActivity() {
-    setEvents(listClientActivityEvents({
-      clientId,
-      repositories: runtime.repositories,
-      viewer: runtime.viewer,
-    }))
+    setReloadTick((currentTick) => currentTick + 1)
   }
 
   return (

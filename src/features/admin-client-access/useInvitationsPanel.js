@@ -69,7 +69,7 @@ export function useInvitationsPanel({ clientId, runtime }) {
   function createInvitation(event) {
     event.preventDefault()
 
-    runtime.dataClient.write((repositories) => createClientInvitation({
+    void runtime.dataClient.write((repositories) => createClientInvitation({
       activityIdGenerator: createUuid,
       clientId,
       email: form.email,
@@ -94,7 +94,7 @@ export function useInvitationsPanel({ clientId, runtime }) {
       return
     }
 
-    runtime.dataClient.write((repositories) => cancelClientInvitation({
+    void runtime.dataClient.write((repositories) => cancelClientInvitation({
       activityIdGenerator: createUuid,
       invitationId: invitationPendingCancel.id,
       repositories,

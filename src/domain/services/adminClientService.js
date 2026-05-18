@@ -1,4 +1,5 @@
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { createClientInvitation } from './clientInviteService'
 import { USER_ROLES } from '../../entities/profile'
 
@@ -88,7 +89,12 @@ function assertClientType(type) {
   return normalizedType
 }
 
-export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer, portalSlug }) {
+export function getPortalSlugIssueFromClients({
+  clients = [],
+  ignoreClientId = null,
+  viewer,
+  portalSlug,
+}) {
   assertAgencyAdmin(viewer)
 
   const normalizedSlug = normalizePortalSlug(portalSlug)
@@ -105,8 +111,7 @@ export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer
     return 'Portal slug can contain lowercase letters, numbers, and hyphens only.'
   }
 
-  const existingClient = repositories.clients
-    .list()
+  const existingClient = clients
     .find((client) => (
       client.agency_id === viewer.agencyId
       && client.portal_slug === normalizedSlug
@@ -120,6 +125,15 @@ export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer
   return ''
 }
 
+export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer, portalSlug }) {
+  return getPortalSlugIssueFromClients({
+    clients: repositories.clients.list(),
+    ignoreClientId,
+    portalSlug,
+    viewer,
+  })
+}
+
 export function listAdminClients({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
@@ -127,6 +141,19 @@ export function listAdminClients({ repositories, viewer }) {
     .list()
     .filter((client) => client.agency_id === viewer.agencyId)
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export function listAdminClientPendingInvitations({ repositories, viewer }) {
+  const clients = listAdminClients({ repositories, viewer })
+  const clientIds = new Set(clients.map((client) => client.id))
+
+  return repositories.clientInvitations
+    .list()
+    .filter((invitation) => (
+      clientIds.has(invitation.client_id)
+      && invitation.status === CLIENT_INVITATION_STATUSES.PENDING
+    ))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
 
 export function createAdminClient({

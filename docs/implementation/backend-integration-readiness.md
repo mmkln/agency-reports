@@ -200,6 +200,15 @@ Current domain audit hooks:
 
 These hooks are still repository-backed frontend/domain behavior. The production backend must persist equivalent events server-side and enforce the same access boundaries.
 
+Current data-client migration progress:
+
+```text
+- Admin client setup create/edit/delete and pending invitation read model now use `runtime.dataClient.read/write`.
+- Task workspace loading, task updates, client-work review handoff, and Markdown task import preview/apply now use `runtime.dataClient.read/write`.
+- Admin client access, invitation, membership, and activity panels now use `runtime.dataClient.read/write`.
+- Remaining direct `runtime.repositories` references are compatibility read paths in app navigation, route headers, and legacy client dashboard/performance routes; migrate them with the async header/navigation refactor before switching to a real API adapter.
+```
+
 ## Next Backend Steps
 
 - [ ] Add a real API/Supabase adapter that implements `PORTAL_REPOSITORY_COLLECTIONS`.
@@ -217,3 +226,5 @@ These hooks are still repository-backed frontend/domain behavior. The production
 - [x] Add server audit transition contract and frontend/domain hooks for invitation lifecycle transitions.
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
 - [x] Replace demo reset behavior with environment-gated admin/dev tooling.
+- [x] Route the first admin client setup, task workspace, access, and activity workflows through `runtime.dataClient`.
+- [ ] Migrate remaining navigation/header/legacy client read paths away from direct `runtime.repositories`.

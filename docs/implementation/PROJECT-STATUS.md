@@ -51,7 +51,7 @@ docs/implementation/clinic-client-portal-refactor-checklist.md
 
 ## Current Verification Baseline
 
-Latest full verification recorded after the Client Control Center refactor:
+Latest full verification recorded after the backend-readiness data-client boundary refactor:
 
 ```text
 npm run lint
@@ -64,8 +64,8 @@ Current baseline from the latest verification run:
 
 ```text
 Lint: passed
-Unit tests: 360 passed
-Full e2e: 44 passed with `npx playwright test --workers=1`
+Unit tests: 420 passed
+Full e2e: 46 passed with `npx playwright test --workers=1`
 Build: passed
 ```
 

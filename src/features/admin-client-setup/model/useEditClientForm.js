@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { CLIENT_TYPES } from '../../../entities/client'
 import {
-  getPortalSlugIssue,
+  getPortalSlugIssueFromClients,
   normalizePortalSlug,
   updateAdminClient,
 } from '../../../domain/services/adminClientService'
@@ -22,17 +22,18 @@ function clientToForm(client) {
 
 export function useEditClientForm({
   client,
+  dataClient,
+  existingClients = [],
   onUpdated,
-  repositories,
   viewer,
 }) {
   const [error, setError] = useState('')
   const [form, setForm] = useState(() => clientToForm(client))
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false)
-  const slugIssue = getPortalSlugIssue({
+  const slugIssue = getPortalSlugIssueFromClients({
+    clients: existingClients,
     ignoreClientId: client?.id,
     portalSlug: form.portalSlug,
-    repositories,
     viewer,
   })
   const visibleSlugIssue = form.portalSlug ? slugIssue : ''
@@ -71,18 +72,18 @@ export function useEditClientForm({
       return
     }
 
-    try {
-      const updatedClient = updateAdminClient({
-        clientId: client.id,
-        input: form,
-        repositories,
-        viewer,
+    void dataClient.write((repositories) => updateAdminClient({
+      clientId: client.id,
+      input: form,
+      repositories,
+      viewer,
+    }))
+      .then((updatedClient) => {
+        onUpdated(updatedClient)
       })
-
-      onUpdated(updatedClient)
-    } catch (caughtError) {
-      setError(caughtError.message)
-    }
+      .catch((caughtError) => {
+        setError(caughtError.message)
+      })
   }
 
   return {

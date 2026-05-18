@@ -61,7 +61,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
   function addMember(event) {
     event.preventDefault()
 
-    runtime.dataClient.write((repositories) => addClientMember({
+    void runtime.dataClient.write((repositories) => addClientMember({
       clientId,
       email: form.email,
       idGenerator: createUuid,
@@ -80,7 +80,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
   }
 
   function changeRole(member, role) {
-    runtime.dataClient.write((repositories) => updateClientMembershipRole({
+    void runtime.dataClient.write((repositories) => updateClientMembershipRole({
       membershipId: member.id,
       repositories,
       role,
@@ -98,7 +98,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
       return
     }
 
-    runtime.dataClient.write((repositories) => removeClientMembership({
+    void runtime.dataClient.write((repositories) => removeClientMembership({
       membershipId: memberPendingRemoval.id,
       repositories,
       viewer: runtime.viewer,

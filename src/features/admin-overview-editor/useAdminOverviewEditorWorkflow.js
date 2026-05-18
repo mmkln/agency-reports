@@ -18,11 +18,11 @@ function createUuid() {
   return crypto.randomUUID()
 }
 
-function loadEditor(clientId, runtime) {
+function loadEditor({ clientId, repositories, viewer }) {
   return getAdminClientOverviewEditor({
     clientId,
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
+    repositories,
+    viewer,
   })
 }
 
@@ -65,9 +65,10 @@ export function useAdminOverviewEditorWorkflow({ clientId, runtime }) {
           status: 'loading',
         })
 
-        return runtime.dataClient.read((repositories) => loadEditor(clientId, {
-          ...runtime,
+        return runtime.dataClient.read((repositories) => loadEditor({
+          clientId,
           repositories,
+          viewer: runtime.viewer,
         }))
       })
       .then((editorData) => {
