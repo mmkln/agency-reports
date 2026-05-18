@@ -286,6 +286,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Use clinic-specific source dashboard copy for patient acquisition source detail.
 - [x] Redirect clinic users from legacy `/client/dashboard` to `Clinic Results` source dashboard context.
 - [x] Redirect clinic users from legacy `/client/performance` to `Clinic Results` current performance context.
+- [x] Align clinic overview and admin workspace copy around `Clinic Results` rather than legacy `Clinic Reports`.
+- [x] Ensure admin results workspace renders structured performance summaries without crashing.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.
 
@@ -384,6 +386,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for Compliance & Approvals.
 - [x] Add e2e for clinic Action Needed approval/response.
 - [x] Add e2e for admin Clinic Metrics JSON import preview/apply/save.
+- [x] Add e2e coverage for admin clinic results workspace naming and structured summary rendering.
 - [x] Add e2e for admin Clinic Reputation and Compliance JSON import preview/apply/save.
 - [x] Add e2e for wrong-section and PHI-blocked clinic import previews.
 - [x] Add unit tests for clinic publish readiness policies.
