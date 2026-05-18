@@ -1,7 +1,5 @@
-import { Button } from '@/shared/ui'
-
-import { CLINIC_RECORD_PUBLISH_STATES } from '../../../entities/clinic'
 import { CLINIC_NEEDED_ACTION_TYPES } from '../../../entities/needed-from-client'
+import { ClinicSuggestedActionButtons } from '../../admin-clinic-actions'
 
 function getNumber(value) {
   const numberValue = Number(value)
@@ -39,16 +37,6 @@ function getSuggestedActions(snapshot) {
   return suggestions
 }
 
-function canCreateSuggestedAction(snapshot, isDirty) {
-  return Boolean(snapshot.id)
-    && !isDirty
-    && snapshot.publish_state === CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
-}
-
-function getSuggestedActionKey(snapshot, suggestionType) {
-  return `${snapshot.id}:${suggestionType}`
-}
-
 export function ReputationSuggestedActionButtons({
   createdActionKeys,
   creatingActionKey,
@@ -57,35 +45,23 @@ export function ReputationSuggestedActionButtons({
   snapshot,
 }) {
   const suggestions = getSuggestedActions(snapshot)
-  const canCreateActions = canCreateSuggestedAction(snapshot, isDirty)
 
   if (suggestions.length === 0) {
     return null
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {suggestions.map((suggestion) => {
-        const actionKey = getSuggestedActionKey(snapshot, suggestion.type)
-        const wasCreated = createdActionKeys.has(actionKey)
-        const hasOpenAction = suggestion.hasOpenAction || wasCreated
-
-        return (
-          <Button
-            disabled={!canCreateActions || hasOpenAction || creatingActionKey === actionKey}
-            key={suggestion.type}
-            onClick={() => onCreateSuggestedAction({
-              snapshotId: snapshot.id,
-              suggestionType: suggestion.type,
-            })}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {suggestion.hasOpenAction ? 'Action exists' : wasCreated ? 'Action created' : suggestion.label}
-          </Button>
-        )
+    <ClinicSuggestedActionButtons
+      createdActionKeys={createdActionKeys}
+      createPayload={({ record, suggestion }) => ({
+        snapshotId: record.id,
+        suggestionType: suggestion.type,
       })}
-    </div>
+      creatingActionKey={creatingActionKey}
+      isDirty={isDirty}
+      onCreateSuggestedAction={onCreateSuggestedAction}
+      record={snapshot}
+      suggestions={suggestions}
+    />
   )
 }
