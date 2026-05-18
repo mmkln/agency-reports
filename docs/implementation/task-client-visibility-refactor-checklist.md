@@ -148,7 +148,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `listByClientId`
   - [x] `findById`
   - [x] `upsert`
-  - [ ] `remove` only if existing repository patterns require it.
+  - [x] `remove` only if existing repository patterns require it; not required for the current repository adapter.
 - [x] Update `src/app/providers/repositories/portalRepository.js`.
 - [x] Update `src/app/providers/repositories/createLocalStoragePortalRepository.js`.
 - [x] Update localStorage schema/version handling if required.
@@ -197,8 +197,8 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Decide whether published work can be edited directly or must return to review:
   - [x] document the decision.
   - [x] enforce the decision in policy.
-- [ ] Update `visibilityPolicy.js` only where generic helpers are still useful.
-- [ ] Update `accessPolicy.js` if agency team/client assignment access is missing.
+- [x] Update `visibilityPolicy.js` only where generic helpers are still useful; no additional generic helper was required.
+- [x] Update `accessPolicy.js` if agency team/client assignment access is missing; existing client assignment access is sufficient.
 - [x] Add policy tests:
   - [x] client cannot see another client's work item.
   - [x] client cannot see draft work item.
@@ -291,12 +291,12 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] publish state.
   - [x] last published.
   - [x] recommended next action.
-- [ ] Add actions:
-  - [ ] create client work item from task.
-  - [ ] edit client-facing title/summary/status/date.
-  - [ ] publish.
-  - [ ] archive.
-  - [ ] create or link client request.
+- [x] Add actions:
+  - [x] create client work item from task.
+  - [x] edit client-facing title/summary/status/date.
+  - [x] publish.
+  - [x] archive.
+  - [x] create or link client request.
 - [x] Add service tests:
   - [x] ready-for-review queue includes correct items.
   - [x] missing-summary queue excludes items with summaries.
@@ -322,9 +322,9 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `client_visible`
   - [x] `client_safe_summary`
   - [x] `client_safe_summary` render paths.
-- [ ] Decide migration naming:
+- [x] Decide migration naming:
   - [x] keep `client_safe_summary` temporarily as proposed text.
-  - [ ] or rename in code/read models to `proposed_client_summary`.
+  - [x] do not rename in code/read models to `proposed_client_summary` during this refactor.
 - [x] Update `teamTaskService.js`:
   - [x] keep internal task listing.
   - [x] expose linked client work item state if useful.
@@ -411,27 +411,27 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] own client ID.
   - [x] `publish_state = published`.
   - [x] non-archived work.
-- [ ] Update overview read model:
-  - [ ] current status.
-  - [ ] needed-from-client preview.
+- [x] Update overview read model:
+  - [x] current status.
+  - [x] needed-from-client preview.
   - [x] active work from published client work items.
-  - [ ] latest update.
-  - [ ] dashboard preview.
-  - [ ] latest report.
-  - [ ] recent activity.
-- [ ] Update `ClientOverviewBlocks` or related widgets:
+  - [x] latest update.
+  - [x] dashboard preview.
+  - [x] latest report.
+  - [x] recent activity.
+- [x] Update `ClientOverviewBlocks` or related widgets:
   - [x] rename task-facing components to active-work language where appropriate.
   - [x] render `ClientWorkItem` cards.
   - [x] show linked needed-action indicator.
   - [x] show target date and last updated.
 - [x] Remove direct task filtering from client overview.
-- [ ] Add overview tests:
+- [x] Add overview tests:
   - [x] draft client work item hidden.
   - [x] ready-for-review client work item hidden.
   - [x] published client work item visible.
   - [x] archived client work item hidden.
   - [x] raw task without client work item hidden.
-  - [ ] internal notes never appear.
+  - [x] internal notes never appear.
 
 ### Completion Criteria
 
@@ -447,8 +447,8 @@ client_user must not read Task directly as the client-facing work contract.
 ### Tasks
 
 - [x] Decide route placement:
-  - [ ] `/admin/review`
-  - [ ] or `/admin/clients/:id/review`
+  - [x] do not use `/admin/review` for this route.
+  - [x] do not use `/admin/clients/:id/review` for this route.
   - [x] or client-scoped query route consistent with current routing.
 - [x] Add route metadata.
 - [x] Add client workspace tab if route is client-scoped.
@@ -470,7 +470,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] target date.
   - [x] linked request.
   - [x] publish state.
-- [ ] Add actions:
+- [x] Add actions:
   - [x] create client work item from task.
   - [x] save draft.
   - [x] mark ready for review.
@@ -572,7 +572,7 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Decide which events are client-visible.
 - [x] Ensure client activity feed includes only client-visible events.
 - [x] Ensure admin activity/audit includes internal publish workflow events.
-- [ ] Add tests:
+- [x] Add tests:
   - [x] publish event created.
   - [x] archive event created.
   - [x] client response event created.
@@ -604,15 +604,15 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] Migrate admin overview connected workflow summary from client-visible task counts to client work item review/publish counts.
   - [x] Migrate performance dashboard work summary from client-visible tasks to published client work items.
   - [x] Remove client overview raw task fallback and `activeTasks` alias.
-- [ ] Rename components where needed:
+- [x] Rename components where needed:
   - [x] `ActiveTasksBlock` -> `ActiveWorkBlock` or equivalent.
   - [x] `VisibleTasksManager` -> review/work-item language.
   - [x] task cards in client UI -> work item cards.
-- [ ] Remove deprecated task visibility assumptions from docs.
+- [x] Remove deprecated task visibility assumptions from docs.
   - [x] Mark UC-001 acceptance/implementation docs as historical where they describe task-based client visibility.
   - [x] Update UC-001 use-case language from client-visible task decisions to client work item publishing.
   - [x] Update MVP scope positioning, permissions, and acceptance language to published client-facing work.
-- [ ] Keep legacy compatibility only where tests prove it is needed.
+- [x] Keep legacy compatibility only where tests prove it is needed.
 - [x] Add a migration note for localStorage seed/reset behavior.
 
 ### Completion Criteria
@@ -630,10 +630,10 @@ client_user must not read Task directly as the client-facing work contract.
 ### Tasks
 
 - [x] Run unit tests.
-- [ ] Run e2e tests.
+- [x] Run e2e tests.
 - [x] Run lint.
 - [x] Run build.
-- [ ] Add or update e2e coverage:
+- [x] Add or update e2e coverage:
   - [x] agency_team updates internal task.
   - [x] agency_team prepares client-facing summary.
   - [x] agency_admin publishes client work item.
@@ -641,30 +641,30 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] client_user does not see draft/review/archived work.
   - [x] client_user never sees internal notes.
   - [x] waiting-client task links to needed-from-client request.
-  - [ ] client response does not mutate task status directly.
+  - [x] client response does not mutate task status directly.
 - [x] Add domain integration coverage for client-work publish boundary and safe client read models.
-- [ ] Update acceptance/implementation docs with final status.
-- [ ] Update `docs/implementation/PROJECT-STATUS.md`.
+- [x] Update acceptance/implementation docs with final status.
+- [x] Update `docs/implementation/PROJECT-STATUS.md`.
 
 ### Completion Criteria
 
 - [x] `npm run lint` passes.
 - [x] `npm test -- --run` passes.
-- [ ] `npx playwright test` passes.
+- [x] `npx playwright test` passes.
 - [x] `npm run build` passes.
-- [ ] Documentation reflects the mature architecture.
+- [x] Documentation reflects the mature architecture.
 
 ## Definition Of Done
 
 This refactor is complete when:
 
-- [ ] `client_user` does not read `Task` directly as client-facing active work.
-- [ ] Client Overview active work comes from published `ClientWorkItem` records.
+- [x] `client_user` does not read `Task` directly as client-facing active work.
+- [x] Client Overview active work comes from published `ClientWorkItem` records.
 - [x] Client Projects/Active Work uses published `ClientWorkItem` records.
-- [ ] Internal task notes cannot appear in client view models.
-- [ ] Agency team can prepare client-facing summaries without publishing by default.
-- [ ] Agency admin/account manager controls publish/archive.
+- [x] Internal task notes cannot appear in client view models.
+- [x] Agency team can prepare client-facing summaries without publishing by default.
+- [x] Agency admin/account manager controls publish/archive.
 - [x] `waiting_client` internal work is represented to clients through `NeededFromClient` / client requests.
 - [x] Client responses do not directly mutate internal task status.
 - [x] Admin review queues identify stale, missing-summary, waiting-client, blocked, and ready-for-review work.
-- [ ] Tests cover role, visibility, publish, and client-request boundaries.
+- [x] Tests cover role, visibility, publish, and client-request boundaries.
