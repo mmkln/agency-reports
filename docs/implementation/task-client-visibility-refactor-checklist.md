@@ -93,7 +93,7 @@ client_user must not read Task directly as the client-facing work contract.
 
 - [x] Create `src/entities/client-work-item`.
 - [x] Add `ClientWorkItem` model exports.
-- [ ] Define fields:
+- [x] Define fields:
   - [x] `id`
   - [x] `client_id`
   - [x] `project_id`
@@ -109,13 +109,13 @@ client_user must not read Task directly as the client-facing work contract.
   - [x] `last_reviewed_at`
   - [x] `created_at`
   - [x] `updated_at`
-- [ ] Define client-facing statuses:
+- [x] Define client-facing statuses:
   - [x] `planned`
   - [x] `in_progress`
   - [x] `waiting_client`
   - [x] `needs_attention`
   - [x] `delivered`
-- [ ] Define publish states:
+- [x] Define publish states:
   - [x] `draft`
   - [x] `ready_for_review`
   - [x] `published`
@@ -225,33 +225,33 @@ client_user must not read Task directly as the client-facing work contract.
 - [x] Create `src/domain/services/clientWorkItemService.js`.
 - [x] Add admin operations:
   - [x] `listAdminClientWorkItems`
-  - [ ] `getAdminClientWorkItemDetail`
+  - [x] `getAdminClientWorkItemDetail`
   - [x] `createClientWorkItem`
   - [x] `createClientWorkItemFromTask`
   - [x] `updateClientWorkItem`
   - [x] `markClientWorkItemReadyForReview`
   - [x] `publishClientWorkItem`
   - [x] `archiveClientWorkItem`
-- [ ] Add team operations:
+- [x] Add team operations:
   - [x] `suggestClientWorkItemFromTask`
-  - [ ] `updateDraftClientWorkItem` if allowed.
+  - [x] `updateDraftClientWorkItem` if allowed.
   - [x] `markReadyForReview` if allowed.
-- [ ] Add client operations:
+- [x] Add client operations:
   - [x] `listPublishedClientWorkItems`
-  - [ ] `getPublishedClientWorkItemDetail` if a client detail view exists.
+  - [x] `getPublishedClientWorkItemDetail` if a client detail view exists.
 - [x] Add validation:
   - [x] required safe title.
   - [x] required safe summary before publish.
   - [x] valid client ID.
-  - [ ] valid related project ID.
-  - [ ] valid source task ID if provided.
+  - [x] valid related project ID.
+  - [x] valid source task ID if provided.
   - [x] valid target date.
   - [x] valid status.
   - [x] valid publish transition.
 - [x] Add read models:
   - [x] admin list item.
-  - [ ] admin detail.
-  - [ ] review queue item.
+  - [x] admin detail.
+  - [x] review queue item.
   - [x] client active work card.
   - [x] overview active work item.
 - [x] Ensure internal task fields do not pass into client read models.

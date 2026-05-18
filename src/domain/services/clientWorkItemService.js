@@ -189,13 +189,53 @@ function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
     )) ?? null
 }
 
-function normalizeEditableFields(input = {}, fallback = {}) {
+function validateRelatedProject({ clientId, projectId, repositories }) {
+  const normalizedProjectId = normalizeText(projectId)
+
+  if (!normalizedProjectId) {
+    return ''
+  }
+
+  const project = repositories.projects.findById(normalizedProjectId)
+
+  if (!project || project.client_id !== clientId) {
+    throw new Error('Project is not available for this client.')
+  }
+
+  return normalizedProjectId
+}
+
+function validateSourceTask({ clientId, repositories, sourceTaskId }) {
+  const normalizedSourceTaskId = normalizeText(sourceTaskId)
+
+  if (!normalizedSourceTaskId) {
+    return ''
+  }
+
+  const task = repositories.tasks.findById(normalizedSourceTaskId)
+
+  if (!task || task.client_id !== clientId) {
+    throw new Error('Source task is not available for this client.')
+  }
+
+  return normalizedSourceTaskId
+}
+
+function normalizeEditableFields({
+  clientId,
+  fallback = {},
+  input = {},
+  repositories,
+}) {
+  const projectId = input.projectId ?? input.project_id ?? fallback.project_id
+  const sourceTaskId = input.sourceTaskId ?? input.source_task_id ?? fallback.source_task_id
+
   return {
-    project_id: normalizeText(input.projectId ?? input.project_id ?? fallback.project_id),
+    project_id: validateRelatedProject({ clientId, projectId, repositories }),
     sort_order: Number.isFinite(Number(input.sortOrder ?? input.sort_order ?? fallback.sort_order))
       ? Number(input.sortOrder ?? input.sort_order ?? fallback.sort_order)
       : 0,
-    source_task_id: normalizeText(input.sourceTaskId ?? input.source_task_id ?? fallback.source_task_id),
+    source_task_id: validateSourceTask({ clientId, repositories, sourceTaskId }),
     status: normalizeStatus(input.status, fallback.status),
     summary: normalizeText(input.summary ?? fallback.summary),
     target_date: normalizeOptionalDate(input.targetDate ?? input.target_date ?? fallback.target_date, 'Target date'),
@@ -303,6 +343,30 @@ export function listAdminClientWorkItems({
   }
 }
 
+export function getAdminClientWorkItemDetail({
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const item = getClientWorkItem({ repositories, workItemId })
+  const client = repositories.clients.findById(item.client_id)
+
+  if (!canAgencyViewClientWorkItem({ item, viewer })) {
+    throw new Error('Client work item was not found.')
+  }
+
+  return {
+    client,
+    status: 'ready',
+    workItem: mapAdminWorkItem({
+      client,
+      item,
+      project: item.project_id ? repositories.projects.findById(item.project_id) : null,
+      sourceTask: item.source_task_id ? repositories.tasks.findById(item.source_task_id) : null,
+    }),
+  }
+}
+
 export function listPublishedClientWorkItems({
   clientId,
   repositories,
@@ -349,6 +413,48 @@ export function listPublishedClientWorkItems({
   }
 }
 
+export function getPublishedClientWorkItemDetail({
+  clientId,
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
+  const client = repositories.clients.findById(normalizedClientId)
+  const item = repositories.clientWorkItems.findById(workItemId)
+
+  if (!client || !item || item.client_id !== normalizedClientId || !isClientWorkItemPublished(item)) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  const canView = viewer?.role === USER_ROLES.CLIENT_USER
+    ? canClientViewClientWorkItem({ item, viewer })
+    : canAgencyViewClientWorkItem({ item, viewer })
+
+  if (!canView) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  return {
+    client: {
+      id: client.id,
+      name: client.name,
+      portalSlug: client.portal_slug,
+    },
+    status: 'ready',
+    workItem: mapClientWorkItem({
+      item,
+      project: item.project_id ? repositories.projects.findById(item.project_id) : null,
+    }),
+  }
+}
+
 export function createClientWorkItem({
   activityIdGenerator,
   idGenerator,
@@ -374,7 +480,11 @@ export function createClientWorkItem({
     published_at: null,
     published_by: null,
     updated_at: timestamp,
-    ...normalizeEditableFields(input),
+    ...normalizeEditableFields({
+      clientId: client.id,
+      input,
+      repositories,
+    }),
   }
 
   repositories.clientWorkItems.upsert(item)
@@ -480,13 +590,17 @@ export function suggestClientWorkItemFromTask({
     published_by: null,
     updated_at: timestamp,
     ...normalizeEditableFields({
-      clientId: task.client_id,
-      projectId: task.project_id,
-      sourceTaskId: task.id,
-      status: input.status ?? mapTaskStatusToClientWorkStatus(task.status),
-      summary,
-      targetDate: input.targetDate ?? task.due_date ?? '',
-      title: input.title ?? task.title,
+      clientId: client.id,
+      input: {
+        clientId: task.client_id,
+        projectId: task.project_id,
+        sourceTaskId: task.id,
+        status: input.status ?? mapTaskStatusToClientWorkStatus(task.status),
+        summary,
+        targetDate: input.targetDate ?? task.due_date ?? '',
+        title: input.title ?? task.title,
+      },
+      repositories,
     }),
   }
 
@@ -525,7 +639,12 @@ export function updateClientWorkItem({
 
   const updatedItem = {
     ...item,
-    ...normalizeEditableFields(input, item),
+    ...normalizeEditableFields({
+      clientId: client.id,
+      fallback: item,
+      input,
+      repositories,
+    }),
     last_reviewed_at: input.lastReviewedAt ?? input.last_reviewed_at ?? item.last_reviewed_at,
     publish_state: nextPublishState,
     updated_at: timestamp,

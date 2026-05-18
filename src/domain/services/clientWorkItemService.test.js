@@ -11,6 +11,8 @@ import {
   archiveClientWorkItem,
   createClientWorkItem,
   createClientWorkItemFromTask,
+  getAdminClientWorkItemDetail,
+  getPublishedClientWorkItemDetail,
   listAdminClientWorkItems,
   listPublishedClientWorkItems,
   markClientWorkItemReadyForReview,
@@ -206,6 +208,75 @@ describe('clientWorkItemService', () => {
     })
   })
 
+  it('returns admin client work item detail with source context', () => {
+    const detail = getAdminClientWorkItemDetail({
+      repositories: createRepositories({
+        clientWorkItems: createEntityRepository([
+          {
+            client_id: IDS.CLIENT,
+            id: IDS.WORK,
+            project_id: IDS.PROJECT,
+            publish_state: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+            source_task_id: IDS.TASK,
+            status: CLIENT_WORK_ITEM_STATUSES.WAITING_CLIENT,
+            summary: 'Review-safe summary.',
+            title: 'Detail work item',
+          },
+        ]),
+      }),
+      viewer: createAdminViewer(),
+      workItemId: IDS.WORK,
+    })
+
+    expect(detail).toMatchObject({
+      status: 'ready',
+      workItem: {
+        projectName: 'Campaign Setup',
+        publishState: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
+        sourceTask: {
+          id: IDS.TASK,
+          title: 'Review creatives',
+        },
+        summary: 'Review-safe summary.',
+        title: 'Detail work item',
+      },
+    })
+  })
+
+  it('returns published client work item detail without admin-only fields', () => {
+    const detail = getPublishedClientWorkItemDetail({
+      clientId: IDS.CLIENT,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+      workItemId: IDS.WORK,
+    })
+
+    expect(detail).toMatchObject({
+      status: 'ready',
+      workItem: {
+        projectName: 'Campaign Setup',
+        summary: 'Published safe summary.',
+        title: 'Published work',
+      },
+    })
+    expect(detail.workItem.publishState).toBeUndefined()
+    expect(detail.workItem.sourceTask).toBeUndefined()
+  })
+
+  it('does not return draft client work item details to client users', () => {
+    const detail = getPublishedClientWorkItemDetail({
+      clientId: IDS.CLIENT,
+      repositories: createRepositories(),
+      viewer: createClientViewer(),
+      workItemId: '88888888-8888-4888-8888-888888888888',
+    })
+
+    expect(detail).toEqual({
+      reason: 'access_denied',
+      status: 'error',
+    })
+  })
+
   it('creates standalone client work items for agency admins', () => {
     const repositories = createRepositories({
       clientWorkItems: createEntityRepository([]),
@@ -236,6 +307,36 @@ describe('clientWorkItemService', () => {
     expect(repositories.clientWorkItems.findById(IDS.WORK)).toMatchObject({
       client_id: IDS.CLIENT,
     })
+  })
+
+  it('validates related project and source task ownership', () => {
+    expect(() => createClientWorkItem({
+      idGenerator: () => IDS.WORK,
+      input: {
+        clientId: IDS.CLIENT,
+        projectId: '99999999-9999-4999-8999-999999999999',
+        summary: 'Safe summary.',
+        title: 'Invalid project item',
+      },
+      repositories: createRepositories({
+        clientWorkItems: createEntityRepository([]),
+      }),
+      viewer: createAdminViewer(),
+    })).toThrow('Project is not available for this client.')
+
+    expect(() => createClientWorkItem({
+      idGenerator: () => IDS.WORK,
+      input: {
+        clientId: IDS.CLIENT,
+        sourceTaskId: '99999999-9999-4999-8999-999999999999',
+        summary: 'Safe summary.',
+        title: 'Invalid source task item',
+      },
+      repositories: createRepositories({
+        clientWorkItems: createEntityRepository([]),
+      }),
+      viewer: createAdminViewer(),
+    })).toThrow('Source task is not available for this client.')
   })
 
   it('creates client work items from internal tasks without publishing automatically', () => {
