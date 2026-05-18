@@ -1,0 +1,1 @@
+export { ClientClinicDataTrust } from './ClientClinicDataTrust'

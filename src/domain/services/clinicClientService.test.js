@@ -550,6 +550,12 @@ describe('clinicClientService', () => {
 
     expect(page.status).toBe('ready')
     expect(page.isEmpty).toBe(false)
+    expect(page.dataTrust).toMatchObject({
+      lastUpdatedAt: '2026-05-08T09:30:00.000Z',
+      privacyBoundaryLabel: 'Aggregate clinic metrics only; no patient-level data shown',
+      recordCount: 2,
+      visibilityLabel: 'Published aggregate records only',
+    })
     expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Dental Implants'])
     expect(page.locations.map((location) => location.name)).toEqual(['Main Clinic'])
     expect(page.locationPerformanceRecords[0]).toMatchObject({
@@ -657,6 +663,12 @@ describe('clinicClientService', () => {
     })
 
     expect(page.status).toBe('ready')
+    expect(page.dataTrust).toMatchObject({
+      dataSourceLabel: 'Manual export',
+      lastUpdatedAt: '2026-05-08T09:30:00.000Z',
+      recordCount: 2,
+      visibilityLabel: 'Published aggregate records only',
+    })
     expect(page.totals).toMatchObject({
       bookedAppointments: 14,
       calls: 18,
@@ -799,6 +811,10 @@ describe('clinicClientService', () => {
 
     expect(clientPage.snapshots).toEqual([])
     expect(adminPreviewPage.source).toBe('draft')
+    expect(adminPreviewPage.dataTrust).toMatchObject({
+      recordCount: 2,
+      visibilityLabel: 'Draft preview for agency admins',
+    })
     expect(adminPreviewPage.snapshots).toHaveLength(1)
   })
 
@@ -810,6 +826,11 @@ describe('clinicClientService', () => {
     })
 
     expect(page.status).toBe('ready')
+    expect(page.dataTrust).toMatchObject({
+      dataSourceLabel: 'Agency-reviewed aggregate records',
+      recordCount: 1,
+      visibilityLabel: 'Published aggregate records only',
+    })
     expect(page.totals).toMatchObject({
       answeredCalls: 37,
       answeredRate: 37 / 43,

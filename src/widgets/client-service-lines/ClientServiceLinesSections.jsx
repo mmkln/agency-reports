@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui'
 
 import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
 
 function formatCurrency(value) {
   if (!value) {
@@ -227,6 +228,7 @@ export function ClientServiceLinesView({ page }) {
           )}
         </PanelBody>
       </Panel>
+      <ClientClinicDataTrust dataTrust={page.dataTrust} />
     </div>
   )
 }

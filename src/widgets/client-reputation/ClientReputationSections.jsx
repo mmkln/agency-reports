@@ -11,6 +11,8 @@ import {
   PropertyGrid,
 } from '@/shared/ui'
 
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
+
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(value || 0))
 }
@@ -21,10 +23,6 @@ function formatRating(value) {
 
 function formatPercent(value) {
   return `${Math.round((value || 0) * 100)}%`
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleDateString() : 'Not updated'
 }
 
 function SummaryMetric({ helper, label, value }) {
@@ -181,33 +179,6 @@ function LocalPresence({ page }) {
   )
 }
 
-function SourceContext({ page }) {
-  return (
-    <Panel>
-      <PanelHeader title="Data Freshness" />
-      <PanelBody>
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Last updated',
-              value: formatDate(page.latestUpdatedAt),
-            },
-            {
-              label: 'Data mode',
-              value: 'Manual aggregate import',
-            },
-            {
-              label: 'Privacy boundary',
-              value: 'No patient-level review records',
-            },
-          ]}
-        />
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function ClientReputationView({ page }) {
   if (page.isEmpty) {
     return (
@@ -256,7 +227,7 @@ export function ClientReputationView({ page }) {
         </PanelBody>
       </Panel>
 
-      <SourceContext page={page} />
+      <ClientClinicDataTrust dataTrust={page.dataTrust} />
     </div>
   )
 }

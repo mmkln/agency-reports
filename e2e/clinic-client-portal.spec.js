@@ -86,7 +86,9 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('heading', { name: 'Patient Acquisition Funnel' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Patient acquisition summary' }).getByText('Booked appointments', { exact: true })).toBeVisible()
   await expect(page.getByText('Campaign', { exact: true }).first()).toBeVisible()
-  await expect(page.getByText('Aggregate clinic metrics only', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
+  await expect(page.getByText('Published aggregate records only', { exact: true })).toBeVisible()
+  await expect(page.getByText('Aggregate clinic metrics only; no patient-level data shown', { exact: true })).toBeVisible()
   await expect(page.getByText('Source dashboards', { exact: true })).toBeVisible()
 
   await page.goto(`/client/calls-bookings?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
@@ -96,6 +98,8 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('region', { name: 'Calls and bookings summary' }).getByText('Missed calls', { exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Calls and bookings summary' }).getByText('Booked from calls', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Service Line Call Handling' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
+  await expect(page.getByText('Aggregate clinic metrics only; no patient-level data shown', { exact: true })).toBeVisible()
 
   await page.goto(`/client/service-lines?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('h1').getByText('Service Lines', { exact: true })).toBeVisible()
@@ -103,6 +107,7 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByText('Dental Implants')).toBeVisible()
   await expect(page.getByText('Campaign status', { exact: true })).toBeVisible()
   await expect(page.getByText('Compliance status', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
 
   await page.goto(`/client/reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('h1').getByText('Reputation', { exact: true })).toBeVisible()
@@ -110,6 +115,7 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('heading', { name: 'Local Presence' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Reputation summary' }).getByText('Google rating', { exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Reputation summary' }).getByText('Reviews gained', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
 
   await page.goto(`/client/compliance-approvals?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
   await expect(page.locator('h1').getByText('Compliance & Approvals', { exact: true })).toBeVisible()
@@ -117,6 +123,7 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('heading', { name: 'Medical Approvals' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Open issues', { exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Pending approvals', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
 })
 
 test('clinic action needed supports medical approval and missed-call operational responses', async ({ page }) => {

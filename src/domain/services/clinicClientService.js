@@ -202,6 +202,32 @@ function buildOptionsFromRecords(records, getValue, getLabel, getMeta = () => nu
   return [...optionsByValue.values()].sort((left, right) => left.label.localeCompare(right.label))
 }
 
+function buildClinicDataTrust({ records, source }) {
+  const dataSources = [...new Set(
+    records
+      .map((record) => record.dataSource)
+      .filter(Boolean),
+  )].sort((left, right) => left.localeCompare(right))
+  const lastUpdatedAt = records
+    .map((record) => record.lastUpdatedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null
+
+  return {
+    dataSourceLabel: dataSources.join(', ') || 'Agency-reviewed aggregate records',
+    dataSources,
+    lastUpdatedAt,
+    noPatientLevelData: true,
+    privacyBoundaryLabel: 'Aggregate clinic metrics only; no patient-level data shown',
+    recordCount: records.length,
+    source,
+    visibilityLabel: source === 'draft'
+      ? 'Draft preview for agency admins'
+      : 'Published aggregate records only',
+  }
+}
+
 function buildClinicFilterOptions({ foundationPage, records, selected, extra = {} }) {
   const availableLocations = foundationPage.locations
     .filter((location) => !selected.serviceLineId || foundationPage.serviceLines.some((serviceLine) => (
@@ -1034,9 +1060,14 @@ export function getClientClinicServiceLinesPage(input) {
   const serviceLines = attachPerformanceToServiceLines(filteredFoundationServiceLines, performanceRecords)
   const locations = attachPerformanceToLocations(foundationPage.locations, locationPerformanceRecords)
   const totals = performanceRecords.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
+  const trustRecords = [...performanceRecords, ...locationPerformanceRecords]
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: trustRecords,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       extra: {
         availableCampaignStatuses: buildOptionsFromRecords(
@@ -1112,9 +1143,14 @@ export function getClientPatientAcquisitionPage(input) {
   const totals = snapshots.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
   const funnelTotals = buildFunnelTotals({ pipelineSnapshots, snapshots })
   const inquiries = totals.calls + totals.forms + totals.chats
+  const trustRecords = [...snapshots, ...pipelineSnapshots]
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: trustRecords,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       extra: {
         availableChannels: buildOptionsFromRecords(
@@ -1198,6 +1234,10 @@ export function getClientCallsBookingsPage(input) {
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: metrics,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       foundationPage,
       records: allMetrics,
@@ -1257,6 +1297,10 @@ export function getClientReputationPage(input) {
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: snapshotsWithActions,
+      source: foundationPage.source,
+    }),
     isEmpty: snapshotsWithActions.length === 0,
     latestSnapshot: snapshotsWithActions[0] ?? null,
     latestUpdatedAt: snapshotsWithActions
@@ -1307,6 +1351,10 @@ export function getClientComplianceApprovalsPage(input) {
   return {
     approvals,
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: [...reviews, ...approvals],
+      source: foundationPage.source,
+    }),
     isEmpty: reviews.length === 0 && approvals.length === 0,
     latestUpdatedAt: [...reviews, ...approvals]
       .map((item) => item.lastUpdatedAt)
