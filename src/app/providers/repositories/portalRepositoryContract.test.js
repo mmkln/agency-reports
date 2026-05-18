@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createLocalStoragePortalRepository } from './createLocalStoragePortalRepository'
+import { portalSeedData } from './portalSeedData'
 import {
   PORTAL_ENTITY_REPOSITORY_METHODS,
   PORTAL_REPOSITORY_COLLECTIONS,
@@ -40,5 +41,17 @@ describe('portalRepositoryContract', () => {
     for (const method of PORTAL_REPOSITORY_EXTENSION_METHODS.root) {
       expect(typeof repository[method], method).toBe('function')
     }
+  })
+
+  it('keeps seed data aligned with the repository table contract', () => {
+    for (const tableName of PORTAL_TABLE_NAMES) {
+      expect(Array.isArray(portalSeedData[tableName]), tableName).toBe(true)
+    }
+
+    const contractTables = new Set(PORTAL_TABLE_NAMES)
+    const unknownSeedTables = Object.keys(portalSeedData)
+      .filter((key) => Array.isArray(portalSeedData[key]) && !contractTables.has(key))
+
+    expect(unknownSeedTables).toEqual([])
   })
 })
