@@ -25,6 +25,10 @@ export function ClientDashboardPageHeader({ activeRoute, routeParams = {}, runti
     return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
+  if (page.redirectTo) {
+    return <PageHeader title="Clinic Results" width={activeRoute?.contentWidth} />
+  }
+
   return (
     <PageHeader
       actions={<HeaderAction dashboard={page.dashboard} />}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
@@ -130,11 +130,36 @@ describe('getClientDashboardPage', () => {
     })
 
     expect(page.status).toBe('ready')
+    expect(page.client.type).toBe(CLIENT_TYPES.GENERIC)
     expect(page.dashboard.name).toBe('Active Dashboard')
+    expect(page.redirectTo).toBeNull()
     expect(page.dashboard.embedUrl).toBe('https://example.com/embed')
     expect(page.latestReport.title).toBe('April Summary')
     expect(JSON.stringify(page)).not.toContain('Draft Dashboard')
     expect(JSON.stringify(page)).not.toContain('May Draft')
+  })
+
+  it('redirects clinic clients from the legacy dashboard surface to the results source dashboard', () => {
+    const page = getClientDashboardPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: [
+          {
+            agency_id: IDS.AGENCY,
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            status: CLIENT_STATUSES.ON_TRACK,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.client.type).toBe(CLIENT_TYPES.CLINIC)
+    expect(page.redirectTo).toBe(`/client/reports-dashboards?clientId=${IDS.CLIENT_A}&dashboardId=${IDS.DASHBOARD_ACTIVE}#source-dashboard`)
   })
 
   it('returns unavailable dashboards as controlled fallback surfaces', () => {

@@ -1,3 +1,4 @@
+import { CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
@@ -52,6 +53,16 @@ function isDashboardVisibleForMode(dashboardLink, mode) {
   return isDashboardVisibleToClient(dashboardLink)
 }
 
+function buildClinicResultsRedirect({ clientId, dashboard }) {
+  const search = new URLSearchParams({ clientId })
+
+  if (dashboard?.id) {
+    search.set('dashboardId', dashboard.id)
+  }
+
+  return `/client/reports-dashboards?${search.toString()}#source-dashboard`
+}
+
 export function getClientDashboardPage({
   clientId,
   dashboardId,
@@ -91,9 +102,13 @@ export function getClientDashboardPage({
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
+      type: client.type ?? CLIENT_TYPES.GENERIC,
     },
     dashboard: dashboard ? mapDashboard(dashboard) : null,
     latestReport: latestReport ? mapReport(latestReport) : null,
+    redirectTo: client.type === CLIENT_TYPES.CLINIC
+      ? buildClinicResultsRedirect({ clientId, dashboard })
+      : null,
     reason: dashboardId && !dashboard ? 'dashboard_not_found' : null,
     status: 'ready',
   }

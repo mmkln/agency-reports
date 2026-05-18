@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Navigate } from 'react-router-dom'
 
 import {
   ACTIVITY_EVENT_TYPES,
@@ -49,7 +50,12 @@ export function ClientDashboardPage({ routeParams = {}, runtime }) {
   const dashboardId = page.dashboard?.id ?? ''
 
   useEffect(() => {
-    if (page.status !== 'ready' || !dashboardId || recordedDashboardOpenRef.current === dashboardId) {
+    if (
+      page.status !== 'ready'
+      || page.redirectTo
+      || !dashboardId
+      || recordedDashboardOpenRef.current === dashboardId
+    ) {
       return
     }
 
@@ -59,10 +65,14 @@ export function ClientDashboardPage({ routeParams = {}, runtime }) {
       dashboardId,
       runtime,
     })
-  }, [clientId, dashboardId, page.status, runtime])
+  }, [clientId, dashboardId, page.redirectTo, page.status, runtime])
 
   if (page.status === 'error') {
     return <AccessDeniedState />
+  }
+
+  if (page.redirectTo) {
+    return <Navigate replace to={page.redirectTo} />
   }
 
   if (!page.dashboard) {

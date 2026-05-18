@@ -85,14 +85,16 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   await expect(page.getByText('E2E dashboard description')).toBeVisible()
 })
 
-test('client can open their active dashboard and cannot open another client dashboard', async ({ page }) => {
+test('clinic client legacy dashboard route opens the Clinic Results source dashboard', async ({ page }) => {
   await signInAsClient(page)
   await page.goto(
     `/client/dashboard?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}`,
     { waitUntil: 'domcontentloaded' },
   )
 
-  await expect(page.getByRole('heading', { name: 'Marketing Dashboard' })).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&dashboardId=${SEED_IDS.DASHBOARD_GREEN_APRIL}#source-dashboard`))
+  await expect(page.getByRole('heading', { name: 'Clinic Results' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient acquisition source detail' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Marketing Performance Dashboard' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Latest summary' })).toBeVisible()
   await expect(page.getByTitle('Marketing Performance Dashboard')).toBeVisible()
