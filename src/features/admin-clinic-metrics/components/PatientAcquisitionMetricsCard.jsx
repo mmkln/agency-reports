@@ -19,6 +19,7 @@ function createBlankSnapshot() {
   return {
     attended_appointments: '',
     booked_appointments: '',
+    campaign_name: '',
     calls: '',
     channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
     chats: '',
@@ -188,6 +189,12 @@ export function PatientAcquisitionMetricsCard({
                   </SelectItem>
                 ))}
               </SelectField>
+              <TextField
+                label="Campaign"
+                onChange={(value) => updateSnapshot(index, 'campaign_name', value)}
+                placeholder="Implants search"
+                value={snapshot.campaign_name}
+              />
             </div>
 
             <div className="grid gap-component md:grid-cols-4">

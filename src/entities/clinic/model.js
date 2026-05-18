@@ -385,6 +385,7 @@ export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
   return {
     attended_appointments: normalizeNumber(snapshot.attended_appointments),
     booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    campaign_name: normalizeText(snapshot.campaign_name),
     calls: normalizeNumber(snapshot.calls),
     channel: normalizeEnum(
       snapshot.channel,
@@ -427,6 +428,7 @@ export function normalizeBookingPipelineSnapshot(snapshot = {}) {
   return {
     attended_appointments: normalizeNumber(snapshot.attended_appointments),
     booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    campaign_name: normalizeText(snapshot.campaign_name),
     calls: normalizeNumber(snapshot.calls),
     chats: normalizeNumber(snapshot.chats),
     client_id: normalizeText(snapshot.client_id),
@@ -494,6 +496,7 @@ export function normalizeCallBookingMetric(metric = {}) {
     answered_calls: normalizeNumber(metric.answered_calls),
     average_response_seconds: normalizeNumber(metric.average_response_seconds),
     booked_from_calls: normalizeNumber(metric.booked_from_calls),
+    campaign_name: normalizeText(metric.campaign_name),
     client_id: normalizeText(metric.client_id),
     created_at: metric.created_at ?? null,
     data_source: normalizeNullableText(metric.data_source),

@@ -135,6 +135,7 @@ function createRepositories(overrides = {}) {
         answered_calls: 37,
         average_response_seconds: 92,
         booked_from_calls: 24,
+        campaign_name: 'Implants search',
         client_id: IDS.CLIENT_A,
         first_time_calls: 31,
         follow_up_needed_count: 5,
@@ -173,6 +174,7 @@ function createRepositories(overrides = {}) {
       {
         attended_appointments: 12,
         booked_appointments: 14,
+        campaign_name: 'Implants search',
         calls: 18,
         channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
         chats: 3,
@@ -198,6 +200,7 @@ function createRepositories(overrides = {}) {
       {
         attended_appointments: 13,
         booked_appointments: 16,
+        campaign_name: 'Implants search',
         calls: 20,
         chats: 2,
         client_id: IDS.CLIENT_A,
@@ -408,6 +411,7 @@ function createFilteringRepositories() {
       {
         answered_calls: 20,
         booked_from_calls: 12,
+        campaign_name: 'Implants search',
         client_id: IDS.CLIENT_A,
         id: IDS.CALL_BOOKING,
         location_id: IDS.LOCATION,
@@ -421,6 +425,7 @@ function createFilteringRepositories() {
       {
         answered_calls: 8,
         booked_from_calls: 4,
+        campaign_name: 'Veneers social',
         client_id: IDS.CLIENT_A,
         id: IDS.CALL_BOOKING_B,
         location_id: IDS.LOCATION_B,
@@ -435,6 +440,7 @@ function createFilteringRepositories() {
     patientAcquisitionSnapshots: createEntityRepository([
       {
         booked_appointments: 14,
+        campaign_name: 'Implants search',
         calls: 18,
         channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
         chats: 3,
@@ -451,6 +457,7 @@ function createFilteringRepositories() {
       },
       {
         booked_appointments: 5,
+        campaign_name: 'Veneers social',
         calls: 8,
         channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
         chats: 1,
@@ -678,6 +685,7 @@ describe('clinicClientService', () => {
     const page = getClientPatientAcquisitionPage({
       clientId: IDS.CLIENT_A,
       filters: {
+        campaign_name: 'Veneers social',
         channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
         location_id: IDS.LOCATION_B,
         period_label: 'June 2026',
@@ -689,6 +697,7 @@ describe('clinicClientService', () => {
 
     expect(page.snapshots).toHaveLength(1)
     expect(page.snapshots[0]).toMatchObject({
+      campaignName: 'Veneers social',
       channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
       locationId: IDS.LOCATION_B,
       serviceLineId: IDS.SERVICE_LINE_B,
@@ -699,12 +708,14 @@ describe('clinicClientService', () => {
       spend: 900,
     })
     expect(page.filters.selected).toMatchObject({
+      campaign_name: 'Veneers social',
       channel: CLINIC_ACQUISITION_CHANNELS.META_ADS,
       location_id: IDS.LOCATION_B,
       period_label: 'June 2026',
       service_line_id: IDS.SERVICE_LINE_B,
     })
     expect(page.filters.availableChannels.map((option) => option.label)).toEqual(['Google Ads', 'Meta Ads'])
+    expect(page.filters.availableCampaigns.map((option) => option.label)).toEqual(['Implants search', 'Veneers social'])
     expect(page.filters.availablePeriods.map((option) => option.value)).toEqual(['June 2026', 'May 2026'])
   })
 

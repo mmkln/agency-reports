@@ -174,6 +174,7 @@ describe('getClientActionNeededPage', () => {
             due_date: '2026-05-13',
             id: '99999999-9999-4999-8999-999999999999',
             patient_impact: 'Missed calls can become lost new-patient appointments.',
+            related_campaign_name: 'Implants search',
             related_location_id: IDS.LOCATION,
             related_service_line_id: IDS.SERVICE_LINE,
             status: NEEDED_ACTION_STATUSES.PENDING,
@@ -195,6 +196,9 @@ describe('getClientActionNeededPage', () => {
           name: 'Main Clinic',
         },
         patientImpact: 'Missed calls can become lost new-patient appointments.',
+        related: {
+          campaignName: 'Implants search',
+        },
         serviceLine: {
           name: 'Dental Implants',
         },

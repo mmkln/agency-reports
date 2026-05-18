@@ -234,6 +234,7 @@ function normalizeEditableActionFields(input = {}) {
     related_call_booking_metric_id: normalizeOptionalId(
       input.relatedCallBookingMetricId ?? input.related_call_booking_metric_id,
     ),
+    related_campaign_name: normalizeText(input.relatedCampaignName ?? input.related_campaign_name),
     related_compliance_review_id: normalizeOptionalId(
       input.relatedComplianceReviewId ?? input.related_compliance_review_id,
     ),
@@ -276,6 +277,7 @@ function mapNeededAction({ action, client }) {
     priority: normalizedAction.priority,
     relatedLink: normalizedAction.related_link,
     relatedCallBookingMetricId: normalizedAction.related_call_booking_metric_id,
+    relatedCampaignName: normalizedAction.related_campaign_name,
     relatedComplianceReviewId: normalizedAction.related_compliance_review_id,
     relatedLocationId: normalizedAction.related_location_id,
     relatedMedicalApprovalId: normalizedAction.related_medical_approval_id,
@@ -315,6 +317,7 @@ function mapClientNeededAction(action) {
     priorityMeta: NEEDED_ACTION_PRIORITY_META[normalizedAction.priority],
     relatedLink: normalizedAction.related_link,
     relatedCallBookingMetricId: normalizedAction.related_call_booking_metric_id,
+    relatedCampaignName: normalizedAction.related_campaign_name,
     relatedComplianceReviewId: normalizedAction.related_compliance_review_id,
     relatedLocationId: normalizedAction.related_location_id,
     relatedMedicalApprovalId: normalizedAction.related_medical_approval_id,
@@ -720,6 +723,7 @@ export function createNeededActionFromClinicBookingSuggestion({
       clientId: metric.client_id,
       clinicActionType: suggestionType,
       relatedCallBookingMetricId: metric.id,
+      relatedCampaignName: metric.campaign_name,
       relatedLocationId: metric.location_id,
       relatedServiceLineId: metric.service_line_id,
       relatedTaskId: '',

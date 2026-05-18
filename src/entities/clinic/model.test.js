@@ -68,6 +68,7 @@ describe('clinic entity model', () => {
   it('normalizes aggregate patient acquisition snapshots', () => {
     expect(normalizePatientAcquisitionSnapshot({
       booked_appointments: '14',
+      campaign_name: '  Implants search  ',
       calls: '18',
       channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
       chats: '3',
@@ -79,6 +80,7 @@ describe('clinic entity model', () => {
       spend: '1860',
     })).toMatchObject({
       booked_appointments: 14,
+      campaign_name: 'Implants search',
       calls: 18,
       channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
       chats: 3,
@@ -96,6 +98,7 @@ describe('clinic entity model', () => {
     expect(normalizeBookingPipelineSnapshot({
       attended_appointments: '9',
       booked_appointments: '12',
+      campaign_name: '  Implants search  ',
       calls: '18',
       chats: '2',
       clicks: '240',
@@ -108,6 +111,7 @@ describe('clinic entity model', () => {
     })).toMatchObject({
       attended_appointments: 9,
       booked_appointments: 12,
+      campaign_name: 'Implants search',
       calls: 18,
       chats: 2,
       clicks: 240,
@@ -126,6 +130,7 @@ describe('clinic entity model', () => {
       answered_calls: '37',
       average_response_seconds: '92',
       booked_from_calls: '24',
+      campaign_name: '  Implants search  ',
       first_time_calls: '31',
       follow_up_needed_count: '5',
       form_leads: '14',
@@ -152,6 +157,7 @@ describe('clinic entity model', () => {
       answered_calls: 37,
       average_response_seconds: 92,
       booked_from_calls: 24,
+      campaign_name: 'Implants search',
       first_time_calls: 31,
       follow_up_needed_count: 5,
       form_leads: 14,

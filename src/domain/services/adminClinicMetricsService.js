@@ -201,6 +201,7 @@ function buildPatientAcquisitionRecord({
   const record = normalizePatientAcquisitionSnapshot({
     attended_appointments: normalizeNumber(input.attended_appointments, 'Attended appointments'),
     booked_appointments: normalizeNumber(input.booked_appointments, 'Booked appointments'),
+    campaign_name: normalizeOptionalText(input.campaign_name),
     calls: normalizeNumber(input.calls, 'Calls'),
     channel: normalizeEnum(
       input.channel,
@@ -254,6 +255,7 @@ function buildCallBookingMetricRecord({
     answered_calls: normalizeNumber(input.answered_calls, 'Answered calls'),
     average_response_seconds: normalizeNumber(input.average_response_seconds, 'Average response seconds'),
     booked_from_calls: normalizeNumber(input.booked_from_calls, 'Booked from calls'),
+    campaign_name: normalizeOptionalText(input.campaign_name),
     client_id: clientId,
     data_source: normalizeOptionalText(input.data_source),
     first_time_calls: normalizeNumber(input.first_time_calls, 'First-time caller calls'),

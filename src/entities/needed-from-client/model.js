@@ -210,6 +210,7 @@ export function normalizeNeededAction(action = {}) {
     related_link: normalizeText(action.related_link),
     related_request_id: normalizeNullableText(action.related_request_id),
     related_call_booking_metric_id: normalizeNullableText(action.related_call_booking_metric_id),
+    related_campaign_name: normalizeText(action.related_campaign_name),
     related_compliance_review_id: normalizeNullableText(action.related_compliance_review_id),
     related_location_id: normalizeNullableText(action.related_location_id),
     related_medical_approval_id: normalizeNullableText(action.related_medical_approval_id),

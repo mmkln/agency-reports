@@ -20,6 +20,7 @@ function createBlankMetric() {
     answered_calls: '',
     average_response_seconds: '',
     booked_from_calls: '',
+    campaign_name: '',
     data_source: '',
     first_time_calls: '',
     follow_up_needed_count: '',
@@ -190,6 +191,12 @@ export function CallBookingMetricsCard({
                 onChange={(value) => updateMetric(index, 'data_source', value)}
                 placeholder="CallRail aggregate export"
                 value={metric.data_source}
+              />
+              <TextField
+                label="Campaign"
+                onChange={(value) => updateMetric(index, 'campaign_name', value)}
+                placeholder="Implants search"
+                value={metric.campaign_name}
               />
             </div>
 

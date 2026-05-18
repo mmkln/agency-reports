@@ -130,6 +130,7 @@ function normalizeOptionalFilterValue(value) {
 
 function normalizeClinicAnalyticsFilters(filters = {}) {
   return {
+    campaignName: normalizeOptionalFilterValue(filters.campaignName ?? filters.campaign_name),
     campaignStatus: normalizeOptionalFilterValue(filters.campaignStatus ?? filters.campaign_status),
     channel: normalizeOptionalFilterValue(filters.channel),
     complianceStatus: normalizeOptionalFilterValue(filters.complianceStatus ?? filters.compliance_status),
@@ -149,6 +150,10 @@ function matchesClinicRecordFilters(record, filters) {
   }
 
   if (filters.periodLabel && record.periodLabel !== filters.periodLabel) {
+    return false
+  }
+
+  if (filters.campaignName && record.campaignName !== filters.campaignName) {
     return false
   }
 
@@ -201,6 +206,7 @@ function buildClinicFilterOptions({ foundationPage, records, selected, extra = {
     availableServiceLines,
     selected: {
       campaign_status: selected.campaignStatus,
+      campaign_name: selected.campaignName,
       channel: selected.channel,
       compliance_status: selected.complianceStatus,
       location_id: selected.locationId,
@@ -218,6 +224,7 @@ function mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesBy
     attendedAppointments: normalizedSnapshot.attended_appointments,
     bookedAppointments: normalizedSnapshot.booked_appointments,
     bookingRate: divide(normalizedSnapshot.booked_appointments, inquiries),
+    campaignName: normalizedSnapshot.campaign_name,
     calls: normalizedSnapshot.calls,
     channel: normalizedSnapshot.channel,
     channelMeta: CLINIC_ACQUISITION_CHANNEL_META[normalizedSnapshot.channel],
@@ -256,6 +263,7 @@ function mapBookingPipelineSnapshot(snapshot, { locationsById, serviceLinesById 
     attendedAppointments: normalizedSnapshot.attended_appointments,
     bookedAppointments: normalizedSnapshot.booked_appointments,
     bookingRate: divide(normalizedSnapshot.booked_appointments, inquiries),
+    campaignName: normalizedSnapshot.campaign_name,
     calls: normalizedSnapshot.calls,
     chats: normalizedSnapshot.chats,
     clientId: normalizedSnapshot.client_id,
@@ -314,6 +322,7 @@ function mapCallBookingMetric(metric, { locationsById, serviceLinesById }) {
     averageResponseSeconds: normalizedMetric.average_response_seconds,
     bookedFromCalls: normalizedMetric.booked_from_calls,
     callBookingRate: divide(normalizedMetric.booked_from_calls, normalizedMetric.total_calls),
+    campaignName: normalizedMetric.campaign_name,
     clientId: normalizedMetric.client_id,
     dataSource: normalizedMetric.data_source,
     firstTimeCalls: normalizedMetric.first_time_calls,
@@ -1095,6 +1104,11 @@ export function getClientPatientAcquisitionPage(input) {
           (record) => record.channel,
           (record) => record.channelMeta?.label ?? record.channel,
           (record) => record.channelMeta,
+        ),
+        availableCampaigns: buildOptionsFromRecords(
+          [...allSnapshots, ...allPipelineSnapshots],
+          (record) => record.campaignName,
+          (record) => record.campaignName,
         ),
       },
       foundationPage,

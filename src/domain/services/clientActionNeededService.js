@@ -110,6 +110,7 @@ function getClinicActionContext({ action, repositories }) {
     patientImpact: action.patientImpact,
     related: {
       callBookingMetricId: action.relatedCallBookingMetricId,
+      campaignName: action.relatedCampaignName,
       complianceReviewId: action.relatedComplianceReviewId,
       medicalApprovalId: action.relatedMedicalApprovalId,
       reputationSnapshotId: action.relatedReputationSnapshotId,

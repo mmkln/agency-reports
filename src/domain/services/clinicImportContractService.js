@@ -174,6 +174,7 @@ function normalizePatientAcquisitionMetric(record, fallbackPeriod) {
     ...normalizeCommonFields(record, fallbackPeriod, 'Patient acquisition period'),
     attended_appointments: normalizeNumber(record.attended_appointments, 'Attended appointments'),
     booked_appointments: normalizeNumber(record.booked_appointments, 'Booked appointments'),
+    campaign_name: normalizeText(record.campaign_name),
     calls: normalizeNumber(record.calls, 'Calls'),
     channel: normalizeEnum(
       record.channel,
@@ -198,6 +199,7 @@ function normalizeCallBookingMetric(record, fallbackPeriod) {
     answered_calls: normalizeNumber(record.answered_calls, 'Answered calls'),
     average_response_seconds: normalizeNumber(record.average_response_seconds, 'Average response seconds'),
     booked_from_calls: normalizeNumber(record.booked_from_calls, 'Booked from calls'),
+    campaign_name: normalizeText(record.campaign_name),
     first_time_calls: normalizeNumber(record.first_time_calls, 'First-time caller calls'),
     follow_up_needed_count: normalizeNumber(record.follow_up_needed_count, 'Follow-up needed count'),
     form_leads: normalizeNumber(record.form_leads, 'Form leads'),

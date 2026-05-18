@@ -114,10 +114,10 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] qualified inquiries
   - [x] booked appointments
   - [x] attended appointments, optional
-- [ ] Add filters:
+- [x] Add filters:
   - [x] location
   - [x] service line
-  - [ ] campaign
+  - [x] campaign
   - [x] channel
   - [x] date range / reporting period
 - [x] Add leakage insight section.
@@ -253,7 +253,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add clinic action metadata:
   - [x] related service line
   - [x] related location
-  - [ ] related campaign
+  - [x] related campaign
   - [x] patient/business impact
   - [x] compliance risk if delayed
 - [x] Update Action Needed filters/categories for clinic actions.
