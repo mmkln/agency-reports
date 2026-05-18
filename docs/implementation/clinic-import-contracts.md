@@ -41,6 +41,16 @@ Preview rules:
 - prohibited patient-level fields are shown as blocking preview errors
 ```
 
+Imported records still need publish readiness before they can become client-visible. Current readiness checks require:
+
+```text
+- complete reporting period for metric/reputation records
+- aggregate patient demand, booking, service-line, or reputation values
+- service-line records to have a reviewed compliance status
+- compliance reviews to have a title, reviewed status, and useful platform/risk/summary context
+- medical approvals to have a title and review instructions
+```
+
 ## Hard Safety Rule
 
 Clinic MVP imports are aggregate-only.

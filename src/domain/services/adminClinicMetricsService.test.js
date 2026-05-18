@@ -316,6 +316,7 @@ describe('adminClinicMetricsService', () => {
     const repositories = createRepositories({
       callBookingMetrics: createRepository([
         {
+          booked_from_calls: 9,
           client_id: IDS.CLIENT_A,
           id: IDS.CALLS_A,
           period_end: '2026-05-31',
@@ -326,6 +327,7 @@ describe('adminClinicMetricsService', () => {
       ]),
       patientAcquisitionSnapshots: createRepository([
         {
+          booked_appointments: 8,
           client_id: IDS.CLIENT_A,
           id: IDS.ACQUISITION_A,
           period_end: '2026-05-31',
@@ -336,7 +338,9 @@ describe('adminClinicMetricsService', () => {
       ]),
       serviceLinePerformance: createRepository([
         {
+          booked_appointments: 10,
           client_id: IDS.CLIENT_A,
+          compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
           id: IDS.PERFORMANCE_A,
           period_end: '2026-05-31',
           period_label: 'May 2026',

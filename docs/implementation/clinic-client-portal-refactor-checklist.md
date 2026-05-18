@@ -306,6 +306,10 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Block wrong-section clinic imports with workspace-specific error copy.
 - [x] Surface ignored-section warnings when a mixed payload contains records outside the current workspace.
 - [x] Keep PHI rejection visible in clinic import preview UI.
+- [x] Add domain publish readiness rules for clinic metrics, reputation, compliance reviews, and medical approvals.
+- [x] Expose publish readiness in admin clinic read models.
+- [x] Block service-level publish attempts for clinic records that are not ready.
+- [x] Show publish readiness badges and first blocking reason in admin clinic workspaces.
 
 ## Phase 12 - Integrations Readiness
 
@@ -360,6 +364,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for admin Clinic Metrics JSON import preview/apply/save.
 - [x] Add e2e for admin Clinic Reputation and Compliance JSON import preview/apply/save.
 - [x] Add e2e for wrong-section and PHI-blocked clinic import previews.
+- [x] Add unit tests for clinic publish readiness policies.
+- [x] Add e2e coverage for admin clinic publish readiness indicators.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.

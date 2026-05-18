@@ -7,6 +7,11 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
+import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
 import { ComplianceReviewStatusActions } from './ComplianceReviewStatusActions'
 import { PolicyIssuesEditor } from './PolicyIssuesEditor'
 import {
@@ -40,12 +45,6 @@ function getPublishLabel(record) {
   return CLINIC_RECORD_PUBLISH_STATE_META[
     record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
   ].label
-}
-
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
 }
 
 export function ComplianceReviewsCard({
@@ -112,10 +111,14 @@ export function ComplianceReviewsCard({
                   {getPublishLabel(review)}
                   {review.published_at ? ` at ${review.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={review.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={review.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(review, isDirty)}
+                  disabled={!canPublishClinicRecord(review, isDirty)}
                   onClick={() => onPublish({ id: review.id, type: 'review' })}
                   size="sm"
                   type="button"

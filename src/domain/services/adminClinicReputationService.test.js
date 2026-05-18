@@ -186,6 +186,7 @@ describe('adminClinicReputationService', () => {
           period_label: 'May 2026',
           period_start: '2026-05-01',
           publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          review_count: 184,
         },
       ]),
     })

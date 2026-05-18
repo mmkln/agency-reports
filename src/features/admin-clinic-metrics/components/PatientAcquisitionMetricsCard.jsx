@@ -8,6 +8,11 @@ import {
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   NumberField,
   SelectField,
@@ -44,12 +49,6 @@ function getPublishLabel(record) {
   return CLINIC_RECORD_PUBLISH_STATE_META[
     record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
   ].label
-}
-
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
 }
 
 export function PatientAcquisitionMetricsCard({
@@ -117,10 +116,14 @@ export function PatientAcquisitionMetricsCard({
                   {getPublishLabel(snapshot)}
                   {snapshot.published_at ? ` at ${snapshot.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={snapshot.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={snapshot.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(snapshot, isDirty)}
+                  disabled={!canPublishClinicRecord(snapshot, isDirty)}
                   onClick={() => onPublish({ id: snapshot.id, type: 'patient_acquisition' })}
                   size="sm"
                   type="button"

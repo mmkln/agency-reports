@@ -133,6 +133,7 @@ function createApproval(overrides = {}) {
     client_id: IDS.CLIENT_A,
     due_date: '2026-05-20',
     id: IDS.APPROVAL_A,
+    instructions: 'Review and approve the medical claim wording.',
     status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
     title: 'Implant success-rate claim',
     version: 'v1',
@@ -288,6 +289,7 @@ describe('adminClinicComplianceService', () => {
         {
           client_id: IDS.CLIENT_A,
           id: IDS.REVIEW_A,
+          platform: 'Google Ads',
           publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
           status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
           title: 'Tracking review',
@@ -345,7 +347,7 @@ describe('adminClinicComplianceService', () => {
       repositories,
       reviewId: IDS.REVIEW_A,
       viewer: createAdminViewer(),
-    })).toThrow('Compliance review must be reviewed before publishing.')
+    })).toThrow('Review the compliance status before publishing.')
   })
 
   it('deletes omitted compliance records when saving', () => {

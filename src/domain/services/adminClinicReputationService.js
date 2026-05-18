@@ -7,6 +7,10 @@ import {
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
+import {
+  assertClinicPublishReady,
+  getReputationSnapshotPublishReadiness,
+} from '../policies/clinicPublishReadinessPolicy'
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
@@ -237,6 +241,7 @@ function publishReputationRecord({
 
   const timestamp = now()
   const normalizedRecord = normalizeReputationSnapshot(existingRecord)
+  assertClinicPublishReady(getReputationSnapshotPublishReadiness(normalizedRecord))
 
   repositories.reputationSnapshots.upsert(normalizeReputationSnapshot({
     ...normalizedRecord,
@@ -260,6 +265,10 @@ export function getAdminClinicReputationPage({ clientId, repositories, viewer })
     reputationSnapshots: repositories.reputationSnapshots
       .listByClientId(clientId)
       .map(normalizeReputationSnapshot)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getReputationSnapshotPublishReadiness(record),
+      }))
       .sort(sortByPeriodDesc),
     status: 'ready',
   }

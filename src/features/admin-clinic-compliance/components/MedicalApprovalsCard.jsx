@@ -11,6 +11,11 @@ import {
 import { getMedicalApprovalDecisionCapabilities } from '../../../domain/services/adminClinicComplianceService'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   SelectField,
   SelectItem,
@@ -57,12 +62,6 @@ function getPublishLabel(record) {
   return CLINIC_RECORD_PUBLISH_STATE_META[
     record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
   ].label
-}
-
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
 }
 
 export function MedicalApprovalsCard({
@@ -170,14 +169,18 @@ function ApprovalEditor({
           <p className="text-label text-text-muted">
             Status: {getStatusLabel(approval.status)}
           </p>
-          <p className="text-label text-text-muted">
-            {getPublishLabel(approval)}
-            {approval.published_at ? ` at ${approval.published_at}` : ''}
-          </p>
-        </div>
+                <p className="text-label text-text-muted">
+                  {getPublishLabel(approval)}
+                  {approval.published_at ? ` at ${approval.published_at}` : ''}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={approval.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={approval.publish_readiness} />
+                </div>
+              </div>
         <div className="flex items-center gap-2">
           <Button
-            disabled={!canPublishRecord(approval, isDirty)}
+            disabled={!canPublishClinicRecord(approval, isDirty)}
             onClick={() => onPublish({ id: approval.id, type: 'approval' })}
             size="sm"
             type="button"

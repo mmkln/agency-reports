@@ -16,10 +16,22 @@ import {
   normalizeServiceLinePerformance,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
+import {
+  assertClinicPublishReady,
+  getCallBookingPublishReadiness,
+  getPatientAcquisitionPublishReadiness,
+  getServiceLinePerformancePublishReadiness,
+} from '../policies/clinicPublishReadinessPolicy'
 
 const VALID_CHANNELS = new Set(Object.values(CLINIC_ACQUISITION_CHANNELS))
 const VALID_CAMPAIGN_STATUSES = new Set(Object.values(CLINIC_CAMPAIGN_STATUSES))
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
+
+const METRIC_READINESS = Object.freeze({
+  call_booking: getCallBookingPublishReadiness,
+  patient_acquisition: getPatientAcquisitionPublishReadiness,
+  service_line_performance: getServiceLinePerformancePublishReadiness,
+})
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
@@ -355,6 +367,7 @@ function publishClinicMetricRecord({
   id,
   normalize,
   now = () => new Date().toISOString(),
+  readiness,
   repository,
   repositories,
   viewer,
@@ -369,6 +382,7 @@ function publishClinicMetricRecord({
 
   const timestamp = now()
   const normalizedRecord = normalize(existingRecord)
+  assertClinicPublishReady(readiness(normalizedRecord))
 
   repository.upsert(normalize({
     ...normalizedRecord,
@@ -390,6 +404,10 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
     callBookingMetrics: repositories.callBookingMetrics
       .listByClientId(clientId)
       .map(normalizeCallBookingMetric)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getCallBookingPublishReadiness(record),
+      }))
       .sort(sortByPeriodDesc),
     campaignStatusMeta: CLINIC_CAMPAIGN_STATUS_META,
     client: mapClient(client),
@@ -398,12 +416,20 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
     patientAcquisitionSnapshots: repositories.patientAcquisitionSnapshots
       .listByClientId(clientId)
       .map(normalizePatientAcquisitionSnapshot)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getPatientAcquisitionPublishReadiness(record),
+      }))
       .sort(sortByPeriodDesc),
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
     serviceLinePerformance: repositories.serviceLinePerformance
       .listByClientId(clientId)
       .map(normalizeServiceLinePerformance)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getServiceLinePerformancePublishReadiness(record),
+      }))
       .sort(sortByPeriodDesc),
     status: 'ready',
   }
@@ -498,6 +524,7 @@ export function publishPatientAcquisitionSnapshot(args) {
     ...args,
     id: args.snapshotId ?? args.id,
     normalize: normalizePatientAcquisitionSnapshot,
+    readiness: METRIC_READINESS.patient_acquisition,
     repository: args.repositories.patientAcquisitionSnapshots,
   })
 }
@@ -507,6 +534,7 @@ export function publishCallBookingMetric(args) {
     ...args,
     id: args.metricId ?? args.id,
     normalize: normalizeCallBookingMetric,
+    readiness: METRIC_READINESS.call_booking,
     repository: args.repositories.callBookingMetrics,
   })
 }
@@ -516,6 +544,7 @@ export function publishServiceLinePerformance(args) {
     ...args,
     id: args.performanceId ?? args.id,
     normalize: normalizeServiceLinePerformance,
+    readiness: METRIC_READINESS.service_line_performance,
     repository: args.repositories.serviceLinePerformance,
   })
 }

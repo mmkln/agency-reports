@@ -17,6 +17,11 @@ import {
   normalizeMedicalApproval,
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
+import {
+  assertClinicPublishReady,
+  getComplianceReviewPublishReadiness,
+  getMedicalApprovalPublishReadiness,
+} from '../policies/clinicPublishReadinessPolicy'
 
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
 const VALID_APPROVAL_TYPES = new Set(Object.values(CLINIC_APPROVAL_TYPES))
@@ -75,6 +80,10 @@ const COMPLIANCE_REVIEW_TRANSITIONS = Object.freeze({
     CLINIC_COMPLIANCE_STATUSES.BLOCKED,
     CLINIC_COMPLIANCE_STATUSES.APPROVED,
   ]),
+})
+const COMPLIANCE_RECORD_READINESS = Object.freeze({
+  approval: getMedicalApprovalPublishReadiness,
+  review: getComplianceReviewPublishReadiness,
 })
 
 function assertAgencyAdmin(viewer) {
@@ -433,6 +442,7 @@ function publishClinicComplianceRecord({
   id,
   normalize,
   now = () => new Date().toISOString(),
+  readiness,
   repository,
   repositories,
   viewer,
@@ -447,10 +457,7 @@ function publishClinicComplianceRecord({
 
   const timestamp = now()
   const normalizedRecord = normalize(existingRecord)
-
-  if (normalizedRecord.status === CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED) {
-    throw new Error('Compliance review must be reviewed before publishing.')
-  }
+  assertClinicPublishReady(readiness(normalizedRecord))
 
   repository.upsert(normalize({
     ...normalizedRecord,
@@ -641,12 +648,20 @@ export function getAdminClinicCompliancePage({ clientId, repositories, viewer })
     complianceReviews: repositories.complianceReviews
       .listByClientId(clientId)
       .map(normalizeComplianceReview)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getComplianceReviewPublishReadiness(record),
+      }))
       .sort(sortReviews),
     complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META,
     locations: foundation.locations,
     medicalApprovals: repositories.medicalApprovals
       .listByClientId(clientId)
       .map(normalizeMedicalApproval)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getMedicalApprovalPublishReadiness(record),
+      }))
       .sort(sortApprovals),
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
@@ -751,6 +766,7 @@ export function publishComplianceReview(args) {
     ...args,
     id: args.reviewId ?? args.id,
     normalize: normalizeComplianceReview,
+    readiness: COMPLIANCE_RECORD_READINESS.review,
     repository: args.repositories.complianceReviews,
   })
 }
@@ -760,6 +776,7 @@ export function publishMedicalApproval(args) {
     ...args,
     id: args.approvalId ?? args.id,
     normalize: normalizeMedicalApproval,
+    readiness: COMPLIANCE_RECORD_READINESS.approval,
     repository: args.repositories.medicalApprovals,
   })
 }

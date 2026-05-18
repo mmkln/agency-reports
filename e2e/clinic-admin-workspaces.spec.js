@@ -86,6 +86,7 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await expect(page.getByText('without storing PHI.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save metrics' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Create missed-call action' }).first()).toBeVisible()
+  await expect(page.getByText('Ready to publish').first()).toBeVisible()
 
   await expect(page.getByRole('link', { name: 'Published acquisition' })).toHaveAttribute(
     'href',
@@ -266,6 +267,7 @@ test('admin reputation and compliance workspaces expose published and draft clin
   await expect(page.getByRole('heading', { name: 'Medical Approvals' })).toBeVisible()
   await expect(page.getByText('policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save compliance' })).toBeVisible()
+  await expect(page.getByText('Ready to publish').first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Approve' }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Request changes' }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Reject' }).first()).toBeVisible()
