@@ -302,6 +302,10 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add Clinic Metrics JSON import dialog with preview and apply-to-draft flow.
 - [x] Add Clinic Reputation JSON import dialog with preview and apply-to-draft flow.
 - [x] Add Clinic Compliance JSON import dialog with preview and apply-to-draft flow.
+- [x] Block empty clinic imports before apply-to-draft.
+- [x] Block wrong-section clinic imports with workspace-specific error copy.
+- [x] Surface ignored-section warnings when a mixed payload contains records outside the current workspace.
+- [x] Keep PHI rejection visible in clinic import preview UI.
 
 ## Phase 12 - Integrations Readiness
 
@@ -355,6 +359,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for clinic Action Needed approval/response.
 - [x] Add e2e for admin Clinic Metrics JSON import preview/apply/save.
 - [x] Add e2e for admin Clinic Reputation and Compliance JSON import preview/apply/save.
+- [x] Add e2e for wrong-section and PHI-blocked clinic import previews.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.

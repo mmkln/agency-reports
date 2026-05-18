@@ -199,6 +199,48 @@ test('admin can preview and save aggregate clinic metrics imports', async ({ pag
   })
 })
 
+test('admin clinic import preview blocks wrong sections and PHI', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-metrics?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  const importDialog = page.getByRole('dialog', { name: 'Import clinic metrics JSON' })
+
+  await expect(importDialog).toBeVisible()
+  await page.getByLabel('Clinic metrics JSON *').fill(JSON.stringify({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    reputation: {
+      reputation_snapshots: [
+        {
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+        },
+      ],
+    },
+  }, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+  await expect(importDialog.getByText(/No clinic metric records were found/)).toBeVisible()
+  await expect(importDialog.getByRole('button', { name: 'Apply to draft' })).toBeDisabled()
+
+  await page.getByLabel('Clinic metrics JSON *').fill(JSON.stringify({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    metrics: {
+      calls_bookings: [
+        {
+          patient_phone: '+1 555 0100',
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+        },
+      ],
+    },
+  }, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+  await expect(importDialog.getByText(/Remove patient-level field "patient_phone"/)).toBeVisible()
+  await expect(importDialog.getByRole('button', { name: 'Apply to draft' })).toBeDisabled()
+})
+
 test('admin reputation and compliance workspaces expose published and draft clinic previews', async ({ page }) => {
   await signInAsAdmin(page)
   await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })

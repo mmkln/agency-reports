@@ -1,18 +1,9 @@
 import { normalizeClinicImportPayload } from '../../../domain/services/clinicImportContractService'
-
-function parseJson(rawJson) {
-  const normalizedRawJson = String(rawJson ?? '').trim()
-
-  if (!normalizedRawJson) {
-    throw new Error('Clinic compliance JSON is required.')
-  }
-
-  try {
-    return JSON.parse(normalizedRawJson)
-  } catch {
-    throw new Error('Clinic compliance JSON is not valid JSON.')
-  }
-}
+import {
+  assertImportHasCurrentSectionRecords,
+  getIgnoredSectionWarnings,
+  parseClinicImportJson,
+} from '../../admin-clinic-import'
 
 function getUniqueValues(records, fieldName) {
   return [...new Set(records.map((record) => record[fieldName]).filter(Boolean))].sort()
@@ -29,17 +20,30 @@ function summarizeClinicComplianceImport(normalizedPayload) {
 }
 
 export function previewClinicComplianceImport({ clientId, rawJson, now }) {
-  const parsedPayload = parseJson(rawJson)
+  const parsedPayload = parseClinicImportJson(rawJson, 'Clinic compliance')
   const normalizedPayload = normalizeClinicImportPayload(parsedPayload, { now })
 
   if (normalizedPayload.clientId !== clientId) {
     throw new Error('Imported clinic compliance belongs to a different client workspace.')
   }
 
+  const summary = summarizeClinicComplianceImport(normalizedPayload)
+
+  assertImportHasCurrentSectionRecords({
+    currentSection: 'compliance',
+    normalizedPayload,
+    recordCount: summary.complianceReviewCount,
+    recordLabel: 'clinic compliance',
+  })
+
   return {
     contractVersion: normalizedPayload.contractVersion,
     normalizedPayload,
-    summary: summarizeClinicComplianceImport(normalizedPayload),
+    summary,
+    warnings: getIgnoredSectionWarnings({
+      currentSection: 'compliance',
+      normalizedPayload,
+    }),
   }
 }
 

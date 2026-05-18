@@ -103,6 +103,54 @@ describe('clinicMetricsImportDraft', () => {
     })).toThrow('aggregate-only')
   })
 
+  it('blocks empty imports before they can be applied', () => {
+    expect(() => previewClinicMetricsImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+      }),
+    })).toThrow('No clinic metric records were found')
+  })
+
+  it('blocks wrong-section imports with a workspace-specific message', () => {
+    expect(() => previewClinicMetricsImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+        reputation: {
+          reputation_snapshots: [
+            {
+              period_end: '2026-05-31',
+              period_label: 'May 2026',
+              period_start: '2026-05-01',
+            },
+          ],
+        },
+      }),
+    })).toThrow('This JSON contains 1 reputation records')
+  })
+
+  it('warns when the payload contains sections ignored by the metrics workspace', () => {
+    const plan = previewClinicMetricsImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify(createPayload({
+        reputation: {
+          reputation_snapshots: [
+            {
+              period_end: '2026-05-31',
+              period_label: 'May 2026',
+              period_start: '2026-05-01',
+            },
+          ],
+        },
+      })),
+    })
+
+    expect(plan.warnings).toEqual([
+      'This import also contains 1 reputation records. They will be ignored in this workspace.',
+    ])
+  })
+
   it('applies previewed records to the unsaved draft', () => {
     const plan = previewClinicMetricsImport({
       clientId: CLIENT_ID,

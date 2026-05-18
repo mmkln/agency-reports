@@ -26,6 +26,23 @@ function ImportIssue({ message }) {
   )
 }
 
+function ImportWarnings({ warnings = [] }) {
+  if (warnings.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="grid gap-1 rounded-control bg-warning-muted px-3 py-2 text-ui text-warning-foreground">
+      <p className="font-semibold text-warning-foreground">Import warnings</p>
+      <ul className="grid gap-1">
+        {warnings.map((warning) => (
+          <li key={warning}>{warning}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function ImportSummary({
   detailItems = [],
   emptyMessage,
@@ -121,6 +138,7 @@ export function AdminClinicJsonImportDialog({
           <OverlayBody className="min-h-0 overflow-y-auto bg-surface-subtle">
             <div className="grid gap-component">
               <ImportIssue message={importError} />
+              <ImportWarnings warnings={importPlan?.warnings} />
 
               <div className="flex items-start gap-3 rounded-control bg-action-muted px-3 py-3 text-ui">
                 <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control bg-block text-action ring-1 ring-action/20">

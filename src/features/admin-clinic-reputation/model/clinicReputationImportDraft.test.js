@@ -51,6 +51,31 @@ describe('clinicReputationImportDraft', () => {
     })).toThrow('different client workspace')
   })
 
+  it('blocks empty imports before they can be applied', () => {
+    expect(() => previewClinicReputationImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+      }),
+    })).toThrow('No clinic reputation records were found')
+  })
+
+  it('blocks wrong-section imports with a workspace-specific message', () => {
+    expect(() => previewClinicReputationImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+        compliance: {
+          compliance_reviews: [
+            {
+              title: 'Policy review',
+            },
+          ],
+        },
+      }),
+    })).toThrow('This JSON contains 1 compliance records')
+  })
+
   it('applies previewed reputation records to the unsaved draft', () => {
     const plan = previewClinicReputationImport({
       clientId: CLIENT_ID,

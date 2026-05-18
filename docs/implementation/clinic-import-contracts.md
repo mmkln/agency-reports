@@ -32,6 +32,15 @@ Admin workspaces that currently expose JSON preview/apply flows:
 - Clinic Compliance
 ```
 
+Preview rules:
+
+```text
+- empty payloads are blocked before apply-to-draft
+- payloads with only another workspace's records are blocked with a workspace-specific message
+- mixed payloads can be previewed, but records outside the current workspace are warned as ignored
+- prohibited patient-level fields are shown as blocking preview errors
+```
+
 ## Hard Safety Rule
 
 Clinic MVP imports are aggregate-only.

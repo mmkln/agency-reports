@@ -1,18 +1,9 @@
 import { normalizeClinicImportPayload } from '../../../domain/services/clinicImportContractService'
-
-function parseJson(rawJson) {
-  const normalizedRawJson = String(rawJson ?? '').trim()
-
-  if (!normalizedRawJson) {
-    throw new Error('Clinic metrics JSON is required.')
-  }
-
-  try {
-    return JSON.parse(normalizedRawJson)
-  } catch {
-    throw new Error('Clinic metrics JSON is not valid JSON.')
-  }
-}
+import {
+  assertImportHasCurrentSectionRecords,
+  getIgnoredSectionWarnings,
+  parseClinicImportJson,
+} from '../../admin-clinic-import'
 
 function getUniqueValues(records, fieldName) {
   return [...new Set(records.map((record) => record[fieldName]).filter(Boolean))].sort()
@@ -46,22 +37,41 @@ function summarizeClinicMetricsImport(normalizedPayload) {
   }
 }
 
+function getMetricRecordCount(summary) {
+  return summary.patientAcquisitionCount
+    + summary.callBookingCount
+    + summary.serviceLinePerformanceCount
+}
+
 export function previewClinicMetricsImport({
   clientId,
   rawJson,
   now,
 }) {
-  const parsedPayload = parseJson(rawJson)
+  const parsedPayload = parseClinicImportJson(rawJson, 'Clinic metrics')
   const normalizedPayload = normalizeClinicImportPayload(parsedPayload, { now })
 
   if (normalizedPayload.clientId !== clientId) {
     throw new Error('Imported clinic metrics belong to a different client workspace.')
   }
 
+  const summary = summarizeClinicMetricsImport(normalizedPayload)
+
+  assertImportHasCurrentSectionRecords({
+    currentSection: 'metrics',
+    normalizedPayload,
+    recordCount: getMetricRecordCount(summary),
+    recordLabel: 'clinic metric',
+  })
+
   return {
     contractVersion: normalizedPayload.contractVersion,
     normalizedPayload,
-    summary: summarizeClinicMetricsImport(normalizedPayload),
+    summary,
+    warnings: getIgnoredSectionWarnings({
+      currentSection: 'metrics',
+      normalizedPayload,
+    }),
   }
 }
 

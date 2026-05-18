@@ -50,6 +50,33 @@ describe('clinicComplianceImportDraft', () => {
     })).toThrow('different client workspace')
   })
 
+  it('blocks empty imports before they can be applied', () => {
+    expect(() => previewClinicComplianceImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+      }),
+    })).toThrow('No clinic compliance records were found')
+  })
+
+  it('blocks wrong-section imports with a workspace-specific message', () => {
+    expect(() => previewClinicComplianceImport({
+      clientId: CLIENT_ID,
+      rawJson: JSON.stringify({
+        client_id: CLIENT_ID,
+        metrics: {
+          patient_acquisition: [
+            {
+              period_end: '2026-05-31',
+              period_label: 'May 2026',
+              period_start: '2026-05-01',
+            },
+          ],
+        },
+      }),
+    })).toThrow('This JSON contains 1 metrics records')
+  })
+
   it('applies previewed compliance records without replacing medical approvals', () => {
     const plan = previewClinicComplianceImport({
       clientId: CLIENT_ID,
