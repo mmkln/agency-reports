@@ -11,26 +11,33 @@ function getUniqueValues(records, fieldName) {
 
 function getUniquePeriods(normalizedPayload) {
   return [...new Set([
+    ...normalizedPayload.metricsInput.bookingPipelineSnapshots.map((record) => record.period_label),
     ...normalizedPayload.metricsInput.patientAcquisitionSnapshots.map((record) => record.period_label),
     ...normalizedPayload.metricsInput.callBookingMetrics.map((record) => record.period_label),
+    ...normalizedPayload.metricsInput.locationPerformance.map((record) => record.period_label),
     ...normalizedPayload.metricsInput.serviceLinePerformance.map((record) => record.period_label),
   ].filter(Boolean))].sort()
 }
 
 function summarizeClinicMetricsImport(normalizedPayload) {
   const {
+    bookingPipelineSnapshots,
     callBookingMetrics,
+    locationPerformance,
     patientAcquisitionSnapshots,
     serviceLinePerformance,
   } = normalizedPayload.metricsInput
 
   return {
+    bookingPipelineCount: bookingPipelineSnapshots.length,
     callBookingCount: callBookingMetrics.length,
     campaignNames: getUniqueValues([
+      ...bookingPipelineSnapshots,
       ...patientAcquisitionSnapshots,
       ...callBookingMetrics,
       ...serviceLinePerformance,
     ], 'campaign_name'),
+    locationPerformanceCount: locationPerformance.length,
     patientAcquisitionCount: patientAcquisitionSnapshots.length,
     periods: getUniquePeriods(normalizedPayload),
     serviceLinePerformanceCount: serviceLinePerformance.length,
@@ -39,7 +46,9 @@ function summarizeClinicMetricsImport(normalizedPayload) {
 
 function getMetricRecordCount(summary) {
   return summary.patientAcquisitionCount
+    + summary.bookingPipelineCount
     + summary.callBookingCount
+    + summary.locationPerformanceCount
     + summary.serviceLinePerformanceCount
 }
 
@@ -85,16 +94,26 @@ export function applyClinicMetricsImportToDraft({ draft, importPlan }) {
   }
 
   const {
+    bookingPipelineSnapshots,
     callBookingMetrics,
+    locationPerformance,
     patientAcquisitionSnapshots,
     serviceLinePerformance,
   } = importPlan.normalizedPayload.metricsInput
 
   return {
     ...draft,
+    bookingPipelineSnapshots: [
+      ...bookingPipelineSnapshots,
+      ...draft.bookingPipelineSnapshots,
+    ],
     callBookingMetrics: [
       ...callBookingMetrics,
       ...draft.callBookingMetrics,
+    ],
+    locationPerformance: [
+      ...locationPerformance,
+      ...draft.locationPerformance,
     ],
     patientAcquisitionSnapshots: [
       ...patientAcquisitionSnapshots,

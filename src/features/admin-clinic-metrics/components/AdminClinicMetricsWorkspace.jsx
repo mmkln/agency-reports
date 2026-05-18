@@ -9,8 +9,10 @@ import {
   ClinicClientPreviewLinks,
 } from '../../admin-client-workspace'
 import { useAdminClinicMetricsWorkflow } from '../useAdminClinicMetricsWorkflow'
+import { BookingPipelineSnapshotsCard } from './BookingPipelineSnapshotsCard'
 import { CallBookingMetricsCard } from './CallBookingMetricsCard'
 import { ClinicMetricsImportDialog } from './ClinicMetricsImportDialog'
+import { LocationPerformanceCard } from './LocationPerformanceCard'
 import { PatientAcquisitionMetricsCard } from './PatientAcquisitionMetricsCard'
 import { ServiceLinePerformanceCard } from './ServiceLinePerformanceCard'
 
@@ -157,6 +159,14 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
+          <BookingPipelineSnapshotsCard
+            draft={draft}
+            isDirty={isDirty}
+            locations={page.locations}
+            onPublish={publishMetricRecord}
+            onUpdate={updateDraft}
+            serviceLines={page.serviceLines}
+          />
           <CallBookingMetricsCard
             createdActionKeys={createdBookingActionKeys}
             creatingActionKey={creatingBookingActionKey}
@@ -167,6 +177,13 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             onPublish={publishMetricRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
+          />
+          <LocationPerformanceCard
+            draft={draft}
+            isDirty={isDirty}
+            locations={page.locations}
+            onPublish={publishMetricRecord}
+            onUpdate={updateDraft}
           />
           <ServiceLinePerformanceCard
             draft={draft}

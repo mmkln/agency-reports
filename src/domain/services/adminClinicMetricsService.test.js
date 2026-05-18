@@ -16,7 +16,9 @@ import {
 import { USER_ROLES } from '../../entities/profile'
 import {
   getAdminClinicMetricsPage,
+  publishBookingPipelineSnapshot,
   publishCallBookingMetric,
+  publishLocationPerformance,
   publishPatientAcquisitionSnapshot,
   publishServiceLinePerformance,
   saveAdminClinicMetrics,
@@ -30,7 +32,9 @@ const IDS = Object.freeze({
   LOCATION_A: '55555555-5555-4555-8555-555555555555',
   SERVICE_A: '66666666-6666-4666-8666-666666666666',
   ACQUISITION_A: '77777777-7777-4777-8777-777777777777',
+  BOOKING_PIPELINE_A: '78787878-7878-4788-8788-787878787878',
   CALLS_A: '88888888-8888-4888-8888-888888888888',
+  LOCATION_PERFORMANCE_A: '89898989-8989-4899-8899-898989898989',
   PERFORMANCE_A: '99999999-9999-4999-8999-999999999999',
 })
 
@@ -73,6 +77,7 @@ function createRepository(initialRecords = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    bookingPipelineSnapshots: createRepository([]),
     callBookingMetrics: createRepository([]),
     clients: createRepository([
       {
@@ -114,6 +119,7 @@ function createRepositories(overrides = {}) {
     ]),
     neededFromClient: createRepository([]),
     patientAcquisitionSnapshots: createRepository([]),
+    locationPerformance: createRepository([]),
     serviceLinePerformance: createRepository([]),
     ...overrides,
   }
@@ -275,14 +281,37 @@ describe('adminClinicMetricsService', () => {
     ])
   })
 
-  it('saves patient acquisition and calls/bookings snapshots as aggregate data', () => {
+  it('saves aggregate clinic metric records', () => {
     const repositories = createRepositories()
-    const generatedIds = [IDS.ACQUISITION_A, IDS.CALLS_A, IDS.PERFORMANCE_A]
+    const generatedIds = [
+      IDS.ACQUISITION_A,
+      IDS.BOOKING_PIPELINE_A,
+      IDS.CALLS_A,
+      IDS.LOCATION_PERFORMANCE_A,
+      IDS.PERFORMANCE_A,
+    ]
 
     const page = saveAdminClinicMetrics({
       clientId: IDS.CLIENT_A,
       idGenerator: () => generatedIds.shift(),
       input: {
+        bookingPipelineSnapshots: [
+          {
+            attended_appointments: '8',
+            booked_appointments: '10',
+            calls: '18',
+            forms: '5',
+            location_id: IDS.LOCATION_A,
+            missed_calls: '2',
+            no_response_leads: '1',
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+            qualified_inquiries: '14',
+            service_line_id: IDS.SERVICE_A,
+            summary: 'Booking pipeline shows front desk leakage.',
+          },
+        ],
         callBookingMetrics: [
           {
             answered_calls: '22',
@@ -314,6 +343,24 @@ describe('adminClinicMetricsService', () => {
             service_line_id: IDS.SERVICE_A,
             summary: 'Call handling improved after front desk follow-up.',
             total_calls: '24',
+          },
+        ],
+        locationPerformance: [
+          {
+            answered_calls: '30',
+            booked_appointments: '16',
+            compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+            google_rating: '4.8',
+            inquiries: '24',
+            location_id: IDS.LOCATION_A,
+            missed_calls: '3',
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+            review_count: '301',
+            reviews_gained: '12',
+            spend: '2100',
+            summary: 'Main clinic is on track.',
           },
         ],
         patientAcquisitionSnapshots: [
@@ -364,6 +411,14 @@ describe('adminClinicMetricsService', () => {
       viewer: createAdminViewer(),
     })
 
+    expect(page.bookingPipelineSnapshots[0]).toMatchObject({
+      booked_appointments: 10,
+      client_id: IDS.CLIENT_A,
+      id: IDS.BOOKING_PIPELINE_A,
+      missed_calls: 2,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+      service_line_id: IDS.SERVICE_A,
+    })
     expect(page.patientAcquisitionSnapshots[0]).toMatchObject({
       booked_appointments: 12,
       client_id: IDS.CLIENT_A,
@@ -386,6 +441,14 @@ describe('adminClinicMetricsService', () => {
       ],
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
     })
+    expect(page.locationPerformance[0]).toMatchObject({
+      booked_appointments: 16,
+      client_id: IDS.CLIENT_A,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      id: IDS.LOCATION_PERFORMANCE_A,
+      location_id: IDS.LOCATION_A,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    })
     expect(page.serviceLinePerformance[0]).toMatchObject({
       booked_appointments: 18,
       campaign_status: CLINIC_CAMPAIGN_STATUSES.LIVE,
@@ -398,11 +461,35 @@ describe('adminClinicMetricsService', () => {
 
   it('publishes metric records with audit metadata', () => {
     const repositories = createRepositories({
+      bookingPipelineSnapshots: createRepository([
+        {
+          booked_appointments: 7,
+          client_id: IDS.CLIENT_A,
+          id: IDS.BOOKING_PIPELINE_A,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
       callBookingMetrics: createRepository([
         {
           booked_from_calls: 9,
           client_id: IDS.CLIENT_A,
           id: IDS.CALLS_A,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+        },
+      ]),
+      locationPerformance: createRepository([
+        {
+          booked_appointments: 12,
+          client_id: IDS.CLIENT_A,
+          compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+          id: IDS.LOCATION_PERFORMANCE_A,
+          location_id: IDS.LOCATION_A,
           period_end: '2026-05-31',
           period_label: 'May 2026',
           period_start: '2026-05-01',
@@ -435,6 +522,13 @@ describe('adminClinicMetricsService', () => {
       ]),
     })
 
+    const bookingPipelinePage = publishBookingPipelineSnapshot({
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T09:30:00.000Z',
+      repositories,
+      snapshotId: IDS.BOOKING_PIPELINE_A,
+      viewer: createAdminViewer(),
+    })
     const acquisitionPage = publishPatientAcquisitionSnapshot({
       clientId: IDS.CLIENT_A,
       now: () => '2026-05-18T10:00:00.000Z',
@@ -449,6 +543,13 @@ describe('adminClinicMetricsService', () => {
       repositories,
       viewer: createAdminViewer(),
     })
+    const locationPage = publishLocationPerformance({
+      clientId: IDS.CLIENT_A,
+      now: () => '2026-05-18T10:45:00.000Z',
+      performanceId: IDS.LOCATION_PERFORMANCE_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })
     const serviceLinePage = publishServiceLinePerformance({
       clientId: IDS.CLIENT_A,
       now: () => '2026-05-18T11:00:00.000Z',
@@ -457,6 +558,11 @@ describe('adminClinicMetricsService', () => {
       viewer: createAdminViewer(),
     })
 
+    expect(bookingPipelinePage.bookingPipelineSnapshots[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T09:30:00.000Z',
+      published_by: 'admin-user-id',
+    })
     expect(acquisitionPage.patientAcquisitionSnapshots[0]).toMatchObject({
       publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
       published_at: '2026-05-18T10:00:00.000Z',
@@ -465,6 +571,11 @@ describe('adminClinicMetricsService', () => {
     expect(callsPage.callBookingMetrics[0]).toMatchObject({
       publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
       published_at: '2026-05-18T10:30:00.000Z',
+      published_by: 'admin-user-id',
+    })
+    expect(locationPage.locationPerformance[0]).toMatchObject({
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+      published_at: '2026-05-18T10:45:00.000Z',
       published_by: 'admin-user-id',
     })
     expect(serviceLinePage.serviceLinePerformance[0]).toMatchObject({

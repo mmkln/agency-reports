@@ -6,7 +6,9 @@ import {
 } from '../../entities/clinic'
 import {
   getCallBookingPublishReadiness,
+  getBookingPipelinePublishReadiness,
   getComplianceReviewPublishReadiness,
+  getLocationPerformancePublishReadiness,
   getMedicalApprovalPublishReadiness,
   getPatientAcquisitionPublishReadiness,
   getReputationSnapshotPublishReadiness,
@@ -41,6 +43,32 @@ describe('clinicPublishReadinessPolicy', () => {
     expect(getCallBookingPublishReadiness({
       ...PERIOD,
       missed_calls: 4,
+    }).isReady).toBe(true)
+  })
+
+  it('requires booking pipeline period and funnel or leakage values', () => {
+    expect(getBookingPipelinePublishReadiness(PERIOD).isReady).toBe(false)
+
+    expect(getBookingPipelinePublishReadiness({
+      ...PERIOD,
+      no_response_leads: 3,
+    }).isReady).toBe(true)
+  })
+
+  it('requires location, performance values, and reviewed location compliance status', () => {
+    const notReady = getLocationPerformancePublishReadiness({
+      ...PERIOD,
+      booked_appointments: 12,
+      location_id: 'location-main',
+    })
+
+    expect(notReady.blockingReasons).toContain('Set a reviewed compliance status before publishing.')
+
+    expect(getLocationPerformancePublishReadiness({
+      ...PERIOD,
+      booked_appointments: 12,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      location_id: 'location-main',
     }).isReady).toBe(true)
   })
 

@@ -5,7 +5,9 @@ import {
 } from '../../domain/services/neededFromClientService'
 import {
   getAdminClinicMetricsPage,
+  publishBookingPipelineSnapshot,
   publishCallBookingMetric,
+  publishLocationPerformance,
   publishPatientAcquisitionSnapshot,
   publishServiceLinePerformance,
   saveAdminClinicMetrics,
@@ -22,7 +24,9 @@ function createUuid() {
 
 function createDraft(page) {
   return {
+    bookingPipelineSnapshots: page.bookingPipelineSnapshots.map((snapshot) => ({ ...snapshot })),
     callBookingMetrics: page.callBookingMetrics.map((metric) => ({ ...metric })),
+    locationPerformance: page.locationPerformance.map((performance) => ({ ...performance })),
     patientAcquisitionSnapshots: page.patientAcquisitionSnapshots.map((snapshot) => ({ ...snapshot })),
     serviceLinePerformance: page.serviceLinePerformance.map((performance) => ({ ...performance })),
   }
@@ -38,7 +42,9 @@ function createInitialState() {
 }
 
 const PUBLISH_SERVICES = Object.freeze({
+  booking_pipeline: publishBookingPipelineSnapshot,
   call_booking: publishCallBookingMetric,
+  location_performance: publishLocationPerformance,
   patient_acquisition: publishPatientAcquisitionSnapshot,
   service_line_performance: publishServiceLinePerformance,
 })

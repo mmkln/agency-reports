@@ -15,8 +15,10 @@ export function parseClinicImportJson(rawJson, fieldLabel) {
 export function getClinicImportSectionCounts(normalizedPayload) {
   return {
     compliance: normalizedPayload.complianceInput.complianceReviews.length,
-    metrics: normalizedPayload.metricsInput.patientAcquisitionSnapshots.length
+    metrics: normalizedPayload.metricsInput.bookingPipelineSnapshots.length
+      + normalizedPayload.metricsInput.patientAcquisitionSnapshots.length
       + normalizedPayload.metricsInput.callBookingMetrics.length
+      + normalizedPayload.metricsInput.locationPerformance.length
       + normalizedPayload.metricsInput.serviceLinePerformance.length,
     reputation: normalizedPayload.reputationInput.reputationSnapshots.length,
   }

@@ -9,9 +9,11 @@ import {
   CLINIC_COMPLIANCE_STATUSES,
   CLINIC_RECORD_PUBLISH_STATE_META,
   CLINIC_RECORD_PUBLISH_STATES,
+  normalizeBookingPipelineSnapshot,
   normalizeCallBookingMetric,
   normalizeClinicLocation,
   normalizeClinicServiceLine,
+  normalizeLocationPerformance,
   normalizePatientAcquisitionSnapshot,
   normalizeServiceLinePerformance,
 } from '../../entities/clinic'
@@ -23,7 +25,9 @@ import {
 } from '../../entities/needed-from-client'
 import {
   assertClinicPublishReady,
+  getBookingPipelinePublishReadiness,
   getCallBookingPublishReadiness,
+  getLocationPerformancePublishReadiness,
   getPatientAcquisitionPublishReadiness,
   getServiceLinePerformancePublishReadiness,
 } from '../policies/clinicPublishReadinessPolicy'
@@ -33,7 +37,9 @@ const VALID_CAMPAIGN_STATUSES = new Set(Object.values(CLINIC_CAMPAIGN_STATUSES))
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
 
 const METRIC_READINESS = Object.freeze({
+  booking_pipeline: getBookingPipelinePublishReadiness,
   call_booking: getCallBookingPublishReadiness,
+  location_performance: getLocationPerformancePublishReadiness,
   patient_acquisition: getPatientAcquisitionPublishReadiness,
   service_line_performance: getServiceLinePerformancePublishReadiness,
 })
@@ -257,6 +263,54 @@ function buildPatientAcquisitionRecord({
     : createTimestamped(record, timestamp)
 }
 
+function buildBookingPipelineSnapshotRecord({
+  clientId,
+  existingRecord,
+  foundation,
+  id,
+  input,
+  timestamp,
+}) {
+  assertClinicAggregateRecord(input, 'Booking pipeline snapshot')
+
+  const locationId = normalizeOptionalReference(input.location_id)
+  const serviceLineId = normalizeOptionalReference(input.service_line_id)
+
+  validateReference(locationId, foundation.locationIds, 'Booking pipeline location')
+  validateReference(serviceLineId, foundation.serviceLineIds, 'Booking pipeline service line')
+
+  const record = normalizeBookingPipelineSnapshot({
+    attended_appointments: normalizeNumber(input.attended_appointments, 'Attended appointments'),
+    booked_appointments: normalizeNumber(input.booked_appointments, 'Booked appointments'),
+    campaign_name: normalizeOptionalText(input.campaign_name),
+    calls: normalizeNumber(input.calls, 'Calls'),
+    chats: normalizeNumber(input.chats, 'Chats'),
+    clicks: normalizeNumber(input.clicks, 'Clicks'),
+    client_id: clientId,
+    data_source: normalizeOptionalText(input.data_source),
+    forms: normalizeNumber(input.forms, 'Forms'),
+    id,
+    impressions: normalizeNumber(input.impressions, 'Impressions'),
+    insight: normalizeOptionalText(input.insight),
+    landing_page_visits: normalizeNumber(input.landing_page_visits, 'Landing page visits'),
+    last_updated_at: timestamp,
+    location_id: locationId,
+    missed_calls: normalizeNumber(input.missed_calls, 'Missed calls'),
+    no_response_leads: normalizeNumber(input.no_response_leads, 'No-response leads'),
+    period_end: requireText(input.period_end, 'Booking pipeline period end'),
+    period_label: requireText(input.period_label, 'Booking pipeline period label'),
+    period_start: requireText(input.period_start, 'Booking pipeline period start'),
+    ...preservePublishState(existingRecord),
+    qualified_inquiries: normalizeNumber(input.qualified_inquiries, 'Qualified inquiries'),
+    service_line_id: serviceLineId,
+    summary: normalizeOptionalText(input.summary),
+  })
+
+  return existingRecord
+    ? updateTimestamped(existingRecord, record, timestamp)
+    : createTimestamped(record, timestamp)
+}
+
 function buildCallBookingMetricRecord({
   clientId,
   existingRecord,
@@ -445,6 +499,57 @@ function buildServiceLinePerformanceRecord({
     : createTimestamped(record, timestamp)
 }
 
+function buildLocationPerformanceRecord({
+  clientId,
+  existingRecord,
+  foundation,
+  id,
+  input,
+  timestamp,
+}) {
+  assertClinicAggregateRecord(input, 'Location performance')
+
+  const locationId = requireText(input.location_id, 'Location performance location')
+
+  validateReference(locationId, foundation.locationIds, 'Location performance location')
+
+  const record = normalizeLocationPerformance({
+    answered_calls: normalizeNumber(input.answered_calls, 'Answered calls'),
+    booked_appointments: normalizeNumber(input.booked_appointments, 'Booked appointments'),
+    client_id: clientId,
+    compliance_status: normalizeEnum(
+      input.compliance_status,
+      VALID_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+      'Location compliance status',
+    ),
+    cost_per_booked_appointment: normalizeNumber(
+      input.cost_per_booked_appointment,
+      'Cost per booked appointment',
+    ),
+    data_source: normalizeOptionalText(input.data_source),
+    google_rating: normalizeNumber(input.google_rating, 'Google rating'),
+    id,
+    inquiries: normalizeNumber(input.inquiries, 'Inquiries'),
+    insight: normalizeOptionalText(input.insight),
+    last_updated_at: timestamp,
+    location_id: locationId,
+    missed_calls: normalizeNumber(input.missed_calls, 'Missed calls'),
+    period_end: requireText(input.period_end, 'Location performance period end'),
+    period_label: requireText(input.period_label, 'Location performance period label'),
+    period_start: requireText(input.period_start, 'Location performance period start'),
+    ...preservePublishState(existingRecord),
+    review_count: normalizeNumber(input.review_count, 'Review count'),
+    reviews_gained: normalizeNumber(input.reviews_gained, 'Reviews gained'),
+    spend: normalizeNumber(input.spend, 'Spend'),
+    summary: normalizeOptionalText(input.summary),
+  })
+
+  return existingRecord
+    ? updateTimestamped(existingRecord, record, timestamp)
+    : createTimestamped(record, timestamp)
+}
+
 
 function requireIdGenerator(idGenerator) {
   if (!idGenerator) {
@@ -495,6 +600,14 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
 
   return {
     acquisitionChannelMeta: CLINIC_ACQUISITION_CHANNEL_META,
+    bookingPipelineSnapshots: repositories.bookingPipelineSnapshots
+      .listByClientId(clientId)
+      .map(normalizeBookingPipelineSnapshot)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getBookingPipelinePublishReadiness(record),
+      }))
+      .sort(sortByPeriodDesc),
     callBookingMetrics: repositories.callBookingMetrics
       .listByClientId(clientId)
       .map(normalizeCallBookingMetric)
@@ -510,6 +623,14 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
     campaignStatusMeta: CLINIC_CAMPAIGN_STATUS_META,
     client: mapClient(client),
     complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META,
+    locationPerformance: repositories.locationPerformance
+      .listByClientId(clientId)
+      .map(normalizeLocationPerformance)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getLocationPerformancePublishReadiness(record),
+      }))
+      .sort(sortByPeriodDesc),
     locations: foundation.locations,
     patientAcquisitionSnapshots: repositories.patientAcquisitionSnapshots
       .listByClientId(clientId)
@@ -547,13 +668,21 @@ export function saveAdminClinicMetrics({
   const foundation = getClinicFoundation({ clientId, repositories })
   const timestamp = now()
   const acquisitionRecords = filterMeaningfulRecords(input?.patientAcquisitionSnapshots)
+  const bookingPipelineRecords = filterMeaningfulRecords(input?.bookingPipelineSnapshots)
   const callBookingRecords = filterMeaningfulRecords(input?.callBookingMetrics)
+  const locationPerformanceRecords = filterMeaningfulRecords(input?.locationPerformance)
   const serviceLinePerformanceRecords = filterMeaningfulRecords(input?.serviceLinePerformance)
   const existingAcquisitionById = new Map(
     repositories.patientAcquisitionSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
   )
+  const existingBookingPipelineById = new Map(
+    repositories.bookingPipelineSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
+  )
   const existingCallBookingById = new Map(
     repositories.callBookingMetrics.listByClientId(clientId).map((record) => [record.id, record]),
+  )
+  const existingLocationPerformanceById = new Map(
+    repositories.locationPerformance.listByClientId(clientId).map((record) => [record.id, record]),
   )
   const existingServiceLinePerformanceById = new Map(
     repositories.serviceLinePerformance.listByClientId(clientId).map((record) => [record.id, record]),
@@ -566,8 +695,18 @@ export function saveAdminClinicMetrics({
   })
   deleteRemovedRecords({
     clientId,
+    inputRecords: bookingPipelineRecords,
+    repository: repositories.bookingPipelineSnapshots,
+  })
+  deleteRemovedRecords({
+    clientId,
     inputRecords: callBookingRecords,
     repository: repositories.callBookingMetrics,
+  })
+  deleteRemovedRecords({
+    clientId,
+    inputRecords: locationPerformanceRecords,
+    repository: repositories.locationPerformance,
   })
   deleteRemovedRecords({
     clientId,
@@ -588,12 +727,38 @@ export function saveAdminClinicMetrics({
     }))
   })
 
+  bookingPipelineRecords.forEach((record) => {
+    const id = record.id || idGenerator()
+
+    repositories.bookingPipelineSnapshots.upsert(buildBookingPipelineSnapshotRecord({
+      clientId,
+      existingRecord: existingBookingPipelineById.get(id),
+      foundation,
+      id,
+      input: record,
+      timestamp,
+    }))
+  })
+
   callBookingRecords.forEach((record) => {
     const id = record.id || idGenerator()
 
     repositories.callBookingMetrics.upsert(buildCallBookingMetricRecord({
       clientId,
       existingRecord: existingCallBookingById.get(id),
+      foundation,
+      id,
+      input: record,
+      timestamp,
+    }))
+  })
+
+  locationPerformanceRecords.forEach((record) => {
+    const id = record.id || idGenerator()
+
+    repositories.locationPerformance.upsert(buildLocationPerformanceRecord({
+      clientId,
+      existingRecord: existingLocationPerformanceById.get(id),
       foundation,
       id,
       input: record,
@@ -627,6 +792,16 @@ export function publishPatientAcquisitionSnapshot(args) {
   })
 }
 
+export function publishBookingPipelineSnapshot(args) {
+  return publishClinicMetricRecord({
+    ...args,
+    id: args.snapshotId ?? args.id,
+    normalize: normalizeBookingPipelineSnapshot,
+    readiness: METRIC_READINESS.booking_pipeline,
+    repository: args.repositories.bookingPipelineSnapshots,
+  })
+}
+
 export function publishCallBookingMetric(args) {
   return publishClinicMetricRecord({
     ...args,
@@ -634,6 +809,16 @@ export function publishCallBookingMetric(args) {
     normalize: normalizeCallBookingMetric,
     readiness: METRIC_READINESS.call_booking,
     repository: args.repositories.callBookingMetrics,
+  })
+}
+
+export function publishLocationPerformance(args) {
+  return publishClinicMetricRecord({
+    ...args,
+    id: args.performanceId ?? args.id,
+    normalize: normalizeLocationPerformance,
+    readiness: METRIC_READINESS.location_performance,
+    repository: args.repositories.locationPerformance,
   })
 }
 

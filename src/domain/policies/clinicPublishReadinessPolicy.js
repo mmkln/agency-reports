@@ -1,8 +1,10 @@
 import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_COMPLIANCE_STATUSES,
+  normalizeBookingPipelineSnapshot,
   normalizeCallBookingMetric,
   normalizeComplianceReview,
+  normalizeLocationPerformance,
   normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
@@ -102,6 +104,28 @@ export function getPatientAcquisitionPublishReadiness(snapshot) {
   return createReadiness(blockingReasons, getNarrativeWarnings(record))
 }
 
+export function getBookingPipelinePublishReadiness(snapshot) {
+  const record = normalizeBookingPipelineSnapshot(snapshot)
+  const blockingReasons = [
+    ...getPeriodIssues(record),
+  ]
+
+  if (![
+    record.calls,
+    record.forms,
+    record.chats,
+    record.qualified_inquiries,
+    record.booked_appointments,
+    record.attended_appointments,
+    record.missed_calls,
+    record.no_response_leads,
+  ].some(hasPositiveNumber)) {
+    blockingReasons.push('Add at least one demand, booking, missed-call, or no-response pipeline value.')
+  }
+
+  return createReadiness(blockingReasons, getNarrativeWarnings(record))
+}
+
 export function getCallBookingPublishReadiness(metric) {
   const record = normalizeCallBookingMetric(metric)
   const blockingReasons = [
@@ -118,6 +142,34 @@ export function getCallBookingPublishReadiness(metric) {
     record.follow_up_needed_count,
   ].some(hasPositiveNumber)) {
     blockingReasons.push('Add at least one call, booking, form lead, missed call, no-response lead, or follow-up value.')
+  }
+
+  return createReadiness(blockingReasons, getNarrativeWarnings(record))
+}
+
+export function getLocationPerformancePublishReadiness(performance) {
+  const record = normalizeLocationPerformance(performance)
+  const blockingReasons = [
+    ...getPeriodIssues(record),
+  ]
+
+  if (!hasText(record.location_id)) {
+    blockingReasons.push('Select a location.')
+  }
+
+  if (![
+    record.spend,
+    record.inquiries,
+    record.booked_appointments,
+    record.answered_calls,
+    record.missed_calls,
+    record.reviews_gained,
+  ].some(hasPositiveNumber)) {
+    blockingReasons.push('Add spend, inquiries, bookings, calls, missed calls, or review movement for this location.')
+  }
+
+  if (record.compliance_status === CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED) {
+    blockingReasons.push('Set a reviewed compliance status before publishing.')
   }
 
   return createReadiness(blockingReasons, getNarrativeWarnings(record))

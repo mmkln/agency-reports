@@ -9,7 +9,9 @@ function createSummaryItems(importPlan) {
 
   return [
     { label: 'Patient acquisition', value: summary.patientAcquisitionCount },
+    { label: 'Booking pipeline', value: summary.bookingPipelineCount },
     { label: 'Calls & bookings', value: summary.callBookingCount },
+    { label: 'Locations', value: summary.locationPerformanceCount },
     { label: 'Service lines', value: summary.serviceLinePerformanceCount },
   ]
 }
@@ -40,7 +42,7 @@ export function ClinicMetricsImportDialog(props) {
       description="Paste aggregate clinic metrics from call tracking, spreadsheets, or connector exports. Patient-level identifiers are blocked by the import contract."
       detailItems={createDetailItems(props.importPlan)}
       emptyPreviewMessage="Preview the JSON to validate aggregate-only clinic metrics before applying them to the draft."
-      safetyDescription="Import accepts patient acquisition, calls/bookings, and service-line performance records for the current clinic workspace only. Do not include names, phones, emails, appointment notes, diagnoses, or other PHI."
+      safetyDescription="Import accepts patient acquisition, booking pipeline, calls/bookings, location performance, and service-line records for the current clinic workspace only. Do not include names, phones, emails, appointment notes, diagnoses, or other PHI."
       safetyTitle="Aggregate-only clinic contract"
       summaryItems={createSummaryItems(props.importPlan)}
       textareaId="clinic-metrics-import-json"

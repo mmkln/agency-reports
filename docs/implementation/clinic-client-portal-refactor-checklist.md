@@ -302,7 +302,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add admin clinic setup workspace route.
 - [x] Add aggregate-only domain validation for admin clinic setup saves.
 - [x] Add metric entry/import workflow for patient acquisition.
+- [x] Add metric entry/import workflow for booking pipeline snapshots.
 - [x] Add metric entry/import workflow for calls/bookings.
+- [x] Add metric entry/import workflow for location performance rollups.
 - [x] Add admin clinic metrics workspace route.
 - [x] Add reputation snapshot entry/import workflow.
 - [x] Add admin clinic reputation workspace route.
@@ -328,7 +330,9 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Keep MVP manual/import-first.
 - [x] Define import contracts for:
   - [x] patient acquisition metrics
+  - [x] booking pipeline snapshots
   - [x] calls/bookings metrics
+  - [x] location performance rollups
   - [x] service line performance
   - [x] reputation snapshot
   - [x] compliance review items

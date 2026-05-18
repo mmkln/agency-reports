@@ -65,6 +65,32 @@ describe('clinicImportContractService', () => {
           total_calls: '41',
         },
       ],
+      booking_pipeline_snapshots: [
+        {
+          booked_appointments: '11',
+          calls: '20',
+          forms: '6',
+          location_id: IDS.LOCATION_A,
+          missed_calls: '2',
+          no_response_leads: '1',
+          qualified_inquiries: '17',
+          service_line_id: IDS.SERVICE_A,
+        },
+      ],
+      location_performance: [
+        {
+          answered_calls: '32',
+          booked_appointments: '15',
+          compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+          google_rating: '4.8',
+          inquiries: '23',
+          location_id: IDS.LOCATION_A,
+          missed_calls: '4',
+          review_count: '318',
+          reviews_gained: '16',
+          spend: '2300',
+        },
+      ],
       service_line_performance: [
         {
           booked_appointments: '14',
@@ -129,6 +155,20 @@ describe('clinicImportContractService', () => {
           missed_calls: 2,
         },
       ],
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    })
+    expect(result.metricsInput.bookingPipelineSnapshots[0]).toMatchObject({
+      booked_appointments: 11,
+      missed_calls: 2,
+      no_response_leads: 1,
+      publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+      service_line_id: IDS.SERVICE_A,
+    })
+    expect(result.metricsInput.locationPerformance[0]).toMatchObject({
+      booked_appointments: 15,
+      compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      google_rating: 4.8,
+      location_id: IDS.LOCATION_A,
       publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
     })
     expect(result.serviceLinePerformance[0]).toMatchObject({
@@ -203,10 +243,29 @@ describe('clinicImportContractService', () => {
             service_line_id: IDS.SERVICE_A,
           },
         ],
+        booking_pipeline: [
+          {
+            booked_appointments: 7,
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+          },
+        ],
+        location_performance: [
+          {
+            booked_appointments: 8,
+            location_id: IDS.LOCATION_A,
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+          },
+        ],
       },
     })
 
+    expect(result.metricsInput.bookingPipelineSnapshots).toHaveLength(1)
     expect(result.metricsInput.callBookingMetrics).toHaveLength(1)
+    expect(result.metricsInput.locationPerformance).toHaveLength(1)
     expect(result.metricsInput.patientAcquisitionSnapshots).toHaveLength(1)
     expect(result.metricsInput.serviceLinePerformance).toHaveLength(1)
   })

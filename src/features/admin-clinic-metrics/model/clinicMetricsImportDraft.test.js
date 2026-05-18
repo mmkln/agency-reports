@@ -37,6 +37,29 @@ function createPayload(overrides = {}) {
           summary: 'Missed calls are limiting booked appointments.',
         },
       ],
+      booking_pipeline: [
+        {
+          booked_appointments: 7,
+          campaign_name: 'Emergency search',
+          missed_calls: 3,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          qualified_inquiries: 13,
+          summary: 'Booking pipeline shows reception leakage.',
+        },
+      ],
+      location_performance: [
+        {
+          booked_appointments: 10,
+          compliance_status: 'approved',
+          location_id: 'main-location',
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          summary: 'Main location is pacing well.',
+        },
+      ],
       service_lines: [
         {
           booked_appointments: 8,
@@ -64,8 +87,10 @@ describe('clinicMetricsImportDraft', () => {
     })
 
     expect(plan.summary).toEqual({
+      bookingPipelineCount: 1,
       callBookingCount: 1,
       campaignNames: ['Emergency search'],
+      locationPerformanceCount: 1,
       patientAcquisitionCount: 1,
       periods: ['May 2026'],
       serviceLinePerformanceCount: 1,
@@ -159,7 +184,9 @@ describe('clinicMetricsImportDraft', () => {
 
     const draft = applyClinicMetricsImportToDraft({
       draft: {
+        bookingPipelineSnapshots: [{ id: 'existing-pipeline', period_label: 'April 2026' }],
         callBookingMetrics: [{ id: 'existing-call', period_label: 'April 2026' }],
+        locationPerformance: [{ id: 'existing-location', period_label: 'April 2026' }],
         patientAcquisitionSnapshots: [{ id: 'existing-acquisition', period_label: 'April 2026' }],
         serviceLinePerformance: [{ id: 'existing-service', period_label: 'April 2026' }],
       },
@@ -167,8 +194,10 @@ describe('clinicMetricsImportDraft', () => {
     })
 
     expect(draft.patientAcquisitionSnapshots).toHaveLength(2)
+    expect(draft.bookingPipelineSnapshots[0].summary).toBe('Booking pipeline shows reception leakage.')
     expect(draft.patientAcquisitionSnapshots[0].summary).toBe('Emergency campaign created high-intent demand.')
     expect(draft.callBookingMetrics[0].summary).toBe('Missed calls are limiting booked appointments.')
+    expect(draft.locationPerformance[0].summary).toBe('Main location is pacing well.')
     expect(draft.serviceLinePerformance[0].summary).toBe('Emergency dentistry is the strongest service line.')
   })
 })
