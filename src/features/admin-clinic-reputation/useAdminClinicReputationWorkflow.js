@@ -6,6 +6,10 @@ import {
   saveAdminClinicReputation,
 } from '../../domain/services/adminClinicReputationService'
 import { useToast } from '../../shared/notifications'
+import {
+  applyClinicReputationImportToDraft,
+  previewClinicReputationImport,
+} from './model/clinicReputationImportDraft'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -29,6 +33,10 @@ function createInitialState() {
 export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importRawJson, setImportRawJson] = useState('')
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -42,6 +50,10 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setImportError('')
+        setImportPlan(null)
+        setImportRawJson('')
+        setIsImportOpen(false)
         setIsDirty(false)
         setSaveState('')
 
@@ -88,6 +100,65 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
     }))
     setIsDirty(true)
     setSaveState('')
+  }
+
+  function openImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(true)
+  }
+
+  function updateImportRawJson(rawJson) {
+    setImportRawJson(rawJson)
+    setImportError('')
+    setImportPlan(null)
+  }
+
+  function closeImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(false)
+  }
+
+  function previewImport(rawJson = importRawJson) {
+    try {
+      const nextImportPlan = previewClinicReputationImport({
+        clientId,
+        rawJson,
+      })
+
+      setImportError('')
+      setImportPlan(nextImportPlan)
+      setImportRawJson(rawJson)
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      setImportPlan(null)
+    }
+  }
+
+  function applyImport() {
+    try {
+      const nextDraft = applyClinicReputationImportToDraft({
+        draft: state.draft,
+        importPlan,
+      })
+
+      setState((currentState) => ({
+        ...currentState,
+        draft: nextDraft,
+        error: '',
+        status: 'ready',
+      }))
+      setIsDirty(true)
+      setSaveState('Import ready to save')
+      closeImportDialog()
+      toast.success('Clinic reputation imported', 'Review the imported aggregate records, then save reputation.')
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      toast.error('Clinic reputation import failed', caughtError.message)
+    }
   }
 
   function saveDraft() {
@@ -173,14 +244,23 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
   }
 
   return {
+    applyImport,
+    closeImportDialog,
     draft: state.draft,
     error: state.error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page: state.page,
+    previewImport,
     publishReputationRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson: updateImportRawJson,
     status: state.status,
     updateDraft,
   }

@@ -9,6 +9,7 @@ import {
   ClinicClientPreviewLinks,
 } from '../../admin-client-workspace'
 import { useAdminClinicReputationWorkflow } from '../useAdminClinicReputationWorkflow'
+import { ClinicReputationImportDialog } from './ClinicReputationImportDialog'
 import { ReputationSnapshotsCard } from './ReputationSnapshotsCard'
 
 function ClinicReputationLoadingState() {
@@ -37,12 +38,21 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
   const {
     draft,
     error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishReputationRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson,
     status,
     updateDraft,
   } = useAdminClinicReputationWorkflow({ clientId, runtime })
@@ -78,6 +88,9 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>
+            <Button onClick={openImportDialog} size="sm" type="button" variant="outline">
+              Import JSON
+            </Button>
             <Button disabled={!isDirty} form="admin-clinic-reputation-form" size="sm" type="submit">
               Save reputation
             </Button>
@@ -107,7 +120,8 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
         >
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
             These records feed the client Reputation page and should summarize Google reviews, response work,
-            local visibility, and GBP updates without storing reviewer or patient identifiers.
+            local visibility, and GBP updates without storing reviewer or patient identifiers. Use Import JSON for
+            reviewed aggregate exports from GBP, review tools, or connector prototypes.
           </div>
 
           <ReputationSnapshotsCard
@@ -119,6 +133,17 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
           />
         </form>
       </PageShell>
+
+      <ClinicReputationImportDialog
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportOpen}
+        onApply={applyImport}
+        onClose={closeImportDialog}
+        onPreview={previewImport}
+        onRawJsonChange={setImportRawJson}
+        rawJson={importRawJson}
+      />
     </>
   )
 }

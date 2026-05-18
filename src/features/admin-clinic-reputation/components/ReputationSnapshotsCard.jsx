@@ -186,6 +186,7 @@ export function ReputationSnapshotsCard({
                 label="Profile completeness"
                 max="100"
                 onChange={(value) => updateSnapshot(index, 'provider_profile_completeness', value)}
+                step="0.01"
                 value={snapshot.provider_profile_completeness}
               />
             </div>

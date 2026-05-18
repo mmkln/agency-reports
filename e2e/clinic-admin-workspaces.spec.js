@@ -239,3 +239,92 @@ test('admin reputation and compliance workspaces expose published and draft clin
   await page.getByRole('link', { name: 'Published compliance' }).click()
   await expect(page.locator('h1').getByText('Compliance & Approvals', { exact: true })).toBeVisible()
 })
+
+test('admin can import aggregate clinic reputation and compliance records', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  const reputationPayload = {
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    reputation: {
+      reputation_snapshots: [
+        {
+          google_rating: 4.9,
+          location_id: SEED_IDS.CLINIC_LOCATION_GREEN_MAIN,
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+          review_count: 361,
+          reviews_gained: 19,
+          summary: 'E2E imported reputation snapshot.',
+        },
+      ],
+    },
+  }
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  const reputationDialog = page.getByRole('dialog', { name: 'Import clinic reputation JSON' })
+
+  await expect(reputationDialog).toBeVisible()
+  await page.getByLabel('Clinic reputation JSON *').fill(JSON.stringify(reputationPayload, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+  await expect(reputationDialog.getByRole('heading', { name: 'Import preview ready' })).toBeVisible()
+  await expect(reputationDialog.locator('p').filter({ hasText: 'Periods: June 2026' })).toBeVisible()
+  await page.getByRole('button', { name: 'Apply to draft' }).click()
+  await expect(reputationDialog).not.toBeVisible()
+  await page.getByRole('button', { name: 'Save reputation' }).click()
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+
+  await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  const compliancePayload = {
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    compliance: {
+      compliance_reviews: [
+        {
+          limited_ads: 1,
+          location_id: SEED_IDS.CLINIC_LOCATION_GREEN_MAIN,
+          open_issues: 2,
+          platform: 'Google Ads',
+          service_line_id: SEED_IDS.CLINIC_SERVICE_EMERGENCY_DENTAL,
+          status: 'risk_flagged',
+          summary: 'E2E imported compliance review.',
+          title: 'E2E emergency claims review',
+        },
+      ],
+    },
+  }
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  const complianceDialog = page.getByRole('dialog', { name: 'Import clinic compliance JSON' })
+
+  await expect(complianceDialog).toBeVisible()
+  await page.getByLabel('Clinic compliance JSON *').fill(JSON.stringify(compliancePayload, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+  await expect(complianceDialog.getByRole('heading', { name: 'Import preview ready' })).toBeVisible()
+  await expect(complianceDialog.locator('p').filter({ hasText: 'Platforms: Google Ads' })).toBeVisible()
+  await page.getByRole('button', { name: 'Apply to draft' }).click()
+  await expect(complianceDialog).not.toBeVisible()
+  await page.getByRole('button', { name: 'Save compliance' }).click()
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+
+  const importedRecords = await page.evaluate(({ portalKey }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    return {
+      compliance: portalData.compliance_reviews.some((record) => (
+        record.summary === 'E2E imported compliance review.'
+      )),
+      reputation: portalData.reputation_snapshots.some((record) => (
+        record.summary === 'E2E imported reputation snapshot.'
+      )),
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+  })
+
+  expect(importedRecords).toEqual({
+    compliance: true,
+    reputation: true,
+  })
+})

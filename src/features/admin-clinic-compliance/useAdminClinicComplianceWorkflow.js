@@ -11,6 +11,10 @@ import {
   transitionComplianceReviewStatus,
 } from '../../domain/services/adminClinicComplianceService'
 import { useToast } from '../../shared/notifications'
+import {
+  applyClinicComplianceImportToDraft,
+  previewClinicComplianceImport,
+} from './model/clinicComplianceImportDraft'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -45,6 +49,10 @@ const PUBLISH_SERVICES = Object.freeze({
 export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importRawJson, setImportRawJson] = useState('')
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -58,6 +66,10 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setImportError('')
+        setImportPlan(null)
+        setImportRawJson('')
+        setIsImportOpen(false)
         setIsDirty(false)
         setSaveState('')
 
@@ -104,6 +116,65 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     }))
     setIsDirty(true)
     setSaveState('')
+  }
+
+  function openImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(true)
+  }
+
+  function updateImportRawJson(rawJson) {
+    setImportRawJson(rawJson)
+    setImportError('')
+    setImportPlan(null)
+  }
+
+  function closeImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(false)
+  }
+
+  function previewImport(rawJson = importRawJson) {
+    try {
+      const nextImportPlan = previewClinicComplianceImport({
+        clientId,
+        rawJson,
+      })
+
+      setImportError('')
+      setImportPlan(nextImportPlan)
+      setImportRawJson(rawJson)
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      setImportPlan(null)
+    }
+  }
+
+  function applyImport() {
+    try {
+      const nextDraft = applyClinicComplianceImportToDraft({
+        draft: state.draft,
+        importPlan,
+      })
+
+      setState((currentState) => ({
+        ...currentState,
+        draft: nextDraft,
+        error: '',
+        status: 'ready',
+      }))
+      setIsDirty(true)
+      setSaveState('Import ready to save')
+      closeImportDialog()
+      toast.success('Clinic compliance imported', 'Review the imported aggregate records, then save compliance.')
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      toast.error('Clinic compliance import failed', caughtError.message)
+    }
   }
 
   function saveDraft() {
@@ -268,16 +339,25 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
   }
 
   return {
+    applyImport,
     applyApprovalDecision,
     applyReviewStatus,
+    closeImportDialog,
     draft: state.draft,
     error: state.error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page: state.page,
+    previewImport,
     publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson: updateImportRawJson,
     status: state.status,
     updateDraft,
   }

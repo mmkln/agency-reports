@@ -24,6 +24,14 @@ The contract feeds:
 
 Imports must never publish records automatically. Normalized imported rows are draft-only until an agency admin explicitly publishes them from the owning admin workspace.
 
+Admin workspaces that currently expose JSON preview/apply flows:
+
+```text
+- Clinic Metrics
+- Clinic Reputation
+- Clinic Compliance
+```
+
 ## Hard Safety Rule
 
 Clinic MVP imports are aggregate-only.

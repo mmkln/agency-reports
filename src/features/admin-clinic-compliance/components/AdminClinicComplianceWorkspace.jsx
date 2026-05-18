@@ -9,6 +9,7 @@ import {
   ClinicClientPreviewLinks,
 } from '../../admin-client-workspace'
 import { useAdminClinicComplianceWorkflow } from '../useAdminClinicComplianceWorkflow'
+import { ClinicComplianceImportDialog } from './ClinicComplianceImportDialog'
 import { ComplianceReviewsCard } from './ComplianceReviewsCard'
 import { MedicalApprovalsCard } from './MedicalApprovalsCard'
 
@@ -41,12 +42,21 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
     applyReviewStatus,
     draft,
     error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson,
     status,
     updateDraft,
   } = useAdminClinicComplianceWorkflow({ clientId, runtime })
@@ -82,6 +92,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>
+            <Button onClick={openImportDialog} size="sm" type="button" variant="outline">
+              Import JSON
+            </Button>
             <Button disabled={!isDirty} form="admin-clinic-compliance-form" size="sm" type="submit">
               Save compliance
             </Button>
@@ -111,7 +124,8 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
         >
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
             These records feed the client Compliance & Approvals page. Keep them client-safe and aggregate:
-            policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI.
+            policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI. Use Import JSON
+            for reviewed aggregate exports from policy checklists, privacy reviews, or ad-platform sources.
           </div>
 
           <ComplianceReviewsCard
@@ -134,6 +148,17 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
           />
         </form>
       </PageShell>
+
+      <ClinicComplianceImportDialog
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportOpen}
+        onApply={applyImport}
+        onClose={closeImportDialog}
+        onPreview={previewImport}
+        onRawJsonChange={setImportRawJson}
+        rawJson={importRawJson}
+      />
     </>
   )
 }

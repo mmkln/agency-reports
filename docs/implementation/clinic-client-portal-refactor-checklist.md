@@ -300,6 +300,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add record-level publish actions for clinic metrics, reputation, compliance, and approvals.
 - [x] Add preview-as-clinic-client actions.
 - [x] Add Clinic Metrics JSON import dialog with preview and apply-to-draft flow.
+- [x] Add Clinic Reputation JSON import dialog with preview and apply-to-draft flow.
+- [x] Add Clinic Compliance JSON import dialog with preview and apply-to-draft flow.
 
 ## Phase 12 - Integrations Readiness
 
@@ -311,7 +313,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] reputation snapshot
   - [x] compliance review items
 - [x] Accept connector-style grouped metric payloads for future adapters.
-- [x] Keep clinic metric imports draft-only until admin save/publish.
+- [x] Keep clinic metric, reputation, and compliance imports draft-only until admin save/publish.
 - [x] Add future connector notes for:
   - [x] Google Ads
   - [x] Meta Ads
@@ -352,6 +354,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for Compliance & Approvals.
 - [x] Add e2e for clinic Action Needed approval/response.
 - [x] Add e2e for admin Clinic Metrics JSON import preview/apply/save.
+- [x] Add e2e for admin Clinic Reputation and Compliance JSON import preview/apply/save.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
