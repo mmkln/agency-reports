@@ -10,6 +10,7 @@ import { ReportsTableSkeleton } from './ReportsTableSkeleton'
 function ReportModalController({
   clients,
   defaultClientId,
+  onGenerateClinicTemplate,
   mode,
   onClose,
   onSaved,
@@ -22,6 +23,14 @@ function ReportModalController({
     onSubmit: (form) => onSubmitReport(form).then(onSaved),
   })
 
+  function applyClinicTemplate(clientId) {
+    return onGenerateClinicTemplate(clientId)
+      .then(reportForm.applyTemplate)
+      .catch((caughtError) => {
+        reportForm.setError(caughtError.message)
+      })
+  }
+
   return (
     <ReportModal
       clients={clients}
@@ -30,6 +39,7 @@ function ReportModalController({
       isOpen
       mode={mode}
       onClose={onClose}
+      onApplyClinicTemplate={applyClinicTemplate}
       onSubmit={reportForm.handleSubmit}
       onUpdateField={reportForm.updateField}
     />
@@ -87,6 +97,7 @@ export function AdminReportsWorkspace({ routeParams = {}, runtime }) {
           defaultClientId={workspace.defaultClientId}
           mode="create"
           onClose={workspace.closeCreateModal}
+          onGenerateClinicTemplate={workspace.generateClinicReportTemplate}
           onSaved={workspace.handleSaved}
           onSubmitReport={workspace.saveReport}
         />
@@ -99,6 +110,7 @@ export function AdminReportsWorkspace({ routeParams = {}, runtime }) {
           key={workspace.reportPendingEdit.id}
           mode="edit"
           onClose={() => workspace.setReportPendingEdit(null)}
+          onGenerateClinicTemplate={workspace.generateClinicReportTemplate}
           onSaved={workspace.handleSaved}
           onSubmitReport={workspace.saveReport}
           report={workspace.reportPendingEdit}

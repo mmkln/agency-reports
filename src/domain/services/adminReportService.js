@@ -1,5 +1,10 @@
+import { CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../entities/report'
+import {
+  mapClinicReportSections,
+  normalizeClinicReportSections,
+} from './clinicReportTemplateService'
 
 const VALID_REPORT_STATUSES = new Set(Object.values(REPORT_STATUSES))
 
@@ -102,6 +107,7 @@ function mapReport({ client, report }) {
     },
     clientDecisionsNeeded: report.client_decisions_needed ?? '',
     clientId: report.client_id,
+    clinicSections: client.type === CLIENT_TYPES.CLINIC ? mapClinicReportSections(report.clinic_sections) : null,
     createdAt: report.created_at,
     dashboardUrl: report.dashboard_url ?? '',
     id: report.id,
@@ -120,6 +126,7 @@ function mapReport({ client, report }) {
       tone: 'neutral',
     },
     summary: report.summary ?? '',
+    template: client.type === CLIENT_TYPES.CLINIC && report.clinic_sections ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC,
     title: report.title,
     updatedAt: report.updated_at,
     whatWeDid: report.what_we_did ?? '',
@@ -200,6 +207,9 @@ export function saveAdminReport({
   const report = {
     client_decisions_needed: normalizeText(input.clientDecisionsNeeded ?? input.client_decisions_needed),
     client_id: client.id,
+    clinic_sections: client.type === CLIENT_TYPES.CLINIC
+      ? normalizeClinicReportSections(input.clinicSections ?? input.clinic_sections)
+      : null,
     created_at: existingReport?.created_at || timestamp,
     created_by: existingReport?.created_by || viewer.userId,
     dashboard_url: normalizeOptionalUrl(input.dashboardUrl ?? input.dashboard_url, 'Report dashboard URL'),
@@ -279,6 +289,7 @@ export function duplicateAdminReport({
       title: `Copy of ${sourceReport.title}`,
       what_we_did: sourceReport.what_we_did,
       wins: sourceReport.wins,
+      clinic_sections: sourceReport.clinic_sections,
     },
     now,
     repositories,

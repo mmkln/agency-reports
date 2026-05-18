@@ -275,7 +275,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] agency work completed
   - [x] clinic actions needed
   - [x] next month plan
-- [ ] Update admin report editor for clinic template content.
+- [x] Update admin report editor for clinic template content.
 - [x] Update client report reader to render clinic sections.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.

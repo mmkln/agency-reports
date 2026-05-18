@@ -9,6 +9,7 @@ import {
   saveAdminReport,
   updateAdminReportStatus,
 } from '../../../domain/services/adminReportService'
+import { buildClinicReportDraftFromClientData } from '../../../domain/services/clinicReportTemplateService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import { createInitialReportFilters, filterReports, getReportMonthOptions } from './reportFilters'
@@ -81,6 +82,14 @@ export function useAdminReportsWorkspace({ routeParams = {}, runtime }) {
     }))
   }
 
+  function generateClinicReportTemplate(clientId) {
+    return runtime.dataClient.read((repositories) => buildClinicReportDraftFromClientData({
+      clientId,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+  }
+
   function deleteReport(reportId) {
     const deletedReport = reports.find((report) => report.id === reportId)
 
@@ -134,6 +143,7 @@ export function useAdminReportsWorkspace({ routeParams = {}, runtime }) {
     error: reportsResource.error,
     filteredReports,
     filters,
+    generateClinicReportTemplate,
     handleSaved,
     isCreateModalOpen,
     reportPendingEdit,

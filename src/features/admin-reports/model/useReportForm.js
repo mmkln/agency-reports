@@ -14,6 +14,7 @@ function createInitialForm({ clientId = '', report = null } = {}) {
   return {
     clientDecisionsNeeded: report?.clientDecisionsNeeded ?? report?.client_decisions_needed ?? '',
     clientId: report?.clientId ?? report?.client_id ?? clientId,
+    clinicSections: report?.clinicSections ?? report?.clinic_sections ?? null,
     dashboardUrl: report?.dashboardUrl ?? report?.dashboard_url ?? '',
     id: report?.id ?? '',
     internalNotes: report?.internalNotes ?? report?.internal_notes ?? '',
@@ -44,6 +45,19 @@ export function useReportForm({ clientId, onSubmit, report }) {
     setError('')
   }
 
+  function applyTemplate(template) {
+    setForm((currentForm) => ({
+      ...currentForm,
+      clientDecisionsNeeded: template.clientDecisionsNeeded ?? currentForm.clientDecisionsNeeded,
+      clinicSections: template.clinicSections ?? currentForm.clinicSections,
+      nextActions: template.nextActions ?? currentForm.nextActions,
+      problems: template.problems ?? currentForm.problems,
+      results: template.results ?? currentForm.results,
+      summary: template.summary ?? currentForm.summary,
+    }))
+    setError('')
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
 
@@ -55,8 +69,10 @@ export function useReportForm({ clientId, onSubmit, report }) {
 
   return {
     error,
+    applyTemplate,
     form,
     handleSubmit,
+    setError,
     updateField,
   }
 }

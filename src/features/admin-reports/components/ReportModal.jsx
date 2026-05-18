@@ -11,6 +11,7 @@ import {
 } from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
+import { ClinicReportTemplateSection } from './ClinicReportTemplateSection'
 import {
   ClientNarrativeSection,
   InternalNotesSection,
@@ -25,6 +26,7 @@ export function ReportModal({
   isOpen,
   mode = 'create',
   onClose,
+  onApplyClinicTemplate,
   onSubmit,
   onUpdateField,
 }) {
@@ -70,6 +72,12 @@ export function ReportModal({
                 onUpdateField={onUpdateField}
               />
               <ClientNarrativeSection form={form} onUpdateField={onUpdateField} />
+              <ClinicReportTemplateSection
+                clients={clients}
+                form={form}
+                onApplyTemplate={onApplyClinicTemplate}
+                onUpdateField={onUpdateField}
+              />
               <SupportingLinksSection form={form} onUpdateField={onUpdateField} />
               <InternalNotesSection form={form} onUpdateField={onUpdateField} />
             </div>
