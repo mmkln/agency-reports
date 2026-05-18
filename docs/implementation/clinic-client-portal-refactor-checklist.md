@@ -83,7 +83,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 ## Phase 3 - Clinic Overview
 
 - [x] Update clinic Overview read model.
-- [ ] Add overview KPI preview:
+- [x] Add overview KPI preview:
   - [x] new patient inquiries
   - [x] booked appointments
   - [x] cost per booked appointment
@@ -106,7 +106,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `getClientPatientAcquisitionPage` domain service.
 - [x] Add `widgets/client-patient-acquisition`.
 - [x] Build patient acquisition header/KPI summary.
-- [ ] Build funnel:
+- [x] Build funnel:
   - [x] impressions
   - [x] clicks
   - [x] landing page visits
@@ -129,7 +129,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add `/client/calls-bookings` route or clinic-template destination mapping.
 - [x] Add `getClientCallsBookingsPage` domain service.
 - [x] Add `widgets/client-calls-bookings`.
-- [ ] Build metrics:
+- [x] Build metrics:
   - [x] total calls
   - [x] first-time caller calls
   - [x] answered calls
@@ -142,7 +142,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] not-booked reasons
   - [x] peak call times
 - [x] Add booking leakage summary.
-- [ ] Add clinic action creation/linking for missed-call or slow-response issues.
+- [x] Add clinic action creation/linking for missed-call or slow-response issues.
   - [x] Link missed-call operational insights to existing clinic actions.
   - [x] Show suggested clinic actions when no linked action exists.
   - [x] Create domain workflow for suggested clinic booking actions from missed-call, slow-response, and follow-up thresholds.

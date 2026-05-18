@@ -8,11 +8,13 @@ import {
   CLINIC_PROFILE_SPECIALTY_META,
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUS_META,
+  normalizeBookingPipelineSnapshot,
   normalizeCallBookingMetric,
   normalizeComplianceReview,
   normalizeClinicLocation,
   normalizeClinicProfile,
   normalizeClinicServiceLine,
+  normalizeLocationPerformance,
   normalizeMedicalApproval,
   normalizePatientAcquisitionSnapshot,
   normalizeReputationSnapshot,
@@ -246,6 +248,43 @@ function mapPatientAcquisitionSnapshot(snapshot, { locationsById, serviceLinesBy
   }
 }
 
+function mapBookingPipelineSnapshot(snapshot, { locationsById, serviceLinesById }) {
+  const normalizedSnapshot = normalizeBookingPipelineSnapshot(snapshot)
+  const inquiries = normalizedSnapshot.calls + normalizedSnapshot.forms + normalizedSnapshot.chats
+
+  return {
+    attendedAppointments: normalizedSnapshot.attended_appointments,
+    bookedAppointments: normalizedSnapshot.booked_appointments,
+    bookingRate: divide(normalizedSnapshot.booked_appointments, inquiries),
+    calls: normalizedSnapshot.calls,
+    chats: normalizedSnapshot.chats,
+    clientId: normalizedSnapshot.client_id,
+    clicks: normalizedSnapshot.clicks,
+    dataSource: normalizedSnapshot.data_source,
+    forms: normalizedSnapshot.forms,
+    id: normalizedSnapshot.id,
+    impressions: normalizedSnapshot.impressions,
+    inquiries,
+    insight: normalizedSnapshot.insight,
+    landingPageVisits: normalizedSnapshot.landing_page_visits,
+    lastUpdatedAt: normalizedSnapshot.last_updated_at,
+    location: normalizedSnapshot.location_id ? locationsById.get(normalizedSnapshot.location_id) ?? null : null,
+    locationId: normalizedSnapshot.location_id,
+    missedCalls: normalizedSnapshot.missed_calls,
+    noResponseLeads: normalizedSnapshot.no_response_leads,
+    periodEnd: normalizedSnapshot.period_end,
+    periodLabel: normalizedSnapshot.period_label,
+    periodStart: normalizedSnapshot.period_start,
+    qualifiedInquiries: normalizedSnapshot.qualified_inquiries,
+    serviceLine: normalizedSnapshot.service_line_id
+      ? serviceLinesById.get(normalizedSnapshot.service_line_id) ?? null
+      : null,
+    serviceLineId: normalizedSnapshot.service_line_id,
+    spend: 0,
+    summary: normalizedSnapshot.summary,
+  }
+}
+
 function buildAcquisitionFunnel(totals) {
   const inquiries = totals.calls + totals.forms + totals.chats
 
@@ -258,6 +297,12 @@ function buildAcquisitionFunnel(totals) {
     { id: 'booked', label: 'Booked appointments', value: totals.bookedAppointments },
     { id: 'attended', label: 'Attended appointments', value: totals.attendedAppointments },
   ]
+}
+
+function buildFunnelTotals({ pipelineSnapshots, snapshots }) {
+  const funnelRecords = pipelineSnapshots.length > 0 ? pipelineSnapshots : snapshots
+
+  return funnelRecords.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
 }
 
 function mapCallBookingMetric(metric, { locationsById, serviceLinesById }) {
@@ -339,6 +384,36 @@ function mapServiceLinePerformance(performance, { locationsById, serviceLinesByI
   }
 }
 
+function mapLocationPerformance(performance, { locationsById }) {
+  const normalizedPerformance = normalizeLocationPerformance(performance)
+
+  return {
+    answeredCalls: normalizedPerformance.answered_calls,
+    bookedAppointments: normalizedPerformance.booked_appointments,
+    clientId: normalizedPerformance.client_id,
+    complianceStatus: normalizedPerformance.compliance_status,
+    complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META[normalizedPerformance.compliance_status],
+    costPerBookedAppointment: normalizedPerformance.cost_per_booked_appointment
+      || divide(normalizedPerformance.spend, normalizedPerformance.booked_appointments),
+    dataSource: normalizedPerformance.data_source,
+    googleRating: normalizedPerformance.google_rating,
+    id: normalizedPerformance.id,
+    inquiries: normalizedPerformance.inquiries,
+    insight: normalizedPerformance.insight,
+    lastUpdatedAt: normalizedPerformance.last_updated_at,
+    location: normalizedPerformance.location_id ? locationsById.get(normalizedPerformance.location_id) ?? null : null,
+    locationId: normalizedPerformance.location_id,
+    missedCalls: normalizedPerformance.missed_calls,
+    periodEnd: normalizedPerformance.period_end,
+    periodLabel: normalizedPerformance.period_label,
+    periodStart: normalizedPerformance.period_start,
+    reviewCount: normalizedPerformance.review_count,
+    reviewsGained: normalizedPerformance.reviews_gained,
+    spend: normalizedPerformance.spend,
+    summary: normalizedPerformance.summary,
+  }
+}
+
 function createEmptyServiceLinePerformanceTotals() {
   return {
     bookedAppointments: 0,
@@ -373,6 +448,63 @@ function attachPerformanceToServiceLines(serviceLines, performanceRecords) {
       },
     }
   })
+}
+
+function createEmptyLocationPerformanceTotals() {
+  return {
+    answeredCalls: 0,
+    bookedAppointments: 0,
+    inquiries: 0,
+    missedCalls: 0,
+    reviewsGained: 0,
+    spend: 0,
+  }
+}
+
+function addLocationPerformanceTotals(total, performance) {
+  return {
+    answeredCalls: total.answeredCalls + performance.answeredCalls,
+    bookedAppointments: total.bookedAppointments + performance.bookedAppointments,
+    inquiries: total.inquiries + performance.inquiries,
+    missedCalls: total.missedCalls + performance.missedCalls,
+    reviewsGained: total.reviewsGained + performance.reviewsGained,
+    spend: total.spend + performance.spend,
+  }
+}
+
+function attachPerformanceToLocations(locations, performanceRecords) {
+  return locations.map((location) => {
+    const records = performanceRecords.filter((performance) => performance.locationId === location.id)
+    const totals = records.reduce(addLocationPerformanceTotals, createEmptyLocationPerformanceTotals())
+    const latestPerformance = records[0] ?? null
+
+    return {
+      ...location,
+      latestPerformance,
+      performanceRecords: records,
+      performanceTotals: {
+        ...totals,
+        bookingRate: divide(totals.bookedAppointments, totals.inquiries),
+        costPerBookedAppointment: divide(totals.spend, totals.bookedAppointments),
+      },
+    }
+  })
+}
+
+function matchesLocationPerformanceFilters(record, filters) {
+  if (filters.locationId && record.locationId !== filters.locationId) {
+    return false
+  }
+
+  if (filters.periodLabel && record.periodLabel !== filters.periodLabel) {
+    return false
+  }
+
+  if (filters.complianceStatus && record.complianceStatus !== filters.complianceStatus) {
+    return false
+  }
+
+  return true
 }
 
 function filterServiceLinesForSelection(serviceLines, performanceRecords, filters) {
@@ -854,12 +986,26 @@ export function getClientClinicServiceLinesPage(input) {
       && (!filters.campaignStatus || performance.campaignStatus === filters.campaignStatus)
       && (!filters.complianceStatus || performance.complianceStatus === filters.complianceStatus)
   ))
+  const allLocationPerformanceRecords = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.locationPerformance,
+    source: foundationPage.source,
+  })
+    .map((performance) => mapLocationPerformance(performance, { locationsById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || (left.location?.name ?? '').localeCompare(right.location?.name ?? '')
+    ))
+  const locationPerformanceRecords = allLocationPerformanceRecords.filter((performance) => (
+    matchesLocationPerformanceFilters(performance, filters)
+  ))
   const filteredFoundationServiceLines = filterServiceLinesForSelection(
     foundationPage.serviceLines,
     performanceRecords,
     filters,
   )
   const serviceLines = attachPerformanceToServiceLines(filteredFoundationServiceLines, performanceRecords)
+  const locations = attachPerformanceToLocations(foundationPage.locations, locationPerformanceRecords)
   const totals = performanceRecords.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
 
   return {
@@ -884,7 +1030,8 @@ export function getClientClinicServiceLinesPage(input) {
       selected: filters,
     }),
     isEmpty: serviceLines.length === 0,
-    locations: foundationPage.locations,
+    locationPerformanceRecords,
+    locations,
     performanceRecords,
     profile: foundationPage.profile,
     serviceLines,
@@ -924,7 +1071,19 @@ export function getClientPatientAcquisitionPage(input) {
     matchesClinicRecordFilters(snapshot, filters)
       && (!filters.channel || snapshot.channel === filters.channel)
   ))
+  const allPipelineSnapshots = listClientVisibleClinicRecords({
+    clientId: input.clientId,
+    repository: input.repositories.bookingPipelineSnapshots,
+    source: foundationPage.source,
+  })
+    .map((snapshot) => mapBookingPipelineSnapshot(snapshot, { locationsById, serviceLinesById }))
+    .sort((left, right) => (
+      new Date(right.periodStart).getTime() - new Date(left.periodStart).getTime()
+      || (left.serviceLine?.name ?? '').localeCompare(right.serviceLine?.name ?? '')
+    ))
+  const pipelineSnapshots = allPipelineSnapshots.filter((snapshot) => matchesClinicRecordFilters(snapshot, filters))
   const totals = snapshots.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
+  const funnelTotals = buildFunnelTotals({ pipelineSnapshots, snapshots })
   const inquiries = totals.calls + totals.forms + totals.chats
 
   return {
@@ -939,10 +1098,11 @@ export function getClientPatientAcquisitionPage(input) {
         ),
       },
       foundationPage,
-      records: allSnapshots,
+      records: [...allSnapshots, ...allPipelineSnapshots],
       selected: filters,
     }),
-    funnel: buildAcquisitionFunnel(totals),
+    funnel: buildAcquisitionFunnel(funnelTotals),
+    funnelSource: pipelineSnapshots.length > 0 ? 'booking_pipeline_snapshots' : 'patient_acquisition_snapshots',
     isEmpty: snapshots.length === 0,
     latestUpdatedAt: snapshots
       .map((snapshot) => snapshot.lastUpdatedAt)
@@ -950,6 +1110,7 @@ export function getClientPatientAcquisitionPage(input) {
       .sort()
       .at(-1) ?? null,
     locations: foundationPage.locations,
+    pipelineSnapshots,
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,

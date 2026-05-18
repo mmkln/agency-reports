@@ -46,6 +46,8 @@ const IDS = Object.freeze({
   MEDICAL_APPROVAL: 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
   SERVICE_PERFORMANCE: 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
   SERVICE_PERFORMANCE_B: 'dededede-dede-4ede-8ede-dededededede',
+  BOOKING_PIPELINE: 'e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1',
+  LOCATION_PERFORMANCE: 'e2e2e2e2-e2e2-42e2-82e2-e2e2e2e2e2e2',
 })
 
 function createEntityRepository(records = []) {
@@ -192,6 +194,30 @@ function createRepositories(overrides = {}) {
         spend: 1860,
       },
     ]),
+    bookingPipelineSnapshots: createEntityRepository([
+      {
+        attended_appointments: 13,
+        booked_appointments: 16,
+        calls: 20,
+        chats: 2,
+        client_id: IDS.CLIENT_A,
+        clicks: 248,
+        forms: 10,
+        id: IDS.BOOKING_PIPELINE,
+        impressions: 12900,
+        landing_page_visits: 218,
+        last_updated_at: '2026-05-08T09:30:00.000Z',
+        location_id: IDS.LOCATION,
+        missed_calls: 4,
+        no_response_leads: 2,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
+        qualified_inquiries: 22,
+        service_line_id: IDS.SERVICE_LINE,
+      },
+    ]),
     serviceLinePerformance: createEntityRepository([
       {
         booked_appointments: 18,
@@ -211,6 +237,28 @@ function createRepositories(overrides = {}) {
         publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
         published_at: '2026-05-08T10:00:00.000Z',
         service_line_id: IDS.SERVICE_LINE,
+        spend: 2250,
+      },
+    ]),
+    locationPerformance: createEntityRepository([
+      {
+        answered_calls: 37,
+        booked_appointments: 18,
+        client_id: IDS.CLIENT_A,
+        compliance_status: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+        cost_per_booked_appointment: 125,
+        google_rating: 4.7,
+        id: IDS.LOCATION_PERFORMANCE,
+        inquiries: 27,
+        last_updated_at: '2026-05-08T09:30:00.000Z',
+        location_id: IDS.LOCATION,
+        missed_calls: 6,
+        period_label: 'May 2026',
+        period_start: '2026-05-01',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        published_at: '2026-05-08T10:00:00.000Z',
+        review_count: 286,
+        reviews_gained: 18,
         spend: 2250,
       },
     ]),
@@ -497,6 +545,22 @@ describe('clinicClientService', () => {
     expect(page.isEmpty).toBe(false)
     expect(page.serviceLines.map((serviceLine) => serviceLine.name)).toEqual(['Dental Implants'])
     expect(page.locations.map((location) => location.name)).toEqual(['Main Clinic'])
+    expect(page.locationPerformanceRecords[0]).toMatchObject({
+      bookedAppointments: 18,
+      complianceStatus: CLINIC_COMPLIANCE_STATUSES.APPROVED,
+      location: expect.objectContaining({ name: 'Main Clinic' }),
+      reviewsGained: 18,
+    })
+    expect(page.locations[0]).toMatchObject({
+      latestPerformance: expect.objectContaining({
+        bookedAppointments: 18,
+      }),
+      performanceTotals: expect.objectContaining({
+        bookedAppointments: 18,
+        inquiries: 27,
+        reviewsGained: 18,
+      }),
+    })
     expect(page.performanceRecords[0]).toMatchObject({
       bookedAppointments: 18,
       bookingRate: 18 / 27,
@@ -592,6 +656,15 @@ describe('clinicClientService', () => {
       'booked',
       'attended',
     ])
+    expect(page.funnelSource).toBe('booking_pipeline_snapshots')
+    expect(page.funnel.find((stage) => stage.id === 'inquiries')).toMatchObject({
+      value: 32,
+    })
+    expect(page.pipelineSnapshots[0]).toMatchObject({
+      bookedAppointments: 16,
+      missedCalls: 4,
+      noResponseLeads: 2,
+    })
     expect(page.snapshots[0]).toMatchObject({
       channelMeta: {
         label: 'Google Ads',
