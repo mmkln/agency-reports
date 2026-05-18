@@ -87,7 +87,7 @@ export function AdminClinicSetupWorkspace({ routeParams = {}, runtime }) {
             This setup defines the aggregate clinic context behind patient acquisition, calls, bookings,
             reputation, compliance, and client action workflows. Do not enter patient-level identifiers here.
             <Button asChild className="ml-2 h-auto p-0 text-link" size="sm" variant="link">
-              <Link to={`/admin/client-reports-dashboards?clientId=${clientId}`}>Manage clinic reports</Link>
+              <Link to={`/admin/client-reports-dashboards?clientId=${clientId}`}>Manage clinic results</Link>
             </Button>
           </div>
 

@@ -79,8 +79,8 @@ test('clinic client navigation prioritizes patient acquisition workflows over ge
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Reviews gained')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Compliance issues')
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('Action Needed')
-  await expect(page.getByRole('heading', { name: 'Clinic Reports' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'View clinic reports' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Clinic Results' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'View clinic results' })).toBeVisible()
 })
 
 test('clinic analytics pages render aggregate acquisition, booking, service, reputation, and compliance views', async ({ page }) => {

@@ -32,15 +32,15 @@ export function ReportsDashboardsOverviewBlock({
       action={(
         <Button asChild size="sm" variant="outline">
           <Link to={`/client/reports-dashboards?clientId=${clientId}`}>
-            {isClinic ? 'View clinic reports' : 'View results'}
+            {isClinic ? 'View clinic results' : 'View results'}
           </Link>
         </Button>
       )}
       description={isClinic
-        ? 'Patient acquisition reports, source dashboard, and published clinic summaries.'
+        ? 'Patient acquisition analytics, source dashboard, and published clinic summaries.'
         : 'Performance interpretation, source dashboard, and published reports.'}
       iconName="barChart"
-      title={isClinic ? 'Clinic Reports' : 'Reports & Dashboards'}
+      title={isClinic ? 'Clinic Results' : 'Reports & Dashboards'}
     >
       {performancePreview || dashboard || report ? (
         <div className="grid gap-3">
