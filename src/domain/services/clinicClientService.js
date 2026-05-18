@@ -882,6 +882,7 @@ function mapComplianceReview(review, { locationsById, serviceLinesById }) {
     pendingApprovals: normalizedReview.pending_approvals,
     policyIssues: normalizedReview.policy_issues,
     platform: normalizedReview.platform,
+    relatedActions: [],
     riskNote: normalizedReview.risk_note,
     serviceLine: normalizedReview.service_line_id
       ? serviceLinesById.get(normalizedReview.service_line_id) ?? null
@@ -913,6 +914,7 @@ function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
     lastUpdatedAt: normalizedApproval.last_updated_at,
     location: normalizedApproval.location_id ? locationsById.get(normalizedApproval.location_id) ?? null : null,
     locationId: normalizedApproval.location_id,
+    relatedActions: [],
     requestedByLabel: normalizedApproval.requested_by_label,
     serviceLine: normalizedApproval.service_line_id
       ? serviceLinesById.get(normalizedApproval.service_line_id) ?? null
@@ -922,6 +924,72 @@ function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
     statusMeta: CLINIC_APPROVAL_STATUS_META[normalizedApproval.status],
     title: normalizedApproval.title,
     version: normalizedApproval.version,
+  }
+}
+
+function listOpenComplianceActions({
+  approvalIds,
+  clientId,
+  repositories,
+  reviewIds,
+  viewer,
+}) {
+  if (!repositories.neededFromClient) {
+    return []
+  }
+
+  const actionsResult = listClientNeededActions({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (actionsResult.status === 'error') {
+    return []
+  }
+
+  return actionsResult.actions.filter((action) => (
+    (
+      action.relatedComplianceReviewId
+        && reviewIds.has(action.relatedComplianceReviewId)
+    )
+      || (
+        action.relatedMedicalApprovalId
+          && approvalIds.has(action.relatedMedicalApprovalId)
+      )
+  ) && ![
+    NEEDED_ACTION_STATUSES.CANCELLED,
+    NEEDED_ACTION_STATUSES.RESOLVED,
+  ].includes(action.status))
+}
+
+function attachComplianceActions({ actions, approvals, reviews }) {
+  const actionsByApprovalId = new Map()
+  const actionsByReviewId = new Map()
+
+  actions.forEach((action) => {
+    if (action.relatedComplianceReviewId) {
+      const reviewActions = actionsByReviewId.get(action.relatedComplianceReviewId) ?? []
+      reviewActions.push(action)
+      actionsByReviewId.set(action.relatedComplianceReviewId, reviewActions)
+    }
+
+    if (action.relatedMedicalApprovalId) {
+      const approvalActions = actionsByApprovalId.get(action.relatedMedicalApprovalId) ?? []
+      approvalActions.push(action)
+      actionsByApprovalId.set(action.relatedMedicalApprovalId, approvalActions)
+    }
+  })
+
+  return {
+    approvals: approvals.map((approval) => ({
+      ...approval,
+      relatedActions: actionsByApprovalId.get(approval.id) ?? [],
+    })),
+    reviews: reviews.map((review) => ({
+      ...review,
+      relatedActions: actionsByReviewId.get(review.id) ?? [],
+    })),
   }
 }
 
@@ -1347,26 +1415,44 @@ export function getClientComplianceApprovalsPage(input) {
       new Date(left.dueDate ?? '9999-12-31').getTime() - new Date(right.dueDate ?? '9999-12-31').getTime()
       || left.title.localeCompare(right.title)
     ))
+  const openComplianceActions = listOpenComplianceActions({
+    approvalIds: new Set(approvals.map((approval) => approval.id)),
+    clientId: input.clientId,
+    repositories: input.repositories,
+    reviewIds: new Set(reviews.map((review) => review.id)),
+    viewer: input.viewer,
+  })
+  const complianceRecordsWithActions = attachComplianceActions({
+    actions: openComplianceActions,
+    approvals,
+    reviews,
+  })
 
   return {
-    approvals,
+    approvals: complianceRecordsWithActions.approvals,
     client: foundationPage.client,
     dataTrust: buildClinicDataTrust({
-      records: [...reviews, ...approvals],
+      records: [
+        ...complianceRecordsWithActions.reviews,
+        ...complianceRecordsWithActions.approvals,
+      ],
       source: foundationPage.source,
     }),
-    isEmpty: reviews.length === 0 && approvals.length === 0,
-    latestUpdatedAt: [...reviews, ...approvals]
+    isEmpty: complianceRecordsWithActions.reviews.length === 0 && complianceRecordsWithActions.approvals.length === 0,
+    latestUpdatedAt: [
+      ...complianceRecordsWithActions.reviews,
+      ...complianceRecordsWithActions.approvals,
+    ]
       .map((item) => item.lastUpdatedAt)
       .filter(Boolean)
       .sort()
       .at(-1) ?? null,
     locations: foundationPage.locations,
     profile: foundationPage.profile,
-    reviews,
+    reviews: complianceRecordsWithActions.reviews,
     serviceLines: foundationPage.serviceLines,
     source: foundationPage.source,
     status: 'ready',
-    totals: summarizeCompliance({ approvals, reviews }),
+    totals: summarizeCompliance(complianceRecordsWithActions),
   }
 }

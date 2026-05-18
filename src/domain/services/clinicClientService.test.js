@@ -1138,6 +1138,63 @@ describe('clinicClientService', () => {
     })
   })
 
+  it('links open compliance actions to visible reviews and medical approvals', () => {
+    const page = getClientComplianceApprovalsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        neededFromClient: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+            due_date: '2026-05-20',
+            id: IDS.ACTION,
+            related_compliance_review_id: IDS.COMPLIANCE_REVIEW,
+            status: NEEDED_ACTION_STATUSES.PENDING,
+            title: 'Approve compliance revision',
+            type: NEEDED_ACTION_TYPES.APPROVAL,
+          },
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+            due_date: '2026-05-21',
+            id: '02020202-0202-4202-8202-020202020202',
+            related_medical_approval_id: IDS.MEDICAL_APPROVAL,
+            status: NEEDED_ACTION_STATUSES.PENDING,
+            title: 'Approve implant claim',
+            type: NEEDED_ACTION_TYPES.APPROVAL,
+          },
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+            id: '03030303-0303-4303-8303-030303030303',
+            related_medical_approval_id: IDS.MEDICAL_APPROVAL,
+            status: NEEDED_ACTION_STATUSES.RESOLVED,
+            title: 'Resolved medical claim',
+            type: NEEDED_ACTION_TYPES.APPROVAL,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.reviews[0].relatedActions).toEqual([
+      expect.objectContaining({
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+        dueDate: '2026-05-20',
+        id: IDS.ACTION,
+        title: 'Approve compliance revision',
+      }),
+    ])
+    expect(page.approvals[0].relatedActions).toEqual([
+      expect.objectContaining({
+        clinicActionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+        dueDate: '2026-05-21',
+        id: '02020202-0202-4202-8202-020202020202',
+        title: 'Approve implant claim',
+      }),
+    ])
+  })
+
   it('hides draft compliance reviews and medical approvals from client users', () => {
     const page = getClientComplianceApprovalsPage({
       clientId: IDS.CLIENT_A,

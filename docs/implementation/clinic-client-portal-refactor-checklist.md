@@ -230,6 +230,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Build approval history with version, approver, timestamp, and decision comment.
 - [x] Add rejected/limited ad policy issue log.
 - [x] Add tracking/privacy setup status.
+- [x] Link open Action Needed records to visible compliance reviews and medical approvals.
 - [x] Add tests for hidden draft compliance items.
 
 ## Phase 9 - Clinic Action Needed
@@ -384,6 +385,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for Campaigns / Service Lines.
 - [x] Add e2e for Reputation.
 - [x] Add e2e for Compliance & Approvals.
+- [x] Add e2e for Compliance & Approvals linked Action Needed records.
 - [x] Add e2e for clinic Action Needed approval/response.
 - [x] Add e2e for admin Clinic Metrics JSON import preview/apply/save.
 - [x] Add e2e coverage for admin clinic results workspace naming and structured summary rendering.

@@ -4,7 +4,11 @@ import { PORTAL_STORAGE_KEY } from '../src/app/providers/repositories/createLoca
 import { SEED_IDS } from '../src/app/providers/repositories/portalSeedData.js'
 import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/services/authService.js'
 import { CLINIC_RECORD_PUBLISH_STATES } from '../src/entities/clinic/index.js'
-import { NEEDED_ACTION_STATUSES } from '../src/entities/needed-from-client/index.js'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../src/entities/needed-from-client/index.js'
 
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
@@ -129,6 +133,48 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Open issues', { exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Pending approvals', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
+})
+
+test('clinic compliance page links open action-needed records', async ({ page }) => {
+  await signInAsClinicClient(page)
+  await mutatePortalStorage(page, `function addComplianceReviewAction(portalData) {
+    portalData.needed_from_client.push({
+      client_id: '${GREEN_DENTAL_CLIENT_ID}',
+      clinic_action_type: '${CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY}',
+      compliance_risk: 'Ad policy review is blocked until the clinic confirms claim wording.',
+      created_at: '2026-05-18T09:00:00.000Z',
+      description: 'Review the revised whitening compliance copy before launch.',
+      due_date: '2026-05-22',
+      id: 'e2e-compliance-review-action',
+      impact_if_delayed: 'Healthcare ads stay limited until the claim is approved.',
+      patient_impact: 'Patients need accurate treatment expectations before booking.',
+      priority: 'high',
+      related_compliance_review_id: '${SEED_IDS.COMPLIANCE_REVIEW_AD_CLAIMS}',
+      related_service_line_id: '${SEED_IDS.CLINIC_SERVICE_WHITENING}',
+      status: '${NEEDED_ACTION_STATUSES.PENDING}',
+      title: 'Approve revised whitening claim',
+      type: '${NEEDED_ACTION_TYPES.APPROVAL}',
+      updated_at: '2026-05-18T09:00:00.000Z'
+    })
+
+    return portalData
+  }`)
+
+  await page.goto(`/client/compliance-approvals?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  const reviewCard = page.locator('article').filter({ hasText: 'Ad claims and offer wording review' })
+  await expect(reviewCard).toContainText('Approve revised whitening claim')
+  await expect(reviewCard.getByRole('link', { name: 'Open action' })).toHaveAttribute(
+    'href',
+    `/client/action-needed?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+
+  const approvalCard = page.locator('article').filter({ hasText: 'Whitening offer ad copy' })
+  await expect(approvalCard).toContainText('Confirm final offer details')
+  await expect(approvalCard.getByRole('link', { name: 'Open action' })).toHaveAttribute(
+    'href',
+    `/client/action-needed?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
 })
 
 test('clinic action needed supports medical approval and missed-call operational responses', async ({ page }) => {
