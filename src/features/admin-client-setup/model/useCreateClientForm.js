@@ -20,6 +20,7 @@ const emptyForm = {
 }
 
 export function useCreateClientForm({
+  activityIdGenerator,
   idGenerator,
   onCreated,
   repositories,
@@ -73,6 +74,7 @@ export function useCreateClientForm({
 
     try {
       const result = createAdminClient({
+        activityIdGenerator,
         idGenerator,
         input: form,
         repositories,

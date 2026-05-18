@@ -70,6 +70,7 @@ export function useInvitationsPanel({ clientId, runtime }) {
     event.preventDefault()
 
     runtime.dataClient.write((repositories) => createClientInvitation({
+      activityIdGenerator: createUuid,
       clientId,
       email: form.email,
       expiresAt: form.expiresAt ? `${form.expiresAt}T23:59:59.999Z` : null,
@@ -94,6 +95,7 @@ export function useInvitationsPanel({ clientId, runtime }) {
     }
 
     runtime.dataClient.write((repositories) => cancelClientInvitation({
+      activityIdGenerator: createUuid,
       invitationId: invitationPendingCancel.id,
       repositories,
       viewer: runtime.viewer,

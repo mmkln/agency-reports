@@ -10,6 +10,7 @@ import {
   normalizePortalSlug,
   updateAdminClient,
 } from './adminClientService'
+import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 
 const IDS = Object.freeze({
   AGENCY_A: '11111111-1111-4111-8111-111111111111',
@@ -18,6 +19,7 @@ const IDS = Object.freeze({
   CLIENT_B: '44444444-4444-4444-8444-444444444444',
   NEW_CLIENT: '55555555-5555-4555-8555-555555555555',
   NEW_INVITATION: '66666666-6666-4666-8666-666666666666',
+  NEW_INVITATION_EVENT: '88888888-8888-4888-8888-888888888888',
   NEW_INVITATION_TOKEN: '77777777-7777-4777-8777-777777777777',
 })
 
@@ -61,6 +63,7 @@ function createClientsRepository(initialClients = []) {
 function createRepositories(initialClients, overrides = {}) {
   return {
     clients: createClientsRepository(initialClients),
+    activityEvents: createClientsRepository([]),
     clientInvitations: createClientsRepository([]),
     clientMemberships: createClientsRepository([]),
     clinicLocations: createClientsRepository([]),
@@ -122,6 +125,7 @@ describe('adminClientService', () => {
 
     const generatedIds = [IDS.NEW_CLIENT, IDS.NEW_INVITATION, IDS.NEW_INVITATION_TOKEN]
     const result = createAdminClient({
+      activityIdGenerator: () => IDS.NEW_INVITATION_EVENT,
       idGenerator: () => generatedIds.shift(),
       input: {
         logoUrl: 'https://cdn.example.com/new-client-logo.png',
@@ -154,6 +158,17 @@ describe('adminClientService', () => {
     })
     expect(repositories.clients.list()).toHaveLength(1)
     expect(repositories.clientInvitations.list()).toHaveLength(1)
+    expect(repositories.activityEvents.list()).toEqual([
+      expect.objectContaining({
+        client_id: IDS.NEW_CLIENT,
+        event_type: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
+        id: IDS.NEW_INVITATION_EVENT,
+        metadata: expect.objectContaining({
+          invitationId: IDS.NEW_INVITATION,
+          status: 'pending',
+        }),
+      }),
+    ])
   })
 
   it('creates clinic clients when a clinic type is requested', () => {

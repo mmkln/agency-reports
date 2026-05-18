@@ -130,6 +130,7 @@ export function listAdminClients({ repositories, viewer }) {
 }
 
 export function createAdminClient({
+  activityIdGenerator,
   idGenerator,
   input,
   now = () => new Date().toISOString(),
@@ -174,6 +175,7 @@ export function createAdminClient({
 
   repositories.clients.upsert(client)
   const invitation = createClientInvitation({
+    activityIdGenerator,
     clientId: client.id,
     email: primaryContactEmail,
     idGenerator,

@@ -61,6 +61,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
   })
   const clients = clientsResource.data ?? []
   const createClientForm = useCreateClientForm({
+    activityIdGenerator: createUuid,
     idGenerator: createUuid,
     onCreated: (client) => {
       void clientsResource.reload()
