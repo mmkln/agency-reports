@@ -17,6 +17,11 @@ import {
 } from '../../entities/clinic'
 import { USER_ROLES } from '../../entities/profile'
 import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
+import {
   assertClinicPublishReady,
   getCallBookingPublishReadiness,
   getPatientAcquisitionPublishReadiness,
@@ -32,6 +37,11 @@ const METRIC_READINESS = Object.freeze({
   patient_acquisition: getPatientAcquisitionPublishReadiness,
   service_line_performance: getServiceLinePerformancePublishReadiness,
 })
+const OPEN_NEEDED_ACTION_STATUSES = new Set([
+  NEEDED_ACTION_STATUSES.ANSWERED,
+  NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+  NEEDED_ACTION_STATUSES.PENDING,
+])
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
@@ -295,6 +305,86 @@ function buildCallBookingMetricRecord({
     : createTimestamped(record, timestamp)
 }
 
+function isOpenNeededAction(action) {
+  return OPEN_NEEDED_ACTION_STATUSES.has(action?.status)
+}
+
+function createBookingActionKey(metricId, suggestionType) {
+  return `${metricId}:${suggestionType}`
+}
+
+function getOpenBookingActionsBySuggestionKey({ clientId, repositories }) {
+  const actions = repositories.neededFromClient?.listByClientId?.(clientId) ?? []
+
+  return new Map(
+    actions
+      .filter((action) => isOpenNeededAction(action))
+      .filter((action) => action.related_call_booking_metric_id && action.clinic_action_type)
+      .map((action) => [
+        createBookingActionKey(action.related_call_booking_metric_id, action.clinic_action_type),
+        action,
+      ]),
+  )
+}
+
+function createBookingActionSuggestion({
+  actionType,
+  label,
+  metric,
+  openBookingActionsBySuggestionKey,
+}) {
+  const openAction = openBookingActionsBySuggestionKey.get(createBookingActionKey(metric.id, actionType))
+
+  return {
+    actionLabel: label,
+    defaultActionType: actionType === CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT
+      ? NEEDED_ACTION_TYPES.APPROVAL
+      : NEEDED_ACTION_TYPES.DECISION,
+    hasOpenAction: Boolean(openAction),
+    openAction: openAction
+      ? {
+          id: openAction.id,
+          status: openAction.status,
+          title: openAction.title,
+        }
+      : null,
+    type: actionType,
+  }
+}
+
+function getCallBookingActionSuggestions({ metric, openBookingActionsBySuggestionKey }) {
+  const suggestions = []
+
+  if (metric.missed_calls > 0) {
+    suggestions.push(createBookingActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      label: 'Create missed-call action',
+      metric,
+      openBookingActionsBySuggestionKey,
+    }))
+  }
+
+  if (metric.average_response_seconds >= 120) {
+    suggestions.push(createBookingActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+      label: 'Create call script action',
+      metric,
+      openBookingActionsBySuggestionKey,
+    }))
+  }
+
+  if (metric.no_response_leads + metric.follow_up_needed_count > 0) {
+    suggestions.push(createBookingActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+      label: 'Create follow-up action',
+      metric,
+      openBookingActionsBySuggestionKey,
+    }))
+  }
+
+  return suggestions
+}
+
 function buildServiceLinePerformanceRecord({
   clientId,
   existingRecord,
@@ -398,6 +488,10 @@ function publishClinicMetricRecord({
 export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const foundation = getClinicFoundation({ clientId, repositories })
+  const openBookingActionsBySuggestionKey = getOpenBookingActionsBySuggestionKey({
+    clientId,
+    repositories,
+  })
 
   return {
     acquisitionChannelMeta: CLINIC_ACQUISITION_CHANNEL_META,
@@ -406,6 +500,10 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
       .map(normalizeCallBookingMetric)
       .map((record) => ({
         ...record,
+        booking_action_suggestions: getCallBookingActionSuggestions({
+          metric: record,
+          openBookingActionsBySuggestionKey,
+        }),
         publish_readiness: getCallBookingPublishReadiness(record),
       }))
       .sort(sortByPeriodDesc),

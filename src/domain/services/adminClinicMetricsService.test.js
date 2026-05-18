@@ -8,6 +8,11 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   getAdminClinicMetricsPage,
@@ -107,6 +112,7 @@ function createRepositories(overrides = {}) {
         status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
       },
     ]),
+    neededFromClient: createRepository([]),
     patientAcquisitionSnapshots: createRepository([]),
     serviceLinePerformance: createRepository([]),
     ...overrides,
@@ -181,6 +187,12 @@ describe('adminClinicMetricsService', () => {
     })
     expect(page.callBookingMetrics[0]).toMatchObject({
       answered_calls: 18,
+      booking_action_suggestions: [
+        {
+          hasOpenAction: false,
+          type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+        },
+      ],
       missed_calls: 2,
     })
     expect(page.serviceLinePerformance[0]).toMatchObject({
@@ -189,6 +201,78 @@ describe('adminClinicMetricsService', () => {
       service_line_id: IDS.SERVICE_A,
       spend: 2250,
     })
+  })
+
+  it('marks existing open booking actions in call booking suggestions', () => {
+    const repositories = createRepositories({
+      callBookingMetrics: createRepository([
+        {
+          average_response_seconds: 180,
+          client_id: IDS.CLIENT_A,
+          follow_up_needed_count: 2,
+          id: IDS.CALLS_A,
+          missed_calls: 4,
+          no_response_leads: 1,
+          period_end: '2026-05-31',
+          period_label: 'May 2026',
+          period_start: '2026-05-01',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+          total_calls: 20,
+        },
+      ]),
+      neededFromClient: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+          id: 'action-open-missed-calls',
+          related_call_booking_metric_id: IDS.CALLS_A,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Fix missed calls',
+        },
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+          id: 'action-resolved-script',
+          related_call_booking_metric_id: IDS.CALLS_A,
+          status: NEEDED_ACTION_STATUSES.RESOLVED,
+          title: 'Old script action',
+        },
+      ]),
+    })
+
+    const page = getAdminClinicMetricsPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.callBookingMetrics[0].booking_action_suggestions).toEqual([
+      {
+        actionLabel: 'Create missed-call action',
+        defaultActionType: NEEDED_ACTION_TYPES.DECISION,
+        hasOpenAction: true,
+        openAction: {
+          id: 'action-open-missed-calls',
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Fix missed calls',
+        },
+        type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      },
+      {
+        actionLabel: 'Create call script action',
+        defaultActionType: NEEDED_ACTION_TYPES.APPROVAL,
+        hasOpenAction: false,
+        openAction: null,
+        type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+      },
+      {
+        actionLabel: 'Create follow-up action',
+        defaultActionType: NEEDED_ACTION_TYPES.DECISION,
+        hasOpenAction: false,
+        openAction: null,
+        type: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+      },
+    ])
   })
 
   it('saves patient acquisition and calls/bookings snapshots as aggregate data', () => {
