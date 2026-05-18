@@ -1,21 +1,11 @@
 import {
+  PORTAL_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_REPOSITORY_COLLECTIONS,
   PORTAL_TABLE_NAMES,
 } from './portalRepositoryContract'
 
 export const PORTAL_STORAGE_KEY = 'agency-reports.portal.v2'
 export const PORTAL_STORAGE_SCHEMA_VERSION = 1
-
-const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
-  'call_booking_metrics',
-  'booking_pipeline_snapshots',
-  'compliance_reviews',
-  'location_performance',
-  'medical_approvals',
-  'patient_acquisition_snapshots',
-  'reputation_snapshots',
-  'service_line_performance',
-])
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
@@ -92,7 +82,7 @@ function mergeSeedRecord(record, seedRecord, tableName) {
     return mergeSeedPerformanceDashboardPeriod(record, seedRecord)
   }
 
-  if (CLINIC_PUBLISH_STATE_TABLES.includes(tableName) && !record.publish_state && seedRecord.publish_state) {
+  if (PORTAL_CLINIC_PUBLISH_STATE_TABLES.includes(tableName) && !record.publish_state && seedRecord.publish_state) {
     return {
       ...record,
       publish_state: seedRecord.publish_state,

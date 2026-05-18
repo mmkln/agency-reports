@@ -4,6 +4,7 @@ import { createLocalStoragePortalRepository } from './createLocalStoragePortalRe
 import { portalSeedData } from './portalSeedData'
 import {
   PORTAL_ENTITY_REPOSITORY_METHODS,
+  PORTAL_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_REPOSITORY_COLLECTIONS,
   PORTAL_REPOSITORY_EXTENSION_METHODS,
   PORTAL_REPOSITORY_KEYS,
@@ -53,5 +54,12 @@ describe('portalRepositoryContract', () => {
       .filter((key) => Array.isArray(portalSeedData[key]) && !contractTables.has(key))
 
     expect(unknownSeedTables).toEqual([])
+  })
+
+  it('keeps clinic publish-state tables inside the repository table contract', () => {
+    const contractTables = new Set(PORTAL_TABLE_NAMES)
+
+    expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES.length).toBeGreaterThan(0)
+    expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES.every((tableName) => contractTables.has(tableName))).toBe(true)
   })
 })

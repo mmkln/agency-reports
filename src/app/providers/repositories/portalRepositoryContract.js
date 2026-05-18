@@ -47,3 +47,14 @@ export const PORTAL_REPOSITORY_EXTENSION_METHODS = Object.freeze({
   profiles: ['findByUserId'],
   root: ['reset'],
 })
+
+export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
+  'booking_pipeline_snapshots',
+  'call_booking_metrics',
+  'compliance_reviews',
+  'location_performance',
+  'medical_approvals',
+  'patient_acquisition_snapshots',
+  'reputation_snapshots',
+  'service_line_performance',
+])

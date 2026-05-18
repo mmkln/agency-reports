@@ -20,6 +20,7 @@ src/app/providers/repositories/portalRepositoryContract.js
 That file defines:
 
 ```text
+- PORTAL_CLINIC_PUBLISH_STATE_TABLES
 - PORTAL_REPOSITORY_COLLECTIONS
 - PORTAL_TABLE_NAMES
 - PORTAL_REPOSITORY_KEYS
@@ -55,6 +56,7 @@ repository.reset() for local/demo environments only
 - Client routes must read published/client-safe records only.
 - Admin draft preview must be explicit and permission-checked.
 - Clinic records must remain aggregate-only; do not add patient-level fields for integrations.
+- Clinic aggregate tables listed in `PORTAL_CLINIC_PUBLISH_STATE_TABLES` must preserve draft/published boundaries.
 - Client responses must update `NeededFromClient` / request records, not internal `Task.status`.
 
 ## Verification
