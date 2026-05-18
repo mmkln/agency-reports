@@ -21,7 +21,7 @@ export function SectionCard({ action, children, className, contentClassName, des
             </span>
           ) : null}
           <div className="min-w-0">
-            <CardTitle className="truncate text-ui text-text-primary">{title}</CardTitle>
+            <CardTitle as="h2" className="truncate text-ui text-text-primary">{title}</CardTitle>
             {description ? <CardDescription className="mt-1">{description}</CardDescription> : null}
           </div>
         </div>
