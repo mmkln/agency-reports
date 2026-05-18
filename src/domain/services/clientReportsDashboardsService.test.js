@@ -10,7 +10,10 @@ import {
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
-import { getClientReportsDashboardsPage } from './clientReportsDashboardsService'
+import {
+  getClientReportsDashboardsFallbackTitle,
+  getClientReportsDashboardsPage,
+} from './clientReportsDashboardsService'
 
 const IDS = Object.freeze({
   CLIENT_A: '11111111-1111-4111-8111-111111111111',
@@ -153,6 +156,26 @@ function createAdminViewer(agencyId = 'agency-a') {
 }
 
 describe('getClientReportsDashboardsPage', () => {
+  it('returns a clinic-aware fallback title before the full results page loads', () => {
+    const title = getClientReportsDashboardsFallbackTitle({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: createEntityRepository([
+          {
+            agency_id: 'agency-a',
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            status: CLIENT_STATUSES.ON_TRACK,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ]),
+      }),
+    })
+
+    expect(title).toBe('Clinic Results')
+  })
+
   it('composes current performance, source dashboard, and report archive for clients', () => {
     const page = getClientReportsDashboardsPage({
       clientId: IDS.CLIENT_A,

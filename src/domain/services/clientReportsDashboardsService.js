@@ -41,6 +41,13 @@ function getResultsPageCopy(template) {
   return RESULTS_PAGE_COPY[template] ?? RESULTS_PAGE_COPY[CLIENT_TYPES.GENERIC]
 }
 
+export function getClientReportsDashboardsFallbackTitle({ clientId, repositories }) {
+  const client = clientId ? repositories.clients.findById(clientId) : null
+  const template = client?.type === CLIENT_TYPES.CLINIC ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC
+
+  return getResultsPageCopy(template).pageTitle
+}
+
 function createTrustContext({ copy, dashboardPage, performancePage, reportsPage }) {
   const performanceDashboard = performancePage.performanceDashboard
   const sourceDashboard = dashboardPage.dashboard
