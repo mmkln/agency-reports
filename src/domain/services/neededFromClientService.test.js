@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_TYPES } from '../../entities/client'
-import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
+import {
+  CLINIC_APPROVAL_STATUSES,
+  CLINIC_APPROVAL_TYPES,
+  CLINIC_COMPLIANCE_STATUSES,
+  CLINIC_RECORD_PUBLISH_STATES,
+} from '../../entities/clinic'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_PRIORITIES,
@@ -16,6 +21,8 @@ import {
   cancelNeededAction,
   createNeededAction,
   createNeededActionFromClinicBookingSuggestion,
+  createNeededActionFromClinicComplianceSuggestion,
+  createNeededActionFromClinicMedicalApprovalSuggestion,
   createNeededActionFromClinicReputationSuggestion,
   createNeededActionFromTask,
   createNeededActionFromWorkItem,
@@ -35,7 +42,9 @@ const IDS = Object.freeze({
   AGENCY: '44444444-4444-4444-8444-444444444444',
   CALL_BOOKING_METRIC: '99999999-9999-4999-8999-999999999999',
   CLIENT: '22222222-2222-4222-8222-222222222222',
+  COMPLIANCE_REVIEW: '12121212-1212-4212-8212-121212121212',
   LOCATION: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  MEDICAL_APPROVAL: '13131313-1313-4313-8313-131313131313',
   OTHER_CLIENT: '77777777-7777-4777-8777-777777777777',
   REPUTATION_SNAPSHOT: '88888888-8888-4888-8888-888888888888',
   SERVICE_LINE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
@@ -116,6 +125,36 @@ function createWorkflowRepositories(overrides = {}) {
         id: IDS.OTHER_CLIENT,
         name: 'Client B',
         type: CLIENT_TYPES.GENERIC,
+      },
+    ]),
+    complianceReviews: createEntityRepository([
+      {
+        blocked_items: 1,
+        client_id: IDS.CLIENT,
+        id: IDS.COMPLIANCE_REVIEW,
+        limited_ads: 1,
+        location_id: IDS.LOCATION,
+        open_issues: 2,
+        platform: 'Google Ads',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE,
+        status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+        title: 'Implants ads policy review',
+      },
+    ]),
+    medicalApprovals: createEntityRepository([
+      {
+        approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+        client_id: IDS.CLIENT,
+        due_date: '2026-05-20',
+        id: IDS.MEDICAL_APPROVAL,
+        instructions: 'Approve the medical claim wording.',
+        location_id: IDS.LOCATION,
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE,
+        status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+        title: 'Implant success-rate claim',
+        version: 'v1',
       },
     ]),
     callBookingMetrics: createEntityRepository([
@@ -679,6 +718,111 @@ describe('neededFromClientService', () => {
       suggestionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
       viewer: createAdminViewer(),
     })).toThrow('Clinic reputation suggestions can only be created from published snapshots.')
+  })
+
+  it('creates needed actions from clinic compliance review suggestions', () => {
+    const repositories = createWorkflowRepositories()
+
+    const action = createNeededActionFromClinicComplianceSuggestion({
+      idGenerator: () => IDS.ACTION,
+      now: () => '2026-05-17T12:00:00.000Z',
+      repositories,
+      complianceReviewId: IDS.COMPLIANCE_REVIEW,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+      viewer: createAdminViewer(),
+    })
+
+    expect(action).toMatchObject({
+      client_id: IDS.CLIENT,
+      clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+      impact_if_delayed: 'Ads, landing pages, or clinic growth campaigns may remain limited until the compliance issue is resolved.',
+      patient_impact: 'Clear compliant messaging helps prospective patients understand services without misleading claims.',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
+      related_campaign_name: 'Google Ads',
+      related_compliance_review_id: IDS.COMPLIANCE_REVIEW,
+      related_location_id: IDS.LOCATION,
+      related_service_line_id: IDS.SERVICE_LINE,
+      related_task_id: null,
+      related_work_item_id: null,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Resolve compliance review issue',
+      type: NEEDED_ACTION_TYPES.DECISION,
+      why_needed: 'Google Ads has 4 open, blocked, or limited compliance items.',
+    })
+  })
+
+  it('creates needed actions from clinic medical approval suggestions', () => {
+    const repositories = createWorkflowRepositories()
+
+    const action = createNeededActionFromClinicMedicalApprovalSuggestion({
+      idGenerator: () => IDS.ACTION,
+      now: () => '2026-05-17T12:00:00.000Z',
+      repositories,
+      medicalApprovalId: IDS.MEDICAL_APPROVAL,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+      viewer: createAdminViewer(),
+    })
+
+    expect(action).toMatchObject({
+      client_id: IDS.CLIENT,
+      clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+      description: 'Approve the medical claim wording.',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
+      related_location_id: IDS.LOCATION,
+      related_medical_approval_id: IDS.MEDICAL_APPROVAL,
+      related_service_line_id: IDS.SERVICE_LINE,
+      related_task_id: null,
+      related_work_item_id: null,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Approve: Implant success-rate claim',
+      type: NEEDED_ACTION_TYPES.APPROVAL,
+      why_needed: 'Approval is pending by 2026-05-20.',
+    })
+  })
+
+  it('rejects duplicate open clinic compliance and approval suggestion actions', () => {
+    const repositories = createWorkflowRepositories({
+      neededFromClient: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+          id: IDS.ACTION,
+          related_medical_approval_id: IDS.MEDICAL_APPROVAL,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Approve claim',
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicMedicalApprovalSuggestion({
+      idGenerator: () => '88888888-8888-4888-8888-888888888888',
+      repositories,
+      medicalApprovalId: IDS.MEDICAL_APPROVAL,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+      viewer: createAdminViewer(),
+    })).toThrow('An open clinic compliance action already exists for this suggestion.')
+  })
+
+  it('rejects clinic compliance suggestions from draft records', () => {
+    const repositories = createWorkflowRepositories({
+      complianceReviews: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.COMPLIANCE_REVIEW,
+          open_issues: 1,
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          title: 'Draft compliance review',
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicComplianceSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      complianceReviewId: IDS.COMPLIANCE_REVIEW,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+      viewer: createAdminViewer(),
+    })).toThrow('Clinic compliance suggestions can only be created from published reviews.')
   })
 
   it('links existing needed actions to a task and client work item', () => {

@@ -1,6 +1,8 @@
 import {
   CLINIC_RECORD_PUBLISH_STATES,
   normalizeCallBookingMetric,
+  normalizeComplianceReview,
+  normalizeMedicalApproval,
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
 import {
@@ -39,6 +41,14 @@ const VALID_CLINIC_BOOKING_SUGGESTION_TYPES = new Set([
 const VALID_CLINIC_REPUTATION_SUGGESTION_TYPES = new Set([
   CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
   CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+])
+const VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES = new Set([
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+  CLINIC_NEEDED_ACTION_TYPES.CONFIRM_SERVICE_PRICING,
+  CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING,
+  CLINIC_NEEDED_ACTION_TYPES.SEND_DOCTOR_BIO,
 ])
 const VALID_CLIENT_RESPONSE_STATUSES = new Set([
   NEEDED_ACTION_STATUSES.ANSWERED,
@@ -444,6 +454,60 @@ function getAdminReputationSnapshot({ repositories, reputationSnapshotId, viewer
   return normalizedSnapshot
 }
 
+function getAdminComplianceReview({ complianceReviewId, repositories, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const review = repositories.complianceReviews?.findById?.(complianceReviewId)
+
+  if (!review) {
+    throw new Error('Clinic compliance review was not found.')
+  }
+
+  const normalizedReview = normalizeComplianceReview(review)
+  const client = getAdminClient({
+    clientId: normalizedReview.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (client.type !== CLIENT_TYPES.CLINIC) {
+    throw new Error('Clinic compliance suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedReview.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic compliance suggestions can only be created from published reviews.')
+  }
+
+  return normalizedReview
+}
+
+function getAdminMedicalApproval({ medicalApprovalId, repositories, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const approval = repositories.medicalApprovals?.findById?.(medicalApprovalId)
+
+  if (!approval) {
+    throw new Error('Clinic medical approval was not found.')
+  }
+
+  const normalizedApproval = normalizeMedicalApproval(approval)
+  const client = getAdminClient({
+    clientId: normalizedApproval.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (client.type !== CLIENT_TYPES.CLINIC) {
+    throw new Error('Clinic medical approval suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedApproval.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic medical approval suggestions can only be created from published approvals.')
+  }
+
+  return normalizedApproval
+}
+
 function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
   const periodLabel = metric.period_label || 'the selected period'
 
@@ -544,6 +608,94 @@ function assertNoOpenClinicReputationSuggestionDuplicate({ repositories, snapsho
 
   if (duplicate) {
     throw new Error('An open clinic reputation action already exists for this suggestion.')
+  }
+}
+
+function getClinicComplianceSuggestionDefaults({ review, suggestionType }) {
+  const areaLabel = review.platform || review.title || 'the compliance review'
+  const openIssueCount = review.open_issues + review.blocked_items + review.limited_ads
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING) {
+    return {
+      complianceRisk: 'Tracking and privacy changes must avoid sending patient-level health data or PHI into analytics/ad platforms.',
+      description: 'Confirm the privacy/tracking setup, consent language, and whether the current configuration is approved for clinic marketing.',
+      impactIfDelayed: 'Campaign tracking or retargeting may remain paused or limited until privacy risk is resolved.',
+      patientImpact: 'Safer tracking keeps patient privacy protected while preserving aggregate reporting.',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
+      title: 'Confirm privacy and tracking setup',
+      type: NEEDED_ACTION_TYPES.DECISION,
+      whyNeeded: `${areaLabel} has ${openIssueCount} open, blocked, or limited compliance items.`,
+    }
+  }
+
+  return {
+    complianceRisk: 'Do not include patient examples, unsupported treatment claims, or patient identifiers in the portal workflow.',
+    description: 'Review the compliance issue, confirm what can be published, and provide the safest approved direction.',
+    impactIfDelayed: 'Ads, landing pages, or clinic growth campaigns may remain limited until the compliance issue is resolved.',
+    patientImpact: 'Clear compliant messaging helps prospective patients understand services without misleading claims.',
+    priority: review.blocked_items > 0 || review.open_issues >= 2
+      ? NEEDED_ACTION_PRIORITIES.HIGH
+      : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: 'Resolve compliance review issue',
+    type: NEEDED_ACTION_TYPES.DECISION,
+    whyNeeded: `${areaLabel} has ${openIssueCount} open, blocked, or limited compliance items.`,
+  }
+}
+
+function getClinicMedicalApprovalSuggestionDefaults({ approval, suggestionType }) {
+  const dueText = approval.due_date ? ` by ${approval.due_date}` : ''
+  const base = {
+    complianceRisk: 'The approval response must avoid patient identifiers and should only approve client-safe claim, copy, pricing, or policy language.',
+    description: approval.instructions || 'Review the pending medical approval and approve, request changes, or reject it with a client-safe comment.',
+    impactIfDelayed: 'Campaigns, landing pages, or medical claims may stay blocked until the clinic approves the item.',
+    patientImpact: 'Approved, accurate information helps patients understand the service and next step.',
+    priority: approval.due_date ? NEEDED_ACTION_PRIORITIES.HIGH : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: approval.title ? `Approve: ${approval.title}` : 'Approve medical content',
+    type: NEEDED_ACTION_TYPES.APPROVAL,
+    whyNeeded: `Approval is pending${dueText}.`,
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING) {
+    return {
+      ...base,
+      description: approval.instructions || 'Approve the privacy, consent, or tracking language before it is used.',
+      title: approval.title ? `Approve privacy/tracking: ${approval.title}` : 'Approve privacy and tracking setup',
+    }
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONFIRM_SERVICE_PRICING) {
+    return {
+      ...base,
+      title: approval.title ? `Confirm pricing: ${approval.title}` : 'Confirm treatment pricing',
+    }
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.SEND_DOCTOR_BIO) {
+    return {
+      ...base,
+      title: approval.title ? `Approve provider content: ${approval.title}` : 'Approve provider content',
+    }
+  }
+
+  return base
+}
+
+function assertNoOpenClinicComplianceSuggestionDuplicate({
+  complianceReviewId,
+  medicalApprovalId,
+  repositories,
+  suggestionType,
+  clientId,
+}) {
+  const duplicate = repositories.neededFromClient
+    .listByClientId(clientId)
+    .some((action) => isOpenNeededAction(action)
+      && action.clinic_action_type === suggestionType
+      && (!complianceReviewId || action.related_compliance_review_id === complianceReviewId)
+      && (!medicalApprovalId || action.related_medical_approval_id === medicalApprovalId))
+
+  if (duplicate) {
+    throw new Error('An open clinic compliance action already exists for this suggestion.')
   }
 }
 
@@ -850,6 +1002,107 @@ export function createNeededActionFromClinicReputationSuggestion({
       clinicActionType: suggestionType,
       relatedLocationId: snapshot.location_id,
       relatedReputationSnapshotId: snapshot.id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicComplianceSuggestion({
+  activityIdGenerator,
+  complianceReviewId,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic compliance suggestion type is invalid.')
+  }
+
+  const review = getAdminComplianceReview({
+    complianceReviewId,
+    repositories,
+    viewer,
+  })
+
+  assertNoOpenClinicComplianceSuggestionDuplicate({
+    clientId: review.client_id,
+    complianceReviewId: review.id,
+    repositories,
+    suggestionType,
+  })
+
+  const defaults = getClinicComplianceSuggestionDefaults({
+    review,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: review.client_id,
+      clinicActionType: suggestionType,
+      relatedCampaignName: review.platform,
+      relatedComplianceReviewId: review.id,
+      relatedLocationId: review.location_id,
+      relatedServiceLineId: review.service_line_id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicMedicalApprovalSuggestion({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  medicalApprovalId,
+  now = () => new Date().toISOString(),
+  repositories,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic medical approval suggestion type is invalid.')
+  }
+
+  const approval = getAdminMedicalApproval({
+    medicalApprovalId,
+    repositories,
+    viewer,
+  })
+
+  assertNoOpenClinicComplianceSuggestionDuplicate({
+    clientId: approval.client_id,
+    medicalApprovalId: approval.id,
+    repositories,
+    suggestionType,
+  })
+
+  const defaults = getClinicMedicalApprovalSuggestionDefaults({
+    approval,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: approval.client_id,
+      clinicActionType: suggestionType,
+      relatedLocationId: approval.location_id,
+      relatedMedicalApprovalId: approval.id,
+      relatedServiceLineId: approval.service_line_id,
       relatedTaskId: '',
       relatedWorkItemId: '',
     }),

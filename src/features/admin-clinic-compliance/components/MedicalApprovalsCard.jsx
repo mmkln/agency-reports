@@ -21,6 +21,7 @@ import {
   SelectItem,
   TextField,
 } from './ComplianceFields'
+import { ComplianceSuggestedActionButtons } from './ComplianceSuggestedActionButtons'
 
 function createBlankApproval() {
   return {
@@ -65,10 +66,13 @@ function getPublishLabel(record) {
 }
 
 export function MedicalApprovalsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
   onApplyDecision,
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -129,11 +133,14 @@ export function MedicalApprovalsCard({
         {draft.medicalApprovals.map((approval, index) => (
           <ApprovalEditor
             approval={approval}
+            createdActionKeys={createdActionKeys}
+            creatingActionKey={creatingActionKey}
             index={index}
             isDirty={isDirty}
             key={approval.id || `new-approval-${index}`}
             locations={locations}
             onApplyDecision={applyDecision}
+            onCreateSuggestedAction={onCreateSuggestedAction}
             onPublish={onPublish}
             onRemove={removeApproval}
             onUpdate={updateApproval}
@@ -147,10 +154,13 @@ export function MedicalApprovalsCard({
 
 function ApprovalEditor({
   approval,
+  createdActionKeys,
+  creatingActionKey,
   index,
   isDirty,
   locations,
   onApplyDecision,
+  onCreateSuggestedAction,
   onPublish,
   onRemove,
   onUpdate,
@@ -193,6 +203,16 @@ function ApprovalEditor({
           </Button>
         </div>
       </div>
+
+      <ComplianceSuggestedActionButtons
+        createdActionKeys={createdActionKeys}
+        creatingActionKey={creatingActionKey}
+        isDirty={isDirty}
+        onCreateSuggestedAction={onCreateSuggestedAction}
+        record={approval}
+        recordType="approval"
+        suggestions={approval.medical_approval_action_suggestions}
+      />
 
       <div className="grid gap-component md:grid-cols-3">
         <TextField

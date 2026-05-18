@@ -13,6 +13,7 @@ import {
   ClinicPublishReadinessNote,
 } from '../../admin-clinic-publish'
 import { ComplianceReviewStatusActions } from './ComplianceReviewStatusActions'
+import { ComplianceSuggestedActionButtons } from './ComplianceSuggestedActionButtons'
 import { PolicyIssuesEditor } from './PolicyIssuesEditor'
 import {
   NotesField,
@@ -48,10 +49,13 @@ function getPublishLabel(record) {
 }
 
 export function ComplianceReviewsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
   onApplyStatus = () => {},
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -131,6 +135,16 @@ export function ComplianceReviewsCard({
                 </Button>
               </div>
             </div>
+
+            <ComplianceSuggestedActionButtons
+              createdActionKeys={createdActionKeys}
+              creatingActionKey={creatingActionKey}
+              isDirty={isDirty}
+              onCreateSuggestedAction={onCreateSuggestedAction}
+              record={review}
+              recordType="review"
+              suggestions={review.compliance_action_suggestions}
+            />
 
             <div className="grid gap-component md:grid-cols-3">
               <TextField

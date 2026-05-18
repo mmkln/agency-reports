@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import {
+  createNeededActionFromClinicComplianceSuggestion,
+  createNeededActionFromClinicMedicalApprovalSuggestion,
+} from '../../domain/services/neededFromClientService'
+import {
   approveMedicalApproval,
   getAdminClinicCompliancePage,
   publishComplianceReview,
@@ -49,6 +53,8 @@ const PUBLISH_SERVICES = Object.freeze({
 export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [createdComplianceActionKeys, setCreatedComplianceActionKeys] = useState(() => new Set())
+  const [creatingComplianceActionKey, setCreatingComplianceActionKey] = useState('')
   const [importError, setImportError] = useState('')
   const [importPlan, setImportPlan] = useState(null)
   const [importRawJson, setImportRawJson] = useState('')
@@ -66,6 +72,8 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setCreatedComplianceActionKeys(new Set())
+        setCreatingComplianceActionKey('')
         setImportError('')
         setImportPlan(null)
         setImportRawJson('')
@@ -338,11 +346,50 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
       })
   }
 
+  function createComplianceSuggestionAction({ recordId, recordType, suggestionType }) {
+    const actionKey = `${recordId}:${suggestionType}`
+    const service = recordType === 'approval'
+      ? createNeededActionFromClinicMedicalApprovalSuggestion
+      : createNeededActionFromClinicComplianceSuggestion
+    const idKey = recordType === 'approval'
+      ? 'medicalApprovalId'
+      : 'complianceReviewId'
+
+    setCreatingComplianceActionKey(actionKey)
+    setSaveState('Creating action...')
+
+    runtime.dataClient.write((repositories) => service({
+      idGenerator: createUuid,
+      [idKey]: recordId,
+      repositories,
+      suggestionType,
+      viewer: runtime.viewer,
+    }))
+      .then((action) => {
+        setCreatedComplianceActionKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(actionKey)
+          return nextKeys
+        })
+        setCreatingComplianceActionKey('')
+        setSaveState('Action created')
+        toast.success('Clinic action created', action.title)
+      })
+      .catch((caughtError) => {
+        setCreatingComplianceActionKey('')
+        setSaveState('')
+        toast.error('Clinic action was not created', caughtError.message)
+      })
+  }
+
   return {
     applyImport,
     applyApprovalDecision,
     applyReviewStatus,
     closeImportDialog,
+    createdComplianceActionKeys,
+    createComplianceSuggestionAction,
+    creatingComplianceActionKey,
     draft: state.draft,
     error: state.error,
     importError,

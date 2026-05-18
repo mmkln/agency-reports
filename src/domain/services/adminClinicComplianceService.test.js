@@ -10,6 +10,11 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   approveMedicalApproval,
@@ -113,6 +118,7 @@ function createRepositories(overrides = {}) {
     ]),
     complianceReviews: createRepository([]),
     medicalApprovals: createRepository([]),
+    neededFromClient: createRepository([]),
     ...overrides,
   }
 }
@@ -179,13 +185,100 @@ describe('adminClinicComplianceService', () => {
     expect(page.locations).toHaveLength(1)
     expect(page.serviceLines).toHaveLength(1)
     expect(page.complianceReviews[0]).toMatchObject({
+      compliance_action_suggestions: [
+        {
+          hasOpenAction: false,
+          type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+        },
+      ],
       open_issues: 2,
       status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
     })
     expect(page.medicalApprovals[0]).toMatchObject({
       approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+      medical_approval_action_suggestions: [
+        {
+          defaultActionType: NEEDED_ACTION_TYPES.APPROVAL,
+          hasOpenAction: false,
+          type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+        },
+      ],
       status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
     })
+  })
+
+  it('marks existing open compliance and approval actions in suggestions', () => {
+    const repositories = createRepositories({
+      complianceReviews: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: IDS.REVIEW_A,
+          open_issues: 1,
+          policy_issues: [
+            {
+              status: CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+              type: CLINIC_POLICY_ISSUE_TYPES.PRIVACY_TRACKING,
+            },
+          ],
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+          status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+          title: 'Tracking policy review',
+        },
+      ]),
+      medicalApprovals: createRepository([
+        createApproval({
+          approval_type: CLINIC_APPROVAL_TYPES.LANDING_PAGE,
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        }),
+      ]),
+      neededFromClient: createRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING,
+          id: 'action-open-compliance',
+          related_compliance_review_id: IDS.REVIEW_A,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Confirm tracking',
+        },
+        {
+          client_id: IDS.CLIENT_A,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+          id: 'action-resolved-approval',
+          related_medical_approval_id: IDS.APPROVAL_A,
+          status: NEEDED_ACTION_STATUSES.RESOLVED,
+          title: 'Old landing page approval',
+        },
+      ]),
+    })
+
+    const page = getAdminClinicCompliancePage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(page.complianceReviews[0].compliance_action_suggestions).toEqual([
+      {
+        actionLabel: 'Create compliance action',
+        defaultActionType: NEEDED_ACTION_TYPES.DECISION,
+        hasOpenAction: true,
+        openAction: {
+          id: 'action-open-compliance',
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Confirm tracking',
+        },
+        type: CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING,
+      },
+    ])
+    expect(page.medicalApprovals[0].medical_approval_action_suggestions).toEqual([
+      {
+        actionLabel: 'Create approval action',
+        defaultActionType: NEEDED_ACTION_TYPES.APPROVAL,
+        hasOpenAction: false,
+        openAction: null,
+        type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+      },
+    ])
   })
 
   it('saves compliance reviews and medical approvals as aggregate records', () => {

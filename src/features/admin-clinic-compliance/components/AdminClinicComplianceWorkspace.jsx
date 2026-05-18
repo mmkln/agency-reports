@@ -40,6 +40,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
   const {
     applyApprovalDecision,
     applyReviewStatus,
+    createdComplianceActionKeys,
+    createComplianceSuggestionAction,
+    creatingComplianceActionKey,
     draft,
     error,
     importError,
@@ -129,19 +132,25 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
           </div>
 
           <ComplianceReviewsCard
+            createdActionKeys={createdComplianceActionKeys}
+            creatingActionKey={creatingComplianceActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
             onApplyStatus={applyReviewStatus}
+            onCreateSuggestedAction={createComplianceSuggestionAction}
             onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
           <MedicalApprovalsCard
+            createdActionKeys={createdComplianceActionKeys}
+            creatingActionKey={creatingComplianceActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
             onApplyDecision={applyApprovalDecision}
+            onCreateSuggestedAction={createComplianceSuggestionAction}
             onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
