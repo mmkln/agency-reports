@@ -280,6 +280,8 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Split the clinic report reader from the generic narrative report renderer.
 - [x] Add a clinic report scoreboard for inquiries, booked appointments, cost per booked appointment, and Google rating.
 - [x] Use clinic-specific source dashboard and report-file evidence copy with safe fallbacks.
+- [x] Rename the clinic client results surface copy to Clinic Results / Clinic results hub while preserving generic Reports & Dashboards copy for non-clinic clients.
+- [x] Use Clinic Data Trust copy for clinic results trust context.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.
 

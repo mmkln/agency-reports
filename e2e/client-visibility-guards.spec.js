@@ -182,7 +182,7 @@ test('client mature routes hide internal and draft records from persisted data',
   await expect(page.getByRole('heading', { name: 'Business-value analytics' })).toBeVisible()
   const trustContext = page.locator('#results-trust-context')
 
-  await expect(trustContext.getByRole('heading', { name: 'Data Trust Context' })).toBeVisible()
+  await expect(trustContext.getByRole('heading', { name: 'Clinic Data Trust' })).toBeVisible()
   await expect(trustContext.getByText('Last updated')).toBeVisible()
   await expect(trustContext.getByText('Confidence', { exact: true })).toBeVisible()
   await expect(trustContext.getByText('Medium confidence')).toBeVisible()

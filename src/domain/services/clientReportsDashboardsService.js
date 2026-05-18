@@ -1,9 +1,33 @@
+import { CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import { getClientDashboardPage } from './clientDashboardService'
 import { getClientPerformanceDashboardPage } from './clientPerformanceDashboardService'
 import { getClientReportsPage } from './clientReportsService'
 
-function createTrustContext({ dashboardPage, performancePage, reportsPage }) {
+const RESULTS_PAGE_COPY = Object.freeze({
+  [CLIENT_TYPES.CLINIC]: {
+    headerDescription: 'Patient acquisition reports, source dashboards, and published clinic growth summaries in one results area.',
+    headerEyebrow: 'Clinic results hub',
+    pageTitle: 'Clinic Results',
+    selectedReportTitle: 'Clinic growth report',
+    trustSubtitle: 'Aggregate source status, freshness, and interpretation caveats before clinic results are used for decisions.',
+    trustTitle: 'Clinic Data Trust',
+  },
+  [CLIENT_TYPES.GENERIC]: {
+    headerDescription: 'Current performance, source dashboards, and published reports in one client-facing results area.',
+    headerEyebrow: 'Reports & Dashboards',
+    pageTitle: 'Reports & Dashboards',
+    selectedReportTitle: 'Narrative report',
+    trustSubtitle: 'Data freshness, source status, and interpretation caveats before the raw dashboard.',
+    trustTitle: 'Data Trust Context',
+  },
+})
+
+function getResultsPageCopy(template) {
+  return RESULTS_PAGE_COPY[template] ?? RESULTS_PAGE_COPY[CLIENT_TYPES.GENERIC]
+}
+
+function createTrustContext({ copy, dashboardPage, performancePage, reportsPage }) {
   const performanceDashboard = performancePage.performanceDashboard
   const sourceDashboard = dashboardPage.dashboard
   const latestReport = reportsPage.latestReport
@@ -36,6 +60,10 @@ function createTrustContext({ dashboardPage, performancePage, reportsPage }) {
   return {
     attributionNote: performanceDashboard?.attributionNote ?? '',
     caveats,
+    copy: {
+      subtitle: copy.trustSubtitle,
+      title: copy.trustTitle,
+    },
     dataConfidence: performanceDashboard?.dataConfidence ?? null,
     dataConfidenceMeta: performanceDashboard?.dataConfidenceMeta ?? null,
     dataFreshness: performanceDashboard?.freshness ?? null,
@@ -121,13 +149,20 @@ export function getClientReportsDashboardsPage({
     }
   }
 
+  const client = reportsPage.client ?? performancePage.client ?? dashboardPage.client
+  const template = client?.type === CLIENT_TYPES.CLINIC ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC
+  const copy = getResultsPageCopy(template)
+
   return {
-    client: performancePage.client ?? dashboardPage.client ?? reportsPage.client,
+    client,
+    copy,
     dashboardPage,
     performancePage,
     reportsPage,
     status: 'ready',
+    template,
     trustContext: createTrustContext({
+      copy,
       dashboardPage,
       performancePage,
       reportsPage,

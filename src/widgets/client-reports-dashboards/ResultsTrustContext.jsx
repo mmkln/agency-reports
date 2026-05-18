@@ -31,8 +31,8 @@ export function ResultsTrustContext({ trustContext }) {
   return (
     <Panel id="results-trust-context">
       <PanelHeader
-        subtitle="Data freshness, source status, and interpretation caveats before the raw dashboard."
-        title="Data Trust Context"
+        subtitle={trustContext.copy?.subtitle ?? 'Data freshness, source status, and interpretation caveats before the raw dashboard.'}
+        title={trustContext.copy?.title ?? 'Data Trust Context'}
       />
       <PanelBody className="grid gap-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

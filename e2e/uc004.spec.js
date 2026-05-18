@@ -154,9 +154,9 @@ test('agency admin creates a draft performance dashboard and enters structured d
 
 test('client can view published performance dashboard but cannot view draft or another client dashboard', async ({ page }) => {
   await signInAsClient(page)
-  await expect(page.getByText('Reports & Dashboards').first()).toBeVisible()
+  await expect(page.getByText('Clinic Reports').first()).toBeVisible()
   await expect(page.getByText('Qualified Leads').first()).toBeVisible()
-  await expect(page.getByRole('link', { name: 'View results' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'View clinic reports' })).toHaveAttribute(
     'href',
     new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`),
   )

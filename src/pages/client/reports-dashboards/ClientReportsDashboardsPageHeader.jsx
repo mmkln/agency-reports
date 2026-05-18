@@ -44,7 +44,7 @@ export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {
   return (
     <PageHeader
       actions={<HeaderActions page={page} />}
-      title="Reports & Dashboards"
+      title={page.copy.pageTitle}
       width={activeRoute?.contentWidth}
     />
   )

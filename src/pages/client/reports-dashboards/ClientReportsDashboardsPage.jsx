@@ -97,7 +97,7 @@ export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
       <CurrentPerformanceSection mode={mode} performancePage={page.performancePage} />
       <ResultsTrustContext trustContext={page.trustContext} />
       <SourceDashboardSection clientId={clientId} dashboardPage={page.dashboardPage} />
-      <SelectedReportSection clientId={clientId} reportsPage={page.reportsPage} />
+      <SelectedReportSection clientId={clientId} copy={page.copy} reportsPage={page.reportsPage} />
       <ReportArchiveSection clientId={clientId} reportsPage={page.reportsPage} />
     </div>
   )

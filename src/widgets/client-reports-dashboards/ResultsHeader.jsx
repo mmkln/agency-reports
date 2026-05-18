@@ -15,10 +15,10 @@ export function ResultsHeader({ page }) {
     <Panel>
       <PanelBody className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
-          <p className="text-label text-text-muted">Reports & Dashboards</p>
+          <p className="text-label text-text-muted">{page.copy.headerEyebrow}</p>
           <h2 className="mt-2 text-heading text-text-primary">{page.client.name}</h2>
           <p className="mt-2 max-w-readable text-body text-text-secondary">
-            Current performance, source dashboards, and published reports in one client-facing results area.
+            {page.copy.headerDescription}
           </p>
         </div>
         <div className="flex flex-wrap gap-tag lg:justify-end">

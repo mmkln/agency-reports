@@ -170,7 +170,7 @@ function ReportReader({ report }) {
   )
 }
 
-export function SelectedReportSection({ clientId, reportsPage }) {
+export function SelectedReportSection({ clientId, copy, reportsPage }) {
   if (reportsPage.reason === 'report_not_found') {
     return (
       <Panel>
@@ -199,14 +199,15 @@ export function SelectedReportSection({ clientId, reportsPage }) {
   }
 
   const selectedReport = reportsPage.selectedReport
-  const isClinicReport = selectedReport.template === 'clinic' && selectedReport.clinicSections
+  const selectedReportTitle = copy?.selectedReportTitle
+    ?? (selectedReport.template === 'clinic' && selectedReport.clinicSections ? 'Clinic growth report' : 'Narrative report')
 
   return (
     <section className="grid gap-4" id="selected-report">
       <div>
         <p className="text-label text-text-muted">Selected Report</p>
         <h2 className="mt-1 text-heading text-text-primary">
-          {isClinicReport ? 'Clinic growth report' : 'Narrative report'}
+          {selectedReportTitle}
         </h2>
       </div>
       <ReportPreviewNotice report={selectedReport} />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import {
   PERFORMANCE_DASHBOARD_STATUSES,
@@ -165,6 +165,11 @@ describe('getClientReportsDashboardsPage', () => {
       id: IDS.CLIENT_A,
       name: 'Client A',
     })
+    expect(page.copy).toMatchObject({
+      pageTitle: 'Reports & Dashboards',
+      trustTitle: 'Data Trust Context',
+    })
+    expect(page.template).toBe(CLIENT_TYPES.GENERIC)
     expect(page.performancePage.performanceDashboard).toMatchObject({
       id: IDS.PERIOD_PUBLISHED,
       title: 'April Performance',
@@ -195,6 +200,37 @@ describe('getClientReportsDashboardsPage', () => {
     ])
     expect(JSON.stringify(page)).not.toContain('Draft Dashboard')
     expect(JSON.stringify(page)).not.toContain('May Draft Performance')
+  })
+
+  it('uses clinic results copy for clinic clients', () => {
+    const page = getClientReportsDashboardsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: createEntityRepository([
+          {
+            agency_id: 'agency-a',
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            status: CLIENT_STATUSES.ON_TRACK,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.template).toBe(CLIENT_TYPES.CLINIC)
+    expect(page.copy).toMatchObject({
+      headerEyebrow: 'Clinic results hub',
+      pageTitle: 'Clinic Results',
+      selectedReportTitle: 'Clinic growth report',
+      trustTitle: 'Clinic Data Trust',
+    })
+    expect(page.trustContext.copy).toMatchObject({
+      title: 'Clinic Data Trust',
+    })
   })
 
   it('surfaces stale and low-confidence trust context without using hidden draft analytics', () => {
