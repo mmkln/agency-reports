@@ -391,6 +391,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Add e2e for wrong-section and PHI-blocked clinic import previews.
 - [x] Add unit tests for clinic publish readiness policies.
 - [x] Add e2e coverage for admin clinic publish readiness indicators.
+- [x] Add e2e coverage for admin clinic suggested actions and duplicate-open-action states.
 - [x] Run `npx eslint src`.
 - [x] Run `npm test`.
 - [x] Run `npm run build`.
