@@ -246,6 +246,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Recording decision...')
 
     runtime.dataClient.write((repositories) => service({
+      activityIdGenerator: createUuid,
       approvalId,
       clientId,
       input: {
@@ -281,6 +282,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Updating status...')
 
     runtime.dataClient.write((repositories) => transitionComplianceReviewStatus({
+      activityIdGenerator: createUuid,
       clientId,
       nextStatus,
       repositories,
@@ -319,6 +321,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Publishing...')
 
     runtime.dataClient.write((repositories) => service({
+      activityIdGenerator: createUuid,
       clientId,
       id,
       repositories,

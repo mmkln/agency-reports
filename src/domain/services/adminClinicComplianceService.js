@@ -27,6 +27,10 @@ import {
   getComplianceReviewPublishReadiness,
   getMedicalApprovalPublishReadiness,
 } from '../policies/clinicPublishReadinessPolicy'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
 const VALID_APPROVAL_TYPES = new Set(Object.values(CLINIC_APPROVAL_TYPES))
@@ -90,6 +94,30 @@ const COMPLIANCE_RECORD_READINESS = Object.freeze({
   approval: getMedicalApprovalPublishReadiness,
   review: getComplianceReviewPublishReadiness,
 })
+
+function recordClinicComplianceActivity({
+  activityIdGenerator,
+  clientId,
+  eventType,
+  metadata,
+  now,
+  repositories,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId,
+    eventType,
+    idGenerator: activityIdGenerator,
+    metadata,
+    now,
+    repositories,
+    viewer,
+  })
+}
 const OPEN_NEEDED_ACTION_STATUSES = new Set([
   NEEDED_ACTION_STATUSES.ANSWERED,
   NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
@@ -568,6 +596,7 @@ function getEditableComplianceReview({ clientId, repositories, reviewId, viewer 
 }
 
 function publishClinicComplianceRecord({
+  activityIdGenerator,
   clientId,
   id,
   normalize,
@@ -588,6 +617,7 @@ function publishClinicComplianceRecord({
   const timestamp = now()
   const normalizedRecord = normalize(existingRecord)
   assertClinicPublishReady(readiness(normalizedRecord))
+  const recordType = repository === repositories.medicalApprovals ? 'medical_approval' : 'compliance_review'
 
   repository.upsert(normalize({
     ...normalizedRecord,
@@ -596,6 +626,20 @@ function publishClinicComplianceRecord({
     published_by: normalizedRecord.published_by ?? viewer.userId ?? null,
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_RECORD_PUBLISHED,
+    metadata: {
+      recordId: normalizedRecord.id,
+      recordType,
+      status: normalizedRecord.status,
+      title: normalizedRecord.title,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
@@ -667,6 +711,7 @@ export function getComplianceReviewTransitionCapabilities(review) {
 }
 
 export function transitionComplianceReviewStatus({
+  activityIdGenerator,
   clientId,
   input = {},
   nextStatus,
@@ -702,11 +747,27 @@ export function transitionComplianceReviewStatus({
     ],
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_STATUS_CHANGED,
+    metadata: {
+      fromStatus: review.status,
+      recordId: review.id,
+      recordType: 'compliance_review',
+      status: nextStatus,
+      title: review.title,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
 
 function transitionMedicalApproval({
+  activityIdGenerator,
   approvalId,
   clientId,
   input,
@@ -751,6 +812,23 @@ function transitionMedicalApproval({
     status: nextStatus,
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_MEDICAL_APPROVAL_DECIDED,
+    metadata: {
+      approvalType: approval.approval_type,
+      fromStatus: approval.status,
+      recordId: approval.id,
+      recordType: 'medical_approval',
+      status: nextStatus,
+      title: approval.title,
+      version,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }

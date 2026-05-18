@@ -122,6 +122,16 @@ The contract tests verify:
 
 `portalRepositoryContract.test-support.js` exports a reusable suite. Any future API/Supabase adapter must run through the same suite before product workflows are switched to it.
 
+Current domain audit hooks:
+
+```text
+- client work item publish/archive transitions record activity events when an activity repository is configured
+- client request and needed-from-client lifecycle changes record activity events when configured
+- clinic compliance publish, compliance status change, and medical approval decision transitions record internal activity events when configured
+```
+
+These hooks are still repository-backed frontend/domain behavior. The production backend must persist equivalent events server-side and enforce the same access boundaries.
+
 ## Next Backend Steps
 
 - [ ] Add a real API/Supabase adapter that implements `PORTAL_REPOSITORY_COLLECTIONS`.
@@ -132,5 +142,6 @@ The contract tests verify:
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
+- [x] Add frontend/domain audit hooks for clinic compliance publish/status/approval transitions.
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
 - [ ] Replace demo reset behavior with environment-gated admin/dev tooling.

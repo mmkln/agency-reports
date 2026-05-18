@@ -27,6 +27,7 @@ import {
   saveAdminClinicCompliance,
   transitionComplianceReviewStatus,
 } from './adminClinicComplianceService'
+import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 
 const IDS = Object.freeze({
   AGENCY_A: '11111111-1111-4111-8111-111111111111',
@@ -377,7 +378,12 @@ describe('adminClinicComplianceService', () => {
   })
 
   it('publishes compliance reviews and medical approvals with audit metadata', () => {
+    const activityIds = [
+      '99999999-9999-4999-8999-999999999991',
+      '99999999-9999-4999-8999-999999999992',
+    ]
     const repositories = createRepositories({
+      activityEvents: createRepository([]),
       complianceReviews: createRepository([
         {
           client_id: IDS.CLIENT_A,
@@ -396,6 +402,7 @@ describe('adminClinicComplianceService', () => {
     })
 
     const reviewPage = publishComplianceReview({
+      activityIdGenerator: () => activityIds.shift(),
       clientId: IDS.CLIENT_A,
       now: () => '2026-05-18T10:00:00.000Z',
       repositories,
@@ -403,6 +410,7 @@ describe('adminClinicComplianceService', () => {
       viewer: createAdminViewer(),
     })
     const approvalPage = publishMedicalApproval({
+      activityIdGenerator: () => activityIds.shift(),
       approvalId: IDS.APPROVAL_A,
       clientId: IDS.CLIENT_A,
       now: () => '2026-05-18T10:30:00.000Z',
@@ -419,6 +427,26 @@ describe('adminClinicComplianceService', () => {
       publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
       published_at: '2026-05-18T10:30:00.000Z',
       published_by: 'admin-user-id',
+    })
+    expect(repositories.activityEvents.list().map((event) => event.event_type)).toEqual([
+      ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_RECORD_PUBLISHED,
+      ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_RECORD_PUBLISHED,
+    ])
+    expect(repositories.activityEvents.list()[0]).toMatchObject({
+      client_id: IDS.CLIENT_A,
+      metadata: {
+        recordId: IDS.REVIEW_A,
+        recordType: 'compliance_review',
+        status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+        title: 'Tracking review',
+      },
+      user_id: 'admin-user-id',
+    })
+    expect(repositories.activityEvents.list()[1]).toMatchObject({
+      metadata: {
+        recordId: IDS.APPROVAL_A,
+        recordType: 'medical_approval',
+      },
     })
   })
 
@@ -478,6 +506,7 @@ describe('adminClinicComplianceService', () => {
 
   it('changes compliance review status through audited domain transitions only', () => {
     const repositories = createRepositories({
+      activityEvents: createRepository([]),
       complianceReviews: createRepository([
         {
           client_id: IDS.CLIENT_A,
@@ -490,6 +519,7 @@ describe('adminClinicComplianceService', () => {
     })
 
     const reviewPage = transitionComplianceReviewStatus({
+      activityIdGenerator: () => '99999999-9999-4999-8999-999999999993',
       clientId: IDS.CLIENT_A,
       input: {
         note: 'Review started before campaign launch.',
@@ -513,6 +543,16 @@ describe('adminClinicComplianceService', () => {
           to_status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
         }),
       ],
+    })
+    expect(repositories.activityEvents.list()[0]).toMatchObject({
+      event_type: ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_STATUS_CHANGED,
+      metadata: {
+        fromStatus: CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+        recordId: IDS.REVIEW_A,
+        recordType: 'compliance_review',
+        status: CLINIC_COMPLIANCE_STATUSES.IN_REVIEW,
+        title: 'Implants tracking policy review',
+      },
     })
 
     expect(() => saveAdminClinicCompliance({
@@ -637,10 +677,12 @@ describe('adminClinicComplianceService', () => {
 
   it('approves medical approvals with actor, timestamp, version, and history', () => {
     const repositories = createRepositories({
+      activityEvents: createRepository([]),
       medicalApprovals: createRepository([createApproval()]),
     })
 
     const page = approveMedicalApproval({
+      activityIdGenerator: () => '99999999-9999-4999-8999-999999999994',
       approvalId: IDS.APPROVAL_A,
       clientId: IDS.CLIENT_A,
       input: {
@@ -667,6 +709,18 @@ describe('adminClinicComplianceService', () => {
         version: 'v2',
       }),
     ])
+    expect(repositories.activityEvents.list()[0]).toMatchObject({
+      event_type: ACTIVITY_EVENT_TYPES.CLINIC_MEDICAL_APPROVAL_DECIDED,
+      metadata: {
+        approvalType: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+        fromStatus: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+        recordId: IDS.APPROVAL_A,
+        recordType: 'medical_approval',
+        status: CLINIC_APPROVAL_STATUSES.APPROVED,
+        title: 'Implant success-rate claim',
+        version: 'v2',
+      },
+    })
   })
 
   it('requests changes and rejects medical approvals with required comments', () => {

@@ -256,6 +256,9 @@ describe('activityTrackingService', () => {
 
   it('keeps internal review events out of the client-visible activity policy', () => {
     expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_READY_FOR_REVIEW)).toBe(false)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_RECORD_PUBLISHED)).toBe(false)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_STATUS_CHANGED)).toBe(false)
+    expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLINIC_MEDICAL_APPROVAL_DECIDED)).toBe(false)
     expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.OVERVIEW_OPENED)).toBe(false)
     expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_WORK_ITEM_PUBLISHED)).toBe(true)
     expect(isActivityEventVisibleToClient(ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_RESOLVED)).toBe(true)
