@@ -121,7 +121,7 @@ Mark items as complete only after code, tests, and documentation for that item a
   - [x] channel
   - [x] date range / reporting period
 - [x] Add leakage insight section.
-- [ ] Add source/dashboard links when available.
+- [x] Add source/dashboard links when available.
 - [x] Add tests for filtering and client isolation.
 
 ## Phase 5 - Calls & Bookings

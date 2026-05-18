@@ -119,10 +119,19 @@ function SnapshotCard({ snapshot }) {
 }
 
 function SourceContext({ page }) {
+  const dataSources = [
+    ...page.snapshots,
+    ...(page.pipelineSnapshots ?? []),
+  ]
+    .map((snapshot) => snapshot.dataSource)
+    .filter(Boolean)
+  const uniqueDataSources = [...new Set(dataSources)]
+  const sourceLinks = (page.sourceLinks ?? []).filter((sourceLink) => sourceLink.publicUrl || sourceLink.embedUrl)
+
   return (
     <Panel>
       <PanelHeader title="Data Freshness" />
-      <PanelBody>
+      <PanelBody className="grid gap-component">
         <PropertyGrid
           columns={3}
           items={[
@@ -132,7 +141,7 @@ function SourceContext({ page }) {
             },
             {
               label: 'Data mode',
-              value: 'Manual aggregate import',
+              value: uniqueDataSources.join(', ') || 'Manual aggregate import',
             },
             {
               label: 'Privacy boundary',
@@ -140,6 +149,24 @@ function SourceContext({ page }) {
             },
           ]}
         />
+        {sourceLinks.length ? (
+          <div className="grid gap-item">
+            <p className="text-label font-semibold text-text-primary">Source dashboards</p>
+            <div className="grid gap-2">
+              {sourceLinks.map((sourceLink) => (
+                <a
+                  className="text-ui text-accent hover:underline"
+                  href={sourceLink.publicUrl || sourceLink.embedUrl}
+                  key={sourceLink.id}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {sourceLink.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </PanelBody>
     </Panel>
   )
@@ -162,6 +189,12 @@ export function ClientPatientAcquisitionView({ page }) {
               key: 'service_line_id',
               label: 'Service line',
               options: page.filters?.availableServiceLines,
+            },
+            {
+              allLabel: 'All campaigns',
+              key: 'campaign_name',
+              label: 'Campaign',
+              options: page.filters?.availableCampaigns,
             },
             {
               allLabel: 'All channels',
@@ -202,6 +235,12 @@ export function ClientPatientAcquisitionView({ page }) {
             key: 'service_line_id',
             label: 'Service line',
             options: page.filters?.availableServiceLines,
+          },
+          {
+            allLabel: 'All campaigns',
+            key: 'campaign_name',
+            label: 'Campaign',
+            options: page.filters?.availableCampaigns,
           },
           {
             allLabel: 'All channels',

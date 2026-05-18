@@ -641,7 +641,18 @@ describe('clinicClientService', () => {
   it('returns aggregate patient acquisition totals and funnel data', () => {
     const page = getClientPatientAcquisitionPage({
       clientId: IDS.CLIENT_A,
-      repositories: createRepositories(),
+      repositories: createRepositories({
+        dashboardLinks: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            client_visible: true,
+            id: 'f1f1f1f1-f1f1-41f1-81f1-f1f1f1f1f1f1',
+            name: 'Patient acquisition dashboard',
+            public_url: 'https://lookerstudio.google.com/reporting/example',
+            status: 'active',
+          },
+        ]),
+      }),
       viewer: createClientViewer(),
     })
 
@@ -671,6 +682,10 @@ describe('clinicClientService', () => {
       bookedAppointments: 16,
       missedCalls: 4,
       noResponseLeads: 2,
+    })
+    expect(page.sourceLinks[0]).toMatchObject({
+      name: 'Patient acquisition dashboard',
+      publicUrl: 'https://lookerstudio.google.com/reporting/example',
     })
     expect(page.snapshots[0]).toMatchObject({
       channelMeta: {

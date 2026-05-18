@@ -1,4 +1,5 @@
 import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import {
   CLINIC_ACQUISITION_CHANNEL_META,
   CLINIC_APPROVAL_STATUS_META,
@@ -26,6 +27,7 @@ import {
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { isDashboardVisibleToClient } from '../policies/visibilityPolicy'
 import { listClientNeededActions } from './neededFromClientService'
 
 function sortRawByDisplayOrder(left, right) {
@@ -87,6 +89,22 @@ function mapProfile(profile) {
     specialty: normalizedProfile.specialty,
     specialtyMeta: CLINIC_PROFILE_SPECIALTY_META[normalizedProfile.specialty],
     updatedAt: normalizedProfile.updated_at,
+  }
+}
+
+function mapSourceDashboardLink(dashboardLink) {
+  return {
+    description: dashboardLink.description ?? '',
+    embedUrl: dashboardLink.embed_url ?? '',
+    id: dashboardLink.id,
+    name: dashboardLink.name,
+    provider: dashboardLink.provider,
+    publicUrl: dashboardLink.public_url ?? '',
+    status: dashboardLink.status,
+    statusMeta: DASHBOARD_LINK_STATUS_META[dashboardLink.status] ?? {
+      label: dashboardLink.status,
+      tone: 'neutral',
+    },
   }
 }
 
@@ -1128,6 +1146,9 @@ export function getClientPatientAcquisitionPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,
+    sourceLinks: (input.repositories.dashboardLinks?.listByClientId(input.clientId) ?? [])
+      .filter(isDashboardVisibleToClient)
+      .map(mapSourceDashboardLink),
     source: foundationPage.source,
     status: 'ready',
     totals: {
