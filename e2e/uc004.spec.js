@@ -180,7 +180,7 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByRole('heading', { name: 'Data may be stale' })).toBeVisible()
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_DRAFT_MAY}`)
-  await expect(page.getByText('Current performance is being prepared')).toBeVisible()
+  await expect(page.getByText('Clinic performance is being prepared')).toBeVisible()
   await expect(page.getByText('May 2026 Draft Performance')).toHaveCount(0)
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)

@@ -6,6 +6,11 @@ import { getClientReportsPage } from './clientReportsService'
 
 const RESULTS_PAGE_COPY = Object.freeze({
   [CLIENT_TYPES.CLINIC]: {
+    currentPerformanceEmptyDescription: 'Published patient acquisition metrics, booking outcomes, trends, and interpretation will appear here after agency review.',
+    currentPerformanceEmptyTitle: 'Clinic performance is being prepared',
+    currentPerformanceEyebrow: 'Clinic Performance',
+    currentPerformanceSubtitle: 'The agency has not published interpreted clinic analytics for this client yet.',
+    currentPerformanceTitle: 'Patient acquisition analytics',
     headerDescription: 'Patient acquisition reports, source dashboards, and published clinic growth summaries in one results area.',
     headerEyebrow: 'Clinic results hub',
     pageTitle: 'Clinic Results',
@@ -14,6 +19,11 @@ const RESULTS_PAGE_COPY = Object.freeze({
     trustTitle: 'Clinic Data Trust',
   },
   [CLIENT_TYPES.GENERIC]: {
+    currentPerformanceEmptyDescription: 'Published outcome metrics, goals, trends, and interpretation will appear here after agency review.',
+    currentPerformanceEmptyTitle: 'Current performance is being prepared',
+    currentPerformanceEyebrow: 'Current Performance',
+    currentPerformanceSubtitle: 'The agency has not published interpreted analytics for this client yet.',
+    currentPerformanceTitle: 'Business-value analytics',
     headerDescription: 'Current performance, source dashboards, and published reports in one client-facing results area.',
     headerEyebrow: 'Reports & Dashboards',
     pageTitle: 'Reports & Dashboards',

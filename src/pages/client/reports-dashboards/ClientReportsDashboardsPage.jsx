@@ -94,7 +94,7 @@ export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
   return (
     <div className="grid gap-6">
       <ResultsHeader page={page} />
-      <CurrentPerformanceSection mode={mode} performancePage={page.performancePage} />
+      <CurrentPerformanceSection copy={page.copy} mode={mode} performancePage={page.performancePage} />
       <ResultsTrustContext trustContext={page.trustContext} />
       <SourceDashboardSection clientId={clientId} dashboardPage={page.dashboardPage} />
       <SelectedReportSection clientId={clientId} copy={page.copy} reportsPage={page.reportsPage} />

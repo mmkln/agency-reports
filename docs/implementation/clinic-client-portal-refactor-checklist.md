@@ -282,6 +282,7 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Use clinic-specific source dashboard and report-file evidence copy with safe fallbacks.
 - [x] Rename the clinic client results surface copy to Clinic Results / Clinic results hub while preserving generic Reports & Dashboards copy for non-clinic clients.
 - [x] Use Clinic Data Trust copy for clinic results trust context.
+- [x] Use clinic-specific current performance copy: Clinic Performance / Patient acquisition analytics.
 - [x] Preserve generic report rendering for non-clinic clients if templates coexist.
 - [x] Add tests for draft/published clinic report visibility.
 

@@ -179,7 +179,7 @@ test('client mature routes hide internal and draft records from persisted data',
   await expect(page.getByText('E2E Internal Client Update')).toHaveCount(0)
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
-  await expect(page.getByRole('heading', { name: 'Business-value analytics' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient acquisition analytics' })).toBeVisible()
   const trustContext = page.locator('#results-trust-context')
 
   await expect(trustContext.getByRole('heading', { name: 'Clinic Data Trust' })).toBeVisible()

@@ -166,6 +166,7 @@ describe('getClientReportsDashboardsPage', () => {
       name: 'Client A',
     })
     expect(page.copy).toMatchObject({
+      currentPerformanceTitle: 'Business-value analytics',
       pageTitle: 'Reports & Dashboards',
       trustTitle: 'Data Trust Context',
     })
@@ -223,6 +224,8 @@ describe('getClientReportsDashboardsPage', () => {
     expect(page.status).toBe('ready')
     expect(page.template).toBe(CLIENT_TYPES.CLINIC)
     expect(page.copy).toMatchObject({
+      currentPerformanceEyebrow: 'Clinic Performance',
+      currentPerformanceTitle: 'Patient acquisition analytics',
       headerEyebrow: 'Clinic results hub',
       pageTitle: 'Clinic Results',
       selectedReportTitle: 'Clinic growth report',
