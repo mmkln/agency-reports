@@ -65,22 +65,27 @@ Current contract coverage:
 
 ```text
 src/app/providers/repositories/portalRepositoryContract.test.js
+src/app/providers/repositories/portalRepositoryContract.test-support.js
 ```
 
-The test verifies:
+The contract tests verify:
 
 ```text
 - repository keys are unique
 - table names are unique
 - localStorage adapter implements every contract collection
 - every collection exposes required entity methods
+- every collection can round-trip records through upsert/list/find/listByClientId/deleteById
 - extension methods remain explicit
 ```
+
+`portalRepositoryContract.test-support.js` exports a reusable suite. Any future API/Supabase adapter must run through the same suite before product workflows are switched to it.
 
 ## Next Backend Steps
 
 - [ ] Add a real API/Supabase adapter that implements `PORTAL_REPOSITORY_COLLECTIONS`.
-- [ ] Add contract tests that run against both localStorage and the API/Supabase adapter.
+- [x] Add reusable contract tests for repository adapter behavior.
+- [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
