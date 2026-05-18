@@ -3,6 +3,10 @@ import { expect, test } from '@playwright/test'
 import { PORTAL_STORAGE_KEY } from '../src/app/providers/repositories/createLocalStoragePortalRepository.js'
 import { SEED_IDS } from '../src/app/providers/repositories/portalSeedData.js'
 import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/services/authService.js'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+} from '../src/entities/needed-from-client/index.js'
 
 const ADMIN_EMAIL = 'admin@growthlab.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
@@ -91,7 +95,8 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await expect(page.getByRole('heading', { name: 'Service Line Performance' })).toBeVisible()
   await expect(page.getByText('without storing PHI.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save metrics' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Create missed-call action' }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Action exists' }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create call script action' }).first()).toBeVisible()
   await expect(page.getByText('Ready to publish').first()).toBeVisible()
 
   await expect(page.getByRole('link', { name: 'Published acquisition' })).toHaveAttribute(
@@ -110,6 +115,81 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await page.getByRole('link', { name: 'Draft calls' }).click()
   await expect(page).toHaveURL(/\/admin\/client-calls-bookings-preview/)
   await expect(page.locator('h1').getByText('Calls & Bookings', { exact: true })).toBeVisible()
+})
+
+test('admin can create clinic action-needed records from aggregate suggestions', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-metrics?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('button', { name: 'Create call script action' }).first().click()
+  await expect(page.getByRole('button', { name: 'Action created' })).toBeVisible()
+
+  await page.goto(`/admin/clinic-metrics?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('button', { name: 'Action exists' }).first()).toBeVisible()
+
+  await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Create review response action' }).click()
+  await expect(page.getByRole('button', { name: 'Action created' })).toBeVisible()
+
+  await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('button', { name: 'Action exists' })).toBeVisible()
+
+  await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Create compliance action' }).click()
+  await expect(page.getByRole('button', { name: 'Action created' })).toBeVisible()
+
+  await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('button', { name: 'Action exists' }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Create approval action' }).click()
+  await expect(page.getByRole('button', { name: 'Action created' })).toBeVisible()
+
+  const createdActions = await page.evaluate(({ portalKey, seedIds }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const actions = portalData.needed_from_client
+
+    return {
+      callScript: actions.find((action) => (
+        action.related_call_booking_metric_id === seedIds.CALL_BOOKING_IMPLANTS
+        && action.clinic_action_type === 'approve_call_script'
+      )),
+      compliance: actions.find((action) => (
+        action.related_compliance_review_id === seedIds.COMPLIANCE_REVIEW_AD_CLAIMS
+        && action.clinic_action_type === 'approve_ad_copy'
+      )),
+      medicalApproval: actions.find((action) => (
+        action.related_medical_approval_id === seedIds.MEDICAL_APPROVAL_WHITENING_OFFER
+        && action.clinic_action_type === 'approve_ad_copy'
+      )),
+      reputation: actions.find((action) => (
+        action.related_reputation_snapshot_id === seedIds.REPUTATION_GREEN_MAIN
+        && action.clinic_action_type === 'respond_to_negative_review'
+      )),
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    seedIds: SEED_IDS,
+  })
+
+  expect(createdActions.callScript).toMatchObject({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+    status: NEEDED_ACTION_STATUSES.PENDING,
+  })
+  expect(createdActions.reputation).toMatchObject({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+    status: NEEDED_ACTION_STATUSES.PENDING,
+  })
+  expect(createdActions.compliance).toMatchObject({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+    status: NEEDED_ACTION_STATUSES.PENDING,
+  })
+  expect(createdActions.medicalApproval).toMatchObject({
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+    status: NEEDED_ACTION_STATUSES.PENDING,
+  })
 })
 
 test('admin can preview and save aggregate clinic metrics imports', async ({ page }) => {
