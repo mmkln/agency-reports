@@ -364,5 +364,5 @@ Mark items as complete only after code, tests, and documentation for that item a
 - [x] Action Needed includes clinic operations and medical/compliance actions.
 - [x] Reports explain booked appointments, service lines, locations, leakage, reputation, compliance, and next plan.
 - [x] Client users never see patient-level health data, raw PHI, internal notes, draft compliance records, or another clinic's data.
-- [ ] Admins can manage clinic setup, service lines, metrics, reputation, compliance, approvals, and preview-as-client.
+- [x] Admins can manage clinic setup, service lines, metrics, reputation, compliance, approvals, and preview-as-client.
 - [x] Documentation, tests, and build are updated.
