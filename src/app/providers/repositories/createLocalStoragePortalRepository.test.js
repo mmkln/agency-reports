@@ -13,17 +13,28 @@ const seedData = Object.freeze({
       name: 'Seed Client',
     },
   ],
+  booking_pipeline_snapshots: [],
+  call_booking_metrics: [],
   client_file_links: [],
   client_invitations: [],
   client_memberships: [],
   client_requests: [],
   client_work_items: [],
+  clinic_locations: [],
+  compliance_reviews: [],
+  clinic_profiles: [],
+  clinic_service_lines: [],
   dashboard_links: [],
+  location_performance: [],
   needed_from_client: [],
+  medical_approvals: [],
   performance_dashboard_periods: [],
+  patient_acquisition_snapshots: [],
   profiles: [],
   projects: [],
+  reputation_snapshots: [],
   reports: [],
+  service_line_performance: [],
   tasks: [],
   updates: [],
 })
@@ -92,17 +103,28 @@ describe('createLocalStoragePortalRepository', () => {
             name: 'Existing Client',
           },
         ],
+        booking_pipeline_snapshots: [],
+        call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
         client_memberships: [],
         client_requests: [],
         client_work_items: [],
+        clinic_locations: [],
+        compliance_reviews: [],
+        clinic_profiles: [],
+        clinic_service_lines: [],
         dashboard_links: [],
+        location_performance: [],
         needed_from_client: [],
+        medical_approvals: [],
         performance_dashboard_periods: [],
+        patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
+        reputation_snapshots: [],
         reports: [],
+        service_line_performance: [],
         tasks: [],
         updates: [],
       }),
@@ -134,13 +156,21 @@ describe('createLocalStoragePortalRepository', () => {
       [PORTAL_STORAGE_KEY]: JSON.stringify({
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
         clients: [],
+        booking_pipeline_snapshots: [],
+        call_booking_metrics: [],
         client_invitations: [],
         client_file_links: [],
         client_memberships: [],
         client_requests: [],
         client_work_items: [],
+        clinic_locations: [],
+        compliance_reviews: [],
+        clinic_profiles: [],
+        clinic_service_lines: [],
         dashboard_links: [],
+        location_performance: [],
         needed_from_client: [],
+        medical_approvals: [],
         performance_dashboard_periods: [
           {
             client_id: '11111111-1111-4111-8111-111111111111',
@@ -160,9 +190,12 @@ describe('createLocalStoragePortalRepository', () => {
             title: 'Locally edited title',
           },
         ],
+        patient_acquisition_snapshots: [],
         profiles: [],
         projects: [],
+        reputation_snapshots: [],
         reports: [],
+        service_line_performance: [],
         tasks: [],
         updates: [],
       }),
@@ -279,6 +312,191 @@ describe('createLocalStoragePortalRepository', () => {
     const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
     expect(reloadedRepository.clientRequests.findById(request.id)).toMatchObject(request)
     expect(reloadedRepository.clientRequests.listByClientId(request.client_id)).toHaveLength(1)
+  })
+
+  it('persists clinic foundation records through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const clientId = '11111111-1111-4111-8111-111111111111'
+    const profile = {
+      client_id: clientId,
+      id: '77777777-7777-4777-8777-777777777777',
+      primary_goal: 'Increase booked new patient appointments.',
+      specialty: 'dental',
+    }
+    const location = {
+      client_id: clientId,
+      id: '88888888-8888-4888-8888-888888888888',
+      name: 'Main Clinic',
+    }
+    const serviceLine = {
+      client_id: clientId,
+      id: '99999999-9999-4999-8999-999999999999',
+      location_ids: [location.id],
+      name: 'Dental Implants',
+      status: 'active',
+    }
+
+    repository.clinicProfiles.upsert(profile)
+    repository.clinicLocations.upsert(location)
+    repository.clinicServiceLines.upsert(serviceLine)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.clinicProfiles.findById(profile.id)).toMatchObject(profile)
+    expect(reloadedRepository.clinicProfiles.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.clinicLocations.findById(location.id)).toMatchObject(location)
+    expect(reloadedRepository.clinicLocations.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.clinicServiceLines.findById(serviceLine.id)).toMatchObject(serviceLine)
+    expect(reloadedRepository.clinicServiceLines.listByClientId(clientId)).toHaveLength(1)
+  })
+
+  it('persists patient acquisition snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      booked_appointments: 14,
+      calls: 18,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '10101010-1010-4010-8010-101010101010',
+      period_label: 'May 2026',
+      spend: 1800,
+    }
+
+    repository.patientAcquisitionSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.patientAcquisitionSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.patientAcquisitionSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
+  it('persists booking pipeline snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      booked_appointments: 12,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '17171717-1717-4717-8717-171717171717',
+      missed_calls: 3,
+      period_label: 'May 2026',
+      qualified_inquiries: 18,
+    }
+
+    repository.bookingPipelineSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.bookingPipelineSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.bookingPipelineSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
+  it('persists call booking metrics through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const metric = {
+      booked_from_calls: 12,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '12121212-1212-4212-8212-121212121212',
+      missed_calls: 3,
+      period_label: 'May 2026',
+      total_calls: 24,
+    }
+
+    repository.callBookingMetrics.upsert(metric)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.callBookingMetrics.findById(metric.id)).toMatchObject(metric)
+    expect(reloadedRepository.callBookingMetrics.listByClientId(metric.client_id)).toHaveLength(1)
+  })
+
+  it('persists reputation snapshots through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const snapshot = {
+      client_id: '11111111-1111-4111-8111-111111111111',
+      google_rating: 4.7,
+      id: '13131313-1313-4313-8313-131313131313',
+      period_label: 'May 2026',
+      review_count: 286,
+      reviews_gained: 18,
+    }
+
+    repository.reputationSnapshots.upsert(snapshot)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.reputationSnapshots.findById(snapshot.id)).toMatchObject(snapshot)
+    expect(reloadedRepository.reputationSnapshots.listByClientId(snapshot.client_id)).toHaveLength(1)
+  })
+
+  it('persists compliance reviews and medical approvals through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const clientId = '11111111-1111-4111-8111-111111111111'
+    const review = {
+      client_id: clientId,
+      id: '14141414-1414-4414-8414-141414141414',
+      open_issues: 2,
+      status: 'risk_flagged',
+      title: 'Google Ads medical claims',
+    }
+    const approval = {
+      approval_type: 'medical_claim',
+      client_id: clientId,
+      id: '15151515-1515-4515-8515-151515151515',
+      status: 'pending_medical_review',
+      title: 'Implant claim wording',
+      version: 'v1',
+    }
+
+    repository.complianceReviews.upsert(review)
+    repository.medicalApprovals.upsert(approval)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.complianceReviews.findById(review.id)).toMatchObject(review)
+    expect(reloadedRepository.complianceReviews.listByClientId(clientId)).toHaveLength(1)
+    expect(reloadedRepository.medicalApprovals.findById(approval.id)).toMatchObject(approval)
+    expect(reloadedRepository.medicalApprovals.listByClientId(clientId)).toHaveLength(1)
+  })
+
+  it('persists service line performance through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const performance = {
+      booked_appointments: 18,
+      campaign_status: 'live',
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '16161616-1616-4616-8616-161616161616',
+      inquiries: 27,
+      period_label: 'May 2026',
+      publish_state: 'draft',
+      service_line_id: '99999999-9999-4999-8999-999999999999',
+      spend: 2250,
+    }
+
+    repository.serviceLinePerformance.upsert(performance)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.serviceLinePerformance.findById(performance.id)).toMatchObject(performance)
+    expect(reloadedRepository.serviceLinePerformance.listByClientId(performance.client_id)).toHaveLength(1)
+  })
+
+  it('persists location performance through the local repository adapter', () => {
+    const storage = createStorage()
+    const repository = createLocalStoragePortalRepository({ seedData, storage })
+    const performance = {
+      booked_appointments: 18,
+      client_id: '11111111-1111-4111-8111-111111111111',
+      id: '18181818-1818-4818-8818-181818181818',
+      inquiries: 29,
+      location_id: '88888888-8888-4888-8888-888888888888',
+      period_label: 'May 2026',
+      publish_state: 'draft',
+      spend: 2480,
+    }
+
+    repository.locationPerformance.upsert(performance)
+
+    const reloadedRepository = createLocalStoragePortalRepository({ seedData, storage })
+    expect(reloadedRepository.locationPerformance.findById(performance.id)).toMatchObject(performance)
+    expect(reloadedRepository.locationPerformance.listByClientId(performance.client_id)).toHaveLength(1)
   })
 
   it('reseeds malformed JSON snapshots', () => {

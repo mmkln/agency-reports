@@ -1,5 +1,5 @@
 import { PageHeader } from '@/shared/ui'
 
-export function ClientSettingsPageHeader() {
-  return <PageHeader title="Settings" />
+export function ClientSettingsPageHeader({ activeRoute }) {
+  return <PageHeader title="Settings" width={activeRoute?.contentWidth} />
 }

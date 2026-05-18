@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
+import {
+  CLINIC_ACQUISITION_CHANNELS,
+  CLINIC_APPROVAL_STATUSES,
+  CLINIC_APPROVAL_TYPES,
+  CLINIC_COMPLIANCE_STATUSES,
+  CLINIC_PROFILE_SPECIALTIES,
+  CLINIC_RECORD_PUBLISH_STATES,
+  CLINIC_SERVICE_LINE_STATUSES,
+} from '../../entities/clinic'
 import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
@@ -42,6 +51,14 @@ const IDS = Object.freeze({
   WORK_ITEM_READY: 'c87a8d3b-9839-4f3c-ae67-16f6888f0104',
   UPDATE_CLIENT_VISIBLE: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
   UPDATE_INTERNAL: '123e4567-e89b-42d3-a456-426614174000',
+  CLINIC_LOCATION: '123e4567-e89b-42d3-a456-426614174010',
+  CLINIC_PROFILE: '123e4567-e89b-42d3-a456-426614174011',
+  CLINIC_SERVICE: '123e4567-e89b-42d3-a456-426614174012',
+  CLINIC_ACQUISITION: '123e4567-e89b-42d3-a456-426614174013',
+  CLINIC_CALLS: '123e4567-e89b-42d3-a456-426614174014',
+  CLINIC_REPUTATION: '123e4567-e89b-42d3-a456-426614174015',
+  CLINIC_COMPLIANCE: '123e4567-e89b-42d3-a456-426614174016',
+  CLINIC_APPROVAL: '123e4567-e89b-42d3-a456-426614174017',
 })
 
 function createEntityRepository(records) {
@@ -144,6 +161,14 @@ function createRepositories(overrides = {}) {
         updated_at: '2026-05-08T08:00:00.000Z',
       },
     ],
+    clinicLocations: [],
+    clinicProfiles: [],
+    clinicServiceLines: [],
+    patientAcquisitionSnapshots: [],
+    callBookingMetrics: [],
+    reputationSnapshots: [],
+    complianceReviews: [],
+    medicalApprovals: [],
     dashboardLinks: [
       {
         client_id: IDS.CLIENT_A,
@@ -381,10 +406,18 @@ function createRepositories(overrides = {}) {
   return {
     clients: createEntityRepository(data.clients),
     clientWorkItems: createEntityRepository(data.clientWorkItems),
+    callBookingMetrics: createEntityRepository(data.callBookingMetrics),
+    clinicLocations: createEntityRepository(data.clinicLocations),
+    clinicProfiles: createEntityRepository(data.clinicProfiles),
+    clinicServiceLines: createEntityRepository(data.clinicServiceLines),
+    complianceReviews: createEntityRepository(data.complianceReviews),
     dashboardLinks: createEntityRepository(data.dashboardLinks),
+    medicalApprovals: createEntityRepository(data.medicalApprovals),
     neededFromClient: createEntityRepository(data.neededFromClient),
     performanceDashboardPeriods: createEntityRepository(data.performanceDashboardPeriods),
+    patientAcquisitionSnapshots: createEntityRepository(data.patientAcquisitionSnapshots),
     projects: createEntityRepository(data.projects),
+    reputationSnapshots: createEntityRepository(data.reputationSnapshots),
     reports: createEntityRepository(data.reports),
     tasks: createEntityRepository(data.tasks),
     updates: createEntityRepository(data.updates),
@@ -429,6 +462,143 @@ describe('getClientOverview', () => {
       value: 81,
     })
     expect(overview.performancePreview.kpiCards).toHaveLength(3)
+  })
+
+  it('adds a clinic control center preview for clinic clients', () => {
+    const overview = getClientOverviewPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: [
+          {
+            agency_id: IDS.AGENCY,
+            current_focus: ['Improve booked appointments'],
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            primary_contact_email: 'clinic@example.com',
+            primary_contact_name: 'Clinic Manager',
+            status: CLIENT_STATUSES.NEEDS_ATTENTION,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+        clinicLocations: [
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.CLINIC_LOCATION,
+            name: 'Main Clinic',
+          },
+        ],
+        clinicProfiles: [
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.CLINIC_PROFILE,
+            specialty: CLINIC_PROFILE_SPECIALTIES.DENTAL,
+          },
+        ],
+        clinicServiceLines: [
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.CLINIC_SERVICE,
+            location_ids: [IDS.CLINIC_LOCATION],
+            name: 'Dental Implants',
+            status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+          },
+        ],
+        patientAcquisitionSnapshots: [
+          {
+            booked_appointments: 14,
+            calls: 18,
+            channel: CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS,
+            chats: 3,
+            client_id: IDS.CLIENT_A,
+            forms: 9,
+            id: IDS.CLINIC_ACQUISITION,
+            location_id: IDS.CLINIC_LOCATION,
+            period_start: '2026-05-01',
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+            qualified_inquiries: 21,
+            service_line_id: IDS.CLINIC_SERVICE,
+            spend: 1860,
+          },
+        ],
+        callBookingMetrics: [
+          {
+            booked_from_calls: 11,
+            client_id: IDS.CLIENT_A,
+            follow_up_needed_count: 5,
+            id: IDS.CLINIC_CALLS,
+            missed_calls: 6,
+            no_response_leads: 3,
+            period_start: '2026-05-01',
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+            total_calls: 43,
+          },
+        ],
+        reputationSnapshots: [
+          {
+            client_id: IDS.CLIENT_A,
+            google_rating: 4.7,
+            id: IDS.CLINIC_REPUTATION,
+            period_start: '2026-05-01',
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+            reviews_gained: 18,
+            unanswered_reviews: 3,
+          },
+        ],
+        complianceReviews: [
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.CLINIC_COMPLIANCE,
+            limited_ads: 1,
+            open_issues: 2,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+            status: CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+            title: 'Ad claims review',
+          },
+        ],
+        medicalApprovals: [
+          {
+            approval_type: CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+            client_id: IDS.CLIENT_A,
+            id: IDS.CLINIC_APPROVAL,
+            publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+            status: CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+            title: 'Implant claim',
+          },
+        ],
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(overview.status).toBe('ready')
+    expect(overview.template).toBe(CLIENT_TYPES.CLINIC)
+    expect(overview.client.type).toBe(CLIENT_TYPES.CLINIC)
+    expect(overview.clinicOverview).toMatchObject({
+      actionNeededCount: 1,
+      booking: {
+        followUpNeededCount: 5,
+        missedCalls: 6,
+        noResponseLeads: 3,
+      },
+      compliance: {
+        limitedAds: 1,
+        openIssues: 2,
+        pendingApprovals: 1,
+        riskFlaggedReviews: 1,
+      },
+      patientAcquisition: {
+        bookedAppointments: 14,
+        costPerBookedAppointment: 1860 / 14,
+        inquiries: 30,
+        topServiceLine: 'Dental Implants',
+        topLocation: 'Main Clinic',
+      },
+      reputation: {
+        googleRating: 4.7,
+        reviewsGained: 18,
+        unansweredReviews: 3,
+      },
+    })
   })
 
   it('denies access when a client user requests another client overview', () => {

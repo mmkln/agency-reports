@@ -26,7 +26,10 @@ export function FilterTabs({
           return (
             <Button
               aria-pressed={selected}
-              className="h-control-small rounded-control px-control"
+              className={cn(
+                'h-control-small rounded-control px-control',
+                selected && 'bg-block text-text-primary shadow-block hover:bg-block',
+              )}
               disabled={item.disabled}
               key={item.value}
               onClick={() => onValueChange?.(item.value)}

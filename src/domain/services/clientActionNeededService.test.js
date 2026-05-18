@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { CLIENT_TYPES } from '../../entities/client'
+import { CLINIC_SERVICE_LINE_STATUSES } from '../../entities/clinic'
 import {
+  CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
@@ -11,6 +14,8 @@ import { getClientActionNeededPage } from './clientActionNeededService'
 const IDS = Object.freeze({
   CLIENT_A: '11111111-1111-4111-8111-111111111111',
   CLIENT_B: '22222222-2222-4222-8222-222222222222',
+  LOCATION: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  SERVICE_LINE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
 })
 
 function createEntityRepository(records = []) {
@@ -31,6 +36,7 @@ function createRepositories(overrides = {}) {
         id: IDS.CLIENT_A,
         name: 'Client A',
         portal_slug: 'client-a',
+        type: CLIENT_TYPES.GENERIC,
       },
       {
         id: IDS.CLIENT_B,
@@ -79,6 +85,8 @@ function createRepositories(overrides = {}) {
         title: 'Cancelled item',
       },
     ]),
+    clinicLocations: createEntityRepository([]),
+    clinicServiceLines: createEntityRepository([]),
     ...overrides,
   }
 }
@@ -112,6 +120,7 @@ describe('getClientActionNeededPage', () => {
       answered: 1,
       approved: 0,
       changesRequested: 0,
+      clinic: 0,
       completed: 1,
       dueSoon: 1,
       open: 2,
@@ -126,6 +135,78 @@ describe('getClientActionNeededPage', () => {
       isDueSoon: true,
     })
     expect(JSON.stringify(page)).not.toContain('Cancelled item')
+  })
+
+  it('adds clinic action context for clinic clients', () => {
+    const page = getClientActionNeededPage({
+      clientId: IDS.CLIENT_A,
+      now: () => new Date('2026-05-12T09:00:00.000Z'),
+      repositories: createRepositories({
+        clients: createEntityRepository([
+          {
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ]),
+        clinicLocations: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.LOCATION,
+            name: 'Main Clinic',
+          },
+        ]),
+        clinicServiceLines: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: IDS.SERVICE_LINE,
+            name: 'Dental Implants',
+            status: CLINIC_SERVICE_LINE_STATUSES.ACTIVE,
+          },
+        ]),
+        neededFromClient: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+            compliance_risk: 'No PHI should be sent in the response.',
+            description: 'Follow up on missed implant calls.',
+            due_date: '2026-05-13',
+            id: '99999999-9999-4999-8999-999999999999',
+            patient_impact: 'Missed calls can become lost new-patient appointments.',
+            related_campaign_name: 'Implants search',
+            related_location_id: IDS.LOCATION,
+            related_service_line_id: IDS.SERVICE_LINE,
+            status: NEEDED_ACTION_STATUSES.PENDING,
+            title: 'Fix missed-call follow-up',
+            type: NEEDED_ACTION_TYPES.DECISION,
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.counts.clinic).toBe(1)
+    expect(page.actions[0]).toMatchObject({
+      actionType: 'confirmation',
+      clinicAction: {
+        complianceRisk: 'No PHI should be sent in the response.',
+        location: {
+          name: 'Main Clinic',
+        },
+        patientImpact: 'Missed calls can become lost new-patient appointments.',
+        related: {
+          campaignName: 'Implants search',
+        },
+        serviceLine: {
+          name: 'Dental Implants',
+        },
+        typeMeta: {
+          label: 'Fix missed-call follow-up',
+        },
+      },
+    })
   })
 
   it('denies cross-client access', () => {

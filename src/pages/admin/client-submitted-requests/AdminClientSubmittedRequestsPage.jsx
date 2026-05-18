@@ -13,7 +13,7 @@ import { AdminClientSubmittedRequestsWorkspace } from '../../../widgets/admin-cl
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -23,7 +23,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -53,9 +53,10 @@ export function AdminClientSubmittedRequestsPage({ routeParams = {}, runtime }) 
         client={workflow.client}
         currentPage="requests"
         eyebrow="Client-submitted requests"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientSubmittedRequestsWorkspace
           counts={workflow.counts}
           filteredRequests={workflow.filteredRequests}

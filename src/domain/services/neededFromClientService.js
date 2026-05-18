@@ -1,4 +1,12 @@
 import {
+  CLINIC_RECORD_PUBLISH_STATES,
+  normalizeCallBookingMetric,
+} from '../../entities/clinic'
+import {
+  CLIENT_TYPES,
+} from '../../entities/client'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_PRIORITY_META,
   NEEDED_ACTION_STATUSES,
@@ -22,6 +30,11 @@ import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
 const VALID_NEEDED_ACTION_PRIORITIES = new Set(Object.values(NEEDED_ACTION_PRIORITIES))
 const VALID_NEEDED_ACTION_TYPES = new Set(Object.values(NEEDED_ACTION_TYPES))
+const VALID_CLINIC_BOOKING_SUGGESTION_TYPES = new Set([
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+  CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+  CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+])
 const VALID_CLIENT_RESPONSE_STATUSES = new Set([
   NEEDED_ACTION_STATUSES.ANSWERED,
   NEEDED_ACTION_STATUSES.APPROVED,
@@ -212,13 +225,29 @@ function normalizeEditableActionFields(input = {}) {
     due_date: normalizeOptionalDate(input.dueDate, 'Request due date'),
     impact_if_delayed: normalizeText(input.impactIfDelayed ?? input.impact_if_delayed),
     internal_notes: normalizeText(input.internalNotes),
+    clinic_action_type: normalizeText(input.clinicActionType ?? input.clinic_action_type) || null,
+    compliance_risk: normalizeText(input.complianceRisk ?? input.compliance_risk),
     last_reminded_at: input.lastRemindedAt ?? input.last_reminded_at ?? null,
     owner_name: ownerName,
     priority: normalizePriority(input.priority),
     related_link: normalizeOptionalUrl(input.relatedLink, 'Request related link'),
+    related_call_booking_metric_id: normalizeOptionalId(
+      input.relatedCallBookingMetricId ?? input.related_call_booking_metric_id,
+    ),
+    related_campaign_name: normalizeText(input.relatedCampaignName ?? input.related_campaign_name),
+    related_compliance_review_id: normalizeOptionalId(
+      input.relatedComplianceReviewId ?? input.related_compliance_review_id,
+    ),
+    related_location_id: normalizeOptionalId(input.relatedLocationId ?? input.related_location_id),
+    related_medical_approval_id: normalizeOptionalId(input.relatedMedicalApprovalId ?? input.related_medical_approval_id),
+    related_reputation_snapshot_id: normalizeOptionalId(
+      input.relatedReputationSnapshotId ?? input.related_reputation_snapshot_id,
+    ),
     related_request_id: normalizeOptionalId(input.relatedRequestId ?? input.related_request_id),
+    related_service_line_id: normalizeOptionalId(input.relatedServiceLineId ?? input.related_service_line_id),
     related_task_id: normalizeOptionalId(input.relatedTaskId ?? input.related_task_id),
     related_work_item_id: normalizeOptionalId(input.relatedWorkItemId ?? input.related_work_item_id),
+    patient_impact: normalizeText(input.patientImpact ?? input.patient_impact),
     title: requireText(input.title, 'Request title'),
     type: normalizeType(input.type),
     why_needed: normalizeText(input.whyNeeded ?? input.why_needed),
@@ -241,11 +270,20 @@ function mapNeededAction({ action, client }) {
     id: normalizedAction.id,
     impactIfDelayed: normalizedAction.impact_if_delayed,
     internalNotes: normalizedAction.internal_notes,
+    clinicActionType: normalizedAction.clinic_action_type,
+    complianceRisk: normalizedAction.compliance_risk,
     lastRemindedAt: normalizedAction.last_reminded_at,
     ownerName: normalizedAction.owner_name,
     priority: normalizedAction.priority,
     relatedLink: normalizedAction.related_link,
+    relatedCallBookingMetricId: normalizedAction.related_call_booking_metric_id,
+    relatedCampaignName: normalizedAction.related_campaign_name,
+    relatedComplianceReviewId: normalizedAction.related_compliance_review_id,
+    relatedLocationId: normalizedAction.related_location_id,
+    relatedMedicalApprovalId: normalizedAction.related_medical_approval_id,
+    relatedReputationSnapshotId: normalizedAction.related_reputation_snapshot_id,
     relatedRequestId: normalizedAction.related_request_id,
+    relatedServiceLineId: normalizedAction.related_service_line_id,
     relatedTaskId: normalizedAction.related_task_id,
     relatedWorkItemId: normalizedAction.related_work_item_id,
     respondedAt: normalizedAction.client_responded_at,
@@ -255,6 +293,7 @@ function mapNeededAction({ action, client }) {
     resolvedBy: normalizedAction.resolved_by,
     responseHistory: normalizedAction.response_history,
     status: getNeededActionStatusMeta(normalizedAction.status),
+    patientImpact: normalizedAction.patient_impact,
     title: normalizedAction.title,
     type: normalizedAction.type,
     updatedAt: normalizedAction.updated_at,
@@ -272,16 +311,26 @@ function mapClientNeededAction(action) {
     dueDate: normalizedAction.due_date,
     id: normalizedAction.id,
     impactIfDelayed: normalizedAction.impact_if_delayed,
+    clinicActionType: normalizedAction.clinic_action_type,
+    complianceRisk: normalizedAction.compliance_risk,
     priority: normalizedAction.priority,
     priorityMeta: NEEDED_ACTION_PRIORITY_META[normalizedAction.priority],
     relatedLink: normalizedAction.related_link,
+    relatedCallBookingMetricId: normalizedAction.related_call_booking_metric_id,
+    relatedCampaignName: normalizedAction.related_campaign_name,
+    relatedComplianceReviewId: normalizedAction.related_compliance_review_id,
+    relatedLocationId: normalizedAction.related_location_id,
+    relatedMedicalApprovalId: normalizedAction.related_medical_approval_id,
+    relatedReputationSnapshotId: normalizedAction.related_reputation_snapshot_id,
     relatedRequestId: normalizedAction.related_request_id,
+    relatedServiceLineId: normalizedAction.related_service_line_id,
     relatedTaskId: normalizedAction.related_task_id,
     relatedWorkItemId: normalizedAction.related_work_item_id,
     respondedAt: normalizedAction.client_responded_at,
     responseHistory: normalizedAction.response_history,
     status: normalizedAction.status,
     statusMeta: NEEDED_ACTION_STATUS_META[normalizedAction.status],
+    patientImpact: normalizedAction.patient_impact,
     title: normalizedAction.title,
     type: normalizedAction.type,
     updatedAt: normalizedAction.updated_at,
@@ -334,6 +383,92 @@ function isOpenNeededAction(action) {
     NEEDED_ACTION_STATUSES.CANCELLED,
     NEEDED_ACTION_STATUSES.RESOLVED,
   ].includes(action.status)
+}
+
+function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const metric = repositories.callBookingMetrics?.findById?.(callBookingMetricId)
+
+  if (!metric) {
+    throw new Error('Clinic booking metric was not found.')
+  }
+
+  const normalizedMetric = normalizeCallBookingMetric(metric)
+  const client = getAdminClient({
+    clientId: normalizedMetric.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (client.type !== CLIENT_TYPES.CLINIC) {
+    throw new Error('Clinic booking suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedMetric.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic booking suggestions can only be created from published metrics.')
+  }
+
+  return normalizedMetric
+}
+
+function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
+  const periodLabel = metric.period_label || 'the selected period'
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP) {
+    const missedRate = metric.total_calls > 0 ? metric.missed_calls / metric.total_calls : 0
+
+    return {
+      complianceRisk: 'Do not send patient names, phone numbers, call recordings, or patient-level attribution through the portal.',
+      description: 'Confirm who calls back missed patient inquiries, how quickly same-day follow-up happens, and how follow-up is tracked.',
+      impactIfDelayed: 'New patient demand may continue leaking after marketing generates calls.',
+      patientImpact: 'Missed calls can become lost booked appointments.',
+      priority: missedRate >= 0.15 ? NEEDED_ACTION_PRIORITIES.HIGH : NEEDED_ACTION_PRIORITIES.MEDIUM,
+      title: 'Fix missed-call follow-up',
+      type: NEEDED_ACTION_TYPES.DECISION,
+      whyNeeded: `${metric.missed_calls} tracked calls were missed in ${periodLabel}.`,
+    }
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT) {
+    return {
+      complianceRisk: 'Call guidance should avoid unsupported medical claims and should not include patient-level examples in the portal.',
+      description: 'Approve the front-desk call handling script or coverage plan for high-intent patient inquiries.',
+      impactIfDelayed: 'Slow or inconsistent call handling can reduce booking conversion from active campaigns.',
+      patientImpact: 'Clearer call handling helps patients understand the next step and book faster.',
+      priority: metric.average_response_seconds >= 180
+        ? NEEDED_ACTION_PRIORITIES.HIGH
+        : NEEDED_ACTION_PRIORITIES.MEDIUM,
+      title: 'Approve call handling script',
+      type: NEEDED_ACTION_TYPES.APPROVAL,
+      whyNeeded: `Average response time was ${Math.round(metric.average_response_seconds)} seconds in ${periodLabel}.`,
+    }
+  }
+
+  return {
+    complianceRisk: 'Keep appointment availability and follow-up notes aggregate-only; do not include patient names or appointment details.',
+    description: 'Confirm who owns follow-up, when unresolved inquiries are escalated, and whether the clinic has appointment availability for campaign demand.',
+    impactIfDelayed: 'Unanswered forms and delayed follow-up can waste acquisition spend and reduce booked appointments.',
+    patientImpact: 'Patients may not book if the clinic does not respond quickly or if appointment availability is unclear.',
+    priority: (metric.no_response_leads + metric.follow_up_needed_count) >= 5
+      ? NEEDED_ACTION_PRIORITIES.HIGH
+      : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: 'Confirm follow-up owner and appointment availability',
+    type: NEEDED_ACTION_TYPES.DECISION,
+    whyNeeded: `${metric.no_response_leads} form leads had no response and ${metric.follow_up_needed_count} inquiries still needed follow-up in ${periodLabel}.`,
+  }
+}
+
+function assertNoOpenClinicBookingSuggestionDuplicate({ metric, repositories, suggestionType }) {
+  const duplicate = repositories.neededFromClient
+    .listByClientId(metric.client_id)
+    .some((action) => isOpenNeededAction(action)
+      && action.clinic_action_type === suggestionType
+      && action.related_call_booking_metric_id === metric.id)
+
+  if (duplicate) {
+    throw new Error('An open clinic booking action already exists for this suggestion.')
+  }
 }
 
 export function listNeededActionsWorkspace({
@@ -422,6 +557,7 @@ export function listClientNeededActions({
       portalSlug: client.portal_slug,
       primaryContactEmail: client.primary_contact_email,
       primaryContactName: client.primary_contact_name,
+      type: client.type,
     },
     status: 'ready',
   }
@@ -542,6 +678,56 @@ export function createNeededActionFromWorkItem({
       title: input.title ?? `Action needed: ${workItem.title}`,
       type: input.type ?? NEEDED_ACTION_TYPES.OTHER,
       whyNeeded: input.whyNeeded ?? workItem.summary ?? '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicBookingSuggestion({
+  activityIdGenerator,
+  callBookingMetricId,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_BOOKING_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic booking suggestion type is invalid.')
+  }
+
+  const metric = getAdminCallBookingMetric({
+    callBookingMetricId,
+    repositories,
+    viewer,
+  })
+
+  assertNoOpenClinicBookingSuggestionDuplicate({
+    metric,
+    repositories,
+    suggestionType,
+  })
+
+  const defaults = getClinicBookingSuggestionDefaults({
+    metric,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: metric.client_id,
+      clinicActionType: suggestionType,
+      relatedCallBookingMetricId: metric.id,
+      relatedCampaignName: metric.campaign_name,
+      relatedLocationId: metric.location_id,
+      relatedServiceLineId: metric.service_line_id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
     }),
     now,
     repositories,

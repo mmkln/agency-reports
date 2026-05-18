@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import {
   createAdminClient,
+  deleteAdminClient,
   getPortalSlugIssue,
   listAdminClients,
   normalizePortalSlug,
@@ -30,6 +31,9 @@ function createClientsRepository(initialClients = []) {
     findById(id) {
       return records.find((record) => record.id === id) ?? null
     },
+    listByClientId(clientId) {
+      return records.filter((record) => record.client_id === clientId)
+    },
     upsert(record) {
       const index = records.findIndex((item) => item.id === record.id)
 
@@ -41,13 +45,35 @@ function createClientsRepository(initialClients = []) {
 
       return record
     },
+    deleteById(id) {
+      const index = records.findIndex((item) => item.id === id)
+
+      if (index === -1) {
+        return false
+      }
+
+      records.splice(index, 1)
+      return true
+    },
   }
 }
 
-function createRepositories(initialClients) {
+function createRepositories(initialClients, overrides = {}) {
   return {
     clients: createClientsRepository(initialClients),
     clientInvitations: createClientsRepository([]),
+    clientMemberships: createClientsRepository([]),
+    clinicLocations: createClientsRepository([]),
+    clinicProfiles: createClientsRepository([]),
+    clinicServiceLines: createClientsRepository([]),
+    dashboardLinks: createClientsRepository([]),
+    neededFromClient: createClientsRepository([]),
+    projects: createClientsRepository([]),
+    reports: createClientsRepository([]),
+    serviceLinePerformance: createClientsRepository([]),
+    tasks: createClientsRepository([]),
+    updates: createClientsRepository([]),
+    ...overrides,
   }
 }
 
@@ -119,6 +145,7 @@ describe('adminClientService', () => {
       primary_contact_email: 'owner@example.com',
       primary_contact_name: 'Owner Name',
       status: CLIENT_STATUSES.SETUP,
+      type: CLIENT_TYPES.GENERIC,
     })
     expect(result.invitation).toMatchObject({
       client_id: IDS.NEW_CLIENT,
@@ -127,6 +154,26 @@ describe('adminClientService', () => {
     })
     expect(repositories.clients.list()).toHaveLength(1)
     expect(repositories.clientInvitations.list()).toHaveLength(1)
+  })
+
+  it('creates clinic clients when a clinic type is requested', () => {
+    const repositories = createRepositories([])
+
+    const generatedIds = [IDS.NEW_CLIENT, IDS.NEW_INVITATION, IDS.NEW_INVITATION_TOKEN]
+    const result = createAdminClient({
+      idGenerator: () => generatedIds.shift(),
+      input: {
+        name: 'Clinic Client',
+        portalSlug: '',
+        primaryContactEmail: 'owner@example.com',
+        primaryContactName: 'Owner Name',
+        type: CLIENT_TYPES.CLINIC,
+      },
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result.client.type).toBe(CLIENT_TYPES.CLINIC)
   })
 
   it('rejects duplicate portal slugs in the same agency', () => {
@@ -267,6 +314,18 @@ describe('adminClientService', () => {
       repositories: createRepositories([]),
       viewer: createAdminViewer(),
     })).toThrow('Client status is invalid.')
+
+    expect(() => createAdminClient({
+      idGenerator: () => IDS.NEW_CLIENT,
+      input: {
+        name: 'New Client',
+        primaryContactEmail: 'owner@example.com',
+        primaryContactName: 'Owner Name',
+        type: 'hospitality',
+      },
+      repositories: createRepositories([]),
+      viewer: createAdminViewer(),
+    })).toThrow('Client type is invalid.')
   })
 
   it('rejects non-admin viewers', () => {
@@ -283,5 +342,72 @@ describe('adminClientService', () => {
         role: USER_ROLES.CLIENT_USER,
       },
     })).toThrow('Only agency admins can manage clients.')
+  })
+
+  it('deletes clinic foundation records when deleting a client', () => {
+    const repositories = createRepositories([
+      {
+        agency_id: IDS.AGENCY_A,
+        id: IDS.CLIENT_A,
+        name: 'Clinic Client',
+      },
+    ], {
+      clinicLocations: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '77777777-7777-4777-8777-777777777777',
+          name: 'Main Clinic',
+        },
+      ]),
+      clinicProfiles: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '88888888-8888-4888-8888-888888888888',
+          specialty: 'dental',
+        },
+      ]),
+      clinicServiceLines: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '99999999-9999-4999-8999-999999999999',
+          name: 'Dental Implants',
+        },
+      ]),
+      bookingPipelineSnapshots: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '11111111-2222-4222-8222-111111111111',
+          qualified_inquiries: 21,
+        },
+      ]),
+      locationPerformance: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '22222222-3333-4333-8333-222222222222',
+          location_id: '77777777-7777-4777-8777-777777777777',
+        },
+      ]),
+      serviceLinePerformance: createClientsRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '10101010-1010-4010-8010-101010101010',
+          service_line_id: '99999999-9999-4999-8999-999999999999',
+        },
+      ]),
+    })
+
+    expect(deleteAdminClient({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    })).toBe(true)
+
+    expect(repositories.clients.findById(IDS.CLIENT_A)).toBeNull()
+    expect(repositories.clinicProfiles.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.clinicLocations.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.clinicServiceLines.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.bookingPipelineSnapshots.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.locationPerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.serviceLinePerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
   })
 })

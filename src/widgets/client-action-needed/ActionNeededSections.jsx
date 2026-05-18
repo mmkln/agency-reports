@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 
 import {
+  Badge,
   EmptyState,
-  Panel,
-  PanelBody,
-  PanelHeader,
 } from '@/shared/ui'
 
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
@@ -29,28 +27,11 @@ function filterActions(actions, activeFilter) {
     return actions.filter((action) => action.isOverdue)
   }
 
-  return actions.filter((action) => action.status === activeFilter)
-}
+  if (activeFilter === 'clinic') {
+    return actions.filter((action) => action.clinicAction)
+  }
 
-export function ActionNeededSummary({ counts }) {
-  return (
-    <Panel>
-      <PanelBody className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <p className="text-label text-text-muted">Open</p>
-          <p className="mt-1 text-data text-text-primary">{counts.open}</p>
-        </div>
-        <div>
-          <p className="text-label text-text-muted">Due soon</p>
-          <p className="mt-1 text-data text-text-primary">{counts.dueSoon}</p>
-        </div>
-        <div>
-          <p className="text-label text-text-muted">Overdue</p>
-          <p className="mt-1 text-data text-text-primary">{counts.overdue}</p>
-        </div>
-      </PanelBody>
-    </Panel>
-  )
+  return actions.filter((action) => action.status === activeFilter)
 }
 
 export function ActionNeededInbox({ actions, counts, onAnswer }) {
@@ -63,43 +44,41 @@ export function ActionNeededInbox({ actions, counts, onAnswer }) {
   const selectedAction = actions.find((action) => action.id === selectedActionId) ?? null
 
   return (
-    <Panel>
-      <PanelHeader
-        subtitle="Approvals, files, access, feedback, and questions waiting on the client."
-        title="Action Needed"
-      />
-      <PanelBody className="grid gap-4">
+    <section className="grid gap-card">
+      <div className="flex flex-col gap-component sm:flex-row sm:items-center sm:justify-between">
         <ActionNeededFilters
           activeFilter={activeFilter}
           counts={counts}
           onChange={setActiveFilter}
         />
+        <Badge className="w-fit" tone="neutral">{actions.length} action{actions.length === 1 ? '' : 's'}</Badge>
+      </div>
 
-        {filteredActions.length ? (
-          <div className="grid gap-3">
-            {filteredActions.map((action) => (
-              <ActionNeededCard
-                action={action}
-                key={action.id}
-                onViewDetails={(nextAction) => setSelectedActionId(nextAction.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            description="No client actions match this view."
-            iconName="checkCircle2"
-            title="Nothing waiting here"
-          />
-        )}
-
-        <ActionNeededDetailDialog
-          action={selectedAction}
-          isOpen={Boolean(selectedAction)}
-          onAnswer={onAnswer}
-          onClose={() => setSelectedActionId(null)}
+      {filteredActions.length ? (
+        <div className="grid gap-card">
+          {filteredActions.map((action) => (
+            <ActionNeededCard
+              action={action}
+              key={action.id}
+              onViewDetails={(nextAction) => setSelectedActionId(nextAction.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          className="bg-block-subtle"
+          description="No client actions match this view."
+          iconName="checkCircle2"
+          title="Nothing waiting here"
         />
-      </PanelBody>
-    </Panel>
+      )}
+
+      <ActionNeededDetailDialog
+        action={selectedAction}
+        isOpen={Boolean(selectedAction)}
+        onAnswer={onAnswer}
+        onClose={() => setSelectedActionId(null)}
+      />
+    </section>
   )
 }

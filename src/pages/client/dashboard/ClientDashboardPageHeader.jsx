@@ -11,7 +11,7 @@ function HeaderAction({ dashboard }) {
   return <StatusBadge meta={dashboard.statusMeta} />
 }
 
-export function ClientDashboardPageHeader({ routeParams = {}, runtime }) {
+export function ClientDashboardPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const page = getClientDashboardPage({
     clientId,
@@ -22,13 +22,14 @@ export function ClientDashboardPageHeader({ routeParams = {}, runtime }) {
   })
 
   if (page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<HeaderAction dashboard={page.dashboard} />}
       title="Marketing Dashboard"
+      width={activeRoute?.contentWidth}
     />
   )
 }

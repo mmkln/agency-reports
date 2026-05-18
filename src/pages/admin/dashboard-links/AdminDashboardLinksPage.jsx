@@ -17,6 +17,7 @@ import {
 } from '../../../features/admin-dashboard-links'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
+import { ErrorBlock } from '@/shared/ui'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -106,9 +107,9 @@ export function AdminDashboardLinksPage({ routeParams = {}, runtime }) {
 
   if (dashboardLinksResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
+      <ErrorBlock title="Dashboard links could not be loaded">
         {dashboardLinksResource.error}
-      </div>
+      </ErrorBlock>
     )
   }
 

@@ -1,0 +1,1 @@
+export { AdminClinicComplianceWorkspace } from './components'

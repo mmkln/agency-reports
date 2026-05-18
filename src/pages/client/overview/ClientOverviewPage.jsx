@@ -11,6 +11,7 @@ import {
   AccessDeniedState,
   ActiveWorkBlock,
   ContactAskQuestionBlock,
+  ClientClinicOverviewView,
   EmptyOverviewState,
   FilesLinksOverviewBlock,
   LatestUpdateBlock,
@@ -91,6 +92,10 @@ export function ClientOverviewPage({ routeParams = {}, runtime }) {
 
   if (overview.status === 'error') {
     return <AccessDeniedState />
+  }
+
+  if (overview.template === 'clinic' && overview.clinicOverview) {
+    return <ClientClinicOverviewView overview={overview} />
   }
 
   return (

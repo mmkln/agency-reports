@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 
 import { PagePrimaryAction } from './PagePrimaryAction'
 import { useInspectorId } from './inspectorId'
+import { getPageShellWidthClass } from './pageShellWidth'
 
 function HeaderContent({
   actions,
@@ -48,6 +49,7 @@ export function PageHeader({
   title,
   titleScale,
   variant = 'shell',
+  width = 'full',
   ...props
 }) {
   void _subtitle
@@ -87,6 +89,7 @@ export function PageHeader({
       <div
         className={cn(
           'flex w-full flex-col gap-control px-app-gutter py-control lg:flex-row lg:items-center lg:justify-between',
+          getPageShellWidthClass(width),
           contentClassName,
         )}
       >

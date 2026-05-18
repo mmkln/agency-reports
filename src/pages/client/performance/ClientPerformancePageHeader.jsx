@@ -16,7 +16,7 @@ function HeaderActions({ dashboard }) {
   )
 }
 
-export function ClientPerformancePageHeader({ routeParams = {}, runtime }) {
+export function ClientPerformancePageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const periodId = routeParams.performancePeriodId ?? routeParams.periodId
   const page = getClientPerformanceDashboardPage({
@@ -28,13 +28,14 @@ export function ClientPerformancePageHeader({ routeParams = {}, runtime }) {
   })
 
   if (page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<HeaderActions dashboard={page.performanceDashboard} />}
       title="Performance Dashboard"
+      width={activeRoute?.contentWidth}
     />
   )
 }

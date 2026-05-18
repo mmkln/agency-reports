@@ -3,20 +3,41 @@ export const PORTAL_STORAGE_SCHEMA_VERSION = 1
 
 const TABLE_NAMES = Object.freeze([
   'activity_events',
+  'booking_pipeline_snapshots',
   'clients',
   'client_invitations',
   'client_file_links',
   'client_memberships',
   'client_requests',
   'client_work_items',
+  'call_booking_metrics',
+  'clinic_locations',
+  'compliance_reviews',
+  'clinic_profiles',
+  'clinic_service_lines',
   'dashboard_links',
+  'location_performance',
   'needed_from_client',
   'performance_dashboard_periods',
+  'patient_acquisition_snapshots',
   'profiles',
   'projects',
+  'reputation_snapshots',
   'reports',
+  'service_line_performance',
+  'medical_approvals',
   'tasks',
   'updates',
+])
+const CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
+  'call_booking_metrics',
+  'booking_pipeline_snapshots',
+  'compliance_reviews',
+  'location_performance',
+  'medical_approvals',
+  'patient_acquisition_snapshots',
+  'reputation_snapshots',
+  'service_line_performance',
 ])
 
 function clone(value) {
@@ -92,6 +113,15 @@ function mergeSeedPerformanceDashboardPeriod(record, seedRecord) {
 function mergeSeedRecord(record, seedRecord, tableName) {
   if (tableName === 'performance_dashboard_periods') {
     return mergeSeedPerformanceDashboardPeriod(record, seedRecord)
+  }
+
+  if (CLINIC_PUBLISH_STATE_TABLES.includes(tableName) && !record.publish_state && seedRecord.publish_state) {
+    return {
+      ...record,
+      publish_state: seedRecord.publish_state,
+      published_at: record.published_at ?? seedRecord.published_at ?? null,
+      published_by: record.published_by ?? seedRecord.published_by ?? null,
+    }
   }
 
   return record
@@ -210,15 +240,23 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
 
   return {
     activityEvents: createEntityRepository('activity_events', readSnapshot, writeSnapshot),
+    bookingPipelineSnapshots: createEntityRepository('booking_pipeline_snapshots', readSnapshot, writeSnapshot),
     clients: createEntityRepository('clients', readSnapshot, writeSnapshot),
     clientFileLinks: createEntityRepository('client_file_links', readSnapshot, writeSnapshot),
     clientInvitations: createEntityRepository('client_invitations', readSnapshot, writeSnapshot),
     clientMemberships: createEntityRepository('client_memberships', readSnapshot, writeSnapshot),
     clientRequests: createEntityRepository('client_requests', readSnapshot, writeSnapshot),
     clientWorkItems: createEntityRepository('client_work_items', readSnapshot, writeSnapshot),
+    callBookingMetrics: createEntityRepository('call_booking_metrics', readSnapshot, writeSnapshot),
+    clinicLocations: createEntityRepository('clinic_locations', readSnapshot, writeSnapshot),
+    clinicProfiles: createEntityRepository('clinic_profiles', readSnapshot, writeSnapshot),
+    clinicServiceLines: createEntityRepository('clinic_service_lines', readSnapshot, writeSnapshot),
+    complianceReviews: createEntityRepository('compliance_reviews', readSnapshot, writeSnapshot),
     dashboardLinks: createEntityRepository('dashboard_links', readSnapshot, writeSnapshot),
+    locationPerformance: createEntityRepository('location_performance', readSnapshot, writeSnapshot),
     neededFromClient: createEntityRepository('needed_from_client', readSnapshot, writeSnapshot),
     performanceDashboardPeriods: createEntityRepository('performance_dashboard_periods', readSnapshot, writeSnapshot),
+    patientAcquisitionSnapshots: createEntityRepository('patient_acquisition_snapshots', readSnapshot, writeSnapshot),
     profiles: {
       ...createEntityRepository('profiles', readSnapshot, writeSnapshot),
       findByUserId(userId) {
@@ -226,7 +264,10 @@ export function createLocalStoragePortalRepository({ seedData, storage } = {}) {
       },
     },
     projects: createEntityRepository('projects', readSnapshot, writeSnapshot),
+    reputationSnapshots: createEntityRepository('reputation_snapshots', readSnapshot, writeSnapshot),
     reports: createEntityRepository('reports', readSnapshot, writeSnapshot),
+    serviceLinePerformance: createEntityRepository('service_line_performance', readSnapshot, writeSnapshot),
+    medicalApprovals: createEntityRepository('medical_approvals', readSnapshot, writeSnapshot),
     reset() {
       storageAdapter.removeItem(PORTAL_STORAGE_KEY)
       return readSnapshot()

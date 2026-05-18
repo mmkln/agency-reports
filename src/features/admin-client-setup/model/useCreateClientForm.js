@@ -1,6 +1,9 @@
 import { useState } from 'react'
 
 import {
+  CLIENT_TYPES,
+} from '../../../entities/client'
+import {
   createAdminClient,
   getPortalSlugIssue,
   normalizePortalSlug,
@@ -13,6 +16,7 @@ const emptyForm = {
   portalSlug: '',
   primaryContactEmail: '',
   primaryContactName: '',
+  type: CLIENT_TYPES.GENERIC,
 }
 
 export function useCreateClientForm({

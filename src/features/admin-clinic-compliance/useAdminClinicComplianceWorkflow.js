@@ -1,0 +1,284 @@
+import { useEffect, useState } from 'react'
+
+import {
+  approveMedicalApproval,
+  getAdminClinicCompliancePage,
+  publishComplianceReview,
+  publishMedicalApproval,
+  rejectMedicalApproval,
+  requestChangesForMedicalApproval,
+  saveAdminClinicCompliance,
+  transitionComplianceReviewStatus,
+} from '../../domain/services/adminClinicComplianceService'
+import { useToast } from '../../shared/notifications'
+
+function createUuid() {
+  return crypto.randomUUID()
+}
+
+function createDraft(page) {
+  return {
+    complianceReviews: page.complianceReviews.map((review) => ({ ...review })),
+    medicalApprovals: page.medicalApprovals.map((approval) => ({ ...approval })),
+  }
+}
+
+function createInitialState() {
+  return {
+    draft: null,
+    error: '',
+    page: null,
+    status: 'loading',
+  }
+}
+
+const APPROVAL_DECISION_SERVICES = Object.freeze({
+  approve: approveMedicalApproval,
+  reject: rejectMedicalApproval,
+  request_changes: requestChangesForMedicalApproval,
+})
+const PUBLISH_SERVICES = Object.freeze({
+  approval: publishMedicalApproval,
+  review: publishComplianceReview,
+})
+
+export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
+  const toast = useToast()
+  const [state, setState] = useState(createInitialState)
+  const [isDirty, setIsDirty] = useState(false)
+  const [saveState, setSaveState] = useState('')
+
+  useEffect(() => {
+    let isActive = true
+
+    void Promise.resolve()
+      .then(() => {
+        if (!isActive) {
+          return null
+        }
+
+        setState(createInitialState())
+        setIsDirty(false)
+        setSaveState('')
+
+        return runtime.dataClient.read((repositories) => getAdminClinicCompliancePage({
+          clientId,
+          repositories,
+          viewer: runtime.viewer,
+        }))
+      })
+      .then((page) => {
+        if (!isActive || !page) {
+          return
+        }
+
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+      })
+      .catch((caughtError) => {
+        if (!isActive) {
+          return
+        }
+
+        setState({
+          draft: null,
+          error: caughtError.message,
+          page: null,
+          status: 'error',
+        })
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [clientId, runtime])
+
+  function updateDraft(updater) {
+    setState((currentState) => ({
+      ...currentState,
+      draft: typeof updater === 'function' ? updater(currentState.draft) : updater,
+    }))
+    setIsDirty(true)
+    setSaveState('')
+  }
+
+  function saveDraft() {
+    if (!state.draft) {
+      return
+    }
+
+    setSaveState('Saving...')
+
+    runtime.dataClient.write((repositories) => saveAdminClinicCompliance({
+      clientId,
+      idGenerator: createUuid,
+      input: state.draft,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Saved')
+        toast.success('Clinic compliance saved', `${page.client.name}'s compliance records were updated.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Clinic compliance was not saved', caughtError.message)
+      })
+  }
+
+  function resetDraft() {
+    if (!state.page) {
+      return
+    }
+
+    setState((currentState) => ({
+      ...currentState,
+      draft: createDraft(currentState.page),
+      error: '',
+      status: 'ready',
+    }))
+    setIsDirty(false)
+    setSaveState('')
+  }
+
+  function applyApprovalDecision({ action, approvalId, comment, version }) {
+    const service = APPROVAL_DECISION_SERVICES[action]
+
+    if (!service) {
+      throw new Error('Medical approval action is invalid.')
+    }
+
+    setSaveState('Recording decision...')
+
+    runtime.dataClient.write((repositories) => service({
+      approvalId,
+      clientId,
+      input: {
+        comment,
+        version,
+      },
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Decision recorded')
+        toast.success('Medical approval updated', `${page.client.name}'s approval decision was recorded.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Medical approval was not updated', caughtError.message)
+      })
+  }
+
+  function applyReviewStatus({ nextStatus, reviewId }) {
+    setSaveState('Updating status...')
+
+    runtime.dataClient.write((repositories) => transitionComplianceReviewStatus({
+      clientId,
+      nextStatus,
+      repositories,
+      reviewId,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Status updated')
+        toast.success('Compliance status updated', `${page.client.name}'s compliance review status was recorded.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Compliance status was not updated', caughtError.message)
+      })
+  }
+
+  function publishComplianceRecord({ id, type }) {
+    const service = PUBLISH_SERVICES[type]
+
+    if (!service) {
+      throw new Error('Clinic compliance publish type is invalid.')
+    }
+
+    setSaveState('Publishing...')
+
+    runtime.dataClient.write((repositories) => service({
+      clientId,
+      id,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((page) => {
+        setState({
+          draft: createDraft(page),
+          error: '',
+          page,
+          status: 'ready',
+        })
+        setIsDirty(false)
+        setSaveState('Published')
+        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now client-visible.`)
+      })
+      .catch((caughtError) => {
+        setState((currentState) => ({
+          ...currentState,
+          error: caughtError.message,
+          status: 'error',
+        }))
+        setSaveState('')
+        toast.error('Clinic compliance record was not published', caughtError.message)
+      })
+  }
+
+  return {
+    applyApprovalDecision,
+    applyReviewStatus,
+    draft: state.draft,
+    error: state.error,
+    isDirty,
+    page: state.page,
+    publishComplianceRecord,
+    resetDraft,
+    saveDraft,
+    saveState,
+    status: state.status,
+    updateDraft,
+  }
+}

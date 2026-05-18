@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom'
 import { useAuth } from '../providers/auth/useAuth'
 import { AppShell } from '../../shared/layout'
 import { DemoRoleSwitcher } from '../components/DemoRoleSwitcher'
-import { canAccessRoute, filterRoutesForViewer } from '../routing/roleAccess'
+import { canAccessRoute, filterRoutesForNavigation } from '../routing/roleAccess'
 import { routeMetadata } from '../routing/routeDefinitions'
 import {
   getDemoRoleOption,
@@ -84,7 +84,13 @@ export function RootLayout() {
 
   const routeParams = Object.fromEntries(searchParams.entries())
 
-  const accessibleRoutes = filterRoutesForViewer(routeMetadata, viewer)
+  const accessibleRoutes = filterRoutesForNavigation({
+    defaultClientId: runtime.defaultClientId,
+    repositories: runtime.repositories,
+    routeParams,
+    routes: routeMetadata,
+    viewer,
+  })
 
   return (
     <>

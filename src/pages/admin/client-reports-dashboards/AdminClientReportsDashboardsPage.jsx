@@ -18,7 +18,7 @@ import { AdminClientReportsDashboardsWorkspace } from '../../../widgets/admin-cl
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -28,7 +28,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -106,11 +106,12 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
         eyebrow="Reports & Dashboards"
         primaryAction={{
           children: 'New Performance',
-          to: `/admin/performance-dashboards?clientId=${client.id}&newPerformanceDashboard=true`,
+          to: `/admin/performance-dashboards?clientId=${client.id}&createPerformanceDashboard=true`,
         }}
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientReportsDashboardsWorkspace
           clientId={client.id}
           dashboardLinks={dashboardLinks}

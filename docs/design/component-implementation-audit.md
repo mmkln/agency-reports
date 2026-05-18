@@ -90,9 +90,7 @@ High-risk files by size and local component count:
 
 | File | Lines | Component declarations | Recommended action |
 | --- | ---: | ---: | --- |
-| `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 426 | 5 | Extract import preview and issue list sections if touched. |
-| `src/features/admin-client-setup/components/CreateClientModal.jsx` | 396 | 10 | Extract form field groups and validation display. |
-| `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 383 | 1 | Move workflow state to a hook, as done for overview editor. |
+No active high-risk UI component files remain in this specific audit list. Continue checking large files before adding behavior.
 
 Recently resolved:
 
@@ -104,6 +102,16 @@ Recently resolved:
 | `src/pages/client/reports/ClientReportsPage.jsx` | 651-line duplicate archive/reader implementation | 27-line legacy redirect bridge into mature Reports & Dashboards. |
 | `src/widgets/client-reports-dashboards/ReportsDashboardsSections.jsx` | 477-line multi-section widget | 6-line export facade plus focused section files. |
 | `src/widgets/client-projects/ClientProjectsSections.jsx` | 379-line list/detail widget | 2-line export facade plus focused list/detail files. |
+| `src/features/admin-performance-dashboards/components/AdminPerformanceDashboardEditor.jsx` | 361-line editor shell with local workflow state | 203-line composition shell plus `useAdminPerformanceDashboardEditorWorkflow`. |
+| `src/features/admin-performance-dashboards/components/PerformanceDashboardJsonImportModal.jsx` | 405-line modal with embedded JSON examples | 171-line modal plus model-owned import examples. |
+| `src/features/admin-client-setup/components/CreateClientModal.jsx` | 359-line modal with 10 local components | 149-line modal shell plus field components and model validation helpers. |
+| `src/features/admin-reports/components/ReportModal.jsx` | 318-line report editor modal | 84-line modal shell plus report section components. |
+| `src/pages/admin/reports/AdminReportsPage.jsx` | 356-line route/workflow mix with local filters, mutations, and modal orchestration | 5-line route shell plus `AdminReportsWorkspace`, `useAdminReportsWorkspace`, and model-owned report filter helpers. |
+| `src/features/admin-performance-dashboards/components/editor/PerformanceCollectionSections.jsx` | 327-line collection section bundle | 5-line section export facade plus focused KPI, goal, insight, channel, and next-action section files. |
+| `src/shared/layout/AppSidebar.jsx` | 318-line app shell component with config, row styling, navigation, search, notifications, account, and theme menu in one file | 59-line shell composition plus focused shared layout files for styles/config, nav item, search, notifications, and account menu. |
+| `src/features/tasks/import-task-markdown/components/TaskMarkdownImportModal.jsx` | 328-line modal with local FileReader, form state, fields, warnings, and preview rendering | 82-line modal shell plus feature hook, field component, preview component, and model-owned example Markdown. |
+| `src/features/admin-client-access/components/InvitationsPanel.jsx` | 281-line invitation lifecycle panel with local repository reads, form state, list cards, actions, and confirmation dialog in one file | 71-line panel composition plus invitation workflow hook, card/form components, and invite-link helper. |
+| `src/features/admin-client-access/components/AccessMembersPanel.jsx` | 245-line member lifecycle panel with local repository reads, form state, member cards, role changes, and confirmation dialog in one file | 71-line panel composition plus member workflow hook and focused member card/form components. |
 
 Fix direction:
 

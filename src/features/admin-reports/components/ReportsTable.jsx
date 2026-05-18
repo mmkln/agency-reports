@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   ConfirmationDialog,
+  DataTableSurface,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  PrimitiveCard as Card,
   StatusBadge,
   Table,
   TableActionCell,
@@ -129,23 +129,23 @@ export function ReportsTable({
 
   return (
     <>
-      <Card className="border-control-border bg-block py-0 shadow-none">
+      <DataTableSurface>
         <Table className="min-w-[1120px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="px-6 py-3">Report</TableHead>
-              <TableHead className="px-6 py-3">Client</TableHead>
-              <TableHead className="px-6 py-3">Period</TableHead>
-              <TableHead className="px-6 py-3">Status</TableHead>
-              <TableHead className="px-6 py-3">Published</TableHead>
-              <TableActionHead className="px-6 py-3">Actions</TableActionHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Report</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Period</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Published</TableHead>
+              <TableActionHead>Actions</TableActionHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-separator">
+          <TableBody>
             {reports.map((report) => {
               return (
-                <TableRow className="transition-colors hover:bg-block-subtle" key={report.id}>
-                  <TableCell className="px-6 py-4">
+                <TableRow key={report.id}>
+                  <TableCell>
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-text-primary">{report.title}</p>
                       <p className="mt-1 max-w-lg truncate text-label font-normal text-text-muted">
@@ -153,20 +153,20 @@ export function ReportsTable({
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>
                     <p className="font-medium text-text-secondary">{report.client.name}</p>
                     <p className="mt-0.5 text-label font-normal text-text-muted">/{report.client.portalSlug}</p>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-text-secondary">
+                  <TableCell className="text-text-secondary">
                     {formatPeriod(report)}
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>
                     <StatusBadge meta={report.statusMeta} />
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-text-muted">
+                  <TableCell className="text-text-muted">
                     {formatDate(report.publishedAt)}
                   </TableCell>
-                  <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">
+                  <TableActionCell>
                     <div className="flex justify-end gap-1.5">
                       <Button onClick={() => onEditReport(report)} size="sm" type="button" variant="outline">
                         Edit
@@ -217,7 +217,7 @@ export function ReportsTable({
             })}
           </TableBody>
         </Table>
-      </Card>
+      </DataTableSurface>
 
       <ConfirmationDialog
         confirmLabel="Delete report"

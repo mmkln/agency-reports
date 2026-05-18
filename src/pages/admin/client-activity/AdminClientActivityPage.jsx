@@ -24,7 +24,7 @@ function loadAdminClient(clientId, runtime) {
 
 function WorkspaceLoadingState() {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="min-h-[260px] animate-pulse" />
       </Card>
@@ -34,7 +34,7 @@ function WorkspaceLoadingState() {
 
 function WorkspaceErrorState({ message }) {
   return (
-    <PageShell className="px-app-gutter py-content-gutter">
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
       <Card className="bg-block shadow-none">
         <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
           {message}
@@ -69,9 +69,10 @@ export function AdminClientActivityPage({ routeParams = {}, runtime }) {
         client={clientResource.data}
         currentPage="activity"
         eyebrow="Client activity"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <RecentClientActivityPanel clientId={clientId} runtime={runtime} />
       </PageShell>
     </>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { getClientReportsPage } from './clientReportsService'
@@ -58,6 +58,37 @@ function createRepositories(overrides = {}) {
       {
         client_decisions_needed: 'Approve next budget.',
         client_id: IDS.CLIENT_A,
+        clinic_sections: {
+          agency_work_completed: ['Launched implant campaigns.'],
+          booking_leakage: {
+            follow_up_needed: 5,
+            missed_calls: 6,
+            no_response_leads: 3,
+            summary: 'Missed calls are the largest leakage point.',
+          },
+          clinic_actions_needed: ['Confirm front-desk follow-up process.'],
+          compliance: {
+            limited_ads: 1,
+            open_issues: 2,
+            pending_approvals: 1,
+            summary: 'Offer wording needs approval.',
+          },
+          next_month_plan: ['Scale only after missed-call process improves.'],
+          patient_acquisition: {
+            booked_appointments: 14,
+            cost_per_booked_appointment: 132.86,
+            inquiries: 30,
+            summary: 'Implant inquiries are efficient.',
+            top_locations: ['Main Clinic'],
+            top_service_lines: ['Dental Implants'],
+          },
+          reputation: {
+            google_rating: 4.7,
+            reviews_gained: 18,
+            summary: 'Review generation improved.',
+            unanswered_reviews: 3,
+          },
+        },
         dashboard_url: 'https://example.com/dashboard',
         id: IDS.REPORT_PUBLISHED,
         next_actions: 'Scale winning campaign.',
@@ -130,6 +161,82 @@ describe('getClientReportsPage', () => {
     expect(page.selectedReport.results).toBe('Generated 119 leads.')
     expect(JSON.stringify(page)).not.toContain('May Draft')
     expect(JSON.stringify(page)).not.toContain('June Ready')
+  })
+
+  it('maps clinic report sections for clinic clients', () => {
+    const page = getClientReportsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: [
+          {
+            agency_id: IDS.AGENCY,
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            status: CLIENT_STATUSES.ON_TRACK,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.client.type).toBe(CLIENT_TYPES.CLINIC)
+    expect(page.selectedReport.template).toBe(CLIENT_TYPES.CLINIC)
+    expect(page.selectedReport.clinicSections).toMatchObject({
+      agencyWorkCompleted: ['Launched implant campaigns.'],
+      bookingLeakage: {
+        missedCalls: 6,
+        noResponseLeads: 3,
+      },
+      compliance: {
+        openIssues: 2,
+        pendingApprovals: 1,
+      },
+      patientAcquisition: {
+        bookedAppointments: 14,
+        inquiries: 30,
+        topServiceLines: ['Dental Implants'],
+      },
+      reputation: {
+        googleRating: 4.7,
+        reviewsGained: 18,
+      },
+    })
+  })
+
+  it('blocks patient-level keys from clinic report sections', () => {
+    expect(() => getClientReportsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        clients: [
+          {
+            agency_id: IDS.AGENCY,
+            id: IDS.CLIENT_A,
+            name: 'Clinic A',
+            portal_slug: 'clinic-a',
+            status: CLIENT_STATUSES.ON_TRACK,
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+        reports: [
+          {
+            client_id: IDS.CLIENT_A,
+            clinic_sections: {
+              patient_acquisition: {
+                patient_name: 'Jane Patient',
+              },
+            },
+            id: IDS.REPORT_PUBLISHED,
+            period_end: '2026-04-30',
+            period_start: '2026-04-01',
+            status: REPORT_STATUSES.PUBLISHED,
+            title: 'Unsafe clinic report',
+          },
+        ],
+      }),
+      viewer: createClientViewer(),
+    })).toThrow('Clinic report sections must stay aggregate-only')
   })
 
   it('selects a visible report by id', () => {

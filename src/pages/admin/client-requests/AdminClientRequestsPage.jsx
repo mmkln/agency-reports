@@ -24,7 +24,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
 
   if (workflow.requestsResource.status === 'loading') {
     return (
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <Card className="bg-block shadow-none">
           <CardContent className="min-h-[260px] animate-pulse" />
         </Card>
@@ -34,7 +34,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
 
   if (workflow.requestsResource.status === 'error' || !workflow.client) {
     return (
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <Card className="bg-block shadow-none">
           <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
             {workflow.requestsResource.error || 'Client was not found.'}
@@ -56,9 +56,10 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
         client={workflow.client}
         currentPage="actions"
         eyebrow="Action Needed"
+        width="content"
       />
 
-      <PageShell className="px-app-gutter py-content-gutter">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         <AdminClientRequestsWorkspace
           filteredActions={workflow.filteredActions}
           onCancel={workflow.setPendingCancel}

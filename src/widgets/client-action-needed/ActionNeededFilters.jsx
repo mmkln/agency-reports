@@ -1,9 +1,10 @@
-import { Button } from '@/shared/ui'
+import { FilterTabs } from '@/shared/ui'
 
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
 
 const filters = [
   { label: 'Open', value: 'open' },
+  { label: 'Clinic', value: 'clinic' },
   { label: 'Due soon', value: 'due_soon' },
   { label: 'Overdue', value: 'overdue' },
   { label: 'Answered', value: NEEDED_ACTION_STATUSES.ANSWERED },
@@ -19,6 +20,7 @@ function getFilterCount({ counts, value }) {
     answered: counts.answered,
     approved: counts.approved,
     changes_requested: counts.changesRequested,
+    clinic: counts.clinic,
     completed: counts.completed,
     due_soon: counts.dueSoon,
     open: counts.open,
@@ -28,30 +30,23 @@ function getFilterCount({ counts, value }) {
 }
 
 export function ActionNeededFilters({ activeFilter, counts, onChange }) {
-  return (
-    <div className="-mx-1 overflow-x-auto px-1">
-      <div className="flex min-w-max items-center gap-tag">
-        {filters.map((filter) => {
-          const selected = activeFilter === filter.value
-          const count = getFilterCount({
-            counts,
-            value: filter.value,
-          })
+  const items = filters
+    .filter((filter) => filter.value !== 'clinic' || counts.clinic > 0)
+    .map((filter) => ({
+      count: getFilterCount({
+        counts,
+        value: filter.value,
+      }) ?? 0,
+      label: filter.label,
+      value: filter.value,
+    }))
 
-          return (
-            <Button
-              key={filter.value}
-              onClick={() => onChange(filter.value)}
-              size="sm"
-              type="button"
-              variant={selected ? 'primary' : 'ghost'}
-            >
-              {filter.label}
-              <span className="ml-1 text-label font-normal opacity-75">{count ?? 0}</span>
-            </Button>
-          )
-        })}
-      </div>
-    </div>
+  return (
+    <FilterTabs
+      ariaLabel="Action needed filters"
+      items={items}
+      onValueChange={onChange}
+      value={activeFilter}
+    />
   )
 }

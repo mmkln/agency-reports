@@ -1,10 +1,11 @@
-import { CLIENT_STATUSES } from '../../entities/client'
+import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { createClientInvitation } from './clientInviteService'
 import { USER_ROLES } from '../../entities/profile'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PORTAL_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const VALID_CLIENT_STATUSES = new Set(Object.values(CLIENT_STATUSES))
+const VALID_CLIENT_TYPES = new Set(Object.values(CLIENT_TYPES))
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
@@ -75,6 +76,16 @@ function assertClientStatus(status) {
   }
 
   return normalizedStatus
+}
+
+function assertClientType(type) {
+  const normalizedType = type || CLIENT_TYPES.GENERIC
+
+  if (!VALID_CLIENT_TYPES.has(normalizedType)) {
+    throw new Error('Client type is invalid.')
+  }
+
+  return normalizedType
 }
 
 export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer, portalSlug }) {
@@ -157,6 +168,7 @@ export function createAdminClient({
     primary_contact_email: primaryContactEmail,
     primary_contact_name: primaryContactName,
     status: assertClientStatus(input.status),
+    type: assertClientType(input.type),
     updated_at: timestamp,
   }
 
@@ -215,6 +227,7 @@ export function updateAdminClient({
     primary_contact_email: primaryContactEmail,
     primary_contact_name: primaryContactName,
     status: assertClientStatus(input.status || existingClient.status),
+    type: assertClientType(input.type || existingClient.type),
     updated_at: now(),
   }
 
@@ -244,6 +257,15 @@ export function deleteAdminClient({
   repositories.reports.listByClientId(clientId).forEach((record) => repositories.reports.deleteById(record.id))
   repositories.clientInvitations.listByClientId(clientId).forEach((record) => repositories.clientInvitations.deleteById(record.id))
   repositories.clientMemberships.listByClientId(clientId).forEach((record) => repositories.clientMemberships.deleteById(record.id))
+  repositories.clinicProfiles?.listByClientId(clientId).forEach((record) => repositories.clinicProfiles.deleteById(record.id))
+  repositories.clinicLocations?.listByClientId(clientId).forEach((record) => repositories.clinicLocations.deleteById(record.id))
+  repositories.clinicServiceLines?.listByClientId(clientId).forEach((record) => repositories.clinicServiceLines.deleteById(record.id))
+  repositories.bookingPipelineSnapshots?.listByClientId(clientId)
+    .forEach((record) => repositories.bookingPipelineSnapshots.deleteById(record.id))
+  repositories.locationPerformance?.listByClientId(clientId)
+    .forEach((record) => repositories.locationPerformance.deleteById(record.id))
+  repositories.serviceLinePerformance?.listByClientId(clientId)
+    .forEach((record) => repositories.serviceLinePerformance.deleteById(record.id))
   repositories.clients.deleteById(clientId)
 
   return true

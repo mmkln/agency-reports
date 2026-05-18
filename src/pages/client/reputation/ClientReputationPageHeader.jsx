@@ -1,0 +1,53 @@
+import { Badge, PageHeader } from '@/shared/ui'
+
+import { getClientReputationPage } from '../../../domain/services/clinicClientService'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClinicPreviewSource } from '../clinicPreviewSource'
+
+function HeaderActions({ latestUpdatedAt, snapshotCount }) {
+  return (
+    <div className="flex items-center gap-tag">
+      <Badge className="border-control-border bg-block text-text-secondary" variant="outline">
+        {snapshotCount} snapshot{snapshotCount === 1 ? '' : 's'}
+      </Badge>
+      <Badge className="border-control-border bg-block text-text-secondary" variant="outline">
+        Updated {latestUpdatedAt ? new Date(latestUpdatedAt).toLocaleDateString() : 'not set'}
+      </Badge>
+    </div>
+  )
+}
+
+export function ClientReputationPageHeader({ routeParams = {}, runtime }) {
+  const clientId = routeParams.clientId ?? runtime.defaultClientId
+  const previewSource = getClinicPreviewSource(routeParams)
+  const pageResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:reputation-header:${clientId}:${previewSource}`,
+    load: () => runtime.dataClient.read((repositories) => getClientReputationPage({
+      clientId,
+      repositories,
+      source: previewSource,
+      viewer: runtime.viewer,
+    })),
+  })
+  const page = pageResource.data
+
+  if (pageResource.status === 'loading' || !page) {
+    return <PageHeader title="Reputation" />
+  }
+
+  if (pageResource.status === 'error' || page.status === 'error') {
+    return <PageHeader title="Access denied" />
+  }
+
+  return (
+    <PageHeader
+      actions={(
+        <HeaderActions
+          latestUpdatedAt={page.latestUpdatedAt}
+          snapshotCount={page.snapshots.length}
+        />
+      )}
+      title="Reputation"
+    />
+  )
+}

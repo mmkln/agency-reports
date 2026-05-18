@@ -1,5 +1,6 @@
 import {
   Button,
+  LabeledNote,
   StatusBadge,
 } from '@/shared/ui'
 
@@ -34,7 +35,12 @@ const actionTypeMeta = {
 }
 
 function ActionTypeLabel({ action }) {
-  const meta = actionTypeMeta[action.actionType] ?? actionTypeMeta.question
+  const meta = action.clinicAction?.typeMeta
+    ? {
+        iconName: action.clinicAction.typeMeta.icon,
+        label: action.clinicAction.typeMeta.label,
+      }
+    : actionTypeMeta[action.actionType] ?? actionTypeMeta.question
 
   return (
     <span className="inline-flex items-center gap-1 rounded-control bg-control px-2 py-1 text-label text-text-secondary">
@@ -44,12 +50,45 @@ function ActionTypeLabel({ action }) {
   )
 }
 
+function ClinicActionContext({ action }) {
+  const clinicAction = action.clinicAction
+
+  if (!clinicAction) {
+    return null
+  }
+
+  const contextItems = [
+    clinicAction.serviceLine?.name,
+    clinicAction.location?.name,
+  ].filter(Boolean)
+
+  return (
+    <div className="mt-component grid gap-item rounded-control bg-block-subtle p-component">
+      {contextItems.length ? (
+        <div className="flex flex-wrap gap-tag">
+          {contextItems.map((item) => (
+            <span className="rounded-control bg-control px-2 py-1 text-label text-text-secondary" key={item}>
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {clinicAction.patientImpact ? (
+        <p className="text-body text-text-secondary">{clinicAction.patientImpact}</p>
+      ) : null}
+      {clinicAction.complianceRisk ? (
+        <p className="text-label font-normal text-text-muted">{clinicAction.complianceRisk}</p>
+      ) : null}
+    </div>
+  )
+}
+
 export function ActionNeededCard({ action, onViewDetails }) {
   return (
-    <article className="rounded-block border border-control-border bg-block p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="rounded-block bg-block px-card py-component shadow-none">
+      <div className="flex flex-col gap-control sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mb-item flex flex-wrap items-center gap-item">
             <ActionTypeLabel action={action} />
             {action.isOverdue ? (
               <span className="rounded-control bg-destructive/10 px-2 py-1 text-label text-destructive">
@@ -62,32 +101,33 @@ export function ActionNeededCard({ action, onViewDetails }) {
               </span>
             ) : null}
           </div>
-          <h2 className="mt-3 text-heading text-text-primary">{action.title}</h2>
-          <p className={`mt-2 text-ui ${action.isOverdue ? 'text-destructive' : 'text-text-muted'}`}>
+          <h2 className="text-ui font-semibold text-text-primary">{action.title}</h2>
+          <p className={`mt-item text-label font-normal ${action.isOverdue ? 'text-destructive' : 'text-text-muted'}`}>
             Due {formatActionDate(action.dueDate)}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
+        <div className="flex shrink-0 flex-wrap items-center gap-item sm:justify-end">
           <StatusBadge meta={action.priorityMeta} />
           <StatusBadge meta={action.statusMeta} />
         </div>
       </div>
 
       {action.description ? (
-        <p className="mt-4 max-w-readable text-body text-text-secondary">{action.description}</p>
+        <p className="mt-component max-w-readable text-ui font-normal text-text-secondary">{action.description}</p>
       ) : null}
+
+      <ClinicActionContext action={action} />
 
       {action.clientResponse ? (
-        <div className="mt-4 rounded-control bg-action-muted px-3 py-2 text-ui text-action">
-          <p className="font-semibold">Your response</p>
-          <p className="mt-1">{action.clientResponse}</p>
-          {action.respondedAt ? <p className="mt-1 text-label">Sent {formatActionDate(action.respondedAt)}</p> : null}
-        </div>
+        <LabeledNote className="mt-component" label="Your response">
+          <p>{action.clientResponse}</p>
+          {action.respondedAt ? <p className="mt-micro text-label text-text-muted">Sent {formatActionDate(action.respondedAt)}</p> : null}
+        </LabeledNote>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-component flex flex-wrap gap-item">
         {action.relatedLink ? (
-          <Button asChild size="sm" variant="outline">
+          <Button asChild size="sm" variant="ghost">
             <a href={action.relatedLink} rel="noreferrer" target="_blank">
               Open related link
               <Icon name="arrowUpRight" size={13} />

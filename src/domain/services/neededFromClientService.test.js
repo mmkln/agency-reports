@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { CLIENT_TYPES } from '../../entities/client'
+import { CLINIC_RECORD_PUBLISH_STATES } from '../../entities/clinic'
 import {
+  CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
@@ -11,6 +14,7 @@ import {
   answerNeededAction,
   cancelNeededAction,
   createNeededAction,
+  createNeededActionFromClinicBookingSuggestion,
   createNeededActionFromTask,
   createNeededActionFromWorkItem,
   linkNeededActionToTask,
@@ -27,8 +31,11 @@ import {
 const IDS = Object.freeze({
   ACTION: '11111111-1111-4111-8111-111111111111',
   AGENCY: '44444444-4444-4444-8444-444444444444',
+  CALL_BOOKING_METRIC: '99999999-9999-4999-8999-999999999999',
   CLIENT: '22222222-2222-4222-8222-222222222222',
+  LOCATION: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
   OTHER_CLIENT: '77777777-7777-4777-8777-777777777777',
+  SERVICE_LINE: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   TASK: '55555555-5555-4555-8555-555555555555',
   USER: '33333333-3333-4333-8333-333333333333',
   WORK_ITEM: '66666666-6666-4666-8666-666666666666',
@@ -99,11 +106,33 @@ function createWorkflowRepositories(overrides = {}) {
         agency_id: IDS.AGENCY,
         id: IDS.CLIENT,
         name: 'Client A',
+        type: CLIENT_TYPES.CLINIC,
       },
       {
         agency_id: IDS.AGENCY,
         id: IDS.OTHER_CLIENT,
         name: 'Client B',
+        type: CLIENT_TYPES.GENERIC,
+      },
+    ]),
+    callBookingMetrics: createEntityRepository([
+      {
+        answered_calls: 31,
+        average_response_seconds: 186,
+        booked_from_calls: 16,
+        campaign_name: 'Implants search',
+        client_id: IDS.CLIENT,
+        first_time_calls: 22,
+        follow_up_needed_count: 4,
+        form_leads: 9,
+        id: IDS.CALL_BOOKING_METRIC,
+        location_id: IDS.LOCATION,
+        missed_calls: 7,
+        no_response_leads: 3,
+        period_label: 'May 2026',
+        publish_state: CLINIC_RECORD_PUBLISH_STATES.PUBLISHED,
+        service_line_id: IDS.SERVICE_LINE,
+        total_calls: 38,
       },
     ]),
     clientWorkItems: createEntityRepository([
@@ -438,6 +467,123 @@ describe('neededFromClientService', () => {
       type: NEEDED_ACTION_TYPES.ACCESS,
       why_needed: 'Client-facing work summary.',
     })
+  })
+
+  it('creates needed actions from clinic booking suggestions without linking internal tasks', () => {
+    const repositories = createWorkflowRepositories()
+
+    const action = createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => IDS.ACTION,
+      input: {
+        relatedTaskId: IDS.TASK,
+        relatedWorkItemId: IDS.WORK_ITEM,
+      },
+      now: () => '2026-05-17T12:00:00.000Z',
+      repositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      viewer: createAdminViewer(),
+    })
+
+    expect(action).toMatchObject({
+      client_id: IDS.CLIENT,
+      clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      compliance_risk: 'Do not send patient names, phone numbers, call recordings, or patient-level attribution through the portal.',
+      description: 'Confirm who calls back missed patient inquiries, how quickly same-day follow-up happens, and how follow-up is tracked.',
+      impact_if_delayed: 'New patient demand may continue leaking after marketing generates calls.',
+      patient_impact: 'Missed calls can become lost booked appointments.',
+      priority: 'high',
+      related_call_booking_metric_id: IDS.CALL_BOOKING_METRIC,
+      related_campaign_name: 'Implants search',
+      related_location_id: IDS.LOCATION,
+      related_service_line_id: IDS.SERVICE_LINE,
+      related_task_id: null,
+      related_work_item_id: null,
+      status: NEEDED_ACTION_STATUSES.PENDING,
+      title: 'Fix missed-call follow-up',
+      type: NEEDED_ACTION_TYPES.DECISION,
+      why_needed: '7 tracked calls were missed in May 2026.',
+    })
+    expect(repositories.tasks.findById(IDS.TASK)).toMatchObject({
+      status: TASK_STATUSES.WAITING_CLIENT,
+    })
+  })
+
+  it('rejects duplicate open clinic booking suggestion actions', () => {
+    const repositories = createWorkflowRepositories({
+      neededFromClient: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          clinic_action_type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+          id: IDS.ACTION,
+          related_call_booking_metric_id: IDS.CALL_BOOKING_METRIC,
+          status: NEEDED_ACTION_STATUSES.PENDING,
+          title: 'Approve call script',
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => '88888888-8888-4888-8888-888888888888',
+      repositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
+      viewer: createAdminViewer(),
+    })).toThrow('An open clinic booking action already exists for this suggestion.')
+  })
+
+  it('requires agency admin access and clinic clients for clinic booking suggestion actions', () => {
+    const repositories = createWorkflowRepositories()
+
+    expect(() => createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+      viewer: createClientViewer(),
+    })).toThrow('Only agency admins can process needed actions.')
+
+    const genericRepositories = createWorkflowRepositories({
+      clients: createEntityRepository([
+        {
+          agency_id: IDS.AGENCY,
+          id: IDS.CLIENT,
+          name: 'Client A',
+          type: CLIENT_TYPES.GENERIC,
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories: genericRepositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
+      viewer: createAdminViewer(),
+    })).toThrow('Clinic booking suggestions are only available for clinic clients.')
+  })
+
+  it('rejects clinic booking suggestion actions from draft metrics', () => {
+    const repositories = createWorkflowRepositories({
+      callBookingMetrics: createEntityRepository([
+        {
+          client_id: IDS.CLIENT,
+          id: IDS.CALL_BOOKING_METRIC,
+          missed_calls: 3,
+          period_label: 'May 2026',
+          publish_state: CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+          total_calls: 12,
+        },
+      ]),
+    })
+
+    expect(() => createNeededActionFromClinicBookingSuggestion({
+      idGenerator: () => IDS.ACTION,
+      repositories,
+      callBookingMetricId: IDS.CALL_BOOKING_METRIC,
+      suggestionType: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+      viewer: createAdminViewer(),
+    })).toThrow('Clinic booking suggestions can only be created from published metrics.')
   })
 
   it('links existing needed actions to a task and client work item', () => {

@@ -32,6 +32,7 @@ export { ConfirmationDialog } from './ConfirmationDialog'
 export { ContentToolbar } from './ContentToolbar'
 export { DashboardSectionGrid } from './DashboardSectionGrid'
 export { DetailRow } from './DetailRow'
+export { DataTableSurface } from './DataTableSurface'
 export {
   Dialog,
   DialogClose,
@@ -63,6 +64,7 @@ export {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 export { EmptyState } from './EmptyState'
+export { ErrorBlock } from './ErrorBlock'
 export { FilterTabs } from './FilterTabs'
 export { FormField } from './FormField'
 export { GoalCard } from './GoalCard'
@@ -71,6 +73,7 @@ export { useInspectorId } from './inspectorId'
 export { Input } from '@/components/ui/input'
 export { Label } from '@/components/ui/label'
 export { KpiCard } from './KpiCard'
+export { LabeledNote } from './LabeledNote'
 export { ListPanel } from './ListPanel'
 export { ListRow } from './ListRow'
 export { MetricGrid } from './MetricGrid'
@@ -83,6 +86,7 @@ export { FoundationPageHeader } from './FoundationPageHeader'
 export { PageHeader } from './PageHeader'
 export { PagePrimaryAction } from './PagePrimaryAction'
 export { PageShell } from './PageShell'
+export { getPageShellWidthClass } from './pageShellWidth'
 export { Panel, PanelBody, PanelHeader } from './Panel'
 export { PhaseCard } from './PhaseCard'
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from './Popover'
@@ -106,6 +110,7 @@ export {
 export { ReadOnlyField } from './ReadOnlyField'
 export { ScrollArea, ScrollBar } from './ScrollArea'
 export { SearchField } from './SearchField'
+export { SectionNav } from './SectionNav'
 export { Separator } from '@/components/ui/separator'
 export {
   Sheet,

@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   ConfirmationDialog,
+  DataTableSurface,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  PrimitiveCard as Card,
   StatusBadge,
   Table,
   TableActionCell,
@@ -56,26 +56,26 @@ export function DashboardLinksTable({
 
   return (
     <>
-      <Card className="border-control-border bg-block py-0 shadow-none">
+      <DataTableSurface>
         <Table className="min-w-[1080px]">
-          <TableHeader className="border-b border-control-border bg-surface-subtle text-label text-text-muted uppercase">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="px-6 py-3">Dashboard</TableHead>
-              <TableHead className="px-6 py-3">Client</TableHead>
-              <TableHead className="px-6 py-3">Provider</TableHead>
-              <TableHead className="px-6 py-3">Status</TableHead>
-              <TableHead className="px-6 py-3">Visibility</TableHead>
-              <TableHead className="px-6 py-3">Last Checked</TableHead>
-              <TableActionHead className="px-6 py-3">Actions</TableActionHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Dashboard</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Provider</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Visibility</TableHead>
+              <TableHead>Last Checked</TableHead>
+              <TableActionHead>Actions</TableActionHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-separator">
+          <TableBody>
             {dashboardLinks.map((dashboardLink) => {
               const isClientVisible = dashboardLink.visibility === VISIBILITY.CLIENT_VISIBLE
 
               return (
-                <TableRow className="transition-colors hover:bg-block-subtle" key={dashboardLink.id}>
-                  <TableCell className="px-6 py-4">
+                <TableRow key={dashboardLink.id}>
+                  <TableCell>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-semibold text-text-primary">{dashboardLink.name}</p>
@@ -90,27 +90,27 @@ export function DashboardLinksTable({
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>
                     <p className="font-medium text-text-secondary">{dashboardLink.client.name}</p>
                     <p className="mt-0.5 text-label font-normal text-text-muted">/{dashboardLink.client.portalSlug}</p>
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-text-secondary">
+                  <TableCell className="text-text-secondary">
                     {dashboardLink.providerMeta.label}
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>
                     <StatusBadge meta={dashboardLink.statusMeta} />
                   </TableCell>
-                  <TableCell className="px-6 py-4">
+                  <TableCell>
                     <StatusBadge
                       icon={isClientVisible ? 'user' : 'lock'}
                       label={isClientVisible ? 'Client visible' : 'Internal'}
                       tone={isClientVisible ? 'blue' : 'neutral'}
                     />
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-text-muted">
+                  <TableCell className="text-text-muted">
                     {formatDate(dashboardLink.lastCheckedAt)}
                   </TableCell>
-                  <TableActionCell className="px-6 py-4 group-hover/table-row:bg-block-subtle">
+                  <TableActionCell>
                     <div className="flex justify-end gap-1.5">
                       <Button onClick={() => onEditDashboardLink(dashboardLink)} size="sm" type="button" variant="outline">
                         Edit
@@ -169,7 +169,7 @@ export function DashboardLinksTable({
             })}
           </TableBody>
         </Table>
-      </Card>
+      </DataTableSurface>
 
       <ConfirmationDialog
         confirmLabel="Delete dashboard"

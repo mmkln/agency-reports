@@ -18,7 +18,7 @@ function HeaderActions({ counts }) {
   )
 }
 
-export function ClientActionNeededPageHeader({ routeParams = {}, runtime }) {
+export function ClientActionNeededPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:action-needed-header:${clientId}`,
@@ -31,17 +31,18 @@ export function ClientActionNeededPageHeader({ routeParams = {}, runtime }) {
   const page = pageResource.data
 
   if (pageResource.status === 'loading' || !page) {
-    return <PageHeader title="Action Needed" />
+    return <PageHeader title="Action Needed" width={activeRoute?.contentWidth} />
   }
 
   if (pageResource.status === 'error' || page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<HeaderActions counts={page.counts} />}
       title="Action Needed"
+      width={activeRoute?.contentWidth}
     />
   )
 }

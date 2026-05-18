@@ -24,6 +24,8 @@ If a product decision conflicts with the UI design system, preserve the product 
 
 The use cases define capabilities. The mature client-facing information architecture is documented in [Client Control Center Information Architecture](../research/client-control-center-information-architecture.md).
 
+If clinics are the primary ICP, use [Clinic Client Portal Information Architecture](../research/clinic-client-portal-information-architecture.md) as the vertical product direction on top of the generic Client Control Center foundation.
+
 | Use case / capability | Mature client destination | Product ownership |
 | --- | --- | --- |
 | UC-001 - Client Overview / Status Hub | Overview | Compact control home with previews and links. |
@@ -36,3 +38,17 @@ The use cases define capabilities. The mature client-facing information architec
 | Files / links | Files & Links | Explicitly visible resources and deliverables. |
 
 Do not split client navigation by implementation use case when the mature destination groups several capabilities together. For example, UC-002, UC-003, and UC-004 are separate capabilities, but the client-facing destination is `Reports & Dashboards`.
+
+## Clinic Vertical Mapping
+
+For clinic clients, the mature product should remap generic client portal capabilities into clinic growth operations destinations:
+
+| Clinic capability | Clinic destination | Product ownership |
+| --- | --- | --- |
+| New patient demand | Patient Acquisition | Aggregated acquisition funnel and source/service/location performance. |
+| Calls, forms, and booking conversion | Calls & Bookings | Booking pipeline, missed calls, response time, and front-desk leakage. |
+| Campaign/service performance | Campaigns / Service Lines | Service line, location, capacity, landing page, approval, and policy status. |
+| Local trust and reviews | Reputation | Reviews, rating, GBP updates, response status, and provider profile completeness. |
+| Medical/platform/privacy review | Compliance & Approvals | Claims, ads, landing pages, tracking/privacy, and approval history. |
+| Clinic-owned blockers | Action Needed | Approvals, assets, credentials, call handling, review responses, access, and capacity confirmations. |
+| Period narrative | Reports | Human-written clinic growth summary and next plan. |

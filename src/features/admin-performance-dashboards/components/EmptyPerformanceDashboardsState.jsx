@@ -4,7 +4,10 @@ import { Button, EmptyState } from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
 
-export function EmptyPerformanceDashboardsState({ hasClients }) {
+export function EmptyPerformanceDashboardsState({
+  createHref = '/admin/performance-dashboards?createPerformanceDashboard=true',
+  hasClients,
+}) {
   if (!hasClients) {
     return (
       <EmptyState
@@ -27,7 +30,7 @@ export function EmptyPerformanceDashboardsState({ hasClients }) {
     <EmptyState
       action={(
         <Button asChild>
-          <Link to="/admin/performance-dashboards?newPerformanceDashboard=true">
+          <Link to={createHref}>
             <Icon name="plus" size={15} />
             Create performance dashboard
           </Link>

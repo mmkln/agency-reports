@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
+import { CLIENT_TYPES } from '../../entities/client'
 import { USER_ROLES } from '../../entities/profile'
 import { routeMetadata } from './routeDefinitions'
-import { canAccessRoute, filterRoutesForViewer } from './roleAccess'
+import {
+  canAccessRoute,
+  filterRoutesForNavigation,
+  filterRoutesForViewer,
+} from './roleAccess'
 
 const routes = [
   {
@@ -26,6 +31,29 @@ const routes = [
   },
 ]
 
+function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
+  return {
+    clients: {
+      findById(id) {
+        return id === 'client-a'
+          ? {
+              id,
+              type: clientType,
+            }
+          : null
+      },
+    },
+  }
+}
+
+function createClientViewer() {
+  return {
+    clientId: 'client-a',
+    clientIds: ['client-a'],
+    role: USER_ROLES.CLIENT_USER,
+  }
+}
+
 describe('route role access', () => {
   it('allows public routes without role metadata', () => {
     expect(canAccessRoute(null, routes[0])).toBe(true)
@@ -44,7 +72,12 @@ describe('route role access', () => {
   })
 
   it('keeps client navigation aligned to the mature Client Control Center IA', () => {
-    const clientNavIds = filterRoutesForViewer(routeMetadata, { role: USER_ROLES.CLIENT_USER })
+    const clientNavIds = filterRoutesForNavigation({
+      defaultClientId: 'client-a',
+      repositories: createRepositories(),
+      routes: routeMetadata,
+      viewer: createClientViewer(),
+    })
       .filter((route) => route.showInNav !== false)
       .map((route) => route.id)
 
@@ -61,6 +94,38 @@ describe('route role access', () => {
     expect(clientNavIds).not.toContain('client-dashboard')
     expect(clientNavIds).not.toContain('client-performance')
     expect(clientNavIds).not.toContain('client-reports')
+    expect(clientNavIds).not.toContain('client-calls-bookings')
+    expect(clientNavIds).not.toContain('client-compliance-approvals')
+    expect(clientNavIds).not.toContain('client-patient-acquisition')
+    expect(clientNavIds).not.toContain('client-reputation')
+    expect(clientNavIds).not.toContain('client-service-lines')
+  })
+
+  it('uses the clinic client navigation template for clinic clients', () => {
+    const clientNavIds = filterRoutesForNavigation({
+      defaultClientId: 'client-a',
+      repositories: createRepositories(CLIENT_TYPES.CLINIC),
+      routes: routeMetadata,
+      viewer: createClientViewer(),
+    })
+      .filter((route) => route.showInNav !== false)
+      .map((route) => route.id)
+
+    expect(clientNavIds).toEqual([
+      'client-overview',
+      'client-action-needed',
+      'client-patient-acquisition',
+      'client-calls-bookings',
+      'client-service-lines',
+      'client-reputation',
+      'client-compliance-approvals',
+      'client-reports-dashboards',
+      'client-files-links',
+      'client-requests',
+      'client-updates',
+      'client-settings',
+    ])
+    expect(clientNavIds).not.toContain('client-projects')
   })
 
   it('keeps legacy client analytics routes hidden from navigation but role-protected', () => {
@@ -81,6 +146,10 @@ describe('route role access', () => {
   it('keeps admin workspace routes inaccessible to client users', () => {
     const adminWorkspaceRouteIds = [
       'admin-client-overview',
+      'admin-clinic-compliance',
+      'admin-clinic-metrics',
+      'admin-clinic-reputation',
+      'admin-clinic-setup',
       'admin-client-requests',
       'admin-client-submitted-requests',
       'admin-client-reports-dashboards',
@@ -104,6 +173,11 @@ describe('route role access', () => {
     const adminPreviewRouteIds = [
       'admin-client-preview',
       'admin-client-action-needed-preview',
+      'admin-client-patient-acquisition-preview',
+      'admin-client-calls-bookings-preview',
+      'admin-client-reputation-preview',
+      'admin-client-service-lines-preview',
+      'admin-client-compliance-approvals-preview',
       'admin-client-projects-preview',
       'admin-client-reports-dashboards-preview',
       'admin-client-files-links-preview',

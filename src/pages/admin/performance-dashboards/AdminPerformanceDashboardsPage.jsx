@@ -11,6 +11,7 @@ import {
 } from '../../../domain/services/adminPerformanceDashboardService'
 import {
   EmptyPerformanceDashboardsState,
+  PerformanceDashboardCreateMethodDialog,
   PerformanceDashboardJsonImportModal,
   PerformanceDashboardPeriodModal,
   PerformanceDashboardsTable,
@@ -19,9 +20,28 @@ import {
 } from '../../../features/admin-performance-dashboards'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
+import { ErrorBlock } from '@/shared/ui'
 
 function createUuid() {
   return crypto.randomUUID()
+}
+
+function getPerformanceDashboardsPath(clientId) {
+  return clientId
+    ? `/admin/performance-dashboards?clientId=${clientId}`
+    : '/admin/performance-dashboards'
+}
+
+function getPerformanceDashboardActionPath(clientId, actionParam) {
+  const params = new URLSearchParams()
+
+  if (clientId) {
+    params.set('clientId', clientId)
+  }
+
+  params.set(actionParam, 'true')
+
+  return `/admin/performance-dashboards?${params.toString()}`
 }
 
 function PerformanceDashboardModalController({
@@ -62,6 +82,7 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
   const [importResult, setImportResult] = useState(null)
   const navigate = useNavigate()
   const toast = useToast()
+  const isCreateMethodDialogOpen = routeParams.createPerformanceDashboard === 'true'
   const isCreateModalOpen = routeParams.newPerformanceDashboard === 'true'
   const isImportModalOpen = routeParams.importPerformanceDashboard === 'true'
   const dashboardsResource = useAsyncResource({
@@ -92,23 +113,25 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
     void dashboardsResource.reload()
   }
 
+  function closeCreateMethodDialog() {
+    navigate(getPerformanceDashboardsPath(routeParams.clientId), { replace: true })
+  }
+
+  function openCreateModal() {
+    navigate(getPerformanceDashboardActionPath(routeParams.clientId, 'newPerformanceDashboard'), { replace: true })
+  }
+
+  function openImportModal() {
+    navigate(getPerformanceDashboardActionPath(routeParams.clientId, 'importPerformanceDashboard'), { replace: true })
+  }
+
   function closeCreateModal() {
-    navigate(
-      routeParams.clientId
-        ? `/admin/performance-dashboards?clientId=${routeParams.clientId}`
-        : '/admin/performance-dashboards',
-      { replace: true },
-    )
+    navigate(getPerformanceDashboardsPath(routeParams.clientId), { replace: true })
   }
 
   function closeImportModal() {
     setImportResult(null)
-    navigate(
-      routeParams.clientId
-        ? `/admin/performance-dashboards?clientId=${routeParams.clientId}`
-        : '/admin/performance-dashboards',
-      { replace: true },
-    )
+    navigate(getPerformanceDashboardsPath(routeParams.clientId), { replace: true })
   }
 
   function handleSaved(period) {
@@ -123,9 +146,9 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
 
   if (dashboardsResource.status === 'error') {
     return (
-      <div className="rounded-block border border-destructive/20 bg-destructive/10 px-4 py-3 text-ui text-destructive">
+      <ErrorBlock title="Performance dashboards could not be loaded">
         {dashboardsResource.error}
-      </div>
+      </ErrorBlock>
     )
   }
 
@@ -164,8 +187,21 @@ export function AdminPerformanceDashboardsPage({ routeParams = {}, runtime }) {
           periods={visiblePeriods}
         />
       ) : (
-        <EmptyPerformanceDashboardsState hasClients={clients.length > 0} />
+        <EmptyPerformanceDashboardsState
+          createHref={getPerformanceDashboardActionPath(routeParams.clientId, 'createPerformanceDashboard')}
+          hasClients={clients.length > 0}
+        />
       )}
+
+      {isCreateMethodDialogOpen ? (
+        <PerformanceDashboardCreateMethodDialog
+          hasClients={clients.length > 0}
+          isOpen
+          onClose={closeCreateMethodDialog}
+          onImportJson={openImportModal}
+          onStartFromScratch={openCreateModal}
+        />
+      ) : null}
 
       {isCreateModalOpen ? (
         <PerformanceDashboardModalController

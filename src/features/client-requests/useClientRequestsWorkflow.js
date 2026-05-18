@@ -21,11 +21,12 @@ function createInitialDraft(clientId = '') {
 
 export function useClientRequestsWorkflow({
   clientId,
+  initiallyOpen = false,
   onCreated,
   runtime,
 }) {
   const toast = useToast()
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isCreateOpen, setIsCreateOpen] = useState(() => initiallyOpen)
   const [requestDraft, setRequestDraft] = useState(() => createInitialDraft(clientId))
   const [requestError, setRequestError] = useState('')
   const [requestSaveState, setRequestSaveState] = useState('')

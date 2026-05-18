@@ -11,7 +11,7 @@ function HeaderActions({ projectCount }) {
   )
 }
 
-export function ClientProjectsPageHeader({ routeParams = {}, runtime }) {
+export function ClientProjectsPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:projects-header:${clientId}:${routeParams.projectId ?? ''}`,
@@ -25,17 +25,18 @@ export function ClientProjectsPageHeader({ routeParams = {}, runtime }) {
   const page = pageResource.data
 
   if (pageResource.status === 'loading' || !page) {
-    return <PageHeader title="Projects" />
+    return <PageHeader title="Projects" width={activeRoute?.contentWidth} />
   }
 
   if (pageResource.status === 'error' || page.status === 'error') {
-    return <PageHeader title="Access denied" />
+    return <PageHeader title="Access denied" width={activeRoute?.contentWidth} />
   }
 
   return (
     <PageHeader
       actions={<HeaderActions projectCount={page.projects.length} />}
       title="Projects"
+      width={activeRoute?.contentWidth}
     />
   )
 }

@@ -199,6 +199,29 @@ updates/activity -> Updates
 client-created asks -> Requests
 ```
 
+Clinic vertical refactor note:
+
+```text
+Clinic clients are not primarily served by generic project-status navigation.
+When client.type = clinic, the portal should use a clinic template focused on patient acquisition, calls/bookings, campaigns/service lines, reputation, compliance/approvals, action needed, reports, files/assets, and settings/access.
+Clinic MVP data must stay aggregate-only. Do not store patient names, patient contact details, diagnoses, MRNs, DOBs, raw PHI, or patient-level attribution.
+```
+
+Clinic template target destinations:
+
+```text
+/client/overview
+/client/patient-acquisition
+/client/calls-bookings
+/client/service-lines
+/client/reputation
+/client/compliance-approvals
+/client/action-needed
+/client/reports-dashboards
+/client/files-links
+/client/settings
+```
+
 ### Admin Pages
 
 ```text

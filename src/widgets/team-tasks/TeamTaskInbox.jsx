@@ -1,4 +1,4 @@
-import { CardContent, PrimitiveCard as Card, StatusBadge } from '@/shared/ui'
+import { CardContent, Panel, PanelBody, PanelHeader, PrimitiveCard as Card, StatusBadge } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 import {
   formatTaskDueDate,
@@ -107,12 +107,9 @@ function TeamTaskSection({ emptyText, onOpenTask, selectedTaskId, tasks, title }
   }
 
   return (
-    <section className="overflow-hidden rounded-block bg-block">
-      <div className="flex items-center justify-between gap-component px-card py-component">
-        <h2 className="text-ui text-text-primary">{title}</h2>
-        <span className="text-label text-text-muted">{tasks.length}</span>
-      </div>
-      <div>
+    <Panel>
+      <PanelHeader divided title={title} />
+      <PanelBody className="p-0">
         {tasks.map((task) => (
           <TeamTaskRow
             isSelected={selectedTaskId === task.id}
@@ -121,9 +118,9 @@ function TeamTaskSection({ emptyText, onOpenTask, selectedTaskId, tasks, title }
             task={task}
           />
         ))}
-      </div>
+      </PanelBody>
       {emptyText ? <p className="text-ui text-text-muted">{emptyText}</p> : null}
-    </section>
+    </Panel>
   )
 }
 

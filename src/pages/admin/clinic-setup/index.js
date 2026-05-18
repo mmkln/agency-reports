@@ -1,0 +1,1 @@
+export { AdminClinicSetupPage } from './AdminClinicSetupPage'

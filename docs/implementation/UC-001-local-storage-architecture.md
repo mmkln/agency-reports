@@ -29,6 +29,12 @@ profiles
 projects
 tasks
 updates
+clinicProfiles
+clinicLocations
+clinicServiceLines
+serviceLinePerformance
+patientAcquisitionSnapshots
+callBookingMetrics
 neededFromClient
 dashboardLinks
 reports
@@ -96,6 +102,15 @@ profiles -> repositories.profiles
 projects -> repositories.projects
 tasks -> repositories.tasks
 updates -> repositories.updates
+clinic_profiles -> repositories.clinicProfiles
+clinic_locations -> repositories.clinicLocations
+clinic_service_lines -> repositories.clinicServiceLines
+patient_acquisition_snapshots -> repositories.patientAcquisitionSnapshots
+call_booking_metrics -> repositories.callBookingMetrics
+reputation_snapshots -> repositories.reputationSnapshots
+compliance_reviews -> repositories.complianceReviews
+medical_approvals -> repositories.medicalApprovals
+service_line_performance -> repositories.serviceLinePerformance
 needed_from_client -> repositories.neededFromClient
 dashboard_links -> repositories.dashboardLinks
 reports -> repositories.reports

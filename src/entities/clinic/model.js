@@ -1,0 +1,789 @@
+export const CLINIC_PROFILE_SPECIALTIES = Object.freeze({
+  AESTHETICS: 'aesthetics',
+  DENTAL: 'dental',
+  DERMATOLOGY: 'dermatology',
+  FERTILITY: 'fertility',
+  MENTAL_HEALTH: 'mental_health',
+  PHYSIOTHERAPY: 'physiotherapy',
+  PODIATRY: 'podiatry',
+  URGENT_CARE: 'urgent_care',
+  OTHER: 'other',
+})
+
+export const CLINIC_PROFILE_SPECIALTY_META = Object.freeze({
+  [CLINIC_PROFILE_SPECIALTIES.AESTHETICS]: { label: 'Aesthetics' },
+  [CLINIC_PROFILE_SPECIALTIES.DENTAL]: { label: 'Dental' },
+  [CLINIC_PROFILE_SPECIALTIES.DERMATOLOGY]: { label: 'Dermatology' },
+  [CLINIC_PROFILE_SPECIALTIES.FERTILITY]: { label: 'Fertility' },
+  [CLINIC_PROFILE_SPECIALTIES.MENTAL_HEALTH]: { label: 'Mental Health' },
+  [CLINIC_PROFILE_SPECIALTIES.PHYSIOTHERAPY]: { label: 'Physiotherapy' },
+  [CLINIC_PROFILE_SPECIALTIES.PODIATRY]: { label: 'Podiatry' },
+  [CLINIC_PROFILE_SPECIALTIES.URGENT_CARE]: { label: 'Urgent Care' },
+  [CLINIC_PROFILE_SPECIALTIES.OTHER]: { label: 'Other' },
+})
+
+export const CLINIC_SERVICE_LINE_STATUSES = Object.freeze({
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  PLANNED: 'planned',
+})
+
+export const CLINIC_ACQUISITION_CHANNELS = Object.freeze({
+  DIRECT: 'direct',
+  GOOGLE_ADS: 'google_ads',
+  META_ADS: 'meta_ads',
+  ORGANIC: 'organic',
+  REFERRAL: 'referral',
+  OTHER: 'other',
+})
+
+export const CLINIC_ACQUISITION_CHANNEL_META = Object.freeze({
+  [CLINIC_ACQUISITION_CHANNELS.GOOGLE_ADS]: { label: 'Google Ads' },
+  [CLINIC_ACQUISITION_CHANNELS.META_ADS]: { label: 'Meta Ads' },
+  [CLINIC_ACQUISITION_CHANNELS.ORGANIC]: { label: 'Organic' },
+  [CLINIC_ACQUISITION_CHANNELS.REFERRAL]: { label: 'Referral' },
+  [CLINIC_ACQUISITION_CHANNELS.DIRECT]: { label: 'Direct' },
+  [CLINIC_ACQUISITION_CHANNELS.OTHER]: { label: 'Other' },
+})
+
+export const CLINIC_CAMPAIGN_STATUSES = Object.freeze({
+  COMPLETED: 'completed',
+  COMPLIANCE_REVIEW: 'compliance_review',
+  LIMITED_BY_POLICY: 'limited_by_policy',
+  LIVE: 'live',
+  OPTIMIZING: 'optimizing',
+  PAUSED: 'paused',
+  PLANNED: 'planned',
+  WAITING_CLINIC_APPROVAL: 'waiting_clinic_approval',
+})
+
+export const CLINIC_CAMPAIGN_STATUS_META = Object.freeze({
+  [CLINIC_CAMPAIGN_STATUSES.PLANNED]: {
+    icon: 'circle',
+    label: 'Planned',
+    tone: 'neutral',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.WAITING_CLINIC_APPROVAL]: {
+    icon: 'clock',
+    label: 'Waiting clinic approval',
+    tone: 'yellow',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.COMPLIANCE_REVIEW]: {
+    icon: 'shieldCheck',
+    label: 'Compliance review',
+    tone: 'blue',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.LIVE]: {
+    icon: 'checkCircle2',
+    label: 'Live',
+    tone: 'green',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.LIMITED_BY_POLICY]: {
+    icon: 'triangleAlert',
+    label: 'Limited by policy',
+    tone: 'yellow',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.OPTIMIZING]: {
+    icon: 'clock',
+    label: 'Optimizing',
+    tone: 'blue',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.PAUSED]: {
+    icon: 'circlePause',
+    label: 'Paused',
+    tone: 'neutral',
+  },
+  [CLINIC_CAMPAIGN_STATUSES.COMPLETED]: {
+    icon: 'checkCircle2',
+    label: 'Completed',
+    tone: 'green',
+  },
+})
+
+export const CLINIC_RECORD_PUBLISH_STATES = Object.freeze({
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+})
+
+export const CLINIC_RECORD_PUBLISH_STATE_META = Object.freeze({
+  [CLINIC_RECORD_PUBLISH_STATES.DRAFT]: {
+    icon: 'filePenLine',
+    label: 'Draft',
+    tone: 'neutral',
+  },
+  [CLINIC_RECORD_PUBLISH_STATES.PUBLISHED]: {
+    icon: 'send',
+    label: 'Published',
+    tone: 'green',
+  },
+})
+
+export const CLINIC_COMPLIANCE_STATUSES = Object.freeze({
+  APPROVED: 'approved',
+  BLOCKED: 'blocked',
+  IN_REVIEW: 'in_review',
+  LIMITED_BY_POLICY: 'limited_by_policy',
+  NOT_REVIEWED: 'not_reviewed',
+  RISK_FLAGGED: 'risk_flagged',
+})
+
+export const CLINIC_POLICY_ISSUE_STATUSES = Object.freeze({
+  OPEN: 'open',
+  RESOLVED: 'resolved',
+})
+
+export const CLINIC_POLICY_ISSUE_TYPES = Object.freeze({
+  BLOCKED_AD: 'blocked_ad',
+  LIMITED_AD: 'limited_ad',
+  MEDICAL_CLAIM: 'medical_claim',
+  OTHER: 'other',
+  PRIVACY_TRACKING: 'privacy_tracking',
+  REJECTED_AD: 'rejected_ad',
+})
+
+export const CLINIC_COMPLIANCE_STATUS_META = Object.freeze({
+  [CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED]: {
+    icon: 'circle',
+    label: 'Not reviewed',
+    tone: 'neutral',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.IN_REVIEW]: {
+    icon: 'clock',
+    label: 'In review',
+    tone: 'blue',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.APPROVED]: {
+    icon: 'shieldCheck',
+    label: 'Approved',
+    tone: 'green',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED]: {
+    icon: 'triangleAlert',
+    label: 'Risk flagged',
+    tone: 'yellow',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.BLOCKED]: {
+    icon: 'circleAlert',
+    label: 'Blocked',
+    tone: 'red',
+  },
+  [CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY]: {
+    icon: 'triangleAlert',
+    label: 'Limited by policy',
+    tone: 'yellow',
+  },
+})
+
+export const CLINIC_APPROVAL_STATUSES = Object.freeze({
+  APPROVED: 'approved',
+  CHANGES_REQUESTED: 'changes_requested',
+  EXPIRED: 'expired',
+  PENDING_MEDICAL_REVIEW: 'pending_medical_review',
+  REJECTED: 'rejected',
+})
+
+export const CLINIC_APPROVAL_STATUS_META = Object.freeze({
+  [CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW]: {
+    icon: 'clock',
+    label: 'Pending medical review',
+    tone: 'blue',
+  },
+  [CLINIC_APPROVAL_STATUSES.CHANGES_REQUESTED]: {
+    icon: 'triangleAlert',
+    label: 'Changes requested',
+    tone: 'yellow',
+  },
+  [CLINIC_APPROVAL_STATUSES.APPROVED]: {
+    icon: 'checkCircle2',
+    label: 'Approved',
+    tone: 'green',
+  },
+  [CLINIC_APPROVAL_STATUSES.REJECTED]: {
+    icon: 'circleAlert',
+    label: 'Rejected',
+    tone: 'red',
+  },
+  [CLINIC_APPROVAL_STATUSES.EXPIRED]: {
+    icon: 'clock',
+    label: 'Expired',
+    tone: 'neutral',
+  },
+})
+
+export const CLINIC_APPROVAL_TYPES = Object.freeze({
+  AD_COPY: 'ad_copy',
+  BEFORE_AFTER_IMAGE: 'before_after_image',
+  CONSENT_LANGUAGE: 'consent_language',
+  DOCTOR_BIO: 'doctor_bio',
+  LANDING_PAGE: 'landing_page',
+  MEDICAL_CLAIM: 'medical_claim',
+  PRIVACY_TRACKING: 'privacy_tracking',
+  SERVICE_DESCRIPTION: 'service_description',
+  TESTIMONIAL: 'testimonial',
+  TREATMENT_PRICING: 'treatment_pricing',
+})
+
+export const CLINIC_APPROVAL_TYPE_META = Object.freeze({
+  [CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM]: { label: 'Medical claim' },
+  [CLINIC_APPROVAL_TYPES.AD_COPY]: { label: 'Ad copy' },
+  [CLINIC_APPROVAL_TYPES.LANDING_PAGE]: { label: 'Landing page' },
+  [CLINIC_APPROVAL_TYPES.DOCTOR_BIO]: { label: 'Doctor bio' },
+  [CLINIC_APPROVAL_TYPES.SERVICE_DESCRIPTION]: { label: 'Service description' },
+  [CLINIC_APPROVAL_TYPES.BEFORE_AFTER_IMAGE]: { label: 'Before/after image' },
+  [CLINIC_APPROVAL_TYPES.TESTIMONIAL]: { label: 'Testimonial' },
+  [CLINIC_APPROVAL_TYPES.TREATMENT_PRICING]: { label: 'Treatment pricing' },
+  [CLINIC_APPROVAL_TYPES.CONSENT_LANGUAGE]: { label: 'Consent language' },
+  [CLINIC_APPROVAL_TYPES.PRIVACY_TRACKING]: { label: 'Privacy/tracking' },
+})
+
+export const CLINIC_SERVICE_LINE_STATUS_META = Object.freeze({
+  [CLINIC_SERVICE_LINE_STATUSES.PLANNED]: {
+    icon: 'circle',
+    label: 'Planned',
+    tone: 'neutral',
+  },
+  [CLINIC_SERVICE_LINE_STATUSES.ACTIVE]: {
+    icon: 'checkCircle2',
+    label: 'Active',
+    tone: 'green',
+  },
+  [CLINIC_SERVICE_LINE_STATUSES.PAUSED]: {
+    icon: 'circlePause',
+    label: 'Paused',
+    tone: 'neutral',
+  },
+})
+
+const PROHIBITED_PATIENT_KEYS = Object.freeze([
+  'date_of_birth',
+  'diagnosis',
+  'dob',
+  'medical_record',
+  'medical_record_number',
+  'mrn',
+  'patient_email',
+  'patient_id',
+  'patient_name',
+  'patient_phone',
+])
+
+function normalizeText(value = '') {
+  return String(value ?? '').trim()
+}
+
+function normalizeNullableText(value) {
+  const normalizedValue = normalizeText(value)
+  return normalizedValue || null
+}
+
+function normalizeBoolean(value, fallback = true) {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function normalizeNumber(value, fallback = 0) {
+  const numberValue = Number(value)
+
+  return Number.isFinite(numberValue) ? numberValue : fallback
+}
+
+function normalizeEnum(value, enumObject, fallback) {
+  return Object.values(enumObject).includes(value) ? value : fallback
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+export function assertClinicAggregateRecord(record, context = 'Clinic data') {
+  function visit(value, path) {
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => visit(item, `${path}[${index}]`))
+      return
+    }
+
+    if (!isPlainObject(value)) {
+      return
+    }
+
+    Object.entries(value).forEach(([key, nestedValue]) => {
+      const normalizedKey = key.toLowerCase()
+
+      if (PROHIBITED_PATIENT_KEYS.includes(normalizedKey)) {
+        throw new Error(`${context} must stay aggregate-only. Remove patient-level field "${key}".`)
+      }
+
+      visit(nestedValue, path ? `${path}.${key}` : key)
+    })
+  }
+
+  visit(record, '')
+}
+
+export function normalizeClinicProfile(profile = {}) {
+  assertClinicAggregateRecord(profile, 'Clinic profile')
+
+  return {
+    capacity_notes: normalizeText(profile.capacity_notes),
+    client_id: normalizeText(profile.client_id),
+    created_at: profile.created_at ?? null,
+    id: normalizeText(profile.id),
+    insurance_model: normalizeText(profile.insurance_model),
+    primary_goal: normalizeText(profile.primary_goal),
+    specialty: normalizeEnum(
+      profile.specialty,
+      CLINIC_PROFILE_SPECIALTIES,
+      CLINIC_PROFILE_SPECIALTIES.OTHER,
+    ),
+    updated_at: profile.updated_at ?? profile.created_at ?? null,
+  }
+}
+
+export function normalizeClinicLocation(location = {}) {
+  assertClinicAggregateRecord(location, 'Clinic location')
+
+  return {
+    address: normalizeText(location.address),
+    city: normalizeText(location.city),
+    client_id: normalizeText(location.client_id),
+    created_at: location.created_at ?? null,
+    display_order: normalizeNumber(location.display_order),
+    id: normalizeText(location.id),
+    is_active: normalizeBoolean(location.is_active),
+    name: normalizeText(location.name),
+    updated_at: location.updated_at ?? location.created_at ?? null,
+  }
+}
+
+export function normalizeClinicServiceLine(serviceLine = {}) {
+  assertClinicAggregateRecord(serviceLine, 'Clinic service line')
+
+  return {
+    average_value: normalizeNumber(serviceLine.average_value),
+    capacity_note: normalizeText(serviceLine.capacity_note),
+    client_id: normalizeText(serviceLine.client_id),
+    created_at: serviceLine.created_at ?? null,
+    display_order: normalizeNumber(serviceLine.display_order),
+    id: normalizeText(serviceLine.id),
+    location_ids: Array.isArray(serviceLine.location_ids)
+      ? serviceLine.location_ids.map(normalizeText).filter(Boolean)
+      : [],
+    name: normalizeText(serviceLine.name),
+    primary_channel: normalizeNullableText(serviceLine.primary_channel),
+    status: normalizeEnum(
+      serviceLine.status,
+      CLINIC_SERVICE_LINE_STATUSES,
+      CLINIC_SERVICE_LINE_STATUSES.PLANNED,
+    ),
+    target_monthly_bookings: normalizeNumber(serviceLine.target_monthly_bookings),
+    updated_at: serviceLine.updated_at ?? serviceLine.created_at ?? null,
+  }
+}
+
+export function normalizePatientAcquisitionSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Patient acquisition snapshot')
+
+  return {
+    attended_appointments: normalizeNumber(snapshot.attended_appointments),
+    booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    campaign_name: normalizeText(snapshot.campaign_name),
+    calls: normalizeNumber(snapshot.calls),
+    channel: normalizeEnum(
+      snapshot.channel,
+      CLINIC_ACQUISITION_CHANNELS,
+      CLINIC_ACQUISITION_CHANNELS.OTHER,
+    ),
+    chats: normalizeNumber(snapshot.chats),
+    client_id: normalizeText(snapshot.client_id),
+    clicks: normalizeNumber(snapshot.clicks),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    forms: normalizeNumber(snapshot.forms),
+    id: normalizeText(snapshot.id),
+    impressions: normalizeNumber(snapshot.impressions),
+    insight: normalizeText(snapshot.insight),
+    landing_page_visits: normalizeNumber(snapshot.landing_page_visits),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    location_id: normalizeNullableText(snapshot.location_id),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
+    qualified_inquiries: normalizeNumber(snapshot.qualified_inquiries),
+    service_line_id: normalizeNullableText(snapshot.service_line_id),
+    spend: normalizeNumber(snapshot.spend),
+    summary: normalizeText(snapshot.summary),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}
+
+export function normalizeBookingPipelineSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Booking pipeline snapshot')
+
+  return {
+    attended_appointments: normalizeNumber(snapshot.attended_appointments),
+    booked_appointments: normalizeNumber(snapshot.booked_appointments),
+    campaign_name: normalizeText(snapshot.campaign_name),
+    calls: normalizeNumber(snapshot.calls),
+    chats: normalizeNumber(snapshot.chats),
+    client_id: normalizeText(snapshot.client_id),
+    clicks: normalizeNumber(snapshot.clicks),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    forms: normalizeNumber(snapshot.forms),
+    id: normalizeText(snapshot.id),
+    impressions: normalizeNumber(snapshot.impressions),
+    insight: normalizeText(snapshot.insight),
+    landing_page_visits: normalizeNumber(snapshot.landing_page_visits),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    location_id: normalizeNullableText(snapshot.location_id),
+    missed_calls: normalizeNumber(snapshot.missed_calls),
+    no_response_leads: normalizeNumber(snapshot.no_response_leads),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
+    qualified_inquiries: normalizeNumber(snapshot.qualified_inquiries),
+    service_line_id: normalizeNullableText(snapshot.service_line_id),
+    summary: normalizeText(snapshot.summary),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}
+
+function normalizeReasonBreakdown(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      count: normalizeNumber(item?.count),
+      reason: normalizeText(item?.reason),
+    }))
+    .filter((item) => item.reason && item.count > 0)
+}
+
+function normalizePeakCallTimes(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      booked_from_calls: normalizeNumber(item?.booked_from_calls ?? item?.bookedFromCalls),
+      call_count: normalizeNumber(item?.call_count ?? item?.calls ?? item?.count),
+      label: normalizeText(item?.label ?? item?.time_window ?? item?.timeWindow),
+      missed_calls: normalizeNumber(item?.missed_calls ?? item?.missedCalls),
+    }))
+    .filter((item) => item.label && item.call_count > 0)
+}
+
+export function normalizeCallBookingMetric(metric = {}) {
+  assertClinicAggregateRecord(metric, 'Call booking metric')
+
+  return {
+    answered_calls: normalizeNumber(metric.answered_calls),
+    average_response_seconds: normalizeNumber(metric.average_response_seconds),
+    booked_from_calls: normalizeNumber(metric.booked_from_calls),
+    campaign_name: normalizeText(metric.campaign_name),
+    client_id: normalizeText(metric.client_id),
+    created_at: metric.created_at ?? null,
+    data_source: normalizeNullableText(metric.data_source),
+    first_time_calls: normalizeNumber(metric.first_time_calls),
+    follow_up_needed_count: normalizeNumber(metric.follow_up_needed_count),
+    form_leads: normalizeNumber(metric.form_leads),
+    id: normalizeText(metric.id),
+    insight: normalizeText(metric.insight),
+    last_updated_at: metric.last_updated_at ?? metric.updated_at ?? metric.created_at ?? null,
+    location_id: normalizeNullableText(metric.location_id),
+    missed_calls: normalizeNumber(metric.missed_calls),
+    no_response_leads: normalizeNumber(metric.no_response_leads),
+    not_booked_reasons: normalizeReasonBreakdown(metric.not_booked_reasons),
+    peak_call_times: normalizePeakCallTimes(metric.peak_call_times),
+    period_end: normalizeText(metric.period_end),
+    period_label: normalizeText(metric.period_label),
+    period_start: normalizeText(metric.period_start),
+    publish_state: normalizeEnum(
+      metric.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: metric.published_at ?? null,
+    published_by: normalizeNullableText(metric.published_by),
+    service_line_id: normalizeNullableText(metric.service_line_id),
+    summary: normalizeText(metric.summary),
+    total_calls: normalizeNumber(metric.total_calls),
+    updated_at: metric.updated_at ?? metric.created_at ?? null,
+  }
+}
+
+export function normalizeServiceLinePerformance(performance = {}) {
+  assertClinicAggregateRecord(performance, 'Service line performance')
+
+  return {
+    ad_approval_status: normalizeText(performance.ad_approval_status),
+    booked_appointments: normalizeNumber(performance.booked_appointments),
+    campaign_name: normalizeText(performance.campaign_name),
+    campaign_status: normalizeEnum(
+      performance.campaign_status,
+      CLINIC_CAMPAIGN_STATUSES,
+      CLINIC_CAMPAIGN_STATUSES.PLANNED,
+    ),
+    capacity_note: normalizeText(performance.capacity_note),
+    client_id: normalizeText(performance.client_id),
+    compliance_status: normalizeEnum(
+      performance.compliance_status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    cost_per_booked_appointment: normalizeNumber(performance.cost_per_booked_appointment),
+    cost_per_inquiry: normalizeNumber(performance.cost_per_inquiry),
+    created_at: performance.created_at ?? null,
+    data_source: normalizeNullableText(performance.data_source),
+    id: normalizeText(performance.id),
+    inquiries: normalizeNumber(performance.inquiries),
+    insight: normalizeText(performance.insight),
+    landing_page_status: normalizeText(performance.landing_page_status),
+    last_updated_at: performance.last_updated_at ?? performance.updated_at ?? performance.created_at ?? null,
+    location_id: normalizeNullableText(performance.location_id),
+    period_end: normalizeText(performance.period_end),
+    period_label: normalizeText(performance.period_label),
+    period_start: normalizeText(performance.period_start),
+    publish_state: normalizeEnum(
+      performance.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: performance.published_at ?? null,
+    published_by: normalizeNullableText(performance.published_by),
+    service_line_id: normalizeNullableText(performance.service_line_id),
+    spend: normalizeNumber(performance.spend),
+    summary: normalizeText(performance.summary),
+    updated_at: performance.updated_at ?? performance.created_at ?? null,
+  }
+}
+
+export function normalizeLocationPerformance(performance = {}) {
+  assertClinicAggregateRecord(performance, 'Location performance')
+
+  return {
+    answered_calls: normalizeNumber(performance.answered_calls),
+    booked_appointments: normalizeNumber(performance.booked_appointments),
+    client_id: normalizeText(performance.client_id),
+    compliance_status: normalizeEnum(
+      performance.compliance_status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    cost_per_booked_appointment: normalizeNumber(performance.cost_per_booked_appointment),
+    created_at: performance.created_at ?? null,
+    data_source: normalizeNullableText(performance.data_source),
+    google_rating: normalizeNumber(performance.google_rating),
+    id: normalizeText(performance.id),
+    inquiries: normalizeNumber(performance.inquiries),
+    insight: normalizeText(performance.insight),
+    last_updated_at: performance.last_updated_at ?? performance.updated_at ?? performance.created_at ?? null,
+    location_id: normalizeNullableText(performance.location_id),
+    missed_calls: normalizeNumber(performance.missed_calls),
+    period_end: normalizeText(performance.period_end),
+    period_label: normalizeText(performance.period_label),
+    period_start: normalizeText(performance.period_start),
+    publish_state: normalizeEnum(
+      performance.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: performance.published_at ?? null,
+    published_by: normalizeNullableText(performance.published_by),
+    review_count: normalizeNumber(performance.review_count),
+    reviews_gained: normalizeNumber(performance.reviews_gained),
+    spend: normalizeNumber(performance.spend),
+    summary: normalizeText(performance.summary),
+    updated_at: performance.updated_at ?? performance.created_at ?? null,
+  }
+}
+
+export function normalizeReputationSnapshot(snapshot = {}) {
+  assertClinicAggregateRecord(snapshot, 'Reputation snapshot')
+
+  return {
+    client_id: normalizeText(snapshot.client_id),
+    created_at: snapshot.created_at ?? null,
+    data_source: normalizeNullableText(snapshot.data_source),
+    gbp_updates: normalizeNumber(snapshot.gbp_updates),
+    google_rating: normalizeNumber(snapshot.google_rating),
+    id: normalizeText(snapshot.id),
+    insight: normalizeText(snapshot.insight),
+    last_updated_at: snapshot.last_updated_at ?? snapshot.updated_at ?? snapshot.created_at ?? null,
+    local_visibility_note: normalizeText(snapshot.local_visibility_note),
+    location_id: normalizeNullableText(snapshot.location_id),
+    negative_reviews: normalizeNumber(snapshot.negative_reviews),
+    period_end: normalizeText(snapshot.period_end),
+    period_label: normalizeText(snapshot.period_label),
+    period_start: normalizeText(snapshot.period_start),
+    provider_profile_completeness: normalizeNumber(snapshot.provider_profile_completeness),
+    publish_state: normalizeEnum(
+      snapshot.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: snapshot.published_at ?? null,
+    published_by: normalizeNullableText(snapshot.published_by),
+    review_count: normalizeNumber(snapshot.review_count),
+    review_request_sent: normalizeNumber(snapshot.review_request_sent),
+    review_response_drafts: normalizeNumber(snapshot.review_response_drafts),
+    reviews_gained: normalizeNumber(snapshot.reviews_gained),
+    summary: normalizeText(snapshot.summary),
+    unanswered_reviews: normalizeNumber(snapshot.unanswered_reviews),
+    updated_at: snapshot.updated_at ?? snapshot.created_at ?? null,
+  }
+}
+
+function normalizeApprovalHistory(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      actor_label: normalizeText(item?.actor_label),
+      comment: normalizeText(item?.comment),
+      decision: normalizeText(item?.decision),
+      decided_at: item?.decided_at ?? null,
+      version: normalizeText(item?.version),
+    }))
+    .filter((item) => item.decision || item.comment || item.decided_at)
+}
+
+function normalizeComplianceHistory(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      actor_label: normalizeText(item?.actor_label),
+      changed_at: item?.changed_at ?? null,
+      from_status: normalizeText(item?.from_status),
+      note: normalizeText(item?.note),
+      to_status: normalizeText(item?.to_status),
+    }))
+    .filter((item) => item.from_status || item.to_status || item.note || item.changed_at)
+}
+
+function normalizePolicyIssues(items) {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => ({
+      affected_campaign: normalizeText(item?.affected_campaign ?? item?.campaign),
+      id: normalizeText(item?.id),
+      next_action: normalizeText(item?.next_action),
+      platform: normalizeText(item?.platform),
+      reason: normalizeText(item?.reason),
+      resolved_at: item?.resolved_at ?? null,
+      status: normalizeEnum(
+        item?.status,
+        CLINIC_POLICY_ISSUE_STATUSES,
+        CLINIC_POLICY_ISSUE_STATUSES.OPEN,
+      ),
+      type: normalizeEnum(
+        item?.type,
+        CLINIC_POLICY_ISSUE_TYPES,
+        CLINIC_POLICY_ISSUE_TYPES.OTHER,
+      ),
+    }))
+    .filter((item) => item.reason || item.next_action || item.platform || item.affected_campaign)
+}
+
+export function normalizeComplianceReview(review = {}) {
+  assertClinicAggregateRecord(review, 'Compliance review')
+
+  return {
+    blocked_items: normalizeNumber(review.blocked_items),
+    client_id: normalizeText(review.client_id),
+    created_at: review.created_at ?? null,
+    data_source: normalizeNullableText(review.data_source),
+    id: normalizeText(review.id),
+    last_updated_at: review.last_updated_at ?? review.updated_at ?? review.created_at ?? null,
+    limited_ads: normalizeNumber(review.limited_ads),
+    location_id: normalizeNullableText(review.location_id),
+    next_action: normalizeText(review.next_action),
+    open_issues: normalizeNumber(review.open_issues),
+    pending_approvals: normalizeNumber(review.pending_approvals),
+    policy_issues: normalizePolicyIssues(review.policy_issues),
+    platform: normalizeText(review.platform),
+    publish_state: normalizeEnum(
+      review.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: review.published_at ?? null,
+    published_by: normalizeNullableText(review.published_by),
+    risk_note: normalizeText(review.risk_note),
+    service_line_id: normalizeNullableText(review.service_line_id),
+    status_history: normalizeComplianceHistory(review.status_history),
+    status: normalizeEnum(
+      review.status,
+      CLINIC_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+    ),
+    summary: normalizeText(review.summary),
+    title: normalizeText(review.title),
+    updated_at: review.updated_at ?? review.created_at ?? null,
+  }
+}
+
+export function normalizeMedicalApproval(approval = {}) {
+  assertClinicAggregateRecord(approval, 'Medical approval')
+
+  return {
+    approval_type: normalizeEnum(
+      approval.approval_type,
+      CLINIC_APPROVAL_TYPES,
+      CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM,
+    ),
+    approved_at: approval.approved_at ?? null,
+    approver_label: normalizeText(approval.approver_label),
+    changes_requested_at: approval.changes_requested_at ?? null,
+    client_id: normalizeText(approval.client_id),
+    created_at: approval.created_at ?? null,
+    decision_comment: normalizeText(approval.decision_comment),
+    due_date: normalizeNullableText(approval.due_date),
+    history: normalizeApprovalHistory(approval.history),
+    id: normalizeText(approval.id),
+    instructions: normalizeText(approval.instructions),
+    last_updated_at: approval.last_updated_at ?? approval.updated_at ?? approval.created_at ?? null,
+    location_id: normalizeNullableText(approval.location_id),
+    publish_state: normalizeEnum(
+      approval.publish_state,
+      CLINIC_RECORD_PUBLISH_STATES,
+      CLINIC_RECORD_PUBLISH_STATES.DRAFT,
+    ),
+    published_at: approval.published_at ?? null,
+    published_by: normalizeNullableText(approval.published_by),
+    requested_by_label: normalizeText(approval.requested_by_label),
+    service_line_id: normalizeNullableText(approval.service_line_id),
+    status: normalizeEnum(
+      approval.status,
+      CLINIC_APPROVAL_STATUSES,
+      CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW,
+    ),
+    title: normalizeText(approval.title),
+    updated_at: approval.updated_at ?? approval.created_at ?? null,
+    version: normalizeText(approval.version),
+  }
+}

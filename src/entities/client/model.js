@@ -7,6 +7,24 @@ export const CLIENT_STATUSES = Object.freeze({
   WAITING_CLIENT: 'waiting_client',
 })
 
+export const CLIENT_TYPES = Object.freeze({
+  CLINIC: 'clinic',
+  GENERIC: 'generic',
+})
+
+export const CLIENT_TYPE_META = Object.freeze({
+  [CLIENT_TYPES.GENERIC]: {
+    icon: 'users',
+    label: 'Generic client',
+    tone: 'neutral',
+  },
+  [CLIENT_TYPES.CLINIC]: {
+    icon: 'barChart',
+    label: 'Clinic',
+    tone: 'blue',
+  },
+})
+
 export const CLIENT_STATUS_META = Object.freeze({
   [CLIENT_STATUSES.SETUP]: {
     icon: 'wrench',
