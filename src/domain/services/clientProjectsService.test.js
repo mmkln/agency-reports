@@ -202,6 +202,11 @@ describe('getClientProjectsPage', () => {
     expect(page.selectedProject).toMatchObject({
       activeWorkItems: [
         expect.objectContaining({
+          clientActions: [
+            expect.objectContaining({
+              title: 'Approve creative direction',
+            }),
+          ],
           title: 'Creative review',
         }),
       ],
@@ -242,6 +247,27 @@ describe('getClientProjectsPage', () => {
     })
     expect(JSON.stringify(page)).not.toContain('Draft SEO work')
     expect(JSON.stringify(page)).not.toContain('Internal project update')
+  })
+
+  it('does not attach resolved actions as active work item blockers', () => {
+    const page = getClientProjectsPage({
+      clientId: IDS.CLIENT_A,
+      repositories: createRepositories({
+        neededFromClient: createEntityRepository([
+          {
+            client_id: IDS.CLIENT_A,
+            id: '23232323-2323-4232-8232-232323232323',
+            related_work_item_id: IDS.WORK_A,
+            status: NEEDED_ACTION_STATUSES.RESOLVED,
+            title: 'Resolved creative approval',
+          },
+        ]),
+      }),
+      viewer: createClientViewer(),
+    })
+
+    expect(page.status).toBe('ready')
+    expect(page.selectedProject.workItems.find((item) => item.id === IDS.WORK_A).clientActions).toEqual([])
   })
 
   it('filters projects by client-facing state', () => {

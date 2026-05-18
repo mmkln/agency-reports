@@ -13,6 +13,8 @@ import { Icon } from '../../shared/icons'
 import { formatDate, getStatusMeta } from './projectDisplay'
 
 function WorkItemCard({ item }) {
+  const pendingAction = item.clientActions?.[0] ?? null
+
   return (
     <article className="rounded-control border border-control-border bg-block-subtle p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -26,6 +28,11 @@ function WorkItemCard({ item }) {
         <span>Target {formatDate(item.targetDate)}</span>
         <span>Updated {formatDate(item.lastUpdatedAt)}</span>
       </div>
+      {pendingAction ? (
+        <div className="mt-3 rounded-control bg-warning-muted px-3 py-2 text-label font-normal text-warning-foreground">
+          Action needed: {pendingAction.title}
+        </div>
+      ) : null}
     </article>
   )
 }

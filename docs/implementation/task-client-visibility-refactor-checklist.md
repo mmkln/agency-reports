@@ -422,7 +422,7 @@ client_user must not read Task directly as the client-facing work contract.
 - [ ] Update `ClientOverviewBlocks` or related widgets:
   - [x] rename task-facing components to active-work language where appropriate.
   - [x] render `ClientWorkItem` cards.
-  - [ ] show linked needed-action indicator.
+  - [x] show linked needed-action indicator.
   - [x] show target date and last updated.
 - [x] Remove direct task filtering from client overview.
 - [ ] Add overview tests:
@@ -536,22 +536,22 @@ client_user must not read Task directly as the client-facing work contract.
 
 ### Tasks
 
-- [ ] Coordinate with `docs/implementation/client-control-center-refactor-checklist.md` Phase 5.
-- [ ] Build or update client Projects page to use `ClientWorkItem` records.
-- [ ] Build project detail active work section from published client work items.
-- [ ] Add filters:
-  - [ ] Active.
-  - [ ] Waiting on me.
-  - [ ] Completed.
-  - [ ] Archived.
-- [ ] Ensure project detail shows linked client requests.
-- [ ] Ensure project detail hides raw internal tasks.
-- [ ] Add tests for project/work visibility.
+- [x] Coordinate with `docs/implementation/client-control-center-refactor-checklist.md` Phase 5.
+- [x] Build or update client Projects page to use `ClientWorkItem` records.
+- [x] Build project detail active work section from published client work items.
+- [x] Add filters:
+  - [x] Active.
+  - [x] Waiting on me.
+  - [x] Completed.
+  - [x] Archived.
+- [x] Ensure project detail shows linked client requests.
+- [x] Ensure project detail hides raw internal tasks.
+- [x] Add tests for project/work visibility.
 
 ### Completion Criteria
 
-- [ ] Client Overview and client Projects use the same client-facing work model.
-- [ ] No client project page reads raw internal tasks as its work contract.
+- [x] Client Overview and client Projects use the same client-facing work model.
+- [x] No client project page reads raw internal tasks as its work contract.
 
 ## Phase 12 - Activity And Audit
 
@@ -640,7 +640,7 @@ client_user must not read Task directly as the client-facing work contract.
   - [ ] client_user sees published active work.
   - [ ] client_user does not see draft/review/archived work.
   - [ ] client_user never sees internal notes.
-  - [ ] waiting-client task links to needed-from-client request.
+  - [x] waiting-client task links to needed-from-client request.
   - [ ] client response does not mutate task status directly.
 - [x] Add domain integration coverage for client-work publish boundary and safe client read models.
 - [ ] Update acceptance/implementation docs with final status.
@@ -660,7 +660,7 @@ This refactor is complete when:
 
 - [ ] `client_user` does not read `Task` directly as client-facing active work.
 - [ ] Client Overview active work comes from published `ClientWorkItem` records.
-- [ ] Client Projects/Active Work uses published `ClientWorkItem` records.
+- [x] Client Projects/Active Work uses published `ClientWorkItem` records.
 - [ ] Internal task notes cannot appear in client view models.
 - [ ] Agency team can prepare client-facing summaries without publishing by default.
 - [ ] Agency admin/account manager controls publish/archive.

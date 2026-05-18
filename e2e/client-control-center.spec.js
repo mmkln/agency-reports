@@ -203,6 +203,7 @@ test('client can inspect project detail without internal work noise', async ({ p
   await expect(page.getByText('Kickoff')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Client-relevant blockers' })).toBeVisible()
   await expect(page.getByText('Approve creative batch #2').first()).toBeVisible()
+  await expect(page.getByText('Action needed: Approve creative batch #2').first()).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Related results' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Marketing Performance Dashboard/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /April 2026 Monthly Summary/ })).toBeVisible()
