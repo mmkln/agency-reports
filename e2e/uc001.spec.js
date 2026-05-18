@@ -124,7 +124,7 @@ test('admin draft changes stay private until publish, then appear on the client 
   await expect(page.getByRole('link', { name: 'View client version' })).toBeVisible()
 
   await signInAsClient(page)
-  await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`/client/updates?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByText(updateText)).toBeVisible()
 })
 
@@ -161,7 +161,7 @@ test('client overview hides internal tasks and internal notes', async ({ page })
   await signInAsClient(page)
   await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByText('Review new ad creatives')).toBeVisible()
+  await expect(page.getByText('Approve creative batch #2')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ask a question' })).toHaveAttribute(
     'href',
     `/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,

@@ -195,12 +195,12 @@ test('client report reader shows narrative hierarchy and link fallbacks', async 
   )
 
   await expect(page.getByRole('heading', { name: 'April 2026 Monthly Summary' }).first()).toBeVisible()
-  await expect(page.getByText('Executive summary')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'What happened' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Performance context' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Next steps' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open dashboard' })).toBeVisible()
-  await expect(page.getByText('PDF version is not available yet. Read the summary inside the portal.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient Acquisition' }).first()).toBeVisible()
+  await expect(page.getByText('Booked appointments', { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Booking Leakage' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reputation' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Compliance' }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Clinic Actions Needed' }).first()).toBeVisible()
 
   const reportOpenedEvent = await page.evaluate(({ portalKey, reportId }) => {
     const portalData = JSON.parse(window.localStorage.getItem(portalKey))

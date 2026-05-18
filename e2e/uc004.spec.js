@@ -47,6 +47,17 @@ async function signInAsClient(page) {
   await expect(page).toHaveURL(/\/client\/overview/)
 }
 
+async function openNewDashboardDialog(page) {
+  await page.getByRole('link', { name: 'New Dashboard' }).click()
+  await expect(page.getByRole('dialog', { name: 'New dashboard' })).toBeVisible()
+}
+
+async function openImportJsonDialog(page) {
+  await openNewDashboardDialog(page)
+  await page.getByRole('button', { name: /Import from JSON/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
+}
+
 test.beforeEach(async ({ page }) => {
   await resetLocalDemo(page)
 })
@@ -59,7 +70,8 @@ test('agency admin creates a draft performance dashboard and enters structured d
   await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Performance Dashboards' })).toBeVisible()
 
-  await page.getByRole('link', { name: 'New Dashboard' }).click()
+  await openNewDashboardDialog(page)
+  await page.getByRole('button', { name: /Start from scratch/ }).click()
   await expect(page.getByRole('dialog', { name: 'Create performance dashboard' })).toBeVisible()
   await expect(page.getByLabel('Content JSON')).toHaveCount(0)
 
@@ -179,9 +191,8 @@ test('client can view published performance dashboard but cannot view draft or a
 test('invalid performance dashboard JSON stays in the import modal with validation errors', async ({ page }) => {
   await signInAsAdmin(page)
   await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('link', { name: 'Import JSON' }).click()
+  await openImportJsonDialog(page)
 
-  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
   await expect(page.getByText('JSON contract reference')).toBeVisible()
   await expect(page.getByText('docs/implementation/UC-004-json-import-contract.md')).toBeVisible()
   await page.getByLabel('Dashboard JSON *').fill('{bad json')
@@ -195,9 +206,8 @@ test('invalid performance dashboard JSON stays in the import modal with validati
 test('performance dashboard JSON with missing required fields stays in the import modal', async ({ page }) => {
   await signInAsAdmin(page)
   await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('link', { name: 'Import JSON' }).click()
+  await openImportJsonDialog(page)
 
-  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
   await page.getByLabel('Dashboard JSON *').fill(JSON.stringify({
     content: {
       executive_summary: {},
@@ -251,9 +261,8 @@ test('agency admin imports campaign execution JSON and publishes it for the clie
 
   await signInAsAdmin(page)
   await page.goto('/admin/performance-dashboards', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('link', { name: 'Import JSON' }).click()
+  await openImportJsonDialog(page)
 
-  await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
   await page.getByLabel('Example payload').click()
   await page.getByRole('option', { name: 'Campaign execution' }).click()
   await page.getByRole('button', { name: 'Use example' }).click()

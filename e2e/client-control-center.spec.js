@@ -61,15 +61,12 @@ test.beforeEach(async ({ page }) => {
 test('client sidebar exposes mature Client Control Center destinations only', async ({ page }) => {
   await signInAsClient(page)
 
-  const primaryNav = page.getByRole('navigation', { name: 'Primary navigation' })
+  const primaryNav = page.getByRole('list', { name: 'Primary navigation' })
   const expectedLinks = [
     ['Overview', '/client/overview'],
     ['Action Needed', '/client/action-needed'],
-    ['Projects', '/client/projects'],
-    ['Reports & Dashboards', '/client/reports-dashboards'],
-    ['Files & Links', '/client/files-links'],
+    ['Reports', '/client/reports-dashboards'],
     ['Requests', '/client/requests'],
-    ['Updates', '/client/updates'],
     ['Settings', '/client/settings'],
   ]
 
@@ -77,9 +74,17 @@ test('client sidebar exposes mature Client Control Center destinations only', as
     await expect(primaryNav.getByRole('link', { exact: true, name: label })).toHaveAttribute('href', href)
   }
 
+  await primaryNav.getByRole('button', { exact: true, name: 'Performance' }).click()
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Acquisition' })).toHaveAttribute('href', '/client/patient-acquisition')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Calls' })).toHaveAttribute('href', '/client/calls-bookings')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Services' })).toHaveAttribute('href', '/client/service-lines')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Reputation' })).toHaveAttribute('href', '/client/reputation')
+  await primaryNav.getByRole('button', { exact: true, name: 'Resources' }).click()
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Compliance' })).toHaveAttribute('href', '/client/compliance-approvals')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Files' })).toHaveAttribute('href', '/client/files-links')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Updates' })).toHaveAttribute('href', '/client/updates')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Projects' })).toHaveCount(0)
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Dashboard' })).toHaveCount(0)
-  await expect(primaryNav.getByRole('link', { exact: true, name: 'Performance' })).toHaveCount(0)
-  await expect(primaryNav.getByRole('link', { exact: true, name: 'Reports' })).toHaveCount(0)
   await expect(page.getByText('Contact', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ask a question' })).toHaveAttribute(
     'href',
@@ -125,12 +130,15 @@ test('client settings owns account context without agency admin controls', async
   await expect(page.locator('h1').getByText('Settings')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Company' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Team Members' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Security' })).toBeVisible()
   await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'client@greendental.example' })).toBeVisible()
   await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'Green Dental Clinic' })).toBeVisible()
   await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'sarah@greendental.example' })).toBeVisible()
+  await page.getByRole('link', { name: 'Team' }).click()
+  await expect(page.getByRole('heading', { name: 'Team Members' })).toBeVisible()
+  await page.getByRole('link', { name: 'Notifications' }).click()
+  await expect(page.getByText('Notification Settings', { exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Security' }).click()
+  await expect(page.getByText('Security and Authorization', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'New Client' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Publish|Archive|Invite/i })).toHaveCount(0)
 })

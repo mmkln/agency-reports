@@ -103,7 +103,7 @@ test('client-submitted request clarification creates linked Action Needed item',
 
   await signInAsClient(page)
   await page.goto(`/client/requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: 'New request' }).click()
+  await page.getByRole('link', { name: 'New request' }).click()
   await expect(page.getByRole('dialog', { name: 'New request' })).toBeVisible()
   await page.getByLabel('Title').fill(title)
   await page.getByLabel('Details').fill('Please prepare a new campaign request after we confirm the offer.')
