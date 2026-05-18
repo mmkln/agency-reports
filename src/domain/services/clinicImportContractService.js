@@ -101,6 +101,18 @@ function getArray(input, names) {
   return value
 }
 
+function getSectionArray(input, sectionName, names) {
+  const topLevelValue = getFirstValue(input, names)
+
+  if (topLevelValue !== undefined) {
+    return getArray(input, names)
+  }
+
+  const sectionInput = input?.[sectionName]
+
+  return isPlainObject(sectionInput) ? getArray(sectionInput, names) : []
+}
+
 function normalizePeriod(input = {}, fallbackPeriod = null, context = 'Reporting period') {
   const source = isPlainObject(input) ? input : {}
 
@@ -295,25 +307,31 @@ export function normalizeClinicImportPayload(payload = {}, { now = () => new Dat
   assertClinicAggregateRecord(payload, 'Clinic import payload')
 
   const fallbackPeriod = normalizeOptionalPeriod(payload)
-  const serviceLinePerformance = getArray(payload, ['service_line_performance', 'serviceLinePerformance'])
+  const serviceLinePerformance = getSectionArray(payload, 'metrics', [
+    'service_line_performance',
+    'service_lines',
+    'serviceLinePerformance',
+  ])
     .map((record) => normalizeServiceLinePerformanceMetric(record, fallbackPeriod))
 
   return {
     clientId: requireText(payload.client_id ?? payload.clientId, 'Client ID'),
     complianceInput: {
-      complianceReviews: getArray(payload, ['compliance_reviews', 'complianceReviews'])
+      complianceReviews: getSectionArray(payload, 'compliance', ['compliance_reviews', 'complianceReviews'])
         .map(normalizeComplianceReviewItem),
     },
     contractVersion: normalizeText(payload.contract_version ?? payload.contractVersion)
       || CLINIC_IMPORT_CONTRACT_VERSION,
     importedAt: normalizeText(payload.imported_at ?? payload.importedAt) || now(),
     metricsInput: {
-      callBookingMetrics: getArray(payload, [
+      callBookingMetrics: getSectionArray(payload, 'metrics', [
+        'calls_bookings',
         'calls_bookings_metrics',
         'call_booking_metrics',
         'callBookingMetrics',
       ]).map((record) => normalizeCallBookingMetric(record, fallbackPeriod)),
-      patientAcquisitionSnapshots: getArray(payload, [
+      patientAcquisitionSnapshots: getSectionArray(payload, 'metrics', [
+        'patient_acquisition',
         'patient_acquisition_metrics',
         'patient_acquisition_snapshots',
         'patientAcquisitionMetrics',
@@ -321,7 +339,7 @@ export function normalizeClinicImportPayload(payload = {}, { now = () => new Dat
       serviceLinePerformance,
     },
     reputationInput: {
-      reputationSnapshots: getArray(payload, ['reputation_snapshots', 'reputationSnapshots'])
+      reputationSnapshots: getSectionArray(payload, 'reputation', ['reputation_snapshots', 'reputationSnapshots'])
         .map((record) => normalizeReputationSnapshot(record, fallbackPeriod)),
     },
     serviceLinePerformance,

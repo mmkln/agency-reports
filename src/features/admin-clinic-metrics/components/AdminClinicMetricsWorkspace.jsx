@@ -10,6 +10,7 @@ import {
 } from '../../admin-client-workspace'
 import { useAdminClinicMetricsWorkflow } from '../useAdminClinicMetricsWorkflow'
 import { CallBookingMetricsCard } from './CallBookingMetricsCard'
+import { ClinicMetricsImportDialog } from './ClinicMetricsImportDialog'
 import { PatientAcquisitionMetricsCard } from './PatientAcquisitionMetricsCard'
 import { ServiceLinePerformanceCard } from './ServiceLinePerformanceCard'
 
@@ -43,12 +44,21 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
     creatingBookingActionKey,
     draft,
     error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishMetricRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson,
     status,
     updateDraft,
   } = useAdminClinicMetricsWorkflow({ clientId, runtime })
@@ -102,6 +112,9 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>
+            <Button onClick={openImportDialog} size="sm" type="button" variant="outline">
+              Import JSON
+            </Button>
             <Button disabled={!isDirty} form="admin-clinic-metrics-form" size="sm" type="submit">
               Save metrics
             </Button>
@@ -132,7 +145,8 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
             These records are the aggregate source for the client Patient Acquisition and Calls & Bookings pages.
             They should describe patient demand, booked appointments, service-line performance, and front desk leakage
-            without storing PHI.
+            without storing PHI. Use Import JSON for reviewed aggregate exports from call tracking, spreadsheets, or
+            connector prototypes.
           </div>
 
           <PatientAcquisitionMetricsCard
@@ -164,6 +178,17 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
           />
         </form>
       </PageShell>
+
+      <ClinicMetricsImportDialog
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportOpen}
+        onApply={applyImport}
+        onClose={closeImportDialog}
+        onPreview={previewImport}
+        onRawJsonChange={setImportRawJson}
+        rawJson={importRawJson}
+      />
     </>
   )
 }

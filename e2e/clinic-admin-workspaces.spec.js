@@ -105,6 +105,100 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await expect(page.locator('h1').getByText('Calls & Bookings', { exact: true })).toBeVisible()
 })
 
+test('admin can preview and save aggregate clinic metrics imports', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-metrics?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  const importPayload = {
+    client_id: GREEN_DENTAL_CLIENT_ID,
+    metrics: {
+      calls_bookings: [
+        {
+          answered_calls: 17,
+          booked_from_calls: 11,
+          campaign_name: 'E2E June emergency campaign',
+          missed_calls: 3,
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+          summary: 'E2E imported calls show emergency demand leakage.',
+          total_calls: 20,
+        },
+      ],
+      patient_acquisition: [
+        {
+          booked_appointments: 11,
+          calls: 20,
+          campaign_name: 'E2E June emergency campaign',
+          channel: 'google_ads',
+          forms: 5,
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+          summary: 'E2E imported acquisition snapshot.',
+        },
+      ],
+      service_lines: [
+        {
+          booked_appointments: 11,
+          campaign_name: 'E2E June emergency campaign',
+          compliance_status: 'approved',
+          inquiries: 25,
+          location_id: SEED_IDS.CLINIC_LOCATION_GREEN_MAIN,
+          period_end: '2026-06-30',
+          period_label: 'June 2026',
+          period_start: '2026-06-01',
+          service_line_id: SEED_IDS.CLINIC_SERVICE_EMERGENCY_DENTAL,
+          spend: 1800,
+          summary: 'E2E imported service line performance.',
+        },
+      ],
+    },
+  }
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  const importDialog = page.getByRole('dialog', { name: 'Import clinic metrics JSON' })
+
+  await expect(importDialog).toBeVisible()
+  await page.getByLabel('Clinic metrics JSON *').fill(JSON.stringify(importPayload, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+
+  await expect(importDialog.getByRole('heading', { name: 'Import preview ready' })).toBeVisible()
+  await expect(importDialog.locator('p').filter({ hasText: 'Periods: June 2026' })).toBeVisible()
+  await expect(importDialog.locator('p').filter({ hasText: 'Campaigns: E2E June emergency campaign' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Apply to draft' }).click()
+  await expect(importDialog).not.toBeVisible()
+  await expect(page.locator('textarea').filter({ hasText: 'E2E imported acquisition snapshot.' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Save metrics' }).click()
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+
+  const importedMetrics = await page.evaluate(({ portalKey }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+
+    return {
+      callBooking: portalData.call_booking_metrics.some((record) => (
+        record.summary === 'E2E imported calls show emergency demand leakage.'
+      )),
+      patientAcquisition: portalData.patient_acquisition_snapshots.some((record) => (
+        record.summary === 'E2E imported acquisition snapshot.'
+      )),
+      serviceLine: portalData.service_line_performance.some((record) => (
+        record.summary === 'E2E imported service line performance.'
+      )),
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+  })
+
+  expect(importedMetrics).toEqual({
+    callBooking: true,
+    patientAcquisition: true,
+    serviceLine: true,
+  })
+})
+
 test('admin reputation and compliance workspaces expose published and draft clinic previews', async ({ page }) => {
   await signInAsAdmin(page)
   await page.goto(`/admin/clinic-reputation?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })

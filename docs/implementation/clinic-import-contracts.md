@@ -74,6 +74,26 @@ The domain normalizer rejects these keys recursively before connector data can r
 }
 ```
 
+The normalizer also accepts connector-style grouped sections. Use this shape when source adapters export one grouped object instead of separate top-level arrays:
+
+```json
+{
+  "contract_version": "clinic-import-v1",
+  "client_id": "33333333-3333-4333-8333-333333333333",
+  "metrics": {
+    "patient_acquisition": [],
+    "calls_bookings": [],
+    "service_lines": []
+  },
+  "reputation": {
+    "reputation_snapshots": []
+  },
+  "compliance": {
+    "compliance_reviews": []
+  }
+}
+```
+
 `reporting_period` may be top-level or repeated per row. Period-based rows require:
 
 ```text

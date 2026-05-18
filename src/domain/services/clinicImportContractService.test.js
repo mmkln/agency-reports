@@ -173,6 +173,44 @@ describe('clinicImportContractService', () => {
     })
   })
 
+  it('normalizes connector-style nested metric sections', () => {
+    const result = normalizeClinicImportPayload({
+      client_id: IDS.CLIENT_A,
+      metrics: {
+        calls_bookings: [
+          {
+            answered_calls: 9,
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+            total_calls: 12,
+          },
+        ],
+        patient_acquisition: [
+          {
+            booked_appointments: 6,
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+          },
+        ],
+        service_lines: [
+          {
+            booked_appointments: 5,
+            period_end: '2026-05-31',
+            period_label: 'May 2026',
+            period_start: '2026-05-01',
+            service_line_id: IDS.SERVICE_A,
+          },
+        ],
+      },
+    })
+
+    expect(result.metricsInput.callBookingMetrics).toHaveLength(1)
+    expect(result.metricsInput.patientAcquisitionSnapshots).toHaveLength(1)
+    expect(result.metricsInput.serviceLinePerformance).toHaveLength(1)
+  })
+
   it('rejects patient-level fields anywhere in clinic imports', () => {
     expect(() => normalizeClinicImportPayload({
       client_id: IDS.CLIENT_A,
