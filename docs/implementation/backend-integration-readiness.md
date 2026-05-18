@@ -14,10 +14,13 @@ Domain services must continue to depend on `runtime.dataClient.read/write` and r
 The canonical frontend repository contract is now:
 
 ```text
+src/app/providers/repositories/createPortalRepository.js
 src/app/providers/repositories/portalRepositoryContract.js
 ```
 
-That file defines:
+`createPortalRepository.js` is the adapter selection boundary. The app should create repositories through this factory instead of importing a concrete adapter directly.
+
+`portalRepositoryContract.js` defines:
 
 ```text
 - PORTAL_CLINIC_PUBLISH_STATE_TABLES
@@ -51,6 +54,7 @@ repository.reset() for local/demo environments only
 
 - Keep repository keys stable; pages and domain services should not know table names.
 - Keep table names centralized in `portalRepositoryContract.js`.
+- Keep adapter selection centralized in `createPortalRepository.js`.
 - Keep client visibility, publish states, and workflow permissions in domain policies/services.
 - Do not move visibility filtering into UI code.
 - Client routes must read published/client-safe records only.
@@ -66,6 +70,7 @@ Current contract coverage:
 ```text
 src/app/providers/repositories/portalRepositoryContract.test.js
 src/app/providers/repositories/portalRepositoryContract.test-support.js
+src/app/providers/repositories/createPortalRepository.test.js
 ```
 
 The contract tests verify:
@@ -74,6 +79,7 @@ The contract tests verify:
 - repository keys are unique
 - table names are unique
 - localStorage adapter implements every contract collection
+- the factory-created default adapter implements the same repository contract
 - every collection exposes required entity methods
 - every collection can round-trip records through upsert/list/find/listByClientId/deleteById
 - extension methods remain explicit
@@ -85,6 +91,7 @@ The contract tests verify:
 
 - [ ] Add a real API/Supabase adapter that implements `PORTAL_REPOSITORY_COLLECTIONS`.
 - [x] Add reusable contract tests for repository adapter behavior.
+- [x] Centralize repository adapter selection behind `createPortalRepository`.
 - [ ] Run the reusable contract suite against both localStorage and the API/Supabase adapter.
 - [ ] Move auth/session validation server-side while preserving `buildViewerFromProfile` semantics in the frontend read model.
 - [ ] Implement server-side access policies/RLS for client membership, agency team assignment, draft/published boundaries, and clinic aggregate-only data.
