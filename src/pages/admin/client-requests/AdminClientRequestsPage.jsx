@@ -1,9 +1,7 @@
 import {
   Button,
-  CardContent,
   ConfirmationDialog,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import {
@@ -11,7 +9,10 @@ import {
   RequestDialog,
   useAdminClientRequestsWorkflow,
 } from '../../../features/admin-client-requests'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { AdminClientRequestsWorkspace } from '../../../widgets/admin-client-requests'
 
@@ -25,9 +26,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   if (workflow.requestsResource.status === 'loading') {
     return (
       <PageShell className="px-app-gutter py-content-gutter" width="content">
-        <Card className="bg-block shadow-none">
-          <CardContent className="min-h-[260px] animate-pulse" />
-        </Card>
+        <WorkspaceState />
       </PageShell>
     )
   }
@@ -35,11 +34,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   if (workflow.requestsResource.status === 'error' || !workflow.client) {
     return (
       <PageShell className="px-app-gutter py-content-gutter" width="content">
-        <Card className="bg-block shadow-none">
-          <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-            {workflow.requestsResource.error || 'Client was not found.'}
-          </CardContent>
-        </Card>
+        <WorkspaceState message={workflow.requestsResource.error || 'Client was not found.'} status="error" />
       </PageShell>
     )
   }
@@ -109,7 +104,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
           }
         }}
         open={Boolean(workflow.pendingCancel)}
-        title="Cancel client request?"
+        title="Cancel request?"
         tone="destructive"
       />
     </>

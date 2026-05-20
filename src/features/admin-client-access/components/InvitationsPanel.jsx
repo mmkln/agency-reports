@@ -2,7 +2,7 @@ import {
   ConfirmationDialog,
 } from '@/shared/ui'
 
-import { InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
+import { FieldError, InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
 import { useInvitationsPanel } from '../useInvitationsPanel'
 import { InvitationCard } from './InvitationCard'
 import { InvitationForm } from './InvitationForm'
@@ -12,7 +12,7 @@ export function InvitationsPanel({ clientId, runtime }) {
 
   return (
     <WorkspaceCard
-      description="Create and track local client portal invitations."
+      description="Create and track local workspace invitations."
       iconName="mail"
       title="Invitations"
     >
@@ -20,9 +20,7 @@ export function InvitationsPanel({ clientId, runtime }) {
         {invitationsPanel.status === 'loading' ? (
           <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading invitations...</div>
         ) : invitationsPanel.status === 'error' ? (
-          <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
-            Invitations could not be loaded.
-          </div>
+          <FieldError>Invitations could not be loaded.</FieldError>
         ) : invitationsPanel.invitations.length > 0 ? (
           <div className="grid grid-cols-1 gap-2">
             {invitationsPanel.invitations.map((invitation) => (

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { USER_ROLES } from '../../../entities/profile'
 import { getCurrentViewer, setAuthSession } from '../../../domain/services/authService'
 import { portalRepository } from '../repositories/portalRepository'
 import { createAsyncPortalDataClient } from '../repositories/createAsyncPortalDataClient'
+import { buildAuthRuntime } from './authRuntime'
 import { AuthContext } from './AuthContext'
 
 const portalDataClient = createAsyncPortalDataClient({
@@ -17,29 +17,11 @@ export function AuthProvider({ children }) {
     return getCurrentViewer({ repositories: portalRepository })
   }, [authRevision])
 
-  const runtime = useMemo(() => {
-    const agencyClientIds = viewer?.agencyId
-      ? portalRepository.clients
-        .list()
-        .filter((client) => client.agency_id === viewer.agencyId)
-        .map((client) => client.id)
-      : []
-    const runtimeViewer = viewer?.role === USER_ROLES.AGENCY_TEAM
-      ? {
-          ...viewer,
-          clientIds: [...new Set([...(viewer.clientIds ?? []), ...agencyClientIds])],
-        }
-      : viewer
-
-    return {
-      defaultClientId: runtimeViewer?.role === USER_ROLES.AGENCY_ADMIN
-        ? portalRepository.clients.list()[0]?.id ?? null
-        : runtimeViewer?.clientId ?? runtimeViewer?.clientIds?.[0] ?? null,
-      dataClient: portalDataClient,
-      repositories: portalRepository,
-      viewer: runtimeViewer,
-    }
-  }, [viewer])
+  const runtime = useMemo(() => buildAuthRuntime({
+    dataClient: portalDataClient,
+    repositories: portalRepository,
+    viewer,
+  }), [viewer])
 
   const handleAuthChange = useCallback(() => {
     setAuthRevision((current) => current + 1)

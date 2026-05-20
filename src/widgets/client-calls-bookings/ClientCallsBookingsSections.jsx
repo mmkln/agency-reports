@@ -172,7 +172,7 @@ export function ClientCallsBookingsView({ page }) {
           filters={page.filters}
         />
         <EmptyState
-          description="Aggregate call and booking metrics will appear after the agency imports clinic-safe call tracking data or the current filters are cleared."
+          description="Aggregate call and booking metrics will appear after the team imports clinic-safe call tracking data or the current filters are cleared."
           iconName="phone"
           title="No calls and bookings data found"
         />

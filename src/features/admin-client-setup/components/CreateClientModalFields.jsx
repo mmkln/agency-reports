@@ -65,7 +65,7 @@ export function ModalSection({ children, className, iconName, title }) {
   )
 }
 
-export function PortalSlugInput({ hint = 'Auto-generated from client name. You can edit it before creating the client.', onChange, slugIssue, value }) {
+export function PortalSlugInput({ hint = 'Auto-generated from the account name. You can edit it before creating the account.', onChange, slugIssue, value }) {
   return (
     <FormField
       error={slugIssue}
@@ -79,7 +79,7 @@ export function PortalSlugInput({ hint = 'Auto-generated from client name. You c
           : 'border-control-border focus-within:border-action focus-within:ring-action/20'
       }`}>
         <span className="flex items-center border-r border-control-border bg-surface-subtle px-3 text-ui text-text-muted">
-          agency.com/
+          portal/
         </span>
         <Input
           aria-invalid={Boolean(slugIssue)}
@@ -111,7 +111,7 @@ export function PortalSlugInput({ hint = 'Auto-generated from client name. You c
 
 export function StatusSelect({ onFieldChange, value }) {
   return (
-    <FormField hint="Controls the client-facing project status shown in the portal." label="Project status" required>
+    <FormField hint="Controls the project status shown in the portal." label="Project status" required>
       <Select onValueChange={(nextValue) => onFieldChange('status', nextValue)} value={value}>
         <SelectTrigger>
           <SelectValue placeholder="Select project status" />
@@ -137,10 +137,10 @@ export function StatusSelect({ onFieldChange, value }) {
 
 export function ClientTypeSelect({ onFieldChange, value }) {
   return (
-    <FormField hint="Clinic clients unlock patient acquisition, calls, reputation, and compliance portal surfaces." label="Client type" required>
+    <FormField hint="Clinic accounts unlock patient acquisition, calls, reputation, and compliance portal surfaces." label="Account type" required>
       <Select onValueChange={(nextValue) => onFieldChange('type', nextValue)} value={value || CLIENT_TYPES.GENERIC}>
         <SelectTrigger>
-          <SelectValue placeholder="Select client type" />
+          <SelectValue placeholder="Select account type" />
         </SelectTrigger>
         <SelectContent>
           {Object.values(CLIENT_TYPES).map((type) => {

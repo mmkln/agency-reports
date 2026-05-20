@@ -6,7 +6,7 @@ import {
   mapTaskStatusToClientWorkStatus,
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
@@ -390,7 +390,7 @@ export function listPublishedClientWorkItems({
         return false
       }
 
-      if (viewer?.role === USER_ROLES.CLIENT_USER) {
+      if (isClientPortalRole(viewer?.role)) {
         return canClientViewClientWorkItem({ item, viewer })
       }
 
@@ -430,7 +430,7 @@ export function getPublishedClientWorkItemDetail({
     }
   }
 
-  const canView = viewer?.role === USER_ROLES.CLIENT_USER
+  const canView = isClientPortalRole(viewer?.role)
     ? canClientViewClientWorkItem({ item, viewer })
     : canAgencyViewClientWorkItem({ item, viewer })
 

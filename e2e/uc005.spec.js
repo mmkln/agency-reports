@@ -112,7 +112,7 @@ test('client-submitted request clarification creates linked Action Needed item',
 
   await signInAsAdmin(page)
   await page.goto(`/admin/client-submitted-requests?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
-  const adminRequestCard = page.locator('article').filter({ hasText: title }).first()
+  const adminRequestCard = page.locator('[data-testid^="client-submitted-request-"]').filter({ hasText: title }).first()
   await expect(adminRequestCard).toBeVisible()
   await adminRequestCard.getByRole('button', { name: 'Review' }).click()
   const triageDialog = page.getByRole('dialog', { name: title })

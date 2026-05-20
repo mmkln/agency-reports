@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_REPORTING_CAPABILITIES,
+  USER_ROLES,
+} from '../../entities/profile'
 import {
   AUTH_SESSION_STORAGE_KEY,
   authenticateWithEmail,
@@ -8,6 +11,7 @@ import {
   clearAuthSession,
   DEMO_AUTH_PASSWORD,
   getCurrentViewer,
+  getHomeHrefForViewer,
   setAuthSession,
 } from './authService'
 
@@ -163,5 +167,13 @@ describe('authService', () => {
       storage,
     })).toBeNull()
     expect(storage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull()
+  })
+
+  it('routes clinic ops client team users to Daily Ops instead of an inaccessible client overview', () => {
+    expect(getHomeHrefForViewer({
+      capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
+      clientId: 'client-1',
+      role: USER_ROLES.CLIENT_TEAM,
+    })).toBe('/clinic/daily-ops?clientId=client-1')
   })
 })

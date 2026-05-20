@@ -60,11 +60,7 @@ export function InvitationForm({
         />
       </div>
       <Button disabled={Boolean(invitationEmailIssue)} type="submit">Create invitation</Button>
-      {error ? (
-        <p className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <FieldError>{error}</FieldError>
     </form>
   )
 }

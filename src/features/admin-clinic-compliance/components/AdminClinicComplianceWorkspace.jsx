@@ -1,12 +1,12 @@
 import {
   Button,
   PageShell,
-  Skeleton,
 } from '@/shared/ui'
 
 import {
   AdminClientWorkspaceHeader,
   ClinicClientPreviewLinks,
+  WorkspaceState,
 } from '../../admin-client-workspace'
 import { useAdminClinicComplianceWorkflow } from '../useAdminClinicComplianceWorkflow'
 import { ClinicComplianceImportDialog } from './ClinicComplianceImportDialog'
@@ -15,22 +15,16 @@ import { MedicalApprovalsCard } from './MedicalApprovalsCard'
 
 function ClinicComplianceLoadingState() {
   return (
-    <PageShell className="py-section" width="full">
-      <div className="grid gap-card">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-80" />
-        <Skeleton className="h-80" />
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState />
     </PageShell>
   )
 }
 
 function ClinicComplianceErrorState({ message }) {
   return (
-    <PageShell className="py-section" width="content">
-      <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-        {message || 'Clinic compliance could not be loaded.'}
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState message={message || 'Clinic compliance could not be loaded.'} status="error" />
     </PageShell>
   )
 }
@@ -108,11 +102,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
         eyebrow="Clinic compliance"
       />
 
-      <PageShell className="py-section" width="full">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         {status === 'error' && error ? (
-          <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-            {error}
-          </div>
+          <WorkspaceState message={error} status="error" />
         ) : null}
 
         <form

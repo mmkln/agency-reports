@@ -213,10 +213,10 @@ function buildClinicResultsRedirect({ clientId, periodId, selectedPeriod }) {
   const resolvedPeriodId = selectedPeriod?.id ?? periodId
 
   if (resolvedPeriodId) {
-    search.set('performancePeriodId', resolvedPeriodId)
+    search.set('legacyPerformancePeriodId', resolvedPeriodId)
   }
 
-  return `/client/reports-dashboards?${search.toString()}#current-performance`
+  return `/client/executive-performance?${search.toString()}`
 }
 
 export function getClientPerformanceDashboardPage({

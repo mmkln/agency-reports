@@ -84,7 +84,7 @@ export function ProjectsListSection({ clientId, counts, filter, projects, select
   return (
     <Panel>
       <PanelHeader
-        subtitle="Client-visible workstreams, not the agency's internal task system."
+        subtitle="Published workstreams, not the internal task system."
         title="Projects"
       />
       <PanelBody className="grid gap-3">
@@ -100,7 +100,7 @@ export function ProjectsListSection({ clientId, counts, filter, projects, select
           ))
         ) : (
           <EmptyState
-            description="Published client-visible work will appear here after agency review."
+            description="Published work will appear here after team review."
             iconName="checkCircle2"
             title="No visible projects yet"
           />

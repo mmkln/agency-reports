@@ -64,7 +64,7 @@ export function useClientRequestsWorkflow({
         setIsCreateOpen(false)
         setRequestDraft(createInitialDraft(clientId))
         onCreated?.()
-        toast.success('Request submitted', `${createdRequest.title} was sent to the agency.`)
+        toast.success('Request submitted', `${createdRequest.title} was sent to the team.`)
       })
       .catch((caughtError) => {
         setRequestError(caughtError.message)

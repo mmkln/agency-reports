@@ -74,7 +74,7 @@ export function LatestUpdateEditor({ draft, onDeleteUpdate, onUpdateUpdates }) {
       </p>
       {update.visibility === VISIBILITY.INTERNAL ? (
         <p className="mt-2 rounded-control bg-warning-muted px-3 py-2 text-label font-normal text-warning-foreground">
-          Internal update: this text is saved for the agency only and will not appear on the client portal.
+          Internal update: this text is saved for the team only and will not appear in the portal.
         </p>
       ) : null}
     </EditorCard>

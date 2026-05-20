@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
@@ -40,6 +40,7 @@ export function LoginPage({ onAuthChange, runtime }) {
   const resolvedRuntime = runtime ?? auth.runtime
   const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const toast = useToast()
   const [email, setEmail] = useState(DEFAULT_EMAIL)
   const [password, setPassword] = useState(DEMO_AUTH_PASSWORD)
@@ -59,7 +60,12 @@ export function LoginPage({ onAuthChange, runtime }) {
 
       resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
-      navigate(getHomeHrefForViewer(viewer), { replace: true })
+      const nextHref = searchParams.get('next')
+      const safeNextHref = nextHref?.startsWith('/') && !nextHref.startsWith('//')
+        ? nextHref
+        : null
+
+      navigate(safeNextHref ?? getHomeHrefForViewer(viewer), { replace: true })
     } catch (caughtError) {
       setError(caughtError.message)
       toast.error('Sign in failed', caughtError.message)
@@ -82,7 +88,7 @@ export function LoginPage({ onAuthChange, runtime }) {
               <p className="text-ui text-brand">Welcome back</p>
               <h1 className="mt-2 text-display text-text-primary">Sign in to your account</h1>
               <p className="mt-2 text-body text-text-secondary">
-                Use your agency email to continue to the client portal workspace.
+                Use your work email to continue to the portal workspace.
               </p>
             </div>
 

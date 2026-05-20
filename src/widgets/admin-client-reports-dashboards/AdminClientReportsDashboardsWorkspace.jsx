@@ -31,6 +31,7 @@ function SectionShell({
             </Link>
           </Button>
         )}
+        divided
         iconName={iconName}
         title={title}
       />
@@ -105,7 +106,7 @@ function PerformanceSection({ clientId, periods }) {
         </div>
       ) : (
         <EmptyState
-          description="Create interpreted performance periods before publishing the client-facing results view."
+          description="Create interpreted performance periods before publishing the portal results view."
           iconName="barChart"
           title="No performance periods"
         />
@@ -140,7 +141,7 @@ function SourceDashboardsSection({ clientId, dashboardLinks }) {
         </div>
       ) : (
         <EmptyState
-          description="Add Looker Studio, AgencyAnalytics, Databox, or other source dashboards as controlled client resources."
+          description="Add Looker Studio, AgencyAnalytics, Databox, or other source dashboards as controlled account resources."
           iconName="layoutDashboard"
           title="No source dashboards"
         />
@@ -175,7 +176,7 @@ function ReportsSection({ clientId, reports }) {
         </div>
       ) : (
         <EmptyState
-          description="Create monthly, weekly, campaign, or custom reports after agency review."
+          description="Create monthly, weekly, campaign, or custom reports after team review."
           iconName="fileText"
           title="No reports"
         />

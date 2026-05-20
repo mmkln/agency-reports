@@ -4,6 +4,7 @@ import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../../entities/client-work-i
 import { CLINIC_RECORD_PUBLISH_STATES } from '../../../entities/clinic'
 import { VISIBILITY } from '../../../entities/update'
 import {
+  PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_REPOSITORY_COLLECTIONS,
   PORTAL_TABLE_NAMES,
@@ -63,8 +64,8 @@ describe('portalRepositoryAccessManifest', () => {
     })
   })
 
-  it('marks clinic aggregate tables as aggregate-only published client reads', () => {
-    for (const tableName of PORTAL_CLINIC_PUBLISH_STATE_TABLES) {
+  it('marks client-facing clinic aggregate tables as aggregate-only published client reads', () => {
+    for (const tableName of PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES) {
       const accessRules = getPortalRepositoryAccessRules(tableName)
 
       expect(accessRules.aggregateOnly, tableName).toBe(true)
@@ -79,6 +80,16 @@ describe('portalRepositoryAccessManifest', () => {
           values: [CLINIC_RECORD_PUBLISH_STATES.PUBLISHED],
         },
       ]))
+    }
+  })
+
+  it('keeps internal clinic reporting layers out of direct client repository reads', () => {
+    for (const tableName of ['clinic_daily_operations', 'clinic_weekly_operator_periods']) {
+      const accessRules = getPortalRepositoryAccessRules(tableName)
+
+      expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES, tableName).toContain(tableName)
+      expect(accessRules.aggregateOnly, tableName).toBe(true)
+      expect(accessRules.accessMode, tableName).toBe(PORTAL_ACCESS_MODES.AGENCY_ONLY)
     }
   })
 

@@ -87,7 +87,7 @@ export function CreateTaskDialog({
                     value={taskDraft.clientId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select client" />
+                      <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
                       {taskData.clients.map((client) => (
@@ -180,7 +180,7 @@ export function CreateTaskDialog({
                   className={`${createTaskTextareaClass} min-h-24`}
                   id="task-internal-note"
                   onChange={(event) => onChange({ ...taskDraft, internalNote: event.target.value })}
-                  placeholder="Private agency context."
+                  placeholder="Private team context."
                   value={taskDraft.internalNote}
                 />
               </label>

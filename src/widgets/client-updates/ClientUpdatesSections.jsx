@@ -155,7 +155,7 @@ export function UpdatesTimeline({ counts, updates }) {
           className="bg-block-subtle"
           description={hasUpdates
             ? 'No published client updates match this view.'
-            : 'Published client updates will appear here when the agency shares them.'}
+            : 'Published updates will appear here when the team shares them.'}
           iconName="target"
           title={hasUpdates ? 'No updates here' : 'No updates yet'}
         />

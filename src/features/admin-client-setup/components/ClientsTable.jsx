@@ -59,7 +59,7 @@ export function ClientsTable({
         <Table className="min-w-[980px]">
           <TableHeader>
             <TableRow>
-              <TableHead>Client</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Project Status</TableHead>
               <TableHead>Primary Contact</TableHead>
               <TableHead>Created</TableHead>
@@ -108,7 +108,7 @@ export function ClientsTable({
                         <DropdownMenuContent align="end" className="min-w-56">
                           <DropdownMenuItem onClick={() => onEditClient(client)}>
                             <Icon name="wrench" size={15} />
-                            Edit client
+                            Edit account
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link to={`/admin/client-preview?clientId=${client.id}`}>
@@ -136,7 +136,7 @@ export function ClientsTable({
                             variant="destructive"
                           >
                             <Icon name="close" size={15} />
-                            Delete client
+                            Delete account
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -150,7 +150,7 @@ export function ClientsTable({
       </DataTableSurface>
 
       <ConfirmationDialog
-        confirmLabel="Delete client"
+        confirmLabel="Delete account"
         description={
           clientPendingDelete
             ? `This removes ${clientPendingDelete.name} and its local demo portal data. This action cannot be undone.`
@@ -163,7 +163,7 @@ export function ClientsTable({
           }
         }}
         open={Boolean(clientPendingDelete)}
-        title="Delete client?"
+        title="Delete account?"
         tone="destructive"
       />
     </>

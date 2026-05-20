@@ -54,7 +54,7 @@ export function TeamTasksPageHeader({ activeRoute, routeParams = {}, runtime }) 
         actions={actions}
         client={client}
         currentPage="tasks"
-        eyebrow="Client tasks"
+        eyebrow="Account tasks"
         primaryAction={primaryAction}
       />
     )

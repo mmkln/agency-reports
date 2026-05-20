@@ -24,11 +24,11 @@ export function EmptyReportsState({ hasClients = true }) {
       )}
       description={
         hasClients
-          ? 'Create a structured monthly summary when the agency is ready to explain performance and next actions.'
-          : 'A client workspace is required before reports can be created.'
+          ? 'Create a structured monthly summary when the team is ready to explain performance and next actions.'
+          : 'An account workspace is required before reports can be created.'
       }
       iconName="fileText"
-      title={hasClients ? 'No monthly reports yet' : 'No clients available'}
+      title={hasClients ? 'No monthly reports yet' : 'No accounts available'}
     />
   )
 }

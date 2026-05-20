@@ -35,7 +35,7 @@ function formatRating(value) {
 
 function ClinicMetricCard({ helper, href, iconName, label, value }) {
   return (
-    <Link className="rounded-block bg-block p-block shadow-block transition-colors hover:bg-block-subtle" to={href}>
+    <Link className="rounded-block bg-block p-block transition-colors hover:bg-block-subtle" to={href}>
       <div className="flex items-start justify-between gap-component">
         <div>
           <p className="text-label text-text-muted">{label}</p>
@@ -154,6 +154,46 @@ function ClinicAcquisitionBlock({ clinicOverview }) {
   )
 }
 
+function ClinicReportingBlock({ clinicOverview }) {
+  if (!clinicOverview.dentalGrowthReviewHref && !clinicOverview.executivePerformanceHref && !clinicOverview.monthlyStrategyHref) {
+    return null
+  }
+
+  return (
+    <SectionCard
+      action={clinicOverview.dentalGrowthReviewHref ? (
+        <Button asChild size="sm" variant="ghost">
+          <Link to={clinicOverview.dentalGrowthReviewHref}>
+            Open Growth Review
+            <Icon name="arrowUpRight" size={13} />
+          </Link>
+        </Button>
+      ) : null}
+      description="Weekly and bi-weekly operating review with decisions, funnel leakage, and source freshness."
+      iconName="barChart"
+      title="Dental Growth Review"
+    >
+      <div className="grid gap-control">
+        {clinicOverview.dentalGrowthReviewHref ? (
+          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.dentalGrowthReviewHref}>
+            Dental growth operating review
+          </Link>
+        ) : null}
+        {clinicOverview.executivePerformanceHref ? (
+          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.executivePerformanceHref}>
+            Executive performance
+          </Link>
+        ) : null}
+        {clinicOverview.monthlyStrategyHref ? (
+          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.monthlyStrategyHref}>
+            Monthly finance strategy
+          </Link>
+        ) : null}
+      </div>
+    </SectionCard>
+  )
+}
+
 function ClinicRiskBlocks({ clinicOverview }) {
   const booking = clinicOverview.booking
   const reputation = clinicOverview.reputation
@@ -190,6 +230,7 @@ export function ClientClinicOverviewView({ overview }) {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_350px]">
         <div className="grid gap-6">
           <ClinicAcquisitionBlock clinicOverview={overview.clinicOverview} />
+          <ClinicReportingBlock clinicOverview={overview.clinicOverview} />
           <ClinicRiskBlocks clinicOverview={overview.clinicOverview} />
           <NeededFromClientBlock
             actions={overview.neededActions}
@@ -200,7 +241,6 @@ export function ClientClinicOverviewView({ overview }) {
           <ReportsDashboardsOverviewBlock
             clientId={overview.client.id}
             dashboard={overview.dashboard}
-            performancePreview={overview.performancePreview}
             report={overview.latestReport}
             variant="clinic"
           />

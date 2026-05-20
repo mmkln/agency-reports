@@ -31,7 +31,8 @@ function UpdateCard({ onEdit, onHide, update }) {
   const isClientVisible = update.visibility === 'client_visible'
 
   return (
-    <article className="rounded-block bg-block p-4 shadow-block">
+    <Panel>
+      <PanelBody>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -79,7 +80,8 @@ function UpdateCard({ onEdit, onHide, update }) {
           ) : null}
         </div>
       </div>
-    </article>
+      </PanelBody>
+    </Panel>
   )
 }
 

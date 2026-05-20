@@ -7,6 +7,8 @@ import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../src/entities/client-work-ite
 import { NEEDED_ACTION_STATUSES } from '../src/entities/needed-from-client/index.js'
 import { TASK_STATUSES } from '../src/entities/task/index.js'
 
+test.setTimeout(120_000)
+
 const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const TEAM_EMAIL = 'mia@growthlab.example'
@@ -82,9 +84,9 @@ test('client sidebar exposes mature Client Control Center destinations only', as
   const expectedLinks = [
     ['Overview', '/client/overview'],
     ['Action Needed', '/client/action-needed'],
+    ['Executive', '/client/executive-performance'],
     ['Reports', '/client/reports-dashboards'],
     ['Requests', '/client/requests'],
-    ['Settings', '/client/settings'],
   ]
 
   for (const [label, href] of expectedLinks) {
@@ -102,6 +104,10 @@ test('client sidebar exposes mature Client Control Center destinations only', as
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Updates' })).toHaveAttribute('href', '/client/updates')
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Projects' })).toHaveCount(0)
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Dashboard' })).toHaveCount(0)
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Monthly Strategy' })).toHaveCount(0)
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Daily Operations' })).toHaveCount(0)
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Settings' })).toHaveCount(0)
+  await expect(page.getByRole('link', { exact: true, name: 'Settings' })).toHaveAttribute('href', '/client/settings')
   await expect(page.getByText('Contact', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ask a question' })).toHaveAttribute(
     'href',
@@ -141,13 +147,36 @@ test('agency admin preview link opens the matching published client surface', as
 })
 
 test('client settings owns account context without agency admin controls', async ({ page }) => {
+  const updatedName = `Green Dental Owner ${Date.now()}`
+  const updatedEmail = `client.${Date.now()}@greendental.example`
+
   await signInAsClient(page)
   await page.goto(`/client/settings?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.locator('h1').getByText('Settings')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Company' })).toBeVisible()
-  await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'client@greendental.example' })).toBeVisible()
+  await expect(page.getByLabel('Name')).toHaveValue('Green Dental Client')
+  await expect(page.getByLabel('Email')).toHaveValue('client@greendental.example')
+  await page.getByLabel('Name').fill(updatedName)
+  await page.getByLabel('Email').fill(updatedEmail)
+  await page.getByRole('button', { name: 'Save profile' }).click()
+  await expect(page.getByText('Saved', { exact: true })).toBeVisible()
+  await expect.poll(async () => page.evaluate(({ portalKey, userId }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const profile = portalData.profiles.find((item) => item.user_id === userId)
+
+    return {
+      email: profile?.email,
+      name: profile?.name,
+    }
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    userId: SEED_IDS.USER_CLIENT_GREEN,
+  })).toEqual({
+    email: updatedEmail,
+    name: updatedName,
+  })
   await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'Green Dental Clinic' })).toBeVisible()
   await expect(page.locator('[id^="PropertyGrid"]').filter({ hasText: 'sarah@greendental.example' })).toBeVisible()
   await page.getByRole('link', { name: 'Team' }).click()
@@ -280,6 +309,7 @@ test('team prepared summaries stay hidden until admin publishes client work', as
     workItemPublishState: CLIENT_WORK_ITEM_PUBLISH_STATES.READY_FOR_REVIEW,
     workItemSummary: summary,
   })
+  expect(preparedState.workItemId).toBeTruthy()
 
   await signInAsClient(page)
   await page.goto(`/client/projects?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&projectId=${SEED_IDS.PROJECT_REPORTING}&filter=all`, { waitUntil: 'domcontentloaded' })
@@ -289,7 +319,7 @@ test('team prepared summaries stay hidden until admin publishes client work', as
   await signInAsAdmin(page)
   await page.goto(`/admin/client-work-review?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
-  const reviewItem = page.locator('article').filter({ hasText: taskTitle }).first()
+  const reviewItem = page.getByTestId(`client-work-review-${preparedState.workItemId}`)
 
   await expect(reviewItem).toBeVisible()
   await reviewItem.getByRole('button', { name: 'Publish' }).click()

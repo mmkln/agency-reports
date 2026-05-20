@@ -6,7 +6,7 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
-import { USER_ROLES } from '../../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../../entities/profile'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import {
   DashboardEmbedFrame,
@@ -21,7 +21,7 @@ function createUuid() {
 }
 
 function recordClientDashboardOpened({ clientId, dashboardId, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER || !dashboardId) {
+  if (!isClientPortalRole(runtime.viewer.role) || !dashboardId) {
     return
   }
 

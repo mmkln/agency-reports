@@ -54,7 +54,7 @@ export function ActiveWorkBlock({ projectsHref = '/client/projects', workItems }
           </TableBody>
         </Table>
       ) : (
-        <EmptyState>No active client-facing work right now.</EmptyState>
+        <EmptyState>No active published work right now.</EmptyState>
       )}
     </SectionCard>
   )

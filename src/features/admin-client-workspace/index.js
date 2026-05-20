@@ -4,4 +4,5 @@ export {
   FieldError,
   InlineEmptyState,
   WorkspaceCard,
+  WorkspaceState,
 } from './components'

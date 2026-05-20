@@ -37,7 +37,7 @@ function ReportLinkActions({ report }) {
       <div className="rounded-control border border-control-border bg-block-subtle p-4">
         <p className="text-ui text-text-primary">Full report / PDF</p>
         <p className="mt-1 text-label font-normal text-text-muted">
-          Formal report file, when the agency provides one.
+          Formal report file, when the team provides one.
         </p>
         {report.pdfUrl ? (
           <Button asChild className="mt-4 w-full" variant="outline">
@@ -102,7 +102,7 @@ function ReportPreviewNotice({ report }) {
         <div>
           <h2 className="text-ui text-text-primary">Preview only</h2>
           <p className="mt-1 text-body text-text-secondary">
-            Preview only. This report is not visible to the client. Publish it when the client-facing narrative is ready.
+            Preview only. This report is not visible in the portal. Publish it when the narrative is ready.
           </p>
         </div>
       </PanelBody>
@@ -140,25 +140,25 @@ function ReportReader({ report }) {
 
             <div className="grid gap-4 xl:grid-cols-3">
           <ReportContentGroup
-            description="What the agency worked on and where the period gained traction."
+            description="What the team worked on and where the period gained traction."
             title="What happened"
           >
             <ReportTextSection title="What we did">{report.whatWeDid}</ReportTextSection>
             <ReportTextSection title="Wins">{report.wins}</ReportTextSection>
           </ReportContentGroup>
           <ReportContentGroup
-            description="Performance context and risks the client should understand."
+            description="Performance context and risks the account should understand."
             title="Performance context"
           >
             <ReportTextSection title="Results">{report.results}</ReportTextSection>
             <ReportTextSection title="Problems / blockers">{report.problems}</ReportTextSection>
           </ReportContentGroup>
           <ReportContentGroup
-            description="What happens next and what the agency needs from the client."
+            description="What happens next and what the team needs from the account."
             title="Next steps"
           >
             <ReportTextSection title="Next actions">{report.nextActions}</ReportTextSection>
-            <ReportTextSection title="Needed from client">{report.clientDecisionsNeeded}</ReportTextSection>
+            <ReportTextSection title="Needed from you">{report.clientDecisionsNeeded}</ReportTextSection>
           </ReportContentGroup>
             </div>
 

@@ -10,7 +10,11 @@ import {
   NEEDED_ACTION_TYPES,
 } from '../src/entities/needed-from-client/index.js'
 
+test.setTimeout(120_000)
+
 const CLIENT_EMAIL = 'client@greendental.example'
+const CLIENT_FINANCE_EMAIL = 'finance@greendental.example'
+const CLIENT_OPS_EMAIL = 'ops@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 const GREEN_DENTAL_CLIENT_ID = SEED_IDS.CLIENT_GREEN_DENTAL
 
@@ -29,6 +33,10 @@ async function resetLocalDemo(page) {
 }
 
 async function signInAsClinicClient(page) {
+  await signInWithEmail(page, CLIENT_EMAIL)
+}
+
+async function signInWithEmail(page, email, expectedUrl = /\/client\/overview/) {
   await page.evaluate(({ authKey, demoRoleKey }) => {
     window.localStorage.removeItem(authKey)
     window.localStorage.setItem(demoRoleKey, 'client')
@@ -37,10 +45,10 @@ async function signInAsClinicClient(page) {
     demoRoleKey: DEMO_ROLE_KEY,
   })
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await page.locator('input[name="email"]').fill(CLIENT_EMAIL)
+  await page.locator('input[name="email"]').fill(email)
   await page.locator('input[name="password"]').fill(DEMO_AUTH_PASSWORD)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page).toHaveURL(/\/client\/overview/)
+  await expect(page).toHaveURL(expectedUrl)
 }
 
 async function mutatePortalStorage(page, mutatorSource) {
@@ -66,6 +74,8 @@ test('clinic client navigation prioritizes patient acquisition workflows over ge
 
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Overview' })).toHaveAttribute('href', '/client/overview')
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Action Needed' })).toHaveAttribute('href', '/client/action-needed')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Growth Review' })).toHaveAttribute('href', '/dashboards/dental-growth-review')
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Executive' })).toHaveAttribute('href', '/client/executive-performance')
   await primaryNav.getByRole('button', { exact: true, name: 'Performance' }).click()
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Acquisition' })).toHaveAttribute('href', '/client/patient-acquisition')
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Calls' })).toHaveAttribute('href', '/client/calls-bookings')
@@ -74,6 +84,8 @@ test('clinic client navigation prioritizes patient acquisition workflows over ge
   await primaryNav.getByRole('button', { exact: true, name: 'Resources' }).click()
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Compliance' })).toHaveAttribute('href', '/client/compliance-approvals')
   await expect(primaryNav.getByRole('link', { exact: true, name: 'Projects' })).toHaveCount(0)
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Monthly Strategy' })).toHaveCount(0)
+  await expect(primaryNav.getByRole('link', { exact: true, name: 'Daily Operations' })).toHaveCount(0)
 
   await expect(page.getByRole('heading', { exact: true, name: 'Green Dental Clinic' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Clinic control center summary' })).toContainText('New inquiries')
@@ -133,6 +145,91 @@ test('clinic analytics pages render aggregate acquisition, booking, service, rep
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Open issues', { exact: true })).toBeVisible()
   await expect(page.getByRole('region', { name: 'Compliance and approvals' }).getByText('Pending approvals', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Data trust' })).toBeVisible()
+})
+
+test('dental growth review opens from client navigation and stays executive-focused by default', async ({ page }) => {
+  await signInAsClinicClient(page)
+
+  await expect(page.getByRole('heading', { name: 'Dental Growth Review' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Dental growth operating review' })).toHaveAttribute(
+    'href',
+    `/dashboards/dental-growth-review?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+  await page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { exact: true, name: 'Growth Review' }).click()
+  await expect(page).toHaveURL('/dashboards/dental-growth-review')
+  await expect(page.locator('h1').getByText('Weekly Dental Growth Operating Review', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Executive Hero Metrics' })).toBeVisible()
+  await expect(page.getByText('Projected 90-Day Revenue Range')).toBeVisible()
+  await expect(page.getByText('LTV:CAC')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Funnel Conversion' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Exact Funnel Numbers' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Data Freshness' })).toBeVisible()
+  await expect(page.getByText('Meta agency PDF / export')).toBeVisible()
+  await page.getByLabel('Review period').selectOption('current_biweekly')
+  await expect(page).toHaveURL(/periodType=biweekly/)
+  await expect(page.locator('h1').getByText('Bi-Weekly Dental Growth Operating Review', { exact: true })).toBeVisible()
+  await expect(page.getByText('Green Dental Clinic | Bi-weekly review: May 4-17, 2026', { exact: true })).toBeVisible()
+})
+
+test('clinic executive reporting is aggregate-only and monthly strategy is finance gated', async ({ page }) => {
+  await signInAsClinicClient(page)
+
+  await expect(page.getByRole('link', { name: 'Executive performance' })).toHaveAttribute(
+    'href',
+    `/client/executive-performance?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+  await expect(page.getByRole('link', { name: 'Monthly finance strategy' })).toHaveCount(0)
+
+  await page.goto(`/client/executive-performance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Clinic Executive Dashboard', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Executive Narrative' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Executive Focus' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Business Outcome Scoreboard' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Channel ROI' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Decisions Needed' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Source Trust' })).toBeVisible()
+  await expect(page.locator('section').filter({ hasText: 'Source Trust' }).getByText('Current').first()).toBeVisible()
+  await expect(page.getByText('Reply Queue')).toHaveCount(0)
+  await expect(page.getByText('Call Queue')).toHaveCount(0)
+
+  await page.goto(`/client/monthly-strategy?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Access denied', { exact: true })).toBeVisible()
+})
+
+test('finance-capable client can open monthly strategy and clinic team daily ops stays row-redacted', async ({ page }) => {
+  await signInWithEmail(page, CLIENT_FINANCE_EMAIL)
+
+  await expect(page.getByRole('link', { name: 'Monthly finance strategy' })).toHaveAttribute(
+    'href',
+    `/client/monthly-strategy?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+  await expect(page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { name: 'Monthly Strategy' })).toHaveAttribute(
+    'href',
+    '/client/monthly-strategy',
+  )
+  await page.goto(`/client/monthly-strategy?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Finance And Strategy Dashboard', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Strategic Decisions Needed' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Monthly Financials' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Unit Economics' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Source Trust' })).toBeVisible()
+  await expect(page.locator('section').filter({ hasText: 'Source Trust' }).getByText('Current').first()).toBeVisible()
+
+  await resetLocalDemo(page)
+  await signInWithEmail(page, CLIENT_OPS_EMAIL, /\/clinic\/daily-ops/)
+  await expect(page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { name: 'Daily Operations' })).toHaveAttribute(
+    'href',
+    '/clinic/daily-ops',
+  )
+  await expect(page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { name: 'Growth Review' })).toHaveCount(0)
+
+  await page.goto(`/clinic/daily-ops?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Daily Operational Command Center', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Queue Workload' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reply Queue' })).toBeVisible()
+  await expect(page.getByText('Operational queue rows are hidden for this viewer.').first()).toBeVisible()
+  await expect(page.getByText('Implant pricing question')).toHaveCount(0)
+  await expect(page.getByText('Implant consult follow-up calls')).toHaveCount(0)
 })
 
 test('clinic compliance page links open action-needed records', async ({ page }) => {

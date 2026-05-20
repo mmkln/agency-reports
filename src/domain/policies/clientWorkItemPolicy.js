@@ -1,5 +1,5 @@
 import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from './accessPolicy'
 
 export function isClientWorkItemPublished(item) {
@@ -7,7 +7,7 @@ export function isClientWorkItemPublished(item) {
 }
 
 export function canClientViewClientWorkItem({ item, viewer }) {
-  if (!item || viewer?.role !== USER_ROLES.CLIENT_USER) {
+  if (!item || !isClientPortalRole(viewer?.role)) {
     return false
   }
 

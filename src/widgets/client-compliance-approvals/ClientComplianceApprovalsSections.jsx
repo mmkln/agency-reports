@@ -202,7 +202,7 @@ export function ClientComplianceApprovalsView({ page }) {
   if (page.isEmpty) {
     return (
       <EmptyState
-        description="Compliance reviews and medical approvals will appear after the agency publishes clinic-safe review records."
+        description="Compliance reviews and medical approvals will appear after the team publishes clinic-safe review records."
         iconName="shieldCheck"
         title="No compliance records yet"
       />

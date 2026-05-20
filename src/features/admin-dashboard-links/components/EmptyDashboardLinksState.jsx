@@ -9,7 +9,7 @@ import { Icon } from '../../../shared/icons'
 
 export function EmptyDashboardLinksState({ hasClients = true }) {
   const actionHref = hasClients ? '/admin/dashboard-links?newDashboard=true' : '/admin/clients?newClient=true'
-  const actionLabel = hasClients ? 'Add first dashboard' : 'Create first client'
+  const actionLabel = hasClients ? 'Add first dashboard' : 'Create first account'
 
   return (
     <EmptyState
@@ -22,10 +22,10 @@ export function EmptyDashboardLinksState({ hasClients = true }) {
         </Button>
       )}
       description={hasClients
-        ? 'Add an external dashboard link for a client. The portal will embed or open that provider dashboard without becoming an analytics platform.'
-        : 'Create a client workspace first. Dashboard links are always scoped to one client portal.'}
+        ? 'Add an external dashboard link for an account. The portal will embed or open that provider dashboard without becoming an analytics platform.'
+        : 'Create an account workspace first. Dashboard links are always scoped to one portal.'}
       iconName="layoutDashboard"
-      title={hasClients ? 'No dashboard links yet' : 'No clients available'}
+      title={hasClients ? 'No dashboard links yet' : 'No accounts available'}
     />
   )
 }

@@ -4,7 +4,7 @@ import {
 } from '../../../domain/services/activityTrackingService'
 import { getClientActionNeededPage } from '../../../domain/services/clientActionNeededService'
 import { answerNeededAction } from '../../../domain/services/neededFromClientService'
-import { USER_ROLES } from '../../../entities/profile'
+import { isClientPortalRole } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import { Panel, PanelBody } from '@/shared/ui'
@@ -16,7 +16,7 @@ function createUuid() {
 }
 
 function recordClientActivity({ actionId, clientId, repositories, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER) {
+  if (!isClientPortalRole(runtime.viewer.role)) {
     return
   }
 

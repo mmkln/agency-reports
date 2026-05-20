@@ -1,8 +1,10 @@
 import {
+  Button,
   ConfirmationDialog,
+  ListPanel,
 } from '@/shared/ui'
 
-import { InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
+import { FieldError, InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
 import { useAccessMembersPanel } from '../useAccessMembersPanel'
 import { AccessMemberCard } from './AccessMemberCard'
 import { AccessMemberForm } from './AccessMemberForm'
@@ -12,7 +14,17 @@ export function AccessMembersPanel({ clientId, runtime }) {
 
   return (
     <WorkspaceCard
-      description="Manage who can open this client portal."
+      action={(
+        <Button
+          onClick={() => membersPanel.setIsMemberFormOpen((isOpen) => !isOpen)}
+          size="sm"
+          type="button"
+          variant={membersPanel.isMemberFormOpen ? 'ghost' : 'outline'}
+        >
+          {membersPanel.isMemberFormOpen ? 'Cancel' : 'Add member'}
+        </Button>
+      )}
+      description="Manage who can open this workspace."
       iconName="users"
       title="Members"
     >
@@ -20,11 +32,9 @@ export function AccessMembersPanel({ clientId, runtime }) {
         {membersPanel.status === 'loading' ? (
           <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading members...</div>
         ) : membersPanel.status === 'error' ? (
-          <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
-            Members could not be loaded.
-          </div>
+          <FieldError>Members could not be loaded.</FieldError>
         ) : membersPanel.members.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2">
+          <ListPanel className="rounded-control">
             {membersPanel.members.map((member) => (
               <AccessMemberCard
                 key={member.id}
@@ -33,27 +43,29 @@ export function AccessMembersPanel({ clientId, runtime }) {
                 onRoleChange={membersPanel.changeRole}
               />
             ))}
-          </div>
+          </ListPanel>
         ) : (
-          <InlineEmptyState iconName="users" title="No client users yet">
+          <InlineEmptyState iconName="users" title="No workspace users yet">
             Add a member or send an invitation before a client can open this portal.
           </InlineEmptyState>
         )}
 
-        <AccessMemberForm
-          error={membersPanel.error}
-          form={membersPanel.form}
-          memberEmailIssue={membersPanel.memberEmailIssue}
-          memberNameIssue={membersPanel.memberNameIssue}
-          onSubmit={membersPanel.addMember}
-          onUpdateForm={membersPanel.updateForm}
-        />
+        {membersPanel.isMemberFormOpen ? (
+          <AccessMemberForm
+            error={membersPanel.error}
+            form={membersPanel.form}
+            memberEmailIssue={membersPanel.memberEmailIssue}
+            memberNameIssue={membersPanel.memberNameIssue}
+            onSubmit={membersPanel.addMember}
+            onUpdateForm={membersPanel.updateForm}
+          />
+        ) : null}
       </div>
       <ConfirmationDialog
         confirmLabel="Remove access"
         description={
           membersPanel.memberPendingRemoval
-            ? `${membersPanel.memberPendingRemoval.name} will lose access to this client portal immediately.`
+            ? `${membersPanel.memberPendingRemoval.name} will lose access to this workspace immediately.`
             : ''
         }
         onConfirm={membersPanel.removeMember}

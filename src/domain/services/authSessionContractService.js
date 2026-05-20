@@ -48,6 +48,15 @@ export const SERVER_AUTH_ROLE_CONTRACTS = Object.freeze({
       SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
     ],
   },
+  [USER_ROLES.CLIENT_TEAM]: {
+    allowedClientSource: 'client_memberships_only',
+    requiredChecks: [
+      SERVER_AUTH_SESSION_CHECKS.ACTIVE_SESSION,
+      SERVER_AUTH_SESSION_CHECKS.SESSION_NOT_EXPIRED,
+      SERVER_AUTH_SESSION_CHECKS.PROFILE_EXISTS,
+      SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
+    ],
+  },
 })
 
 export function createServerAuthSessionContract() {

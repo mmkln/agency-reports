@@ -84,7 +84,7 @@ export function PerformanceDashboardPeriodModal({
             <div className="grid gap-component">
               {!hasClients ? (
                 <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
-                  Create a client workspace before adding performance dashboards.
+                  Create an account workspace before adding performance dashboards.
                 </div>
               ) : null}
 
@@ -95,19 +95,19 @@ export function PerformanceDashboardPeriodModal({
               ) : null}
 
               <FormSection
-                description="Define ownership, reporting period, and the trust metadata clients will see. New dashboards start as draft and stay hidden until published."
+                description="Define ownership, reporting period, and the trust metadata portal users will see. New dashboards start as draft and stay hidden until published."
                 iconName="layoutDashboard"
                 title="Dashboard setup"
               >
                 <div className="grid gap-2">
-                  <Label htmlFor="performance-client">Client *</Label>
+                  <Label htmlFor="performance-client">Account *</Label>
                   <Select
                     disabled={mode === 'edit' || !hasClients}
                     onValueChange={(value) => onUpdateField('clientId', value)}
                     value={form.clientId}
                   >
                     <SelectTrigger id="performance-client">
-                      <SelectValue placeholder="Select client" />
+                      <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
                       {clients.map((client) => (
@@ -201,7 +201,7 @@ export function PerformanceDashboardPeriodModal({
               </FormSection>
 
               <FormSection
-                description="These fields build trust in the client view: who owns the period, where the data came from, and how attribution should be read."
+                description="These fields build trust in the portal view: who owns the period, where the data came from, and how attribution should be read."
                 iconName="shieldCheck"
                 title="Trust metadata"
               >
@@ -216,11 +216,11 @@ export function PerformanceDashboardPeriodModal({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="performance-agency-contact">Agency contact</Label>
+                    <Label htmlFor="performance-agency-contact">Team contact</Label>
                     <Input
                       id="performance-agency-contact"
                       onChange={(event) => onUpdateField('agencyContact', event.target.value)}
-                      placeholder="sarah@agency.com"
+                      placeholder="sarah@example.com"
                       value={form.agencyContact}
                     />
                   </div>

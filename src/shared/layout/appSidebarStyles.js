@@ -2,15 +2,19 @@ import { USER_ROLES } from '../../entities/profile'
 
 export const roleMeta = {
   [USER_ROLES.AGENCY_ADMIN]: {
-    label: 'Agency Admin',
-    searchPlaceholder: 'Search clients, reports...',
+    label: 'Admin',
+    searchPlaceholder: 'Search accounts, reports...',
   },
   [USER_ROLES.AGENCY_TEAM]: {
-    label: 'Agency Team',
-    searchPlaceholder: 'Search tasks, clients...',
+    label: 'Team',
+    searchPlaceholder: 'Search tasks, accounts...',
   },
   [USER_ROLES.CLIENT_USER]: {
-    label: 'Client User',
+    label: 'Workspace Admin',
+    searchPlaceholder: 'Search portal...',
+  },
+  [USER_ROLES.CLIENT_TEAM]: {
+    label: 'Workspace Team',
     searchPlaceholder: 'Search portal...',
   },
 }
@@ -31,7 +35,7 @@ export const demoNotifications = [
     title: 'Tracking task needs review',
   },
   {
-    body: 'April 2026 report is ready for the client portal preview.',
+    body: 'April 2026 report is ready for the workspace preview.',
     id: 'notification-report-ready',
     isUnread: false,
     time: 'Yesterday',

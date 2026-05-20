@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import {
   Button,
   PageShell,
-  Skeleton,
 } from '@/shared/ui'
 
-import { AdminClientWorkspaceHeader } from '../../admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../admin-client-workspace'
 import { useAdminClinicSetupWorkflow } from '../useAdminClinicSetupWorkflow'
 import { ClinicLocationsCard } from './ClinicLocationsCard'
 import { ClinicProfileCard } from './ClinicProfileCard'
@@ -14,22 +16,16 @@ import { ClinicServiceLinesCard } from './ClinicServiceLinesCard'
 
 function ClinicSetupLoadingState() {
   return (
-    <PageShell className="py-section" width="full">
-      <div className="grid gap-card">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-64" />
-        <Skeleton className="h-64" />
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState />
     </PageShell>
   )
 }
 
 function ClinicSetupErrorState({ message }) {
   return (
-    <PageShell className="py-section" width="content">
-      <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-        {message || 'Clinic setup could not be loaded.'}
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState message={message || 'Clinic setup could not be loaded.'} status="error" />
     </PageShell>
   )
 }
@@ -75,11 +71,9 @@ export function AdminClinicSetupWorkspace({ routeParams = {}, runtime }) {
         eyebrow="Clinic setup"
       />
 
-      <PageShell className="py-section" width="full">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         {status === 'error' && error ? (
-          <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-            {error}
-          </div>
+          <WorkspaceState message={error} status="error" />
         ) : null}
 
         <div className="grid gap-card">

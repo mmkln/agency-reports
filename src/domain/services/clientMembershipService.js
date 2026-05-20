@@ -1,5 +1,5 @@
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_MEMBERSHIP_ROLES = new Set(Object.values(CLIENT_MEMBERSHIP_ROLES))
@@ -99,7 +99,7 @@ export function addClientMember({
     .list()
     .find((profile) => profile.email.toLowerCase() === normalizedEmail)
 
-  if (existingProfile && existingProfile.role !== USER_ROLES.CLIENT_USER) {
+  if (existingProfile && !isClientPortalRole(existingProfile.role)) {
     throw new Error('This email belongs to a non-client user.')
   }
 
@@ -110,7 +110,7 @@ export function addClientMember({
     email: normalizedEmail,
     id: idGenerator(),
     name: normalizedName,
-    role: USER_ROLES.CLIENT_USER,
+    role: normalizedRole === CLIENT_MEMBERSHIP_ROLES.OWNER ? USER_ROLES.CLIENT_ADMIN : USER_ROLES.CLIENT_TEAM,
     updated_at: timestamp,
     user_id: idGenerator(),
   }
@@ -119,7 +119,7 @@ export function addClientMember({
     ...profile,
     agency_id: client.agency_id,
     name: normalizedName,
-    role: USER_ROLES.CLIENT_USER,
+    role: existingProfile?.role ?? (normalizedRole === CLIENT_MEMBERSHIP_ROLES.OWNER ? USER_ROLES.CLIENT_ADMIN : USER_ROLES.CLIENT_TEAM),
     updated_at: timestamp,
   })
 

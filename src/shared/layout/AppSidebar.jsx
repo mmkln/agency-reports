@@ -89,6 +89,29 @@ function SidebarToggleItem() {
   )
 }
 
+function SidebarSettingsItem({ isActive, route }) {
+  if (!route) {
+    return null
+  }
+
+  const label = route.navLabel ?? route.label
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={label} variant="quiet">
+        <Link
+          aria-current={isActive ? 'page' : undefined}
+          title={label}
+          to={route.path}
+        >
+          <Icon className="text-current" name={route.iconName} size={18} />
+          <span>{label}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
 function SidebarNavGroup({ activeRoute, group, isExpanded, onExpandedChange }) {
   const isActive = group.children.some((route) => route.id === activeRoute.id)
   const isOpen = isActive || isExpanded
@@ -153,7 +176,12 @@ export function AppSidebar({
     label: viewer.role,
     searchPlaceholder: 'Search...',
   }
-  const navItems = useMemo(() => createSidebarNavItems(routes), [routes])
+  const settingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
+  const primaryRoutes = useMemo(
+    () => routes.filter((route) => route.id !== 'client-settings'),
+    [routes],
+  )
+  const navItems = useMemo(() => createSidebarNavItems(primaryRoutes), [primaryRoutes])
   const [expandedGroups, setExpandedGroups] = useState(() => new Set())
 
   function setGroupExpanded(groupId, isExpanded) {
@@ -175,7 +203,7 @@ export function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Agency Reports">
+            <SidebarMenuButton asChild tooltip="Reports Workspace">
               <BrandLogo
                 className="[&>span:last-child]:whitespace-nowrap"
                 href="/"
@@ -225,6 +253,10 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <NotificationsMenu />
+          <SidebarSettingsItem
+            isActive={activeRoute.id === settingsRoute?.id}
+            route={settingsRoute}
+          />
           <AccountMenu
             activeRole={activeRole}
             hasUnsavedChanges={hasUnsavedChanges}

@@ -15,13 +15,13 @@ export function EmptyPerformanceDashboardsState({
           <Button asChild>
             <Link to="/admin/clients?newClient=true">
               <Icon name="plus" size={15} />
-              Create first client
+              Create first account
             </Link>
           </Button>
         )}
-        description="Create a client workspace before adding client-facing analytics dashboards."
+        description="Create an account workspace before adding portal analytics dashboards."
         iconName="users"
-        title="No client workspaces yet"
+        title="No account workspaces yet"
       />
     )
   }
@@ -36,7 +36,7 @@ export function EmptyPerformanceDashboardsState({
           </Link>
         </Button>
       )}
-      description="Create a draft dashboard period, fill it in with the structured editor or import prepared JSON, validate it, then publish it to the client."
+      description="Create a draft dashboard period, fill it in with the structured editor or import prepared JSON, validate it, then publish it to the portal."
       iconName="layoutDashboard"
       title="No performance dashboards yet"
     />

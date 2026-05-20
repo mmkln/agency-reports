@@ -109,7 +109,7 @@ function EvidenceLinks({ report }) {
       <div className="rounded-control bg-block-subtle p-4">
         <p className="text-ui text-text-primary">Clinic report file</p>
         <p className="mt-1 text-label font-normal text-text-muted">
-          Formal PDF or external file, when the agency publishes one.
+          Formal PDF or external file, when the team publishes one.
         </p>
         {report.pdfUrl ? (
           <Button asChild className="mt-4 w-full" variant="outline">
@@ -249,7 +249,7 @@ export function ClinicReportReader({ report }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <ListSection items={sections.agencyWorkCompleted} title="Agency Work Completed" />
+        <ListSection items={sections.agencyWorkCompleted} title="Work Completed" />
         <ListSection items={sections.clinicActionsNeeded} title="Clinic Actions Needed" />
         <ListSection items={sections.nextMonthPlan} title="Next Plan" />
       </div>

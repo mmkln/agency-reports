@@ -51,7 +51,7 @@ export function FileLinkDialog({
                 value={draft.clientId}
               >
                 <SelectTrigger id="file-link-client">
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (

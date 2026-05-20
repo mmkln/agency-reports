@@ -24,7 +24,7 @@ export function AdminDashboardLinksPageHeader({ routeParams = {}, runtime }) {
       <AdminClientWorkspaceHeader
         client={client}
         currentPage="reports-dashboards"
-        eyebrow="Client dashboards"
+        eyebrow="Account dashboards"
         primaryAction={{ children: 'New Dashboard', to: createHref }}
       />
     )

@@ -1,5 +1,6 @@
 export const PORTAL_REPOSITORY_COLLECTIONS = Object.freeze([
   { key: 'activityEvents', tableName: 'activity_events' },
+  { key: 'authCredentials', tableName: 'auth_credentials' },
   { key: 'bookingPipelineSnapshots', tableName: 'booking_pipeline_snapshots' },
   { key: 'clients', tableName: 'clients' },
   { key: 'clientFileLinks', tableName: 'client_file_links' },
@@ -10,9 +11,15 @@ export const PORTAL_REPOSITORY_COLLECTIONS = Object.freeze([
   { key: 'callBookingMetrics', tableName: 'call_booking_metrics' },
   { key: 'clinicLocations', tableName: 'clinic_locations' },
   { key: 'clinicProfiles', tableName: 'clinic_profiles' },
+  { key: 'clinicDailyOperations', tableName: 'clinic_daily_operations' },
+  { key: 'clinicExecutivePerformancePeriods', tableName: 'clinic_executive_performance_periods' },
+  { key: 'clinicMonthlyStrategyPeriods', tableName: 'clinic_monthly_strategy_periods' },
+  { key: 'clinicWeeklyOperatorPeriods', tableName: 'clinic_weekly_operator_periods' },
   { key: 'clinicServiceLines', tableName: 'clinic_service_lines' },
   { key: 'complianceReviews', tableName: 'compliance_reviews' },
   { key: 'dashboardLinks', tableName: 'dashboard_links' },
+  { key: 'dentalGrowthReviewPeriods', tableName: 'dental_growth_review_periods' },
+  { key: 'invitationAccessTokens', tableName: 'invitation_access_tokens' },
   { key: 'locationPerformance', tableName: 'location_performance' },
   { key: 'neededFromClient', tableName: 'needed_from_client' },
   { key: 'performanceDashboardPeriods', tableName: 'performance_dashboard_periods' },
@@ -50,6 +57,11 @@ export const PORTAL_REPOSITORY_EXTENSION_METHODS = Object.freeze({
 export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'booking_pipeline_snapshots',
   'call_booking_metrics',
+  'clinic_daily_operations',
+  'clinic_executive_performance_periods',
+  'clinic_monthly_strategy_periods',
+  'clinic_weekly_operator_periods',
+  'dental_growth_review_periods',
   'compliance_reviews',
   'location_performance',
   'medical_approvals',
@@ -57,3 +69,10 @@ export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'reputation_snapshots',
   'service_line_performance',
 ])
+
+export const PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES = Object.freeze(
+  PORTAL_CLINIC_PUBLISH_STATE_TABLES.filter((tableName) => ![
+    'clinic_daily_operations',
+    'clinic_weekly_operator_periods',
+  ].includes(tableName)),
+)

@@ -16,8 +16,10 @@ import { ClientOverviewPage } from '../../pages/client/overview/ClientOverviewPa
 import { ClientOverviewPageHeader } from '../../pages/client/overview/ClientOverviewPageHeader'
 import { ClientDashboardPage } from '../../pages/client/dashboard/ClientDashboardPage'
 import { ClientDashboardPageHeader } from '../../pages/client/dashboard/ClientDashboardPageHeader'
+import { ClientExecutivePerformancePage } from '../../pages/client/executive-performance/ClientExecutivePerformancePage'
 import { ClientFilesLinksPage } from '../../pages/client/files-links/ClientFilesLinksPage'
 import { ClientFilesLinksPageHeader } from '../../pages/client/files-links/ClientFilesLinksPageHeader'
+import { ClientMonthlyStrategyPage } from '../../pages/client/monthly-strategy/ClientMonthlyStrategyPage'
 import { ClientPatientAcquisitionPage } from '../../pages/client/patient-acquisition/ClientPatientAcquisitionPage'
 import {
   ClientPatientAcquisitionPageHeader,
@@ -52,9 +54,11 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminClinicCompliancePage } from '../../pages/admin/clinic-compliance'
 import { AdminClinicMetricsPage } from '../../pages/admin/clinic-metrics'
+import { AdminClinicReportingPage } from '../../pages/admin/clinic-reporting'
 import { AdminClinicReputationPage } from '../../pages/admin/clinic-reputation'
 import { AdminClinicSetupPage } from '../../pages/admin/clinic-setup'
 import { AdminDashboardLinksPage } from '../../pages/admin/dashboard-links/AdminDashboardLinksPage'
+import { DentalGrowthReviewPage } from '../../pages/dashboards/dental-growth-review'
 import { AdminDashboardLinksPageHeader } from '../../pages/admin/dashboard-links/AdminDashboardLinksPageHeader'
 import { AdminPerformanceDashboardEditorPage } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPage'
 import { AdminPerformanceDashboardEditorPageHeader } from '../../pages/admin/performance-dashboard-editor/AdminPerformanceDashboardEditorPageHeader'
@@ -65,6 +69,8 @@ import { AdminReportsPageHeader } from '../../pages/admin/reports/AdminReportsPa
 import { AdminClientOverviewPage } from '../../pages/admin/client-overview/AdminClientOverviewPage'
 import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
+import { ClinicDailyOpsPage } from '../../pages/clinic/daily-ops/ClinicDailyOpsPage'
+import { TeamClinicOperatorPage } from '../../pages/team/clinic-operator/TeamClinicOperatorPage'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
 
@@ -101,7 +107,9 @@ export const ClientComplianceApprovalsPageRoute = withPageProps(
   ClientComplianceApprovalsPageHeader,
 )
 export const ClientDashboardPageRoute = withPageProps(ClientDashboardPage, ClientDashboardPageHeader)
+export const ClientExecutivePerformancePageRoute = withPageProps(ClientExecutivePerformancePage, undefined)
 export const ClientFilesLinksPageRoute = withPageProps(ClientFilesLinksPage, ClientFilesLinksPageHeader)
+export const ClientMonthlyStrategyPageRoute = withPageProps(ClientMonthlyStrategyPage, undefined)
 export const ClientPatientAcquisitionPageRoute = withPageProps(
   ClientPatientAcquisitionPage,
   ClientPatientAcquisitionPageHeader,
@@ -120,6 +128,7 @@ export const ClientServiceLinesPageRoute = withPageProps(ClientServiceLinesPage,
 export const ClientUpdatesPageRoute = withPageProps(ClientUpdatesPage, ClientUpdatesPageHeader)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, AdminClientsPageHeader)
 export const AdminDashboardLinksPageRoute = withPageProps(AdminDashboardLinksPage, AdminDashboardLinksPageHeader)
+export const DentalGrowthReviewPageRoute = withPageProps(DentalGrowthReviewPage, undefined)
 export const AdminPerformanceDashboardsPageRoute = withPageProps(
   AdminPerformanceDashboardsPage,
   AdminPerformanceDashboardsPageHeader,
@@ -141,7 +150,10 @@ export const AdminClientPreviewPageRoute = withPageProps(ClientOverviewPage, Cli
 export const AdminClientOverviewPageRoute = withPageProps(AdminClientOverviewPage, undefined)
 export const AdminClinicCompliancePageRoute = withPageProps(AdminClinicCompliancePage, undefined)
 export const AdminClinicMetricsPageRoute = withPageProps(AdminClinicMetricsPage, undefined)
+export const AdminClinicReportingPageRoute = withPageProps(AdminClinicReportingPage, undefined)
 export const AdminClinicReputationPageRoute = withPageProps(AdminClinicReputationPage, undefined)
 export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)
 export const AdminTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)
+export const ClinicDailyOpsPageRoute = withPageProps(ClinicDailyOpsPage, undefined)
+export const TeamClinicOperatorPageRoute = withPageProps(TeamClinicOperatorPage, undefined)
 export const TeamTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)

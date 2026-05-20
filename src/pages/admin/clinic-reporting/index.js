@@ -1,0 +1,1 @@
+export { AdminClinicReportingPage } from './AdminClinicReportingPage'

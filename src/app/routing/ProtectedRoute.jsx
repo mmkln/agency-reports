@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useAuth } from '../providers/auth/useAuth'
 import { canAccessRoute } from './roleAccess'
 
-export function ProtectedRoute({ children, allowedRoles }) {
+export function ProtectedRoute({ children, allowedRoles, requiredCapabilities }) {
   const { viewer } = useAuth()
   const navigate = useNavigate()
 
@@ -13,16 +13,16 @@ export function ProtectedRoute({ children, allowedRoles }) {
       return
     }
 
-    if (!canAccessRoute(viewer, { allowedRoles })) {
+    if (!canAccessRoute(viewer, { allowedRoles, requiredCapabilities })) {
       navigate('/access-denied', { replace: true })
     }
-  }, [viewer, allowedRoles, navigate])
+  }, [viewer, allowedRoles, requiredCapabilities, navigate])
 
   if (!viewer) {
     return <div className="p-6 text-ui text-text-muted">Redirecting to sign in...</div>
   }
 
-  if (!canAccessRoute(viewer, { allowedRoles })) {
+  if (!canAccessRoute(viewer, { allowedRoles, requiredCapabilities })) {
     return <div className="p-6 text-ui text-text-muted">Checking permissions...</div>
   }
 

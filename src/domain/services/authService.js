@@ -1,4 +1,11 @@
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_REPORTING_CAPABILITIES,
+  getViewerCapabilities,
+  hasCapability,
+  normalizeUserRole,
+  USER_ROLES,
+} from '../../entities/profile'
+import { findPasswordCredential, verifyPasswordCredential } from './authCredentialService'
 
 export const AUTH_SESSION_STORAGE_KEY = 'agency-reports.auth-session'
 export const DEMO_AUTH_PASSWORD = 'password'
@@ -40,7 +47,15 @@ function createExpiresAt(now, ttlMs) {
   return new Date(new Date(now()).getTime() + ttlMs).toISOString()
 }
 
-function assertPassword(password) {
+function assertPassword({ password, profile, repositories }) {
+  if (findPasswordCredential({ repositories, userId: profile.user_id })) {
+    if (!verifyPasswordCredential({ password, repositories, userId: profile.user_id })) {
+      throw new Error('Invalid password.')
+    }
+
+    return
+  }
+
   if (password !== DEMO_AUTH_PASSWORD) {
     throw new Error('Invalid password.')
   }
@@ -73,12 +88,13 @@ export function clearAuthSession(storage = getDefaultStorage()) {
 }
 
 function getClientIdsForProfile(profile, repositories) {
+  const role = normalizeUserRole(profile.role)
   const membershipClientIds = repositories.clientMemberships
     .list()
     .filter((membership) => membership.user_id === profile.user_id)
     .map((membership) => membership.client_id)
 
-  if (profile.role === USER_ROLES.CLIENT_USER) {
+  if ([USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(role)) {
     return [...new Set(membershipClientIds)]
   }
 
@@ -94,16 +110,23 @@ export function buildViewerFromProfile({ profile, repositories }) {
     return null
   }
 
+  const role = normalizeUserRole(profile.role)
   const clientIds = getClientIdsForProfile(profile, repositories)
 
   return {
     agencyId: profile.agency_id,
-    clientId: profile.role === USER_ROLES.CLIENT_USER ? clientIds[0] ?? null : profile.client_id ?? null,
+    capabilities: getViewerCapabilities({
+      capabilities: profile.capabilities,
+      role,
+    }),
+    clientId: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(role)
+      ? clientIds[0] ?? null
+      : profile.client_id ?? null,
     clientIds,
     email: profile.email,
     name: profile.name,
     profileId: profile.id,
-    role: profile.role,
+    role,
     userId: profile.user_id,
   }
 }
@@ -151,7 +174,7 @@ export function authenticateWithEmail({
     throw new Error('No portal user exists for this email.')
   }
 
-  assertPassword(password)
+  assertPassword({ password, profile, repositories })
   setAuthSession(profile.user_id, storage, { now })
 
   return buildViewerFromProfile({ profile, repositories })
@@ -168,6 +191,13 @@ export function getHomeHrefForViewer(viewer) {
 
   if (viewer.role === USER_ROLES.AGENCY_TEAM) {
     return '/team/tasks'
+  }
+
+  if (
+    viewer.role === USER_ROLES.CLIENT_TEAM
+    && hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW)
+  ) {
+    return `/clinic/daily-ops${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`
   }
 
   return `/client/overview${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`

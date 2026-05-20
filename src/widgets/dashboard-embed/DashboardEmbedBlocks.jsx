@@ -36,7 +36,7 @@ export function NoDashboardState() {
           </div>
           <h2 className="mt-5 text-heading text-text-primary">Dashboard is being prepared</h2>
           <p className="mt-2 text-body text-text-muted">
-            The agency team has not published a client-visible marketing dashboard yet.
+            The team has not published a marketing dashboard yet.
           </p>
         </div>
       </CardContent>
@@ -56,7 +56,7 @@ export function DashboardUnavailableState({ dashboard }) {
             <div>
               <h2 className="font-semibold text-warning-foreground">Dashboard is temporarily unavailable</h2>
               <p className="mt-1 max-w-2xl text-body text-warning-foreground">
-                {dashboard.fallbackMessage || 'Dashboard access needs to be updated. Please contact your agency manager.'}
+                {dashboard.fallbackMessage || 'Dashboard access needs to be updated. Please contact your workspace contact.'}
               </p>
             </div>
           </div>
@@ -154,7 +154,7 @@ export function LatestSummaryCallout({ clientId, report }) {
     return (
       <Card className="border-control-border bg-block shadow-none">
         <CardContent className="py-5 text-ui text-text-muted">
-          No monthly summary has been published yet. The report will appear here after the agency publishes it.
+          No monthly summary has been published yet. The report will appear here after the team publishes it.
         </CardContent>
       </Card>
     )

@@ -9,10 +9,10 @@ import { ClientPerformanceDashboard } from '../client-performance'
 
 export function CurrentPerformanceSection({ copy, mode, performancePage }) {
   const sectionCopy = {
-    emptyDescription: copy?.currentPerformanceEmptyDescription ?? 'Published outcome metrics, goals, trends, and interpretation will appear here after agency review.',
+    emptyDescription: copy?.currentPerformanceEmptyDescription ?? 'Published outcome metrics, goals, trends, and interpretation will appear here after team review.',
     emptyTitle: copy?.currentPerformanceEmptyTitle ?? 'Current performance is being prepared',
     eyebrow: copy?.currentPerformanceEyebrow ?? 'Current Performance',
-    subtitle: copy?.currentPerformanceSubtitle ?? 'The agency has not published interpreted analytics for this client yet.',
+    subtitle: copy?.currentPerformanceSubtitle ?? 'The team has not published interpreted analytics for this account yet.',
     title: copy?.currentPerformanceTitle ?? 'Business-value analytics',
   }
 

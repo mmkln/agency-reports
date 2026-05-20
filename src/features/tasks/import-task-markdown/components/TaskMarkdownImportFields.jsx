@@ -47,7 +47,7 @@ export function TaskMarkdownImportFields({
           <Label htmlFor="task-import-client">Client</Label>
           <Select disabled={!hasClients} onValueChange={changeClient} value={clientId}>
             <SelectTrigger id="task-import-client">
-              <SelectValue placeholder="Select client" />
+              <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               {clients.map((client) => (

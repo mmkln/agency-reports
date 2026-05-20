@@ -8,7 +8,11 @@ import {
   NEEDED_ACTION_STATUS_META,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_REPORTING_CAPABILITIES,
+  hasCapability,
+  USER_ROLES,
+} from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import {
@@ -231,6 +235,15 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
         }
       : null,
     clientId,
+    dentalGrowthReviewHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
+      ? `/dashboards/dental-growth-review?clientId=${clientId}`
+      : null,
+    executivePerformanceHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
+      ? `/client/executive-performance?clientId=${clientId}`
+      : null,
+    monthlyStrategyHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW)
+      ? `/client/monthly-strategy?clientId=${clientId}`
+      : null,
     serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
   }
 }

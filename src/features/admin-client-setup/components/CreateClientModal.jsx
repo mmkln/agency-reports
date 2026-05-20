@@ -38,7 +38,7 @@ export function CreateClientModal({
   onUpdateField,
   slugIssue,
 }) {
-  const clientNameIssue = getShortTextIssue(form.name, 'Client name')
+  const clientNameIssue = getShortTextIssue(form.name, 'Account name')
   const contactNameIssue = getShortTextIssue(form.primaryContactName, 'Contact name')
   const contactEmailIssue = getEmailIssue(form.primaryContactEmail)
   const isEditMode = mode === 'edit'
@@ -54,20 +54,20 @@ export function CreateClientModal({
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
               <DialogTitle className="text-heading text-text-primary">
-                {isEditMode ? 'Edit Client' : 'Create Client'}
+                {isEditMode ? 'Edit Account' : 'Create Account'}
               </DialogTitle>
               <DialogDescription>
                 {isEditMode
-                  ? 'Update the client workspace, portal slug, contact, and project status.'
-                  : 'Create a client workspace and first portal invite.'}
+                  ? 'Update the account workspace, portal slug, contact, and project status.'
+                  : 'Create an account workspace and first portal invite.'}
               </DialogDescription>
             </DialogHeader>
           </OverlayHeader>
 
           <OverlayBody className="min-h-0 overflow-y-auto">
             <div className="grid gap-card lg:grid-cols-2 lg:items-start">
-              <ModalSection iconName="grid" title="Client Workspace">
-                <FormField error={clientNameIssue} label="Client name" required>
+              <ModalSection iconName="grid" title="Account Workspace">
+                <FormField error={clientNameIssue} label="Account name" required>
                   <Input
                     aria-invalid={Boolean(clientNameIssue)}
                     minLength={2}
@@ -80,7 +80,7 @@ export function CreateClientModal({
                 </FormField>
                 <PortalSlugInput
                   hint={isEditMode
-                    ? 'Used for the client portal URL. Changing it updates future portal links.'
+                    ? 'Used for the portal URL. Changing it updates future portal links.'
                     : undefined}
                   onChange={(value) => onUpdateField('portalSlug', value)}
                   slugIssue={slugIssue}
@@ -132,7 +132,7 @@ export function CreateClientModal({
               <div className="mt-5 rounded-control border border-control-border bg-surface-subtle px-3 py-3 text-ui text-text-secondary">
                 <p className="font-semibold text-text-primary">{lastCreatedClient.client.name} was created.</p>
                 <p className="mt-1">
-                  Configure the client overview in the editor. The local invite is ready for{' '}
+                  Configure the workspace overview in the editor. The local invite is ready for{' '}
                   {lastCreatedClient.invitation.email}; email delivery is still simulated.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -157,7 +157,7 @@ export function CreateClientModal({
               Cancel
             </Button>
             <Button size="lg" type="submit">
-              {isEditMode ? 'Save Changes' : 'Create Client'}
+              {isEditMode ? 'Save Changes' : 'Create Account'}
             </Button>
           </OverlayFooter>
         </form>

@@ -1,24 +1,23 @@
 import {
   Button,
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import {
   FileLinkDialog,
   useAdminClientFilesLinksWorkflow,
 } from '../../../features/admin-client-files-links'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { AdminClientFilesLinksWorkspace } from '../../../widgets/admin-client-files-links'
 
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -26,11 +25,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }

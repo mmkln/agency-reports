@@ -10,13 +10,13 @@ export function EmptyClientsState() {
         <Button asChild>
           <Link to="/admin/clients?newClient=true">
             <Icon name="plus" size={16} />
-            Create first client
+            Create first account
           </Link>
         </Button>
       )}
-      description="Get started by creating your first client portal workspace."
+      description="Get started by creating your first account workspace."
       iconName="users"
-      title="No clients yet"
+      title="No accounts yet"
     />
   )
 }

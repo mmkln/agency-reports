@@ -28,15 +28,15 @@ export function ClientPeriodDataTrustSection({
 }) {
   return (
     <WorkspaceCard
-      description="These fields define the period and the data trust labels clients see before reading any metric."
+      description="These fields define the period and the data trust labels portal users see before reading any metric."
       iconName="layoutDashboard"
-      title="Client, Period & Data Trust"
+      title="Account, Period & Data Trust"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <FormField label="Dashboard title">
           <Input onChange={(event) => updateForm({ title: event.target.value })} value={form.title} />
         </FormField>
-        <SelectField label="Client" onChange={(value) => updateForm({ clientId: value })} value={form.clientId}>
+        <SelectField label="Account" onChange={(value) => updateForm({ clientId: value })} value={form.clientId}>
           {clients.map((client) => (
             <option key={client.id} value={client.id}>{client.name}</option>
           ))}
@@ -66,7 +66,7 @@ export function ClientPeriodDataTrustSection({
         <FormField label="Account manager">
           <Input onChange={(event) => updateForm({ accountManager: event.target.value })} value={form.accountManager} />
         </FormField>
-        <FormField label="Agency contact">
+        <FormField label="Team contact">
           <Input onChange={(event) => updateForm({ agencyContact: event.target.value })} value={form.agencyContact} />
         </FormField>
         <div className="md:col-span-2">
@@ -90,7 +90,7 @@ export function ExecutiveSummarySection({
 }) {
   return (
     <WorkspaceCard
-      description="Research rule: no number without narrative. This is the client-facing interpretation of the month."
+      description="Research rule: no number without narrative. This is the portal-ready interpretation of the month."
       iconName="messageSquare"
       title="Executive Summary"
     >
@@ -98,7 +98,7 @@ export function ExecutiveSummarySection({
         <FormField label="Narrative">
           <Textarea
             onChange={(event) => updateExecutiveSummary('narrative', event.target.value)}
-            placeholder="Plain-language summary of what happened, why it matters, and what the agency is doing next."
+            placeholder="Plain-language summary of what happened, why it matters, and what the team is doing next."
             rows={5}
             value={form.content.executive_summary.narrative}
           />

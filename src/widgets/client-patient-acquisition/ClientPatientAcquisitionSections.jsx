@@ -155,7 +155,7 @@ export function ClientPatientAcquisitionView({ page }) {
           filters={page.filters}
         />
         <EmptyState
-          description="Aggregate acquisition metrics will appear after the agency publishes clinic-safe reporting data or the current filters are cleared."
+          description="Aggregate acquisition metrics will appear after the team publishes clinic-safe reporting data or the current filters are cleared."
           iconName="target"
           title="No patient acquisition data found"
         />

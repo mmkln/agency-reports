@@ -62,7 +62,7 @@ export function DashboardLinkModal({
             <div className="grid gap-component">
               {!hasClients ? (
                 <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
-                  Create a client workspace before adding dashboard links.
+                  Create an account workspace before adding dashboard links.
                 </div>
               ) : null}
 
@@ -73,14 +73,14 @@ export function DashboardLinkModal({
               ) : null}
 
               <div className="grid gap-2">
-                <Label htmlFor="dashboard-client">Client *</Label>
+                <Label htmlFor="dashboard-client">Account *</Label>
                 <Select
                   disabled={mode === 'edit' || !hasClients}
                   onValueChange={(value) => onUpdateField('clientId', value)}
                   value={form.clientId}
                 >
                   <SelectTrigger id="dashboard-client">
-                    <SelectValue placeholder="Select client" />
+                    <SelectValue placeholder="Select account" />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (

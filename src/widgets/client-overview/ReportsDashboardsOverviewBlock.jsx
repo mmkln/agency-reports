@@ -71,7 +71,7 @@ export function ReportsDashboardsOverviewBlock({
         </div>
       ) : (
         <EmptyState iconName="barChart">
-          Reports and dashboards are being prepared. Published results will appear here after agency review.
+          Reports and dashboards are being prepared. Published results will appear here after team review.
         </EmptyState>
       )}
     </SectionCard>

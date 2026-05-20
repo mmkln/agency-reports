@@ -1,0 +1,1 @@
+export { DentalGrowthReviewDashboard } from './DentalGrowthReviewDashboard'

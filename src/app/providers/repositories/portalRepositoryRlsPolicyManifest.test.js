@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_REPOSITORY_COLLECTIONS,
   PORTAL_TABLE_NAMES,
@@ -56,8 +57,8 @@ describe('portalRepositoryRlsPolicyManifest', () => {
     }
   })
 
-  it('carries published-state filters into clinic aggregate client policies', () => {
-    for (const tableName of PORTAL_CLINIC_PUBLISH_STATE_TABLES) {
+  it('carries published-state filters into client-facing clinic aggregate policies', () => {
+    for (const tableName of PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES) {
       const entry = getPortalRepositoryRlsPolicies(tableName)
       const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.CLIENT_MEMBER)
 
@@ -69,6 +70,17 @@ describe('portalRepositoryRlsPolicyManifest', () => {
           values: ['published'],
         }),
       ]))
+    }
+  })
+
+  it('does not create client member policies for internal clinic reporting layers', () => {
+    for (const tableName of ['clinic_daily_operations', 'clinic_weekly_operator_periods']) {
+      const entry = getPortalRepositoryRlsPolicies(tableName)
+      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.CLIENT_MEMBER)
+
+      expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES, tableName).toContain(tableName)
+      expect(entry.aggregateOnly, tableName).toBe(true)
+      expect(clientPolicy, tableName).toBeUndefined()
     }
   })
 

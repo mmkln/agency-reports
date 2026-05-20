@@ -1,12 +1,12 @@
 import {
   Button,
   PageShell,
-  Skeleton,
 } from '@/shared/ui'
 
 import {
   AdminClientWorkspaceHeader,
   ClinicClientPreviewLinks,
+  WorkspaceState,
 } from '../../admin-client-workspace'
 import { useAdminClinicReputationWorkflow } from '../useAdminClinicReputationWorkflow'
 import { ClinicReputationImportDialog } from './ClinicReputationImportDialog'
@@ -14,21 +14,16 @@ import { ReputationSnapshotsCard } from './ReputationSnapshotsCard'
 
 function ClinicReputationLoadingState() {
   return (
-    <PageShell className="py-section" width="full">
-      <div className="grid gap-card">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-80" />
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState />
     </PageShell>
   )
 }
 
 function ClinicReputationErrorState({ message }) {
   return (
-    <PageShell className="py-section" width="content">
-      <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-        {message || 'Clinic reputation could not be loaded.'}
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState message={message || 'Clinic reputation could not be loaded.'} status="error" />
     </PageShell>
   )
 }
@@ -104,11 +99,9 @@ export function AdminClinicReputationWorkspace({ routeParams = {}, runtime }) {
         eyebrow="Clinic reputation"
       />
 
-      <PageShell className="py-section" width="full">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         {status === 'error' && error ? (
-          <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-            {error}
-          </div>
+          <WorkspaceState message={error} status="error" />
         ) : null}
 
         <form

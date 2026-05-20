@@ -48,7 +48,7 @@ export function RequestDialog({
                 value={draft.clientId}
               >
                 <SelectTrigger id="request-client">
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((item) => (
@@ -75,7 +75,7 @@ export function RequestDialog({
                 className="resize-none"
                 id="request-description"
                 onChange={(event) => onChange({ ...draft, description: event.target.value })}
-                placeholder="What exactly do we need from the client?"
+                placeholder="What exactly do we need from the account?"
                 value={draft.description}
               />
             </div>
@@ -133,7 +133,7 @@ export function RequestDialog({
                   className="resize-none"
                   id="request-internal-notes"
                   onChange={(event) => onChange({ ...draft, internalNotes: event.target.value })}
-                  placeholder="Internal context. Never shown to the client."
+                placeholder="Internal context. Never shown in the portal."
                   value={draft.internalNotes}
                 />
               </div>

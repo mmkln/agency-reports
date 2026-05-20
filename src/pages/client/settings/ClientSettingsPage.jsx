@@ -30,5 +30,5 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
     return <AccessDeniedState />
   }
 
-  return <ClientSettingsWorkspace page={page} routeParams={routeParams} />
+  return <ClientSettingsWorkspace page={page} routeParams={routeParams} runtime={runtime} />
 }

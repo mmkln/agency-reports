@@ -1,22 +1,21 @@
 import {
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import {
   ClientRequestTriageDialog,
   useAdminClientSubmittedRequestsWorkflow,
 } from '../../../features/admin-client-submitted-requests'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { AdminClientSubmittedRequestsWorkspace } from '../../../widgets/admin-client-submitted-requests'
 
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -24,11 +23,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }
@@ -52,7 +47,7 @@ export function AdminClientSubmittedRequestsPage({ routeParams = {}, runtime }) 
       <AdminClientWorkspaceHeader
         client={workflow.client}
         currentPage="requests"
-        eyebrow="Client-submitted requests"
+        eyebrow="Submitted requests"
         width="content"
       />
 

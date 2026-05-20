@@ -30,6 +30,15 @@ describe('authSessionContractService', () => {
         SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
       ],
     })
+    expect(getServerAuthRoleContract(USER_ROLES.CLIENT_TEAM)).toEqual({
+      allowedClientSource: 'client_memberships_only',
+      requiredChecks: [
+        SERVER_AUTH_SESSION_CHECKS.ACTIVE_SESSION,
+        SERVER_AUTH_SESSION_CHECKS.SESSION_NOT_EXPIRED,
+        SERVER_AUTH_SESSION_CHECKS.PROFILE_EXISTS,
+        SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
+      ],
+    })
   })
 
   it('keeps agency and team role contracts explicit', () => {

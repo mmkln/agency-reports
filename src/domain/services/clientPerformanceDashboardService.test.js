@@ -329,7 +329,7 @@ describe('clientPerformanceDashboardService', () => {
     expect(JSON.stringify(page)).not.toContain('Debug internal attribution issue')
   })
 
-  it('redirects clinic clients from the legacy performance surface to current performance in Clinic Results', () => {
+  it('redirects clinic clients from the legacy performance surface to executive performance', () => {
     const page = getClientPerformanceDashboardPage({
       clientId: IDS.CLIENT_A,
       periodId: IDS.PERIOD_ARCHIVED,
@@ -343,7 +343,7 @@ describe('clientPerformanceDashboardService', () => {
       id: IDS.PERIOD_ARCHIVED,
       title: 'March Dashboard',
     })
-    expect(page.redirectTo).toBe(`/client/reports-dashboards?clientId=${IDS.CLIENT_A}&performancePeriodId=${IDS.PERIOD_ARCHIVED}#current-performance`)
+    expect(page.redirectTo).toBe(`/client/executive-performance?clientId=${IDS.CLIENT_A}&legacyPerformancePeriodId=${IDS.PERIOD_ARCHIVED}`)
   })
 
   it('allows a client to open an archived dashboard period for their own client', () => {

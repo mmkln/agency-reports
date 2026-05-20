@@ -8,7 +8,7 @@ import { canAccessRoute, filterRoutesForNavigation } from '../routing/roleAccess
 import { routeMetadata } from '../routing/routeDefinitions'
 import {
   getDemoRoleOption,
-  getDemoRoleOptionByRole,
+  getDemoRoleOptionByViewer,
   readDemoRoleKey,
   writeDemoRoleKey,
 } from '../providers/session/demoRoleSwitch'
@@ -104,7 +104,7 @@ export function RootLayout() {
         <Outlet />
       </AppShell>
       <DemoRoleSwitcher
-        activeRoleKey={viewer ? getDemoRoleOptionByRole(viewer.role).key : demoRoleKey}
+        activeRoleKey={viewer ? getDemoRoleOptionByViewer(viewer).key : demoRoleKey}
         onRoleChange={handleDemoRoleChange}
       />
     </>

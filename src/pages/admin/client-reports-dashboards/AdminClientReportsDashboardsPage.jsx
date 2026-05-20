@@ -2,9 +2,7 @@ import { Link } from 'react-router-dom'
 
 import {
   Button,
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import { listAdminClients } from '../../../domain/services/adminClientService'
@@ -12,7 +10,10 @@ import { listAdminPerformanceDashboardPeriods } from '../../../domain/services/a
 import { listAdminReports } from '../../../domain/services/adminReportService'
 import { listAdminDashboardLinks } from '../../../domain/services/dashboardLinkService'
 import { CLIENT_TYPES } from '../../../entities/client'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { AdminClientReportsDashboardsWorkspace } from '../../../widgets/admin-client-reports-dashboards'
@@ -20,9 +21,7 @@ import { AdminClientReportsDashboardsWorkspace } from '../../../widgets/admin-cl
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -30,11 +29,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }

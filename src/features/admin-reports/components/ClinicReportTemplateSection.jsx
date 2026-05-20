@@ -220,7 +220,7 @@ export function ClinicReportTemplateSection({
 
         <div className="grid gap-component md:grid-cols-3">
           <SectionTextarea
-            label="Agency work completed"
+            label="Work completed"
             onChange={(value) => updateList('agencyWorkCompleted', value)}
             placeholder="- Work item"
             value={getListText(sections.agencyWorkCompleted)}

@@ -1,8 +1,9 @@
 import {
-  CardContent,
-  CardTitle,
-  PrimitiveCard as Card,
-  PrimitiveCardHeader as CardHeader,
+  EmptyState,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Skeleton,
 } from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
@@ -35,22 +36,40 @@ export function InlineEmptyState({ children, iconName = 'helpCircle', title }) {
 
 export function WorkspaceCard({ action, children, description, iconName, title }) {
   return (
-    <Card className="gap-0 bg-block py-0 shadow-none">
-      <CardHeader className="border-b border-separator px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <CardTitle as="h2" className="flex items-center gap-2 text-ui text-text-primary">
-              {iconName ? <Icon className="text-text-quaternary" name={iconName} size={15} /> : null}
-              {title}
-            </CardTitle>
-            {description ? <p className="mt-1 text-label font-normal text-text-muted">{description}</p> : null}
+    <Panel>
+      <PanelHeader
+        action={action}
+        divided
+        iconName={iconName}
+        subtitle={description}
+        title={title}
+      />
+      <PanelBody>{children}</PanelBody>
+    </Panel>
+  )
+}
+
+export function WorkspaceState({ description, message, status = 'loading', title }) {
+  const isLoading = status === 'loading'
+
+  return (
+    <Panel>
+      <PanelBody className="flex min-h-[260px] items-center justify-center">
+        {isLoading ? (
+          <div className="grid w-full max-w-md gap-component">
+            <Skeleton className="h-6 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
           </div>
-          {action}
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        {children}
-      </CardContent>
-    </Card>
+        ) : (
+          <EmptyState
+            className={status === 'error' ? 'text-destructive' : ''}
+            description={description ?? message}
+            iconName={status === 'error' ? 'circleAlert' : 'helpCircle'}
+            title={title ?? (status === 'error' ? 'Unable to load workspace' : 'No data')}
+          />
+        )}
+      </PanelBody>
+    </Panel>
   )
 }

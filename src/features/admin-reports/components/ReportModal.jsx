@@ -54,7 +54,7 @@ export function ReportModal({
             <div className="grid gap-component">
               {!hasClients ? (
                 <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
-                  Create a client workspace before adding monthly reports.
+                  Create an account workspace before adding monthly reports.
                 </div>
               ) : null}
 

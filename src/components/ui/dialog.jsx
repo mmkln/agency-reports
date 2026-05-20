@@ -20,11 +20,17 @@ function DialogOverlay({ className, ...props }) {
   )
 }
 
-function DialogContent({ children, className, ...props }) {
+function DialogContent({
+  children,
+  className,
+  'aria-describedby': ariaDescribedBy = undefined,
+  ...props
+}) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        aria-describedby={ariaDescribedBy}
         className={cn(
           'fixed left-1/2 top-1/2 z-50 grid w-full max-w-sheet-md -translate-x-1/2 -translate-y-1/2 gap-component border border-island-border bg-material-vibrant p-panel text-text-primary shadow-premium backdrop-blur-2xl duration-motion-medium ease-motion-emphasized data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-motion-fast data-[state=closed]:ease-motion-exit data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-island',
           className,

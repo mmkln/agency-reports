@@ -137,7 +137,7 @@ export function ActionNeededDetailDialog({
                       setMessage(event.target.value)
                       setError('')
                     }}
-                    placeholder={isApproval ? 'Add an approval note or request specific changes...' : 'Write a short response for the agency...'}
+                    placeholder={isApproval ? 'Add an approval note or request specific changes...' : 'Write a short response for the team...'}
                     value={message}
                   />
                   {error ? <p className="text-ui text-destructive">{error}</p> : null}

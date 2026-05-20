@@ -49,7 +49,7 @@ export function ClientUpdateDialog({
                 value={draft.clientId}
               >
                 <SelectTrigger id="client-update-client">
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (

@@ -87,7 +87,8 @@ function ReviewItemCard({
   const canCreateRequest = item.recommendedAction === 'create_client_request' && !hasLinkedRequests
 
   return (
-    <article className="rounded-block bg-block p-4 shadow-block" data-testid={`client-work-review-${item.workItemId ?? item.taskId}`}>
+    <Panel data-testid={`client-work-review-${item.workItemId ?? item.taskId}`}>
+      <PanelBody>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -160,7 +161,8 @@ function ReviewItemCard({
           )}
         </div>
       </div>
-    </article>
+      </PanelBody>
+    </Panel>
   )
 }
 

@@ -10,7 +10,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { createNeededAction } from './neededFromClientService'
 
@@ -152,7 +152,7 @@ function countBy(requests, predicate) {
 }
 
 function assertClientUserCanSubmit({ clientId, viewer }) {
-  if (viewer?.role !== USER_ROLES.CLIENT_USER || !canAccessClient(viewer, clientId)) {
+  if (!isClientPortalRole(viewer?.role) || !canAccessClient(viewer, clientId)) {
     throw new Error('Only client users can submit requests for their client.')
   }
 }

@@ -91,7 +91,7 @@ export function ExecutiveSummaryHero({ dashboard, executiveSummary, heroMetric }
             </p>
             <h2 className="mt-2 text-heading text-text-primary">{dashboard.title}</h2>
             <p className="mt-3 max-w-readable text-body text-text-secondary">
-              {executiveSummary.narrative || 'The agency has not published an executive summary for this period yet.'}
+              {executiveSummary.narrative || 'The team has not published an executive summary for this period yet.'}
             </p>
           </div>
 
@@ -207,7 +207,7 @@ export function DashboardContextBar({ client, dashboard, mode, periods }) {
           <p className="text-label font-normal text-text-muted">
             {hasMultiplePeriods
               ? 'Published and archived dashboards are available here.'
-              : 'Only one client-visible dashboard is available.'}
+              : 'Only one published dashboard is available.'}
           </p>
         </div>
       </div>

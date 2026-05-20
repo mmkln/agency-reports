@@ -221,7 +221,7 @@ export function ClientServiceLinesView({ page }) {
             ))
           ) : (
             <EmptyState
-              description="Clinic service lines will appear after the agency defines the patient acquisition focus."
+              description="Clinic service lines will appear after the team defines the patient acquisition focus."
               iconName="stethoscope"
               title="No service lines yet"
             />

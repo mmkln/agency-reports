@@ -1,5 +1,5 @@
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 
 export const neededActionStatusSelectionOrder = Object.freeze([
   NEEDED_ACTION_STATUSES.PENDING,
@@ -70,7 +70,7 @@ export function getNeededActionStatusSelectionOptions({
 }
 
 export function canClientRespondToNeededAction({ action, viewer }) {
-  return viewer?.role === USER_ROLES.CLIENT_USER
+  return isClientPortalRole(viewer?.role)
     && action?.status === NEEDED_ACTION_STATUSES.PENDING
 }
 

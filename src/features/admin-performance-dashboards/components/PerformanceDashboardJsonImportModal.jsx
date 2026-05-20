@@ -76,7 +76,7 @@ export function PerformanceDashboardJsonImportModal({
             <div className="grid gap-component">
               {!hasClients ? (
                 <div className="rounded-control border border-warning/25 bg-warning/10 px-3 py-2 text-ui text-warning-foreground">
-                  Create a client workspace before importing performance data.
+                  Create an account workspace before importing performance data.
                 </div>
               ) : null}
 
@@ -108,17 +108,17 @@ export function PerformanceDashboardJsonImportModal({
                     <div>
                       <h3 className="text-ui text-text-primary">Import source</h3>
                       <p className="mt-1 text-label font-normal text-text-muted">
-                        The selected client is applied to the imported dashboard, so the JSON cannot accidentally publish under a different workspace.
+                        The selected account is applied to the imported dashboard, so the JSON cannot accidentally publish under a different workspace.
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="grid gap-component p-card">
                   <div className="grid gap-2">
-                    <Label htmlFor="performance-import-client">Client *</Label>
+                    <Label htmlFor="performance-import-client">Account *</Label>
                     <Select disabled={!hasClients} onValueChange={setClientId} value={clientId}>
                       <SelectTrigger id="performance-import-client">
-                        <SelectValue placeholder="Select client" />
+                        <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
                         {clients.map((client) => (

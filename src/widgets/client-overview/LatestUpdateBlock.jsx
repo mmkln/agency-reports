@@ -26,7 +26,7 @@ export function LatestUpdateBlock({ clientId, focusItems, update }) {
           <p className="mt-3 text-label text-text-quaternary">Updated {formatDate(update.updatedAt)}</p>
         </article>
       ) : (
-        <EmptyState>No client-facing update has been published yet.</EmptyState>
+        <EmptyState>No portal update has been published yet.</EmptyState>
       )}
 
       <div className="mt-5">

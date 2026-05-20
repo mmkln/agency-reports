@@ -1,13 +1,22 @@
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
+import { assertCanManageClientTeam } from '../policies/clientTeamPolicy'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
 } from './activityTrackingService'
+import { createPasswordCredential, validatePasswordPair } from './authCredentialService'
 import { setAuthSession } from './authService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const INVITATION_ACCESS_TOKEN_TTL_MS = 1000 * 60 * 15
+const INVITATION_ACCESS_TOKEN_STATUSES = Object.freeze({
+  EXPIRED: 'expired',
+  PENDING: 'pending',
+  USED: 'used',
+})
+export const INVITATION_ACCESS_LINK_SENT_MESSAGE = 'If an invitation exists for that email, we sent a secure link.'
 
 function requireText(value, fieldName) {
   const normalizedValue = String(value ?? '').trim()
@@ -39,6 +48,17 @@ function createToken(idGenerator) {
   return idGenerator().replace(/-/g, '')
 }
 
+function createExpiresAt(now, ttlMs) {
+  return new Date(new Date(now()).getTime() + ttlMs).toISOString()
+}
+
+function isPastDate(value, now) {
+  const expiresAt = new Date(value).getTime()
+  const currentTime = new Date(now()).getTime()
+
+  return !Number.isNaN(expiresAt) && !Number.isNaN(currentTime) && expiresAt < currentTime
+}
+
 function assertClientBelongsToAgency({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
@@ -59,6 +79,22 @@ function normalizeRole(role) {
   }
 
   return normalizedRole
+}
+
+function normalizeClientTeamInviteRole(role) {
+  const normalizedRole = role || CLIENT_MEMBERSHIP_ROLES.VIEWER
+
+  if (normalizedRole !== CLIENT_MEMBERSHIP_ROLES.VIEWER) {
+    throw new Error('Client admins can invite teammates as viewers only.')
+  }
+
+  return normalizedRole
+}
+
+function getProfileRoleForMembershipRole(role) {
+  return role === CLIENT_MEMBERSHIP_ROLES.OWNER
+    ? USER_ROLES.CLIENT_ADMIN
+    : USER_ROLES.CLIENT_TEAM
 }
 
 export function getInvitationStatus(invitation, now = () => new Date().toISOString()) {
@@ -203,23 +239,202 @@ export function listClientInvitations({
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
 
-export function getClientInvitationByToken({ repositories, token }) {
+export function listClientTeamInvitations({
+  clientId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  assertCanManageClientTeam({ clientId, repositories, viewer })
+
+  return repositories.clientInvitations
+    .listByClientId(clientId)
+    .map((invitation) => mapInvitation(invitation, now))
+    .filter((invitation) => invitation.status === CLIENT_INVITATION_STATUSES.PENDING)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+}
+
+export function createClientTeamInvitation({
+  activityIdGenerator,
+  clientId,
+  email,
+  expiresAt = null,
+  idGenerator,
+  name = '',
+  now = () => new Date().toISOString(),
+  repositories,
+  role = CLIENT_MEMBERSHIP_ROLES.VIEWER,
+  viewer,
+}) {
+  if (!idGenerator) {
+    throw new Error('idGenerator is required.')
+  }
+
+  assertCanManageClientTeam({ clientId, repositories, viewer })
+
+  const client = repositories.clients.findById(clientId)
+  const normalizedEmail = normalizeEmail(email)
+  const normalizedRole = normalizeClientTeamInviteRole(role)
+  const timestamp = now()
+  const invitation = {
+    accepted_at: null,
+    client_id: client.id,
+    created_at: timestamp,
+    email: normalizedEmail,
+    expires_at: expiresAt || null,
+    id: idGenerator(),
+    invited_by: viewer.userId,
+    name: String(name ?? '').trim(),
+    role: normalizedRole,
+    status: CLIENT_INVITATION_STATUSES.PENDING,
+    token: createToken(idGenerator),
+    updated_at: timestamp,
+  }
+
+  repositories.clientInvitations.upsert(invitation)
+  recordInvitationActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
+    invitation,
+    now,
+    repositories,
+    viewer,
+  })
+
+  return invitation
+}
+
+export function getClientInvitationByToken({ now = () => new Date().toISOString(), repositories, token }) {
   const normalizedToken = requireText(token, 'Invitation token')
   const invitation = repositories.clientInvitations
     .list()
     .find((item) => item.token === normalizedToken)
 
-  if (!invitation) {
+  if (invitation) {
+    const client = repositories.clients.findById(invitation.client_id)
+
+    if (!client) {
+      throw new Error('Invitation client was not found.')
+    }
+
+    const profile = repositories.profiles
+      .list()
+      .find((item) => item.email.toLowerCase() === invitation.email.toLowerCase()) ?? null
+
+    return { accessToken: null, client, invitation, profile, tokenSource: 'invitation' }
+  }
+
+  const accessToken = repositories.invitationAccessTokens
+    ?.list()
+    .find((item) => item.token === normalizedToken)
+
+  if (!accessToken) {
     throw new Error('Invitation was not found.')
   }
 
-  const client = repositories.clients.findById(invitation.client_id)
+  if (
+    accessToken.status === INVITATION_ACCESS_TOKEN_STATUSES.USED
+    || accessToken.used_at
+  ) {
+    throw new Error('Invitation access link was already used.')
+  }
+
+  if (accessToken.status === INVITATION_ACCESS_TOKEN_STATUSES.EXPIRED) {
+    throw new Error('Invitation access link has expired.')
+  }
+
+  if (
+    accessToken.expires_at
+    && isPastDate(accessToken.expires_at, now)
+  ) {
+    repositories.invitationAccessTokens.upsert({
+      ...accessToken,
+      status: INVITATION_ACCESS_TOKEN_STATUSES.EXPIRED,
+      updated_at: now(),
+    })
+    throw new Error('Invitation access link has expired.')
+  }
+
+  const invitationByAccessToken = repositories.clientInvitations.findById(accessToken.invitation_id)
+
+  if (!invitationByAccessToken) {
+    throw new Error('Invitation was not found.')
+  }
+
+  const client = repositories.clients.findById(invitationByAccessToken.client_id)
 
   if (!client) {
     throw new Error('Invitation client was not found.')
   }
 
-  return { client, invitation }
+  const profile = repositories.profiles
+    .list()
+    .find((item) => item.email.toLowerCase() === invitationByAccessToken.email.toLowerCase()) ?? null
+
+  return {
+    accessToken,
+    client,
+    invitation: invitationByAccessToken,
+    profile,
+    tokenSource: 'access-token',
+  }
+}
+
+export function requestClientInvitationAccessLink({
+  email,
+  idGenerator,
+  now = () => new Date().toISOString(),
+  repositories,
+}) {
+  if (!idGenerator) {
+    throw new Error('idGenerator is required.')
+  }
+
+  let normalizedEmail = ''
+
+  try {
+    normalizedEmail = normalizeEmail(email)
+  } catch {
+    return {
+      message: INVITATION_ACCESS_LINK_SENT_MESSAGE,
+      sent: false,
+    }
+  }
+
+  const invitation = repositories.clientInvitations
+    .list()
+    .find((item) => (
+      item.email.toLowerCase() === normalizedEmail
+      && getInvitationStatus(item, now) === CLIENT_INVITATION_STATUSES.PENDING
+    ))
+
+  if (!invitation) {
+    return {
+      message: INVITATION_ACCESS_LINK_SENT_MESSAGE,
+      sent: false,
+    }
+  }
+
+  const timestamp = now()
+  const accessToken = {
+    client_id: invitation.client_id,
+    created_at: timestamp,
+    expires_at: createExpiresAt(now, INVITATION_ACCESS_TOKEN_TTL_MS),
+    id: idGenerator(),
+    invitation_id: invitation.id,
+    status: INVITATION_ACCESS_TOKEN_STATUSES.PENDING,
+    token: createToken(idGenerator),
+    updated_at: timestamp,
+    used_at: null,
+  }
+
+  repositories.invitationAccessTokens.upsert(accessToken)
+
+  return {
+    accessToken,
+    message: INVITATION_ACCESS_LINK_SENT_MESSAGE,
+    sent: true,
+  }
 }
 
 export function cancelClientInvitation({
@@ -268,21 +483,68 @@ export function cancelClientInvitation({
   return mapInvitation(nextInvitation, now)
 }
 
+export function cancelClientTeamInvitation({
+  activityIdGenerator,
+  invitationId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  const invitation = repositories.clientInvitations.findById(invitationId)
+
+  if (!invitation) {
+    throw new Error('Invitation was not found.')
+  }
+
+  assertCanManageClientTeam({
+    clientId: invitation.client_id,
+    repositories,
+    viewer,
+  })
+
+  const status = getInvitationStatus(invitation, now)
+
+  if (status === CLIENT_INVITATION_STATUSES.ACCEPTED) {
+    throw new Error('Accepted invitations cannot be cancelled.')
+  }
+
+  const nextInvitation = {
+    ...invitation,
+    status: CLIENT_INVITATION_STATUSES.CANCELLED,
+    updated_at: now(),
+  }
+
+  repositories.clientInvitations.upsert(nextInvitation)
+  recordInvitationActivity({
+    activityIdGenerator,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CANCELLED,
+    invitation: nextInvitation,
+    now,
+    repositories,
+    viewer,
+  })
+
+  return mapInvitation(nextInvitation, now)
+}
+
 export function acceptClientInvitation({
   activityIdGenerator,
+  confirmPassword,
   email,
   idGenerator,
   name,
   now = () => new Date().toISOString(),
+  password,
   repositories,
   storage = typeof window !== 'undefined' ? window.localStorage : null,
   token,
+  viewer = null,
 }) {
   if (!idGenerator) {
     throw new Error('idGenerator is required.')
   }
 
-  const { client, invitation } = getClientInvitationByToken({ repositories, token })
+  const { accessToken, client, invitation } = getClientInvitationByToken({ now, repositories, token })
 
   try {
     assertInvitationIsPending(invitation, now)
@@ -316,9 +578,32 @@ export function acceptClientInvitation({
     email: normalizedEmail,
     id: idGenerator(),
     name: normalizedName,
-    role: USER_ROLES.CLIENT_USER,
+    role: getProfileRoleForMembershipRole(invitation.role),
     updated_at: timestamp,
     user_id: idGenerator(),
+  }
+
+  if (existingProfile) {
+    if (!isClientPortalRole(existingProfile.role)) {
+      throw new Error('This email belongs to a non-client user.')
+    }
+
+    if (!viewer?.userId) {
+      throw new Error('Sign in to accept this invitation.')
+    }
+
+    if (viewer.userId !== existingProfile.user_id) {
+      throw new Error('This invitation belongs to another account. Sign in with the invited email to continue.')
+    }
+  } else {
+    const normalizedPassword = validatePasswordPair({ confirmPassword, password })
+    createPasswordCredential({
+      idGenerator,
+      now,
+      password: normalizedPassword,
+      repositories,
+      userId: profile.user_id,
+    })
   }
 
   repositories.profiles.upsert({
@@ -326,7 +611,7 @@ export function acceptClientInvitation({
     agency_id: client.agency_id,
     client_id: client.id,
     name: normalizedName,
-    role: USER_ROLES.CLIENT_USER,
+    role: existingProfile ? profile.role : getProfileRoleForMembershipRole(invitation.role),
     updated_at: timestamp,
   })
 
@@ -353,6 +638,14 @@ export function acceptClientInvitation({
   }
 
   repositories.clientInvitations.upsert(acceptedInvitation)
+  if (accessToken) {
+    repositories.invitationAccessTokens.upsert({
+      ...accessToken,
+      status: INVITATION_ACCESS_TOKEN_STATUSES.USED,
+      updated_at: timestamp,
+      used_at: timestamp,
+    })
+  }
   recordInvitationActivity({
     activityIdGenerator,
     eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_ACCEPTED,
@@ -362,7 +655,7 @@ export function acceptClientInvitation({
     viewer: {
       clientId: client.id,
       clientIds: [client.id],
-      role: USER_ROLES.CLIENT_USER,
+      role: getProfileRoleForMembershipRole(invitation.role),
       userId: profile.user_id,
     },
   })

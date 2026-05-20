@@ -2,7 +2,10 @@ import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../../entities/client-work-i
 import { CLINIC_RECORD_PUBLISH_STATES } from '../../../entities/clinic'
 import { REPORT_STATUSES } from '../../../entities/report'
 import { VISIBILITY } from '../../../entities/update'
-import { PORTAL_CLINIC_PUBLISH_STATE_TABLES } from './portalRepositoryContract'
+import {
+  PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES,
+  PORTAL_CLINIC_PUBLISH_STATE_TABLES,
+} from './portalRepositoryContract'
 import {
   createPortalRepositorySchemaManifest,
   PORTAL_REPOSITORY_CLIENT_SCOPE,
@@ -43,6 +46,7 @@ const CLIENT_READABLE_TABLES = new Set([
   'reputation_snapshots',
   'service_line_performance',
   'updates',
+  ...PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES,
 ])
 
 const CLIENT_SAFE_VISIBILITY_TABLES = new Set([
@@ -91,7 +95,10 @@ function getAccessMode(tableSchema) {
     return PORTAL_ACCESS_MODES.SELF_OR_AGENCY
   }
 
-  if (tableSchema.tableName === 'client_invitations') {
+  if (
+    tableSchema.tableName === 'client_invitations'
+    || tableSchema.tableName === 'invitation_access_tokens'
+  ) {
     return PORTAL_ACCESS_MODES.TOKEN_GATED
   }
 

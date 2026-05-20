@@ -5,7 +5,7 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientReportsDashboardsPage } from '../../../domain/services/clientReportsDashboardsService'
-import { USER_ROLES } from '../../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
@@ -23,7 +23,7 @@ function createUuid() {
 }
 
 function recordClientReportOpened({ clientId, reportId, repositories, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER || !reportId) {
+  if (!isClientPortalRole(runtime.viewer.role) || !reportId) {
     return
   }
 

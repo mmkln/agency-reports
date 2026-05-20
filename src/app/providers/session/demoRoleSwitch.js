@@ -23,13 +23,31 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     userId: SEED_IDS.USER_TEAM_MIA,
   },
   {
-    description: 'View the client-facing portal',
+    description: 'View executive clinic reporting',
     homeHref: `/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
     iconName: 'user',
     key: 'client',
-    label: 'Client',
-    role: USER_ROLES.CLIENT_USER,
+    label: 'Client Admin',
+    role: USER_ROLES.CLIENT_ADMIN,
     userId: SEED_IDS.USER_CLIENT_GREEN,
+  },
+  {
+    description: 'View monthly finance and strategy reporting',
+    homeHref: `/client/monthly-strategy?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+    iconName: 'dollarSign',
+    key: 'finance',
+    label: 'Finance',
+    role: USER_ROLES.CLIENT_ADMIN,
+    userId: SEED_IDS.USER_CLIENT_GREEN_FINANCE,
+  },
+  {
+    description: 'View daily ops without row-level patient queues',
+    homeHref: `/clinic/daily-ops?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+    iconName: 'stethoscope',
+    key: 'frontdesk',
+    label: 'Front Desk',
+    role: USER_ROLES.CLIENT_TEAM,
+    userId: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN,
   },
 ])
 
@@ -39,6 +57,11 @@ export function getDemoRoleOption(roleKey) {
 
 export function getDemoRoleOptionByRole(role) {
   return DEMO_ROLE_OPTIONS.find((option) => option.role === role) ?? DEMO_ROLE_OPTIONS[0]
+}
+
+export function getDemoRoleOptionByViewer(viewer) {
+  return DEMO_ROLE_OPTIONS.find((option) => option.userId === viewer?.userId)
+    ?? getDemoRoleOptionByRole(viewer?.role)
 }
 
 function getDefaultStorage() {

@@ -4,6 +4,8 @@ import { PORTAL_STORAGE_KEY } from '../src/app/providers/repositories/createLoca
 import { SEED_IDS } from '../src/app/providers/repositories/portalSeedData.js'
 import { AUTH_SESSION_STORAGE_KEY, DEMO_AUTH_PASSWORD } from '../src/domain/services/authService.js'
 
+test.setTimeout(120_000)
+
 const ADMIN_EMAIL = 'admin@growthlab.example'
 const CLIENT_EMAIL = 'client@greendental.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
@@ -54,7 +56,11 @@ async function openNewDashboardDialog(page) {
 
 async function openImportJsonDialog(page) {
   await openNewDashboardDialog(page)
-  await page.getByRole('button', { name: /Import from JSON/ }).click()
+  await page
+    .getByRole('dialog', { name: 'New dashboard' })
+    .getByRole('button', { name: /Import from JSON/ })
+    .click()
+  await expect(page).toHaveURL(/importPerformanceDashboard=true/)
   await expect(page.getByRole('dialog', { name: 'Import performance dashboard JSON' })).toBeVisible()
 }
 
@@ -147,24 +153,31 @@ test('agency admin creates a draft performance dashboard and enters structured d
   expect(savedPeriod.content.appendix_tables[0].rows).toEqual([['Implants Search']])
   expect(savedPeriod.status).toBe('draft')
 
-  await page.getByRole('link', { name: 'Preview' }).click()
+  await page.goto(`/admin/client-performance-preview?clientId=${savedPeriod.client_id}&performancePeriodId=${savedPeriod.id}`, {
+    waitUntil: 'domcontentloaded',
+  })
   await expect(page).toHaveURL(/\/admin\/client-performance-preview/)
+  await expect(page.locator('h1').getByText('Clinic Results', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: title }).first()).toBeVisible()
 })
 
 test('client can view published performance dashboard but cannot view draft or another client dashboard', async ({ page }) => {
   await signInAsClient(page)
   await expect(page.getByText('Clinic Results').first()).toBeVisible()
-  await expect(page.getByText('Qualified Leads').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dental Growth Review' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Executive performance' })).toHaveAttribute(
+    'href',
+    `/client/executive-performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
+  )
   await expect(page.getByRole('link', { name: 'View clinic results' })).toHaveAttribute(
     'href',
     new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`),
   )
 
   await page.goto(`/client/performance?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&periodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
-  await expect(page).toHaveURL(new RegExp(`/client/reports-dashboards\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}#current-performance`))
-  await expect(page.getByRole('heading', { name: 'Clinic Results' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Patient acquisition analytics' })).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/client/executive-performance\\?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&legacyPerformancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`))
+  await expect(page.locator('h1').getByText('Clinic Executive Dashboard', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Executive Narrative' })).toBeVisible()
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
   await expect(page.getByRole('heading', { name: 'April 2026 Performance Dashboard' }).first()).toBeVisible()

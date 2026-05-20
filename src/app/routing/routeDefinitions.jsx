@@ -1,7 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react'
 import { CLIENT_TYPES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_REPORTING_CAPABILITIES,
+  USER_ROLES,
+} from '../../entities/profile'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
@@ -47,6 +50,7 @@ import {
   AdminClientsPageRoute,
   AdminClinicCompliancePageRoute,
   AdminClinicMetricsPageRoute,
+  AdminClinicReportingPageRoute,
   AdminClinicReputationPageRoute,
   AdminClinicSetupPageRoute,
   AdminDashboardLinksPageRoute,
@@ -58,7 +62,9 @@ import {
   ClientCallsBookingsPageRoute,
   ClientComplianceApprovalsPageRoute,
   ClientDashboardPageRoute,
+  ClientExecutivePerformancePageRoute,
   ClientFilesLinksPageRoute,
+  ClientMonthlyStrategyPageRoute,
   ClientOverviewPageRoute,
   ClientPatientAcquisitionPageRoute,
   ClientPerformancePageRoute,
@@ -70,7 +76,10 @@ import {
   ClientSettingsPageRoute,
   ClientServiceLinesPageRoute,
   ClientUpdatesPageRoute,
+  DentalGrowthReviewPageRoute,
   TeamTasksPageRoute,
+  ClinicDailyOpsPageRoute,
+  TeamClinicOperatorPageRoute,
 } from './RoutePages'
 
 function lazyNamed(loader, exportName) {
@@ -85,6 +94,7 @@ const MarketingProcessPage = lazyNamed(() => import('../../pages/legacy/marketin
 const MarketingReportsPage = lazyNamed(() => import('../../pages/legacy/marketing-reports/MarketingReportsPage'), 'MarketingReportsPage')
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
+const CLIENT_PORTAL_ALLOWED_ROLES = [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM]
 
 export const routeDefinitions = [
   {
@@ -124,7 +134,7 @@ export const routeDefinitions = [
     id: 'client-overview',
     label: 'Overview',
     pageTitle: 'Client Overview',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientOverviewPageHeader,
     iconName: 'layoutDashboard',
@@ -136,7 +146,7 @@ export const routeDefinitions = [
     id: 'client-dashboard',
     label: 'Dashboard',
     pageTitle: 'Marketing Dashboard',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientDashboardPageHeader,
     showInNav: false,
@@ -144,11 +154,54 @@ export const routeDefinitions = [
     element: <ClientDashboardPageRoute />,
   },
   {
+    path: '/client/executive-performance',
+    id: 'client-executive-performance',
+    label: 'Executive Performance',
+    pageTitle: 'Executive Performance',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    contentWidth: 'content',
+    iconName: 'barChart',
+    navAllowedRoles: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    navLabel: 'Executive',
+    navOrder: 25,
+    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW],
+    element: <ClientExecutivePerformancePageRoute />,
+  },
+  {
+    path: '/client/monthly-strategy',
+    id: 'client-monthly-strategy',
+    label: 'Monthly Strategy',
+    pageTitle: 'Monthly Strategy',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    contentWidth: 'content',
+    iconName: 'dollarSign',
+    navAllowedRoles: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    navOrder: 45,
+    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
+    element: <ClientMonthlyStrategyPageRoute />,
+  },
+  {
+    path: '/dashboards/dental-growth-review',
+    id: 'dental-growth-review',
+    label: 'Dental Growth Review',
+    pageTitle: 'Dental Growth Review',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM, USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    clientTypes: [CLIENT_TYPES.CLINIC],
+    contentWidth: 'content',
+    iconName: 'target',
+    navLabel: 'Growth Review',
+    navOrder: 23,
+    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+    element: <DentalGrowthReviewPageRoute />,
+  },
+  {
     path: '/client/action-needed',
     id: 'client-action-needed',
     label: 'Action Needed',
     pageTitle: 'Action Needed',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientActionNeededPageHeader,
     iconName: 'bell',
@@ -160,7 +213,7 @@ export const routeDefinitions = [
     id: 'client-performance',
     label: 'Performance',
     pageTitle: 'Performance Dashboard',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientPerformancePageHeader,
     showInNav: false,
@@ -172,7 +225,7 @@ export const routeDefinitions = [
     id: 'client-patient-acquisition',
     label: 'Patient Acquisition',
     pageTitle: 'Patient Acquisition',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     header: ClientPatientAcquisitionPageHeader,
     iconName: 'target',
     clientTypes: [CLIENT_TYPES.CLINIC],
@@ -190,7 +243,7 @@ export const routeDefinitions = [
     id: 'client-calls-bookings',
     label: 'Calls & Bookings',
     pageTitle: 'Calls & Bookings',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     header: ClientCallsBookingsPageHeader,
     iconName: 'phone',
     clientTypes: [CLIENT_TYPES.CLINIC],
@@ -208,7 +261,7 @@ export const routeDefinitions = [
     id: 'client-projects',
     label: 'Projects',
     pageTitle: 'Projects',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientProjectsPageHeader,
     iconName: 'checkCircle2',
@@ -221,7 +274,7 @@ export const routeDefinitions = [
     id: 'client-service-lines',
     label: 'Service Lines',
     pageTitle: 'Service Lines',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientServiceLinesPageHeader,
     iconName: 'stethoscope',
@@ -240,7 +293,7 @@ export const routeDefinitions = [
     id: 'client-reputation',
     label: 'Reputation',
     pageTitle: 'Reputation',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientReputationPageHeader,
     iconName: 'messageSquare',
@@ -258,7 +311,7 @@ export const routeDefinitions = [
     id: 'client-compliance-approvals',
     label: 'Compliance',
     pageTitle: 'Compliance & Approvals',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientComplianceApprovalsPageHeader,
     iconName: 'shieldCheck',
@@ -276,7 +329,7 @@ export const routeDefinitions = [
     id: 'client-reports-dashboards',
     label: 'Reports',
     pageTitle: 'Reports & Dashboards',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientReportsDashboardsPageHeader,
     iconName: 'barChart',
@@ -288,7 +341,7 @@ export const routeDefinitions = [
     id: 'client-files-links',
     label: 'Files & Links',
     pageTitle: 'Files & Links',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientFilesLinksPageHeader,
     iconName: 'fileText',
@@ -306,7 +359,7 @@ export const routeDefinitions = [
     id: 'client-requests',
     label: 'Requests',
     pageTitle: 'Requests',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientRequestsPageHeader,
     iconName: 'messageSquare',
@@ -318,7 +371,7 @@ export const routeDefinitions = [
     id: 'client-updates',
     label: 'Updates',
     pageTitle: 'Updates',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientUpdatesPageHeader,
     iconName: 'clock',
@@ -335,10 +388,10 @@ export const routeDefinitions = [
     id: 'client-settings',
     label: 'Settings',
     pageTitle: 'Settings',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientSettingsPageHeader,
-    iconName: 'user',
+    iconName: 'settings',
     navOrder: 70,
     element: <ClientSettingsPageRoute />,
   },
@@ -347,7 +400,7 @@ export const routeDefinitions = [
     id: 'client-reports',
     label: 'Reports',
     pageTitle: 'Monthly Reports',
-    allowedRoles: [USER_ROLES.CLIENT_USER],
+    allowedRoles: CLIENT_PORTAL_ALLOWED_ROLES,
     contentWidth: 'content',
     header: ClientReportsPageHeader,
     showInNav: false,
@@ -357,11 +410,12 @@ export const routeDefinitions = [
   {
     path: '/admin/clients',
     id: 'admin-clients',
-    label: 'Clients',
-    pageTitle: 'Clients',
+    label: 'Accounts',
+    pageTitle: 'Accounts',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminClientsPageHeader,
     iconName: 'users',
+    navOrder: 10,
     element: <AdminClientsPageRoute />,
   },
   {
@@ -372,6 +426,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    navOrder: 20,
     element: <AdminTasksPageRoute />,
   },
   {
@@ -382,6 +437,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminDashboardLinksPageHeader,
     iconName: 'layoutDashboard',
+    navOrder: 50,
     element: <AdminDashboardLinksPageRoute />,
   },
   {
@@ -392,6 +448,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminPerformanceDashboardsPageHeader,
     iconName: 'barChart',
+    navOrder: 60,
     element: <AdminPerformanceDashboardsPageRoute />,
   },
   {
@@ -413,13 +470,14 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminReportsPageHeader,
     iconName: 'fileText',
+    navOrder: 70,
     element: <AdminReportsPageRoute />,
   },
   {
     path: '/admin/client-preview',
     id: 'admin-client-preview',
-    label: 'Published Client Overview Preview',
-    pageTitle: 'Published Client Overview Preview',
+    label: 'Published Workspace Overview Preview',
+    pageTitle: 'Published Workspace Overview Preview',
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     contentWidth: 'content',
     header: ClientOverviewPageHeader,
@@ -568,7 +626,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientSettingsPageHeader,
     showInNav: false,
-    iconName: 'user',
+    iconName: 'settings',
     element: <ClientSettingsPageRoute />,
   },
   {
@@ -642,6 +700,22 @@ export const routeDefinitions = [
     hidePageHeader: true,
     iconName: 'target',
     element: <AdminClinicMetricsPageRoute />,
+  },
+  {
+    path: '/admin/clinic-reporting',
+    id: 'admin-clinic-reporting',
+    label: 'Clinic Reporting',
+    pageTitle: 'Clinic Reporting',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    requiredCapabilities: [
+      CLINIC_REPORTING_CAPABILITIES.REPORTING_IMPORT,
+      CLINIC_REPORTING_CAPABILITIES.REPORTING_PUBLISH,
+    ],
+    showInNav: false,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'barChart',
+    element: <AdminClinicReportingPageRoute />,
   },
   {
     path: '/admin/clinic-setup',
@@ -771,7 +845,32 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    navOrder: 10,
     element: <TeamTasksPageRoute />,
+  },
+  {
+    path: '/clinic/daily-ops',
+    id: 'clinic-daily-ops',
+    label: 'Daily Operations',
+    pageTitle: 'Daily Operations',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM, USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    contentWidth: 'content',
+    iconName: 'phone',
+    navOrder: 40,
+    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
+    element: <ClinicDailyOpsPageRoute />,
+  },
+  {
+    path: '/team/clinic-operator',
+    id: 'team-clinic-operator',
+    label: 'Clinic Operator',
+    pageTitle: 'Clinic Operator',
+    allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM],
+    contentWidth: 'content',
+    iconName: 'barChart',
+    navOrder: 30,
+    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.WEEKLY_OPERATOR_VIEW],
+    element: <TeamClinicOperatorPageRoute />,
   },
   {
     path: '/legacy/build-board',
@@ -832,11 +931,19 @@ function buildRouteElement(route) {
     : <Suspense fallback={<LoadingFallback />}>{route.element}</Suspense>
 
   if (!route.allowedRoles?.length) {
+    if (route.requiredCapabilities?.length) {
+      return (
+        <ProtectedRoute requiredCapabilities={route.requiredCapabilities}>
+          {routeElement}
+        </ProtectedRoute>
+      )
+    }
+
     return routeElement
   }
 
   return (
-    <ProtectedRoute allowedRoles={route.allowedRoles}>
+    <ProtectedRoute allowedRoles={route.allowedRoles} requiredCapabilities={route.requiredCapabilities}>
       {routeElement}
     </ProtectedRoute>
   )

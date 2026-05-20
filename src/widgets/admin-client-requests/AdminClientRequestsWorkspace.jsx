@@ -1,8 +1,9 @@
 import {
   Badge,
   Button,
-  PrimitiveCard as Card,
-  CardContent,
+  EmptyState,
+  Panel,
+  PanelBody,
   StatusBadge,
 } from '@/shared/ui'
 
@@ -38,8 +39,8 @@ function RequestCard({
   const canReopen = action.status !== NEEDED_ACTION_STATUSES.PENDING
 
   return (
-    <Card className="bg-block py-0 shadow-none" data-testid={`request-card-${action.id}`}>
-      <CardContent className="p-4">
+    <Panel data-testid={`request-card-${action.id}`}>
+      <PanelBody>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -112,8 +113,8 @@ function RequestCard({
             ) : null}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </PanelBody>
+    </Panel>
   )
 }
 
@@ -166,11 +167,15 @@ export function AdminClientRequestsWorkspace({
           ))}
         </div>
       ) : (
-        <Card className="bg-block py-0 shadow-none">
-          <CardContent className="flex min-h-[180px] items-center justify-center text-ui text-text-muted">
-            No requests in this view.
-          </CardContent>
-        </Card>
+        <Panel>
+          <PanelBody>
+            <EmptyState
+              description="Client action items that match the selected view will appear here."
+              iconName="bell"
+              title="No requests in this view"
+            />
+          </PanelBody>
+        </Panel>
       )}
     </div>
   )

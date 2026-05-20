@@ -26,6 +26,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
   const toast = useToast()
   const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
   const [form, setForm] = useState(initialMemberForm)
+  const [isMemberFormOpen, setIsMemberFormOpen] = useState(false)
   const [error, setError] = useState('')
   const membersResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:client-members:${clientId ?? ''}`,
@@ -71,8 +72,9 @@ export function useAccessMembersPanel({ clientId, runtime }) {
       viewer: runtime.viewer,
     })).then((member) => {
       setForm(initialMemberForm)
+      setIsMemberFormOpen(false)
       refreshMembers()
-      toast.success('Member added', `${member.name} can now access this client portal.`)
+      toast.success('Member added', `${member.name} can now access this workspace.`)
     }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Member was not added', caughtError.message)
@@ -106,7 +108,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
       const removedMemberName = memberPendingRemoval.name
       setMemberPendingRemoval(null)
       refreshMembers()
-      toast.success('Member removed', `${removedMemberName} no longer has access to this client.`)
+      toast.success('Member removed', `${removedMemberName} no longer has access to this workspace.`)
     }).catch((caughtError) => {
       toast.error('Member was not removed', caughtError.message)
     })
@@ -117,11 +119,13 @@ export function useAccessMembersPanel({ clientId, runtime }) {
     changeRole,
     error,
     form,
+    isMemberFormOpen,
     memberEmailIssue,
     memberNameIssue,
     memberPendingRemoval,
     members,
     removeMember,
+    setIsMemberFormOpen,
     setMemberPendingRemoval,
     status: membersResource.status,
     updateForm,

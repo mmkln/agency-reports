@@ -183,7 +183,7 @@ export function ClientReputationView({ page }) {
   if (page.isEmpty) {
     return (
       <EmptyState
-        description="Aggregate review, local presence, and Google Business Profile metrics will appear after the agency imports clinic-safe reputation data."
+        description="Aggregate review, local presence, and Google Business Profile metrics will appear after the team imports clinic-safe reputation data."
         iconName="messageSquare"
         title="No reputation data yet"
       />

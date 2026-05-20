@@ -29,7 +29,7 @@ export function ClientPerformancePage({ routeParams = {}, runtime }) {
   if (!page.performanceDashboard) {
     return (
       <EmptyState
-        description="The agency is preparing the performance dashboard for this client. Published analytics will appear here once reviewed."
+        description="The team is preparing the performance dashboard for this account. Published analytics will appear here once reviewed."
         iconName="layoutDashboard"
         title="Performance dashboard is being prepared"
       />

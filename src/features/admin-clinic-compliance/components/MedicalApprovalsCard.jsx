@@ -270,7 +270,7 @@ function ApprovalEditor({
         <TextField
           label="Requested by"
           onChange={(value) => onUpdate(index, 'requested_by_label', value)}
-          placeholder="Agency team"
+          placeholder="Team"
           value={approval.requested_by_label}
         />
         <TextField

@@ -14,8 +14,8 @@ import { formatDate, formatDateTime } from './requestFormatters'
 const filters = [
   { label: 'Open', value: 'open' },
   { label: 'Needs review', value: 'needs_review' },
-  { label: 'Waiting on agency', value: 'waiting_on_agency' },
-  { label: 'Waiting on client', value: 'waiting_on_client' },
+  { label: 'Waiting on team', value: 'waiting_on_agency' },
+  { label: 'Waiting on requester', value: 'waiting_on_client' },
   { label: 'Completed', value: 'completed' },
   { label: 'All', value: 'all' },
 ]
@@ -38,7 +38,8 @@ function getFilterCount(counts, value) {
 
 function RequestCard({ onOpenTriage, request }) {
   return (
-    <article className="rounded-block bg-block p-4 shadow-block">
+    <Panel data-testid={`client-submitted-request-${request.id}`}>
+      <PanelBody>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -67,7 +68,7 @@ function RequestCard({ onOpenTriage, request }) {
 
           {request.agencyResponse ? (
             <div className="mt-3 rounded-control bg-control px-3 py-2 text-ui text-text-secondary">
-              <p className="text-label text-text-muted">Agency response</p>
+              <p className="text-label text-text-muted">Team response</p>
               <p className="mt-1">{request.agencyResponse}</p>
             </div>
           ) : null}
@@ -87,7 +88,8 @@ function RequestCard({ onOpenTriage, request }) {
           </Button>
         </div>
       </div>
-    </article>
+      </PanelBody>
+    </Panel>
   )
 }
 

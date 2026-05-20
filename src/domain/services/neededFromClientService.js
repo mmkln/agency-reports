@@ -17,7 +17,7 @@ import {
   NEEDED_ACTION_TYPES,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import {
   ACTIVITY_EVENT_TYPES,
@@ -1310,7 +1310,7 @@ export function answerNeededAction({
 }) {
   const action = getAction({ actionId, repositories, viewer })
 
-  if (viewer?.role !== USER_ROLES.CLIENT_USER) {
+  if (!isClientPortalRole(viewer?.role)) {
     throw new Error('Only client users can respond to needed actions.')
   }
 

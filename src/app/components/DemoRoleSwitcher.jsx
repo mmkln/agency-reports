@@ -1,10 +1,18 @@
-import { CheckCircle2, ShieldCheck, User } from 'lucide-react'
+import {
+  CheckCircle2,
+  DollarSign,
+  ShieldCheck,
+  Stethoscope,
+  User,
+} from 'lucide-react'
 
 import { DEMO_ROLE_OPTIONS } from '../providers/session/demoRoleSwitch'
 
 const iconByName = {
   checkCircle2: CheckCircle2,
+  dollarSign: DollarSign,
   shieldCheck: ShieldCheck,
+  stethoscope: Stethoscope,
   user: User,
 }
 

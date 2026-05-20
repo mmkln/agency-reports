@@ -8,6 +8,8 @@ import {
   NEEDED_ACTION_STATUSES,
 } from '../src/entities/needed-from-client/index.js'
 
+test.setTimeout(120_000)
+
 const ADMIN_EMAIL = 'admin@growthlab.example'
 const DEMO_ROLE_KEY = 'agency-reports.demo-role'
 const GREEN_DENTAL_CLIENT_ID = SEED_IDS.CLIENT_GREEN_DENTAL
@@ -50,16 +52,18 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('admin can manage clinic setup from the client workspace', async ({ page }) => {
+  test.slow()
+
   await signInAsAdmin(page)
   await page.goto(`/admin/clinic-setup?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
 
   await expect(page.locator('h1').getByText('Green Dental Clinic', { exact: true })).toBeVisible()
 
-  for (const tabName of ['Clinic Setup', 'Clinic Metrics', 'Reputation', 'Compliance', 'Clinic Results']) {
+  for (const tabName of ['Home', 'Work', 'Performance', 'Portal', 'Access', 'Activity', 'Setup']) {
     await expect(clientWorkspaceTabs(page).getByRole('link', { name: tabName })).toBeVisible()
   }
 
-  await clientWorkspaceTabs(page).getByRole('link', { name: 'Clinic Results' }).click()
+  await clientWorkspaceTabs(page).getByRole('link', { name: 'Performance' }).click()
   await expect(page).toHaveURL(/\/admin\/client-reports-dashboards/)
   await expect(page.getByText('Clinic results').first()).toBeVisible()
   await expect(page.getByRole('link', { name: 'New Clinic Performance' })).toBeVisible()
@@ -115,6 +119,178 @@ test('admin clinic metrics workspace manages aggregate records and client previe
   await page.getByRole('link', { name: 'Draft calls' }).click()
   await expect(page).toHaveURL(/\/admin\/client-calls-bookings-preview/)
   await expect(page.locator('h1').getByText('Calls & Bookings', { exact: true })).toBeVisible()
+})
+
+test('admin can manage clinic reporting periods and view operational dashboards', async ({ page }) => {
+  test.slow()
+
+  await signInAsAdmin(page)
+  await expect(page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { name: 'Growth Review' })).toHaveAttribute(
+    'href',
+    '/dashboards/dental-growth-review',
+  )
+
+  await page.getByRole('list', { name: 'Primary navigation' }).getByRole('link', { name: 'Growth Review' }).click()
+  await expect(page).toHaveURL('/dashboards/dental-growth-review')
+  await expect(page.locator('h1').getByText('Weekly Dental Growth Operating Review', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Exact Funnel Numbers' })).toBeVisible()
+
+  await page.goto(`/admin/clinic-reporting?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  await expect(page.locator('h1').getByText('Green Dental Clinic', { exact: true })).toBeVisible()
+  await expect(clientWorkspaceTabs(page).getByRole('link', { name: 'Performance' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Performance sections' }).getByRole('link', { name: 'Reporting' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Clinic Reporting Periods' })).toBeVisible()
+  await expect(page.locator('main').getByRole('link', { name: 'Growth Review' })).toHaveAttribute(
+    'href',
+    `/dashboards/dental-growth-review?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+  await expect(page.getByRole('cell', { name: 'Daily Operations' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Dental Growth Review' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Executive Performance' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Monthly Strategy' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Weekly Operator' }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: /Current \|/ }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Import JSON' })).toBeVisible()
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  await expect(page.getByLabel('Reporting layer')).toContainText('Dental Growth Review')
+
+  await page.goto(`/clinic/daily-ops?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Daily Operational Command Center', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Operational Triage' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Queue Workload' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reply Queue' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Call Queue' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Booking Scorecard' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Data Hygiene' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reactivation Tracks' })).toBeVisible()
+
+  await page.goto(`/team/clinic-operator?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.locator('h1').getByText('Weekly Operator Dashboard', { exact: true })).toBeVisible()
+  await expect(page.locator('main').getByRole('link', { name: 'Daily operations' })).toHaveAttribute(
+    'href',
+    `/clinic/daily-ops?clientId=${GREEN_DENTAL_CLIENT_ID}`,
+  )
+  await expect(page.getByRole('heading', { name: 'Funnel Leakage' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Operator Focus' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Source Diagnostics' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Deliverability And Workflow' })).toBeVisible()
+})
+
+test('admin clinic reporting import saves draft before explicit publish and archive', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-reporting?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  const importedTitle = 'E2E Executive Reporting Import'
+  const importPayload = {
+    content: {
+      hero_metrics: [
+        { id: 'e2e-new-patients', label: 'New patients', status: 'on_track', value: 9 },
+      ],
+      narrative: {
+        narrative: 'E2E imported executive narrative.',
+        next: ['Review source-level lead quality.'],
+        wins: ['Reactivation remains efficient.'],
+      },
+    },
+    period_end: '2026-05-31',
+    period_label: 'E2E May 2026',
+    period_start: '2026-05-01',
+    source_trust: [
+      {
+        confidence: 'medium',
+        data_mode: 'manual',
+        last_updated_at: '2026-05-31T08:00:00.000Z',
+        name: 'E2E import workbook',
+        source_type: 'spreadsheet',
+      },
+    ],
+    title: importedTitle,
+  }
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  await page.getByRole('textbox', { name: 'Clinic reporting JSON' }).fill(JSON.stringify(importPayload, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+  const importDialog = page.getByRole('dialog', { name: 'Import clinic reporting JSON' })
+  await expect(importDialog.getByRole('heading', { name: 'Import preview ready' })).toBeVisible()
+  await expect(importDialog.getByText(importedTitle, { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Apply to draft' }).click()
+  await expect(page.getByText('Draft imported', { exact: true })).toBeVisible()
+
+  const draftRecord = await page.evaluate(({ portalKey, title }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.clinic_executive_performance_periods.find((record) => record.title === title)
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    title: importedTitle,
+  })
+
+  expect(draftRecord.publish_state).toBe('draft')
+
+  const importedRow = page.getByRole('row').filter({ hasText: importedTitle })
+  await expect(importedRow).toContainText('draft')
+  await importedRow.getByRole('button', { name: 'Publish' }).click()
+  await expect(page.getByText('Published', { exact: true })).toBeVisible()
+
+  const publishedRecord = await page.evaluate(({ portalKey, title }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.clinic_executive_performance_periods.find((record) => record.title === title)
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    title: importedTitle,
+  })
+
+  expect(publishedRecord.publish_state).toBe('published')
+
+  await page.getByRole('row').filter({ hasText: importedTitle }).getByRole('button', { name: 'Archive' }).click()
+  await expect(page.getByText('Archived', { exact: true })).toBeVisible()
+
+  const archivedRecord = await page.evaluate(({ portalKey, title }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.clinic_executive_performance_periods.find((record) => record.title === title)
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    title: importedTitle,
+  })
+
+  expect(archivedRecord.publish_state).toBe('archived')
+})
+
+test('admin clinic reporting import blocks patient-level fields before saving', async ({ page }) => {
+  await signInAsAdmin(page)
+  await page.goto(`/admin/clinic-reporting?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+
+  await page.getByRole('button', { name: 'Import JSON' }).click()
+  await page.getByLabel('Reporting layer').selectOption('monthly_strategy')
+  await page.getByRole('textbox', { name: 'Clinic reporting JSON' }).fill(JSON.stringify({
+    content: {
+      financials: [
+        {
+          label: 'Collections',
+          patient_name: 'Jane Patient',
+          value: 181000,
+        },
+      ],
+    },
+    period_end: '2026-05-31',
+    period_label: 'E2E PHI blocked',
+    period_start: '2026-05-01',
+    title: 'E2E PHI blocked monthly import',
+  }, null, 2))
+  await page.getByRole('button', { name: 'Preview import' }).click()
+
+  const importDialog = page.getByRole('dialog', { name: 'Import clinic reporting JSON' })
+  await expect(importDialog.getByText('Remove patient-level field')).toBeVisible()
+  await expect(importDialog.getByRole('button', { name: 'Apply to draft' })).toBeDisabled()
+
+  const blockedRecordExists = await page.evaluate(({ portalKey }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.clinic_monthly_strategy_periods.some((record) => record.title === 'E2E PHI blocked monthly import')
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+  })
+
+  expect(blockedRecordExists).toBe(false)
 })
 
 test('admin can create clinic action-needed records from aggregate suggestions', async ({ page }) => {

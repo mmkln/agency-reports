@@ -100,6 +100,7 @@ export function AdminClinicJsonImportDialog({
   description,
   detailItems,
   emptyPreviewMessage,
+  headerControl,
   importError,
   importPlan,
   isOpen,
@@ -115,6 +116,8 @@ export function AdminClinicJsonImportDialog({
   textareaLabel,
   title,
 }) {
+  const canApplyImport = Boolean(importPlan) && importPlan.isValid !== false
+
   function submitPreview(event) {
     event.preventDefault()
     onPreview(rawJson)
@@ -137,6 +140,11 @@ export function AdminClinicJsonImportDialog({
 
           <OverlayBody className="min-h-0 overflow-y-auto bg-surface-subtle">
             <div className="grid gap-component">
+              {headerControl ? (
+                <section className="rounded-control bg-block px-3 py-3">
+                  {headerControl}
+                </section>
+              ) : null}
               <ImportIssue message={importError} />
               <ImportWarnings warnings={importPlan?.warnings} />
 
@@ -183,7 +191,7 @@ export function AdminClinicJsonImportDialog({
               <Icon name="fileJson" size={15} />
               Preview import
             </Button>
-            <Button disabled={!importPlan} onClick={onApply} type="button">
+            <Button disabled={!canApplyImport} onClick={onApply} type="button">
               <Icon name="fileJson" size={15} />
               Apply to draft
             </Button>

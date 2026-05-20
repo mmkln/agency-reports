@@ -5,7 +5,7 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientOverviewPage } from '../../../domain/services/clientOverviewService'
-import { USER_ROLES } from '../../../entities/profile'
+import { isClientPortalRole } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import {
   AccessDeniedState,
@@ -32,7 +32,7 @@ function recordClientActivity({
   repositories,
   runtime,
 }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER) {
+  if (!isClientPortalRole(runtime.viewer.role)) {
     return
   }
 

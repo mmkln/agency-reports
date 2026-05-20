@@ -8,6 +8,7 @@ export default defineConfig({
   reporter: [['list']],
   testDir: './e2e',
   timeout: 60_000,
+  workers: 4,
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'retain-on-failure',

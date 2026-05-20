@@ -1,10 +1,5 @@
 import {
-  AvatarFallback,
-  Badge,
   CodeValue,
-  EmptyState,
-  ListPanel,
-  ListRow,
   Panel,
   PanelBody,
   PanelHeader,
@@ -13,6 +8,9 @@ import {
   UnavailableState,
 } from '@/shared/ui'
 import { useLocation } from 'react-router-dom'
+
+import { ClientProfileSettings } from '../../features/client-profile-settings'
+import { ClientTeamManagement } from '../../features/client-team-management'
 
 const settingsSections = [
   {
@@ -75,43 +73,12 @@ function ClientSettingsNavigation({ routeParams, selectedSection }) {
   )
 }
 
-export function ProfileSettingsSection({ membership, profile }) {
-  return (
-    <Panel>
-      <PanelHeader
-        divided
-        subtitle="Your portal identity and client access role."
-        title="Profile"
-      />
-      <PanelBody>
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Name',
-              value: profile.name,
-            },
-            {
-              label: 'Email',
-              value: profile.email,
-            },
-            {
-              label: 'Portal role',
-              value: <Badge tone="blue">{membership?.roleLabel ?? profile.roleLabel}</Badge>,
-            },
-          ]}
-        />
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function CompanySettingsSection({ client }) {
   return (
     <Panel>
       <PanelHeader
         divided
-        subtitle="The client workspace connected to your account."
+        subtitle="The workspace connected to your account."
         title="Company"
       />
       <PanelBody>
@@ -119,7 +86,7 @@ export function CompanySettingsSection({ client }) {
           columns={2}
           items={[
             {
-              label: 'Client',
+              label: 'Account',
               value: client.name,
             },
             {
@@ -141,40 +108,6 @@ export function CompanySettingsSection({ client }) {
   )
 }
 
-export function TeamMembersSection({ members }) {
-  return (
-    <Panel>
-      <PanelHeader
-        divided
-        subtitle="People with access to this client portal."
-        title="Team Members"
-      />
-      <PanelBody className="p-0">
-        {members.length ? (
-          <ListPanel>
-            {members.map((member) => (
-              <ListRow
-                description={member.email}
-                key={member.id}
-                leading={<AvatarFallback name={member.name} />}
-                title={member.name}
-                trailing={<Badge tone={member.role === 'owner' ? 'blue' : 'neutral'}>{member.roleLabel}</Badge>}
-              />
-            ))}
-          </ListPanel>
-        ) : (
-          <EmptyState
-            className="m-card"
-            description="No members are currently attached to this client."
-            iconName="users"
-            title="No team members"
-          />
-        )}
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function UnavailableSettingsSection({ iconName, section, title }) {
   return (
     <Panel className="min-h-[360px]">
@@ -190,18 +123,23 @@ export function UnavailableSettingsSection({ iconName, section, title }) {
   )
 }
 
-function GeneralSettingsSection({ page }) {
+function GeneralSettingsSection({ page, runtime }) {
   return (
     <div className="grid gap-card">
-      <ProfileSettingsSection membership={page.currentMembership} profile={page.profile} />
+      <ClientProfileSettings
+        clientId={page.client.id}
+        membership={page.currentMembership}
+        profile={page.profile}
+        runtime={runtime}
+      />
       <CompanySettingsSection client={page.client} />
     </div>
   )
 }
 
-function SelectedSettingsSection({ page, selectedSection }) {
+function SelectedSettingsSection({ page, runtime, selectedSection }) {
   if (selectedSection === 'team') {
-    return <TeamMembersSection members={page.members} />
+    return <ClientTeamManagement clientId={page.client.id} page={page} runtime={runtime} />
   }
 
   if (selectedSection === 'notifications') {
@@ -224,16 +162,16 @@ function SelectedSettingsSection({ page, selectedSection }) {
     )
   }
 
-  return <GeneralSettingsSection page={page} />
+  return <GeneralSettingsSection page={page} runtime={runtime} />
 }
 
-export function ClientSettingsWorkspace({ page, routeParams = {} }) {
+export function ClientSettingsWorkspace({ page, routeParams = {}, runtime }) {
   const selectedSection = getSelectedSection(routeParams.section)
 
   return (
     <div className="grid items-start gap-card lg:grid-cols-[240px_minmax(0,1fr)]">
       <ClientSettingsNavigation routeParams={routeParams} selectedSection={selectedSection} />
-      <SelectedSettingsSection page={page} selectedSection={selectedSection} />
+      <SelectedSettingsSection page={page} runtime={runtime} selectedSection={selectedSection} />
     </div>
   )
 }
