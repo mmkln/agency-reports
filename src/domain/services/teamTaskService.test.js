@@ -198,7 +198,7 @@ describe('teamTaskService', () => {
       repositories: createRepositories(),
       taskId: IDS.TASK_A,
       viewer: createViewer(),
-    })).toThrow('Task visibility no longer publishes client-facing work')
+    })).toThrow('Task visibility no longer publishes portal work')
   })
 
   it('reopens completed tasks back to todo', () => {

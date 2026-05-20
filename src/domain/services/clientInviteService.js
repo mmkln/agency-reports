@@ -40,7 +40,7 @@ function normalizeEmail(value) {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage client invitations.')
+    throw new Error('Only admins can manage workspace invitations.')
   }
 }
 

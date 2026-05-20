@@ -223,7 +223,7 @@ function buildClinicDataTrust({ records, source }) {
     recordCount: records.length,
     source,
     visibilityLabel: source === 'draft'
-      ? 'Draft preview for agency admins'
+      ? 'Draft admin preview'
       : 'Published aggregate records only',
   }
 }

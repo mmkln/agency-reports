@@ -170,7 +170,7 @@ describe('activityTrackingService', () => {
       clientId: IDS.CLIENT_A,
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency users can read client activity.')
+    })).toThrow('Only team users can read workspace activity.')
   })
 
   it('lists only curated client-visible activity without internal metadata', () => {

@@ -76,7 +76,7 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
   }
 
   if (workspaceResource.status === 'error' || !client) {
-    return <WorkspaceErrorState message={workspaceResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workspaceResource.error || 'Account was not found.'} />
   }
 
   return (

@@ -2,9 +2,11 @@ import {
   CLINIC_REPORTING_CAPABILITIES,
   getViewerCapabilities,
   hasCapability,
+  isActiveProfile,
   normalizeUserRole,
   USER_ROLES,
 } from '../../entities/profile'
+import { isActiveClientMembership } from '../../entities/client-membership'
 import { findPasswordCredential, verifyPasswordCredential } from './authCredentialService'
 
 export const AUTH_SESSION_STORAGE_KEY = 'agency-reports.auth-session'
@@ -91,6 +93,7 @@ function getClientIdsForProfile(profile, repositories) {
   const role = normalizeUserRole(profile.role)
   const membershipClientIds = repositories.clientMemberships
     .list()
+    .filter(isActiveClientMembership)
     .filter((membership) => membership.user_id === profile.user_id)
     .map((membership) => membership.client_id)
 
@@ -106,7 +109,7 @@ function getClientIdsForProfile(profile, repositories) {
 }
 
 export function buildViewerFromProfile({ profile, repositories }) {
-  if (!profile) {
+  if (!profile || !isActiveProfile(profile)) {
     return null
   }
 
@@ -149,12 +152,18 @@ export function getCurrentViewer({
 
   const profile = repositories.profiles.findByUserId(session.userId)
 
+  if (!isActiveProfile(profile)) {
+    clearAuthSession(storage)
+    return null
+  }
+
   return buildViewerFromProfile({ profile, repositories })
 }
 
 export function listLoginProfiles({ repositories }) {
   return repositories.profiles
     .list()
+    .filter(isActiveProfile)
     .sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name))
 }
 
@@ -172,6 +181,10 @@ export function authenticateWithEmail({
 
   if (!profile) {
     throw new Error('No portal user exists for this email.')
+  }
+
+  if (!isActiveProfile(profile)) {
+    throw new Error('This account is inactive.')
   }
 
   assertPassword({ password, profile, repositories })

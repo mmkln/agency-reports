@@ -16,7 +16,7 @@ const OPEN_NEEDED_ACTION_STATUSES = new Set(['answered', 'approved', 'changes_re
 
 function assertAgencyTeam(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_TEAM || !viewer.agencyId) {
-    throw new Error('Only agency team members can update assigned tasks.')
+    throw new Error('Only team members can update assigned tasks.')
   }
 }
 
@@ -291,7 +291,7 @@ export function updateAssignedTask({
   }
 
   if (hasVisibilityInput && nextVisibility !== VISIBILITY.INTERNAL) {
-    throw new Error('Task visibility no longer publishes client-facing work. Use the client work review workflow.')
+    throw new Error('Task visibility no longer publishes portal work. Use the work review workflow.')
   }
 
   const updatedTask = {

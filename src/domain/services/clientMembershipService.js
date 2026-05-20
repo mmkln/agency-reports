@@ -1,4 +1,8 @@
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import {
+  CLIENT_MEMBERSHIP_ROLES,
+  CLIENT_MEMBERSHIP_STATUSES,
+  isActiveClientMembership,
+} from '../../entities/client-membership'
 import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -6,7 +10,7 @@ const VALID_MEMBERSHIP_ROLES = new Set(Object.values(CLIENT_MEMBERSHIP_ROLES))
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage client members.')
+    throw new Error('Only admins can manage workspace members.')
   }
 }
 
@@ -68,6 +72,7 @@ export function listClientMembers({ clientId, repositories, viewer }) {
 
   return repositories.clientMemberships
     .listByClientId(clientId)
+    .filter(isActiveClientMembership)
     .map((membership) => mapMember({
       membership,
       profile: repositories.profiles.findByUserId(membership.user_id),
@@ -125,6 +130,7 @@ export function addClientMember({
 
   const existingMembership = repositories.clientMemberships
     .listByClientId(clientId)
+    .filter(isActiveClientMembership)
     .find((membership) => membership.user_id === profile.user_id)
 
   if (existingMembership) {
@@ -191,4 +197,47 @@ export function removeClientMembership({
   getAdminClient({ clientId: membership.client_id, repositories, viewer })
 
   return repositories.clientMemberships.deleteById(membershipId)
+}
+
+export function leaveClientWorkspace({
+  clientId,
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  if (!viewer?.userId || !isClientPortalRole(viewer.role)) {
+    throw new Error('Only client users can leave a workspace.')
+  }
+
+  const client = repositories.clients.findById(clientId)
+
+  if (!client) {
+    throw new Error('Client was not found.')
+  }
+
+  const memberships = repositories.clientMemberships
+    .listByClientId(clientId)
+    .filter(isActiveClientMembership)
+  const membership = memberships.find((item) => item.user_id === viewer.userId)
+
+  if (!membership) {
+    throw new Error('You do not have access to this workspace.')
+  }
+
+  if (membership.role === CLIENT_MEMBERSHIP_ROLES.OWNER) {
+    const ownerCount = memberships.filter((item) => item.role === CLIENT_MEMBERSHIP_ROLES.OWNER).length
+
+    if (ownerCount <= 1) {
+      throw new Error('Transfer ownership before leaving this workspace.')
+    }
+  }
+
+  repositories.clientMemberships.upsert({
+    ...membership,
+    removed_at: now(),
+    removed_by: viewer.userId,
+    status: CLIENT_MEMBERSHIP_STATUSES.REMOVED,
+  })
+
+  return true
 }

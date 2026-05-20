@@ -82,7 +82,7 @@ export function RecentClientActivityPanel({ clientId, runtime }) {
           Refresh
         </Button>
       )}
-      description="Local QA activity from client-facing pages."
+      description="Local QA activity from portal pages."
       iconName="clock"
       title="Recent Client Activity"
     >

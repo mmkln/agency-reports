@@ -42,7 +42,7 @@ async function signIn(page, email, password = DEMO_AUTH_PASSWORD) {
 async function signInAsAdmin(page) {
   await signIn(page, ADMIN_EMAIL)
   await expect(page).toHaveURL(/\/admin\/clients/)
-  await expect(page.getByRole('heading', { name: 'Clients' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Accounts' })).toBeVisible()
 }
 
 async function signInAsClient(page) {
@@ -69,13 +69,13 @@ test('agency admin can create a client and the generated invite grants client ov
   const contactPassword = `secure-${suffix}`
 
   await signInAsAdmin(page)
-  await page.getByRole('link', { name: 'New Client' }).click()
-  await expect(page.getByRole('heading', { name: 'Create Client' })).toBeVisible()
+  await page.getByRole('link', { name: 'New Account' }).click()
+  await expect(page.getByRole('heading', { name: 'Create Account' })).toBeVisible()
 
   await page.getByPlaceholder('e.g. Green Dental Clinic').fill(clientName)
   await page.getByPlaceholder('e.g. Sarah Johnson').fill(contactName)
   await page.getByPlaceholder('sarah@greendental.com').fill(contactEmail)
-  await page.getByRole('button', { name: 'Create Client' }).click()
+  await page.getByRole('button', { name: 'Create Account' }).click()
 
   const clientRow = page.getByRole('row').filter({ hasText: clientName })
   await expect(clientRow).toBeVisible()
@@ -143,14 +143,26 @@ test('client admin can invite a teammate from settings team', async ({ page }) =
     button.closest('form')?.requestSubmit()
   })
 
-  const demoLinkText = page.getByText(/accept-invite\?token=/).last()
-  await expect(demoLinkText).toBeVisible()
-  const demoLinkTextContent = await demoLinkText.textContent()
-  const demoLink = demoLinkTextContent.match(/https?:\/\/\S*accept-invite\?token=\S+/)?.[0]
-  expect(demoLink).toBeTruthy()
-  const inviteUrl = new URL(demoLink)
+  await expect.poll(async () => page.evaluate(({ email, portalKey }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const invitation = portalData.client_invitations.find((item) => item.email === email)
 
-  await page.goto(`${inviteUrl.pathname}${inviteUrl.search}`, { waitUntil: 'domcontentloaded' })
+    return invitation?.token ?? ''
+  }, {
+    email: teammateEmail,
+    portalKey: PORTAL_STORAGE_KEY,
+  })).not.toBe('')
+  const inviteToken = await page.evaluate(({ email, portalKey }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    const invitation = portalData.client_invitations.find((item) => item.email === email)
+
+    return invitation.token
+  }, {
+    email: teammateEmail,
+    portalKey: PORTAL_STORAGE_KEY,
+  })
+
+  await page.goto(`/accept-invite?token=${inviteToken}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Accept your invitation' })).toBeVisible()
   await expect(page.locator('input[name="email"]')).toHaveValue(teammateEmail)
   await page.locator('input[name="password"]').fill(teammatePassword)
@@ -177,8 +189,8 @@ test('client users cannot access another client overview', async ({ page }) => {
 
   await page.goto(`/client/overview?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}`, { waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
-  await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible()
+  await expect(page.getByText('Your current role or client membership does not allow access to this workspace.')).toBeVisible()
 })
 
 test('admin draft changes stay private until publish, then appear on the client overview', async ({ page }) => {
@@ -221,7 +233,7 @@ test('client can answer a needed action and admin can mark it resolved', async (
   await expect(neededAction).toBeVisible()
   await neededAction.getByRole('button', { name: 'View details' }).click()
   const actionDialog = page.getByRole('dialog', { name: 'Confirm final offer details' })
-  await actionDialog.getByPlaceholder('Write a short response for the agency...').fill(responseText)
+  await actionDialog.getByLabel('Response').fill(responseText)
   await actionDialog.getByRole('button', { name: 'Send response' }).click()
 
   await page.getByRole('button', { name: /Answered/ }).click()

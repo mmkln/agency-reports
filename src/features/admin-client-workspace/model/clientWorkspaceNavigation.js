@@ -195,3 +195,41 @@ export function getClientWorkspacePreviewRoute(sections, currentPage) {
 
   return currentPageConfig?.previewRoute ?? '/admin/client-preview'
 }
+
+export function getClientWorkspacePageIdByRoutePath(path) {
+  const page = clientWorkspaceSections
+    .flatMap((section) => section.pages)
+    .find((workspacePage) => workspacePage.route === path)
+
+  return page?.id ?? null
+}
+
+export function getClientWorkspaceSidebarItems(client, clientId) {
+  return getVisibleClientWorkspaceSections(client).map((section) => {
+    if (section.pages.length === 1) {
+      const page = section.pages[0]
+
+      return {
+        iconName: section.iconName,
+        id: page.id,
+        label: getClientWorkspacePageLabel(page, client),
+        path: getClientWorkspacePageHref(page, clientId),
+        type: 'route',
+      }
+    }
+
+    return {
+      children: section.pages.map((page) => ({
+        iconName: section.iconName,
+        id: page.id,
+        label: getClientWorkspacePageLabel(page, client),
+        path: getClientWorkspacePageHref(page, clientId),
+        type: 'route',
+      })),
+      iconName: section.iconName,
+      id: section.id,
+      label: section.label,
+      type: 'group',
+    }
+  })
+}

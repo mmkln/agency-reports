@@ -118,7 +118,7 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
           }}
         >
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
-            These records feed the client Compliance & Approvals page. Keep them client-safe and aggregate:
+            These records feed the Compliance & Approvals page. Keep them portal-ready and aggregate:
             policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI. Use Import JSON
             for reviewed aggregate exports from policy checklists, privacy reviews, or ad-platform sources.
           </div>

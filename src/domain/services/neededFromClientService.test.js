@@ -595,7 +595,7 @@ describe('neededFromClientService', () => {
       callBookingMetricId: IDS.CALL_BOOKING_METRIC,
       suggestionType: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can process needed actions.')
+    })).toThrow('Only admins can process needed actions.')
 
     const genericRepositories = createWorkflowRepositories({
       clients: createEntityRepository([

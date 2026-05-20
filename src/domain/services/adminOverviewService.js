@@ -12,7 +12,7 @@ const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can edit client overviews.')
+    throw new Error('Only admins can edit workspace overviews.')
   }
 }
 

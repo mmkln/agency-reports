@@ -61,7 +61,7 @@ describe('authSessionContractService', () => {
     const contract = createServerAuthSessionContract()
 
     expect(contract.invariants).toEqual(expect.arrayContaining([
-      'Client users derive portal access from active client_memberships, never profile.client_id fallback.',
+      'Portal users derive access from active client_memberships, never profile.client_id fallback.',
       'Route clientId is a requested resource identifier, not proof of access.',
       'Frontend buildViewerFromProfile semantics must match the server viewer payload.',
     ]))

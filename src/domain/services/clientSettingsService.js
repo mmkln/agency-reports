@@ -1,28 +1,19 @@
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { CLIENT_MEMBERSHIP_ROLES, isActiveClientMembership } from '../../entities/client-membership'
+import {
+  CLIENT_REQUEST_STATUSES,
+  CLIENT_REQUEST_TYPES,
+  normalizeClientRequest,
+} from '../../entities/client-request'
 import { canAccessClient } from '../policies/accessPolicy'
 import { canManageClientTeam } from '../policies/clientTeamPolicy'
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const MEMBERSHIP_ROLE_LABELS = Object.freeze({
   [CLIENT_MEMBERSHIP_ROLES.OWNER]: 'Owner',
   [CLIENT_MEMBERSHIP_ROLES.VIEWER]: 'Viewer',
 })
 
-const USER_ROLE_LABELS = Object.freeze({
-  [USER_ROLES.AGENCY_ADMIN]: 'Agency admin',
-  [USER_ROLES.AGENCY_TEAM]: 'Agency team',
-  [USER_ROLES.CLIENT_ADMIN]: 'Client admin',
-  [USER_ROLES.CLIENT_TEAM]: 'Client team',
-})
-
 function normalizeText(value = '') {
   return String(value ?? '').trim()
-}
-
-function normalizeEmail(value = '') {
-  return normalizeText(value).toLowerCase()
 }
 
 function requireClientAccess({ clientId, repositories, viewer }) {
@@ -30,22 +21,12 @@ function requireClientAccess({ clientId, repositories, viewer }) {
   const client = repositories.clients.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
-    throw new Error('You do not have permission to view this client portal.')
+    throw new Error('You do not have permission to view this workspace.')
   }
 
   return {
     client,
     clientId: normalizedClientId,
-  }
-}
-
-function mapProfile({ profile, viewer }) {
-  return {
-    email: profile?.email ?? viewer.email ?? '',
-    name: profile?.name ?? viewer.name ?? '',
-    role: profile?.role ?? viewer.role,
-    roleLabel: USER_ROLE_LABELS[profile?.role ?? viewer.role] ?? (profile?.role ?? viewer.role),
-    userId: viewer.userId,
   }
 }
 
@@ -67,7 +48,23 @@ function getCurrentMembership({ clientId, repositories, viewer }) {
 
   return repositories.clientMemberships
     .listByClientId(clientId)
+    .filter(isActiveClientMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
+}
+
+function findOpenBusinessDeletionRequest({ clientId, repositories }) {
+  return repositories.clientRequests
+    ?.listByClientId(clientId)
+    .map(normalizeClientRequest)
+    .find((request) => (
+      request.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION
+      && ![
+        CLIENT_REQUEST_STATUSES.ARCHIVED,
+        CLIENT_REQUEST_STATUSES.COMPLETED,
+        CLIENT_REQUEST_STATUSES.DECLINED,
+      ].includes(request.status)
+    ))
+    ?? null
 }
 
 export function getClientSettingsPage({
@@ -87,14 +84,18 @@ export function getClientSettingsPage({
   }
 
   const { client, clientId: normalizedClientId } = accessContext
-  const profile = repositories.profiles.findByUserId(viewer.userId)
   const currentMembership = getCurrentMembership({
     clientId: normalizedClientId,
     repositories,
     viewer,
   })
+  const businessDeletionRequest = findOpenBusinessDeletionRequest({
+    clientId: normalizedClientId,
+    repositories,
+  })
   const members = repositories.clientMemberships
     .listByClientId(normalizedClientId)
+    .filter(isActiveClientMembership)
     .map((membership) => mapMembership({
       membership,
       profile: repositories.profiles.findByUserId(membership.user_id),
@@ -117,15 +118,17 @@ export function getClientSettingsPage({
         }
       : null,
     members,
-    profile: mapProfile({ profile, viewer }),
     sections: {
-      notifications: {
-        isAvailable: false,
-        message: 'Notification preferences are managed by the agency until notification delivery is implemented.',
-      },
-      security: {
-        isAvailable: false,
-        message: 'Password and session controls are not exposed in this client portal yet.',
+      access: {
+        businessDeletionRequest: businessDeletionRequest
+          ? {
+              createdAt: businessDeletionRequest.created_at,
+              id: businessDeletionRequest.id,
+              status: businessDeletionRequest.status,
+              title: businessDeletionRequest.title,
+            }
+          : null,
+        canRequestBusinessDeletion: currentMembership?.role === CLIENT_MEMBERSHIP_ROLES.OWNER,
       },
       team: {
         allowedInviteRoles: [CLIENT_MEMBERSHIP_ROLES.VIEWER],
@@ -138,51 +141,4 @@ export function getClientSettingsPage({
     },
     status: 'ready',
   }
-}
-
-export function updateClientProfileSettings({
-  clientId,
-  input,
-  now = () => new Date().toISOString(),
-  repositories,
-  viewer,
-}) {
-  requireClientAccess({ clientId, repositories, viewer })
-
-  const profile = repositories.profiles.findByUserId(viewer.userId)
-
-  if (!profile) {
-    throw new Error('Profile was not found.')
-  }
-
-  const name = normalizeText(input?.name)
-  const email = normalizeEmail(input?.email)
-
-  if (name.length < 2) {
-    throw new Error('Name must be at least 2 characters.')
-  }
-
-  if (!EMAIL_PATTERN.test(email)) {
-    throw new Error('Email must be a valid email address.')
-  }
-
-  const duplicateProfile = repositories.profiles
-    .list()
-    .find((candidate) => (
-      candidate.user_id !== viewer.userId
-      && String(candidate.email ?? '').toLowerCase() === email
-    ))
-
-  if (duplicateProfile) {
-    throw new Error('Email is already used by another account.')
-  }
-
-  const updatedProfile = repositories.profiles.upsert({
-    ...profile,
-    email,
-    name,
-    updated_at: now(),
-  })
-
-  return mapProfile({ profile: updatedProfile, viewer })
 }

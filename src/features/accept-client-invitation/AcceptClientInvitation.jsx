@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { Button, CardContent, PrimitiveCard as Card, statusToneClasses } from '@/shared/ui'
@@ -10,6 +10,7 @@ import {
   requestClientInvitationAccessLink,
 } from '../../domain/services/clientInviteService'
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../entities/client-invitation'
+import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { Icon } from '../../shared/icons'
 import { useToast } from '../../shared/notifications'
 import { BrandLogo } from '../../shared/ui'
@@ -54,20 +55,27 @@ function getSafeLoginHref(token) {
 export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
   const navigate = useNavigate()
   const toast = useToast()
-  const invitationContext = useMemo(() => {
-    if (!token) {
-      return null
-    }
+  const invitationResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? 'anonymous'}:client-invitation:${token ?? ''}`,
+    initialData: null,
+    load: () => {
+      if (!token) {
+        return Promise.resolve(null)
+      }
 
-    try {
-      return getClientInvitationByToken({
-        repositories: runtime.repositories,
-        token,
+      return runtime.dataClient.read((repositories) => {
+        try {
+          return getClientInvitationByToken({
+            repositories,
+            token,
+          })
+        } catch {
+          return null
+        }
       })
-    } catch {
-      return null
-    }
-  }, [runtime.repositories, token])
+    },
+  })
+  const invitationContext = invitationResource.data
   const inviteStatus = invitationContext
     ? getInvitationStatus(invitationContext.invitation)
     : null
@@ -91,8 +99,9 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
   const shouldCreateAccount = canAcceptInvite && !existingProfile
   const shouldSignIn = canAcceptInvite && existingProfile && !viewer?.userId
   const shouldAcceptExistingAccount = canAcceptInvite && viewerMatchesInvite
-  const [email] = useState(invitationContext?.invitation.email ?? '')
-  const [name, setName] = useState(invitationContext?.invitation.name ?? '')
+  const email = invitationContext?.invitation.email ?? ''
+  const [nameDraft, setNameDraft] = useState(null)
+  const name = nameDraft ?? invitationContext?.invitation.name ?? ''
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [recoveryEmail, setRecoveryEmail] = useState('')
@@ -131,25 +140,23 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
       return
     }
 
-    try {
-      const result = acceptClientInvitation({
+    void runtime.dataClient.write((repositories) => acceptClientInvitation({
         confirmPassword,
         email,
         idGenerator: createUuid,
         name,
         password,
-        repositories: runtime.repositories,
+        repositories,
         token,
         viewer,
-      })
-
+      })).then((result) => {
       onAuthChange?.()
       toast.success('Invitation accepted', `You now have access to ${result.client.name}.`)
       navigate(`/client/overview?clientId=${result.client.id}`, { replace: true })
-    } catch (caughtError) {
+    }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Invite was not accepted', caughtError.message)
-    }
+    })
   }
 
   return (
@@ -174,7 +181,9 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
             {token ? (
               <div className={`mt-5 flex items-start gap-2 rounded-control border px-control py-control text-ui ${statusToneClasses[inviteStatusMeta.tone] ?? statusToneClasses.amber}`}>
                 <Icon className="mt-0.5 shrink-0" name={inviteStatusMeta.icon} size={15} />
-                {getInviteStateMessage(invitationContext, inviteStatus)}
+                {invitationResource.status === 'loading'
+                  ? 'Checking invitation...'
+                  : getInviteStateMessage(invitationContext, inviteStatus)}
               </div>
             ) : null}
 
@@ -198,7 +207,7 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
                 password={password}
                 setConfirmPassword={setConfirmPassword}
                 setError={setError}
-                setName={setName}
+                setName={setNameDraft}
                 setPassword={setPassword}
               />
             ) : null}

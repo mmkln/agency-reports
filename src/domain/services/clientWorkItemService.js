@@ -127,13 +127,13 @@ function getStatusMeta(status, registry) {
 
 function getAdminClient({ clientId, repositories, viewer }) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage client-facing work.')
+    throw new Error('Only admins can manage published work.')
   }
 
   const client = repositories.clients.findById(clientId)
 
   if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+    throw new Error('Account was not found.')
   }
 
   return client
@@ -576,7 +576,7 @@ export function suggestClientWorkItemFromTask({
   const summary = normalizeText(input.summary ?? task.client_safe_summary)
 
   if (!summary) {
-    throw new Error('Client-safe summary is required before sending work for review.')
+    throw new Error('Portal-ready summary is required before sending work for review.')
   }
 
   const timestamp = now()
@@ -716,7 +716,7 @@ export function publishClientWorkItem({
   const { client, item } = getEditableClientWorkItem({ repositories, viewer, workItemId })
 
   if (!canPublishClientWorkItem({ client, item, viewer })) {
-    throw new Error('Only agency admins can publish client work items.')
+    throw new Error('Only admins can publish work items.')
   }
 
   if (!normalizeText(item.summary)) {

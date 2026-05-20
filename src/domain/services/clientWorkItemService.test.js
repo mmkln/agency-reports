@@ -430,7 +430,7 @@ describe('clientWorkItemService', () => {
       repositories,
       taskId: IDS.TASK,
       viewer: createTeamViewer(),
-    })).toThrow('Client-safe summary is required before sending work for review.')
+    })).toThrow('Portal-ready summary is required before sending work for review.')
   })
 
   it('blocks team members from suggesting work for unassigned clients', () => {

@@ -11,7 +11,7 @@ import { USER_ROLES } from '../../entities/profile'
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage performance dashboards.')
+    throw new Error('Only admins can manage performance dashboards.')
   }
 }
 
@@ -45,7 +45,7 @@ function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.clients.findById(clientId)
 
   if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+    throw new Error('Account was not found.')
   }
 
   return client

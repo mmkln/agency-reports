@@ -42,7 +42,7 @@ export function AdminClientFilesLinksPage({ routeParams = {}, runtime }) {
   }
 
   if (workflow.fileLinksResource.status === 'error' || !workflow.client) {
-    return <WorkspaceErrorState message={workflow.fileLinksResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workflow.fileLinksResource.error || 'Account was not found.'} />
   }
 
   return (

@@ -95,7 +95,7 @@ export function CallBookingMetricsCard({
           Add calls snapshot
         </Button>
       )}
-      description="Aggregate call handling and booking conversion. Keep front desk notes client-safe and non-identifying."
+      description="Aggregate call handling and booking conversion. Keep front desk notes portal-ready and non-identifying."
       iconName="phone"
       title="Calls & Bookings Snapshots"
     >

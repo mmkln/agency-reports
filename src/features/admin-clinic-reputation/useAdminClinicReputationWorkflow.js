@@ -237,7 +237,7 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Reputation snapshot published', `${page.client.name}'s reputation snapshot is now client-visible.`)
+        toast.success('Reputation snapshot published', `${page.client.name}'s reputation snapshot is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({

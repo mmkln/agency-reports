@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CLINIC_REPORTING_CAPABILITIES,
+  PROFILE_STATUSES,
   USER_ROLES,
 } from '../../entities/profile'
 import {
@@ -12,6 +13,7 @@ import {
   DEMO_AUTH_PASSWORD,
   getCurrentViewer,
   getHomeHrefForViewer,
+  listLoginProfiles,
   setAuthSession,
 } from './authService'
 
@@ -145,6 +147,28 @@ describe('authService', () => {
     })).toThrow('Invalid password.')
 
     expect(storage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull()
+  })
+
+  it('blocks inactive profiles from sessions and login', () => {
+    const repositories = createRepository()
+    const storage = createStorage()
+    const profile = repositories.profiles.list()[0]
+
+    profile.status = PROFILE_STATUSES.INACTIVE
+    setAuthSession(profile.user_id, storage)
+
+    expect(getCurrentViewer({
+      repositories,
+      storage,
+    })).toBeNull()
+    expect(storage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull()
+    expect(() => authenticateWithEmail({
+      email: profile.email,
+      password: DEMO_AUTH_PASSWORD,
+      repositories,
+      storage,
+    })).toThrow('This account is inactive.')
+    expect(listLoginProfiles({ repositories })).toEqual([])
   })
 
   it('clears expired sessions and returns no viewer', () => {

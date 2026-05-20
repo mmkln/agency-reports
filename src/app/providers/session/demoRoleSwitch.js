@@ -5,7 +5,7 @@ export const DEMO_ROLE_STORAGE_KEY = 'agency-reports.demo-role'
 
 export const DEMO_ROLE_OPTIONS = Object.freeze([
   {
-    description: 'Manage clients and overview content',
+    description: 'Manage accounts and overview content',
     homeHref: '/admin/clients',
     iconName: 'shieldCheck',
     key: 'admin',
@@ -27,7 +27,7 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     homeHref: `/client/overview?clientId=${SEED_IDS.CLIENT_GREEN_DENTAL}`,
     iconName: 'user',
     key: 'client',
-    label: 'Client Admin',
+    label: 'Workspace Admin',
     role: USER_ROLES.CLIENT_ADMIN,
     userId: SEED_IDS.USER_CLIENT_GREEN,
   },

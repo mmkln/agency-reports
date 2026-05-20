@@ -19,6 +19,7 @@ export const PORTAL_REPOSITORY_COLLECTIONS = Object.freeze([
   { key: 'complianceReviews', tableName: 'compliance_reviews' },
   { key: 'dashboardLinks', tableName: 'dashboard_links' },
   { key: 'dentalGrowthReviewPeriods', tableName: 'dental_growth_review_periods' },
+  { key: 'dentalGrowthReviewSourceBatches', tableName: 'dental_growth_review_source_batches' },
   { key: 'invitationAccessTokens', tableName: 'invitation_access_tokens' },
   { key: 'locationPerformance', tableName: 'location_performance' },
   { key: 'neededFromClient', tableName: 'needed_from_client' },

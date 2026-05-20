@@ -107,6 +107,7 @@ export const SEED_IDS = Object.freeze({
   DASHBOARD_GREEN_APRIL: '33333333-3333-4333-8333-333333333333',
   DENTAL_GROWTH_BIWEEKLY_CURRENT: '73737373-7373-4373-9373-737373737373',
   DENTAL_GROWTH_BIWEEKLY_PREVIOUS: '74747474-7474-4474-9474-747474747474',
+  DENTAL_GROWTH_SOURCE_WEEKLY_CURRENT: '75757575-7575-4575-9575-757575757575',
   DENTAL_GROWTH_WEEKLY_CURRENT: '71717171-7171-4171-9171-717171717171',
   DENTAL_GROWTH_WEEKLY_PREVIOUS: '72727272-7272-4272-9272-727272727272',
   NEEDED_CREATIVE_APPROVAL: '55555555-5555-4555-8555-555555555555',
@@ -1836,6 +1837,50 @@ export const portalSeedData = Object.freeze({
       periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
       previous: true,
     }),
+  ],
+  dental_growth_review_source_batches: [
+    {
+      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+      generated_period_id: SEED_IDS.DENTAL_GROWTH_WEEKLY_CURRENT,
+      id: SEED_IDS.DENTAL_GROWTH_SOURCE_WEEKLY_CURRENT,
+      imported_at: '2026-05-20T08:00:00.000Z',
+      imported_by: SEED_IDS.USER_ADMIN_GROWTHLAB,
+      payload: {
+        appointments: [
+          { appointment_date: '2026-05-14', created_at: '2026-05-11', id: 'seed-appt-1', patient_type: 'new', source: 'google_ads', status: 'attended' },
+          { appointment_date: '2026-05-15', created_at: '2026-05-12', id: 'seed-appt-2', patient_type: 'reactivated', source: 'reactivation', status: 'attended' },
+          { appointment_date: '2026-05-17', created_at: '2026-05-13', id: 'seed-appt-3', patient_type: 'new', source: 'meta', status: 'confirmed' },
+        ],
+        assumptions: {
+          estimated_90_day_revenue_per_attended: 1120,
+          revenue_p25_multiplier: 0.75,
+          revenue_p75_multiplier: 1.18,
+        },
+        leads: [
+          { contacted_at: '2026-05-11T10:04:00.000Z', created_at: '2026-05-11T10:00:00.000Z', id: 'seed-lead-1', source: 'google_ads' },
+          { contacted_at: '2026-05-12T11:06:00.000Z', created_at: '2026-05-12T11:00:00.000Z', id: 'seed-lead-2', source: 'reactivation' },
+          { created_at: '2026-05-13T13:00:00.000Z', id: 'seed-lead-3', source: 'meta' },
+        ],
+        source_freshness: [
+          { affected_metrics: ['Bookings', 'Attendance'], freshness_status: 'green', last_updated_at: '2026-05-20T08:00:00.000Z', source_name: 'GHL' },
+          { affected_metrics: ['Spend', 'CPL', 'CPB'], freshness_status: 'yellow', last_updated_at: '2026-05-17T08:00:00.000Z', source_name: 'Meta Ads export' },
+        ],
+        spend: [
+          { amount: 925, source: 'google_ads' },
+          { amount: 580, source: 'meta' },
+          { amount: 432, source: 'reactivation' },
+        ],
+      },
+      period_end: '2026-05-17',
+      period_start: '2026-05-11',
+      period_type: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.WEEKLY,
+      source_metadata: {
+        imported_from: 'seed',
+      },
+      source_type: 'json_import',
+      validation_errors: [],
+      validation_state: 'valid',
+    },
   ],
   invitation_access_tokens: [],
   location_performance: [],

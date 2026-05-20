@@ -239,7 +239,7 @@ function ProjectWorkItemsSection({ workItems }) {
         workItems.map((item) => <WorkItemCard item={item} key={item.id} />)
       ) : (
         <EmptyState
-          description="No client-visible work items are published for this project yet."
+          description="No published work items are available for this project yet."
           iconName="checkCircle2"
           title="No work items"
         />
@@ -254,7 +254,7 @@ export function ProjectDetailSection({ project }) {
       <Panel>
         <PanelBody>
           <EmptyState
-            description="Choose a project from the list to view client-visible work."
+            description="Choose a project from the list to view published work."
             iconName="checkCircle2"
             title="Select a project"
           />

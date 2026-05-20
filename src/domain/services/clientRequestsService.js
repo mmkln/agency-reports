@@ -6,12 +6,20 @@ import {
   normalizeClientRequest,
 } from '../../entities/client-request'
 import {
+  CLIENT_MEMBERSHIP_ROLES,
+  isActiveClientMembership,
+} from '../../entities/client-membership'
+import {
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
 import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 import { createNeededAction } from './neededFromClientService'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -157,9 +165,22 @@ function assertClientUserCanSubmit({ clientId, viewer }) {
   }
 }
 
+function assertClientOwnerCanRequestBusinessDeletion({ clientId, repositories, viewer }) {
+  assertClientUserCanSubmit({ clientId, viewer })
+
+  const membership = repositories.clientMemberships
+    .listByClientId(clientId)
+    .filter(isActiveClientMembership)
+    .find((item) => item.user_id === viewer.userId)
+
+  if (membership?.role !== CLIENT_MEMBERSHIP_ROLES.OWNER) {
+    throw new Error('Only workspace owners can request business deletion.')
+  }
+}
+
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
-    throw new Error('Only agency admins can manage client requests.')
+    throw new Error('Only admins can manage requests.')
   }
 }
 
@@ -182,6 +203,44 @@ function isOpenNeededAction(action) {
     NEEDED_ACTION_STATUSES.CANCELLED,
     NEEDED_ACTION_STATUSES.RESOLVED,
   ].includes(action.status)
+}
+
+function isOpenBusinessDeletionRequest(request) {
+  const normalizedRequest = normalizeClientRequest(request)
+
+  return normalizedRequest.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION
+    && ![
+      CLIENT_REQUEST_STATUSES.ARCHIVED,
+      CLIENT_REQUEST_STATUSES.COMPLETED,
+      CLIENT_REQUEST_STATUSES.DECLINED,
+    ].includes(normalizedRequest.status)
+}
+
+function recordClientRequestActivity({
+  activityIdGenerator,
+  clientId,
+  now,
+  repositories,
+  request,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CREATED,
+    idGenerator: activityIdGenerator,
+    metadata: {
+      requestId: request.id,
+      title: request.title,
+      type: request.request_type,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 }
 
 function findOpenClarificationAction({ repositories, request }) {
@@ -288,6 +347,7 @@ export function getClientRequestsPage({
 }
 
 export function createClientRequest({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
@@ -338,8 +398,61 @@ export function createClientRequest({
   }
 
   repositories.clientRequests.upsert(request)
+  recordClientRequestActivity({
+    activityIdGenerator,
+    clientId,
+    now: () => timestamp,
+    repositories,
+    request,
+    viewer,
+  })
 
   return mapClientRequest(request)
+}
+
+export function createBusinessDeletionRequest({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  const clientId = normalizeText(input.clientId || viewer?.clientId)
+  const client = repositories.clients.findById(clientId)
+
+  if (!client) {
+    throw new Error('Client is not available for deletion requests.')
+  }
+
+  assertClientOwnerCanRequestBusinessDeletion({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  const existingRequest = repositories.clientRequests
+    .listByClientId(clientId)
+    .find(isOpenBusinessDeletionRequest)
+
+  if (existingRequest) {
+    throw new Error('A business deletion request is already open.')
+  }
+
+  return createClientRequest({
+    activityIdGenerator,
+    idGenerator,
+    input: {
+      clientId,
+      description: normalizeText(input.reason)
+        || `Workspace owner requested deletion for ${client.name}. Agency admin review is required before any records are removed.`,
+      requestType: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      title: `Business deletion request - ${client.name}`,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 }
 
 export function listAdminClientRequestsWorkspace({
@@ -415,7 +528,7 @@ export function updateClientRequestTriage({
   const clarificationAction = nextStatus === CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT
     ? createRequestClarificationAction({
       activityIdGenerator,
-      agencyResponse: requireText(agencyResponse, 'Agency response'),
+      agencyResponse: requireText(agencyResponse, 'Team response'),
       idGenerator,
       now: () => timestamp,
       repositories,

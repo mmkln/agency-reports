@@ -30,11 +30,11 @@ export function EditorInspector({
         </div>
       </WorkspaceCard>
 
-      <WorkspaceCard iconName="users" title="Client Context">
+      <WorkspaceCard iconName="users" title="Account Context">
         <div className="grid gap-3 text-ui">
           <div>
-            <p className="text-label text-text-muted">Client</p>
-            <p className="mt-1 font-semibold text-text-primary">{selectedClient?.name ?? 'Unknown client'}</p>
+            <p className="text-label text-text-muted">Account</p>
+            <p className="mt-1 font-semibold text-text-primary">{selectedClient?.name ?? 'Unknown account'}</p>
           </div>
           <div>
             <p className="text-label text-text-muted">Portal slug</p>

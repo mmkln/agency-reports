@@ -42,7 +42,7 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
   }
 
   if (workflow.reviewResource.status === 'error' || !workflow.client) {
-    return <WorkspaceErrorState message={workflow.reviewResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workflow.reviewResource.error || 'Account was not found.'} />
   }
 
   return (

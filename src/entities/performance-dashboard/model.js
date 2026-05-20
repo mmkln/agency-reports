@@ -720,7 +720,7 @@ export function validatePerformanceDashboardPeriod(period, options = {}) {
   if (!normalized.attribution_note) {
     warnings.push(makeIssue(
       'attribution_note',
-      'Attribution note is recommended before publishing client-facing performance data.',
+      'Attribution note is recommended before publishing portal performance data.',
       PERFORMANCE_VALIDATION_SEVERITIES.WARNING,
     ))
   }

@@ -316,6 +316,6 @@ describe('adminReviewService', () => {
         clientIds: [IDS.CLIENT],
         role: USER_ROLES.AGENCY_TEAM,
       },
-    })).toThrow('Only agency admins can review client-facing work.')
+    })).toThrow('Only admins can review published work.')
   })
 })

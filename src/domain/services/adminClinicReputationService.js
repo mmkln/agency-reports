@@ -19,7 +19,7 @@ import {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage clinic reputation.')
+    throw new Error('Only admins can manage clinic reputation.')
   }
 }
 

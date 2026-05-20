@@ -6,6 +6,11 @@ export const USER_ROLES = Object.freeze({
   CLIENT_USER: 'client_admin',
 })
 
+export const PROFILE_STATUSES = Object.freeze({
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+})
+
 export const LEGACY_USER_ROLES = Object.freeze({
   CLIENT_USER: 'client_user',
 })
@@ -53,6 +58,10 @@ export function normalizeUserRole(role) {
 
 export function isClientPortalRole(role) {
   return CLIENT_PORTAL_ROLES.includes(normalizeUserRole(role))
+}
+
+export function isActiveProfile(profile) {
+  return profile?.status !== PROFILE_STATUSES.INACTIVE
 }
 
 export function getDefaultCapabilitiesForRole(role) {

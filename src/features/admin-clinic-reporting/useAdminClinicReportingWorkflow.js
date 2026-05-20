@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import {
-  createAdminDentalGrowthReviewDraft,
   getAdminDentalGrowthReviewDraft,
   getAdminClinicReportingPage,
+  importDentalGrowthReviewSourceAndGenerateDraft,
   importAdminClinicReportingJson,
+  previewAdminDentalGrowthReviewSourceImport,
   previewAdminClinicReportingImport,
   updateAdminDentalGrowthReviewDraft,
   updateAdminClinicReportingPublishState,
@@ -36,9 +37,13 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
   const [importRawJson, setImportRawJson] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isReviewEditorOpen, setIsReviewEditorOpen] = useState(false)
+  const [isSourceImportOpen, setIsSourceImportOpen] = useState(false)
   const [reviewEditorError, setReviewEditorError] = useState('')
   const [reviewEditorPeriod, setReviewEditorPeriod] = useState(null)
   const [saveState, setSaveState] = useState('')
+  const [sourceImportError, setSourceImportError] = useState('')
+  const [sourceImportPlan, setSourceImportPlan] = useState(null)
+  const [sourceRawJson, setSourceRawJson] = useState('')
 
   const layerOptions = useMemo(() => state.page?.layers ?? [], [state.page])
 
@@ -121,6 +126,20 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
     setReviewEditorPeriod(null)
   }
 
+  function openSourceImportDialog() {
+    setSourceImportError('')
+    setSourceImportPlan(null)
+    setSourceRawJson('')
+    setIsSourceImportOpen(true)
+  }
+
+  function closeSourceImportDialog() {
+    setSourceImportError('')
+    setSourceImportPlan(null)
+    setSourceRawJson('')
+    setIsSourceImportOpen(false)
+  }
+
   function updateRawJson(rawJson) {
     setImportRawJson(rawJson)
     setImportError('')
@@ -131,6 +150,12 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
     setImportLayer(layer)
     setImportError('')
     setImportPlan(null)
+  }
+
+  function updateSourceRawJson(rawJson) {
+    setSourceRawJson(rawJson)
+    setSourceImportError('')
+    setSourceImportPlan(null)
   }
 
   function previewImport(rawJson = importRawJson) {
@@ -171,7 +196,7 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
 
         closeImportDialog()
         setSaveState('Draft imported')
-        toast.success('Clinic reporting draft imported', 'The record is saved as draft and is not client-visible.')
+        toast.success('Clinic reporting draft imported', 'The record is saved as draft and is not visible in the portal.')
         return loadPage()
       })
       .catch((caughtError) => {
@@ -202,23 +227,49 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
       })
   }
 
-  function createGrowthReviewDraft() {
-    setSaveState('Creating draft...')
-
-    runtime.dataClient.write((repositories) => createAdminDentalGrowthReviewDraft({
+  function previewSourceImport(rawJson = sourceRawJson) {
+    runtime.dataClient.read((repositories) => previewAdminDentalGrowthReviewSourceImport({
       clientId,
       idGenerator: createUuid,
+      rawJson,
       repositories,
       viewer: runtime.viewer,
     }))
-      .then((summary) => {
-        setSaveState('Draft created')
-        toast.success('Growth review draft created', 'The draft is not client-visible until published.')
-        return loadPage().then(() => openReviewEditor(summary.id))
+      .then((result) => {
+        setSourceRawJson(rawJson)
+        setSourceImportPlan(result)
+        setSourceImportError(result.isValid ? '' : result.errors.map((error) => error.message).join('\n'))
+      })
+      .catch((caughtError) => {
+        setSourceImportPlan(null)
+        setSourceImportError(caughtError.message)
+      })
+  }
+
+  function generateGrowthReviewDraftFromSource() {
+    setSaveState('Generating draft...')
+
+    runtime.dataClient.write((repositories) => importDentalGrowthReviewSourceAndGenerateDraft({
+      clientId,
+      idGenerator: createUuid,
+      rawJson: sourceRawJson,
+      repositories,
+      viewer: runtime.viewer,
+    }))
+      .then((result) => {
+        if (!result.isValid) {
+          throw new Error(result.errors.map((error) => error.message).join('\n'))
+        }
+
+        closeSourceImportDialog()
+        setSaveState('Draft generated')
+        toast.success('Growth review draft generated', 'Source data was saved and the dashboard draft was calculated.')
+        return loadPage().then(() => openReviewEditor(result.generatedPeriod.id))
       })
       .catch((caughtError) => {
         setSaveState('')
-        toast.error('Growth review draft failed', caughtError.message)
+        setSourceImportError(caughtError.message)
+        toast.error('Growth review source import failed', caughtError.message)
       })
   }
 
@@ -273,21 +324,29 @@ export function useAdminClinicReportingWorkflow({ clientId, runtime }) {
     importRawJson,
     isImportOpen,
     isReviewEditorOpen,
+    isSourceImportOpen,
     layerOptions,
     openImportDialog,
     openReviewEditor,
+    openSourceImportDialog,
     page: state.page,
     applyImport,
     closeImportDialog,
     closeReviewEditor,
-    createGrowthReviewDraft,
+    closeSourceImportDialog,
+    generateGrowthReviewDraftFromSource,
     previewImport,
+    previewSourceImport,
     reviewEditorError,
     reviewEditorPeriod,
     saveState,
     saveGrowthReviewDraft,
     setImportLayer: updateImportLayer,
     setImportRawJson: updateRawJson,
+    setSourceRawJson: updateSourceRawJson,
+    sourceImportError,
+    sourceImportPlan,
+    sourceRawJson,
     status: state.status,
     updatePublishState,
   }

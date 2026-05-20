@@ -51,6 +51,7 @@ export function ReviewHeader({ onPeriodChange, page, selectedPeriodOptionKey }) 
   const period = page.period
   const context = period.content.period_context
   const heroMetric = period.content.hero_metrics[0]
+  const calculationMeta = page.calculationMeta
 
   return (
     <Panel>
@@ -82,6 +83,22 @@ export function ReviewHeader({ onPeriodChange, page, selectedPeriodOptionKey }) 
           <div className={`mt-component rounded-control px-control py-item text-ui font-medium ${statusClass(context.top_alert_status)}`}>
             {context.top_alert_message}
           </div>
+          {calculationMeta ? (
+            <div className="mt-control grid gap-tag rounded-control bg-block-subtle p-control text-label text-text-muted sm:grid-cols-3">
+              <div>
+                <span>Source batch</span>
+                <p className="mt-tag font-medium text-text-primary">{calculationMeta.sourceBatchId || 'Not linked'}</p>
+              </div>
+              <div>
+                <span>Calculated</span>
+                <p className="mt-tag font-medium text-text-primary">{formatDate(calculationMeta.calculatedAt)}</p>
+              </div>
+              <div>
+                <span>Validation</span>
+                <p className="mt-tag font-medium text-text-primary">{formatLabel(calculationMeta.validationState || 'unknown')}</p>
+              </div>
+            </div>
+          ) : null}
         </div>
         <div className="grid gap-control">
           <label className="grid gap-tag text-label text-text-muted">

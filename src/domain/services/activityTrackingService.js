@@ -91,7 +91,7 @@ function assertCanReadActivity({ clientId, repositories, viewer }) {
   const client = assertCanRecordActivity({ clientId, repositories, viewer })
 
   if (![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role)) {
-    throw new Error('Only agency users can read client activity.')
+    throw new Error('Only team users can read workspace activity.')
   }
 
   return client

@@ -336,7 +336,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now client-visible.`)
+        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({

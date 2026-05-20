@@ -93,7 +93,7 @@ export function ComplianceReviewsCard({
           Add review
         </Button>
       )}
-      description="Policy, claims, privacy, and ad-platform review records visible in client-safe compliance summaries."
+      description="Policy, claims, privacy, and ad-platform review records visible in portal-ready compliance summaries."
       iconName="shieldCheck"
       title="Compliance Reviews"
     >
@@ -223,7 +223,7 @@ export function ComplianceReviewsCard({
               <NotesField
                 label="Summary"
                 onChange={(value) => updateReview(index, 'summary', value)}
-                placeholder="Client-safe summary of the compliance state"
+                placeholder="Portal-ready summary of the compliance state"
                 value={review.summary}
               />
               <NotesField

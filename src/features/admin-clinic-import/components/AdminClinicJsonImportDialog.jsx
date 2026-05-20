@@ -97,6 +97,7 @@ function ImportSummary({
 }
 
 export function AdminClinicJsonImportDialog({
+  applyLabel = 'Apply to draft',
   description,
   detailItems,
   emptyPreviewMessage,
@@ -193,7 +194,7 @@ export function AdminClinicJsonImportDialog({
             </Button>
             <Button disabled={!canApplyImport} onClick={onApply} type="button">
               <Icon name="fileJson" size={15} />
-              Apply to draft
+              {applyLabel}
             </Button>
           </OverlayFooter>
         </form>

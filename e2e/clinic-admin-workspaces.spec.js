@@ -44,7 +44,7 @@ async function signInAsAdmin(page) {
 }
 
 function clientWorkspaceTabs(page) {
-  return page.getByRole('navigation', { name: 'Client workspace sections' })
+  return page.getByRole('navigation', { name: 'Account workspace sections' })
 }
 
 test.beforeEach(async ({ page }) => {
@@ -140,7 +140,7 @@ test('admin can manage clinic reporting periods and view operational dashboards'
   await expect(page.locator('h1').getByText('Green Dental Clinic', { exact: true })).toBeVisible()
   await expect(clientWorkspaceTabs(page).getByRole('link', { name: 'Performance' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Performance sections' }).getByRole('link', { name: 'Reporting' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Clinic Reporting Periods' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reporting Records' })).toBeVisible()
   await expect(page.locator('main').getByRole('link', { name: 'Growth Review' })).toHaveAttribute(
     'href',
     `/dashboards/dental-growth-review?clientId=${GREEN_DENTAL_CLIENT_ID}`,
@@ -211,7 +211,7 @@ test('admin clinic reporting import saves draft before explicit publish and arch
   await page.getByRole('button', { name: 'Import JSON' }).click()
   await page.getByRole('textbox', { name: 'Clinic reporting JSON' }).fill(JSON.stringify(importPayload, null, 2))
   await page.getByRole('button', { name: 'Preview import' }).click()
-  const importDialog = page.getByRole('dialog', { name: 'Import clinic reporting JSON' })
+  const importDialog = page.getByRole('dialog', { name: 'Import reporting JSON' })
   await expect(importDialog.getByRole('heading', { name: 'Import preview ready' })).toBeVisible()
   await expect(importDialog.getByText(importedTitle, { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Apply to draft' }).click()
@@ -228,9 +228,9 @@ test('admin clinic reporting import saves draft before explicit publish and arch
   expect(draftRecord.publish_state).toBe('draft')
 
   const importedRow = page.getByRole('row').filter({ hasText: importedTitle })
-  await expect(importedRow).toContainText('draft')
+  await expect(importedRow).toContainText('Draft')
   await importedRow.getByRole('button', { name: 'Publish' }).click()
-  await expect(page.getByText('Published', { exact: true })).toBeVisible()
+  await expect(importedRow).toContainText('Published')
 
   const publishedRecord = await page.evaluate(({ portalKey, title }) => {
     const portalData = JSON.parse(window.localStorage.getItem(portalKey))
@@ -243,7 +243,7 @@ test('admin clinic reporting import saves draft before explicit publish and arch
   expect(publishedRecord.publish_state).toBe('published')
 
   await page.getByRole('row').filter({ hasText: importedTitle }).getByRole('button', { name: 'Archive' }).click()
-  await expect(page.getByText('Archived', { exact: true })).toBeVisible()
+  await expect(importedRow).toContainText('Archived')
 
   const archivedRecord = await page.evaluate(({ portalKey, title }) => {
     const portalData = JSON.parse(window.localStorage.getItem(portalKey))
@@ -279,7 +279,7 @@ test('admin clinic reporting import blocks patient-level fields before saving', 
   }, null, 2))
   await page.getByRole('button', { name: 'Preview import' }).click()
 
-  const importDialog = page.getByRole('dialog', { name: 'Import clinic reporting JSON' })
+  const importDialog = page.getByRole('dialog', { name: 'Import reporting JSON' })
   await expect(importDialog.getByText('Remove patient-level field')).toBeVisible()
   await expect(importDialog.getByRole('button', { name: 'Apply to draft' })).toBeDisabled()
 
@@ -312,7 +312,16 @@ test('admin can create clinic action-needed records from aggregate suggestions',
 
   await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Create compliance action' }).click()
-  await expect(page.getByRole('button', { name: 'Action created' })).toBeVisible()
+  await expect.poll(async () => page.evaluate(({ portalKey, seedIds }) => {
+    const portalData = JSON.parse(window.localStorage.getItem(portalKey))
+    return portalData.needed_from_client.some((action) => (
+      action.related_compliance_review_id === seedIds.COMPLIANCE_REVIEW_AD_CLAIMS
+      && action.clinic_action_type === 'approve_ad_copy'
+    ))
+  }, {
+    portalKey: PORTAL_STORAGE_KEY,
+    seedIds: SEED_IDS,
+  })).toBe(true)
 
   await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('button', { name: 'Action exists' }).first()).toBeVisible()
@@ -582,6 +591,7 @@ test('admin can import aggregate clinic reputation and compliance records', asyn
   await expect(page.getByText('Saved', { exact: true })).toBeVisible()
 
   await page.goto(`/admin/clinic-compliance?clientId=${GREEN_DENTAL_CLIENT_ID}`, { waitUntil: 'domcontentloaded' })
+  await expect(page.getByRole('heading', { name: 'Compliance Reviews' })).toBeVisible()
 
   const compliancePayload = {
     client_id: GREEN_DENTAL_CLIENT_ID,

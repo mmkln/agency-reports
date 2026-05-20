@@ -1,20 +1,15 @@
-import { listAdminClients } from '../../../domain/services/adminClientService'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  useAdminRouteClient,
+} from '../../../features/admin-client-workspace'
 import { PageHeader } from '@/shared/ui'
 
-function getRouteClient(clientId, runtime) {
-  if (!clientId) {
-    return null
-  }
-
-  return listAdminClients({
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }).find((client) => client.id === clientId) ?? null
-}
-
 export function AdminPerformanceDashboardsPageHeader({ routeParams = {}, runtime }) {
-  const client = getRouteClient(routeParams.clientId, runtime)
+  const clientResource = useAdminRouteClient({
+    clientId: routeParams.clientId,
+    runtime,
+  })
+  const client = clientResource.data
   const createHref = client
     ? `/admin/performance-dashboards?clientId=${client.id}&createPerformanceDashboard=true`
     : '/admin/performance-dashboards?createPerformanceDashboard=true'

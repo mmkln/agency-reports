@@ -17,7 +17,7 @@ function loadAdminClient({ clientId, repositories, viewer }) {
   }).find((record) => record.id === clientId)
 
   if (!client) {
-    throw new Error('Client was not found.')
+    throw new Error('Account was not found.')
   }
 
   return client
@@ -56,7 +56,7 @@ export function AdminClientAccessPage({ routeParams = {}, runtime }) {
   }
 
   if (clientResource.status === 'error' || !clientResource.data) {
-    return <WorkspaceErrorState message={clientResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={clientResource.error || 'Account was not found.'} />
   }
 
   return (

@@ -34,7 +34,7 @@ export function AdminClientRequestsPage({ routeParams = {}, runtime }) {
   if (workflow.requestsResource.status === 'error' || !workflow.client) {
     return (
       <PageShell className="px-app-gutter py-content-gutter" width="content">
-        <WorkspaceState message={workflow.requestsResource.error || 'Client was not found.'} status="error" />
+        <WorkspaceState message={workflow.requestsResource.error || 'Account was not found.'} status="error" />
       </PageShell>
     )
   }

@@ -16,11 +16,12 @@ import {
   CLINIC_REPORTING_PUBLISH_STATES,
 } from '../../entities/clinic-reporting'
 import {
-  createAdminDentalGrowthReviewDraft,
   getAdminDentalGrowthReviewDraft,
   getAdminClinicReportingPage,
+  importDentalGrowthReviewSourceAndGenerateDraft,
   importAdminClinicReportingJson,
   previewAdminClinicReportingImport,
+  previewAdminDentalGrowthReviewSourceImport,
   updateAdminDentalGrowthReviewDraft,
   updateAdminClinicReportingPublishState,
 } from './adminClinicReportingService'
@@ -70,6 +71,7 @@ function createRepositories() {
     clinicMonthlyStrategyPeriods: createEntityRepository([]),
     clinicWeeklyOperatorPeriods: createEntityRepository([]),
     dentalGrowthReviewPeriods: createEntityRepository([]),
+    dentalGrowthReviewSourceBatches: createEntityRepository([]),
   }
 }
 
@@ -116,6 +118,136 @@ function createDentalGrowthReviewImportPayload(overrides = {}) {
       name: zone.name,
       zone_number: zone.number,
     })),
+    ...overrides,
+  }
+}
+
+function createDentalGrowthReviewSourcePayload(overrides = {}) {
+  return {
+    payload: {
+      appointments: [
+        {
+          appointment_date: '2026-05-13',
+          booked_at: '2026-05-11T09:30:00.000Z',
+          contact_source: 'Meta Ads',
+          created_at: '2026-05-11T09:30:00.000Z',
+          patient_type: 'new',
+          status: 'attended',
+          track: 'Track A',
+        },
+        {
+          appointment_date: '2026-05-14',
+          booked_at: '2026-05-12T10:00:00.000Z',
+          contact_source: 'reactivation',
+          created_at: '2026-05-12T10:00:00.000Z',
+          patient_type: 'reactivated',
+          status: 'confirmed',
+          track: 'Track C',
+        },
+        {
+          appointment_date: '2026-05-16',
+          booked_at: '2026-05-13T13:00:00.000Z',
+          contact_source: 'Google Ads',
+          created_at: '2026-05-13T13:00:00.000Z',
+          patient_type: 'recall',
+          status: 'attended',
+          track: 'Track A',
+        },
+      ],
+      assumptions: {
+        chair_utilization_rate: 86,
+        estimated_90_day_revenue_per_attended: 1200,
+        hygiene_reappointment_rate: 72,
+        revenue_p25_multiplier: 0.75,
+        revenue_p75_multiplier: 1.25,
+      },
+      call_logs: [
+        { disposition: 'booked', outcome: 'booked', status: 'completed', weekly_target: 4 },
+        { disposition: 'left voicemail', outcome: 'no_answer', status: 'completed', weekly_target: 4 },
+        { disposition: 'not interested', outcome: 'declined', status: 'completed', weekly_target: 4 },
+      ],
+      capacity_slots: [
+        { date: '2026-05-16', slots_booked: 3, slots_offered: 4, track: 'Track A' },
+        { date: '2026-05-16', slots_booked: 1, slots_offered: 2, track: 'Track C' },
+      ],
+      conversations: [
+        {
+          agent_first_reply_at: '2026-05-11T09:04:00.000Z',
+          closed_at: '2026-05-11T09:30:00.000Z',
+          patient_inbound_at: '2026-05-11T09:00:00.000Z',
+        },
+        {
+          agent_first_reply_at: '2026-05-12T10:20:00.000Z',
+          patient_inbound_at: '2026-05-12T10:00:00.000Z',
+          resolved_at: '2026-05-12T11:00:00.000Z',
+        },
+        {
+          patient_inbound_at: '2026-05-13T13:00:00.000Z',
+        },
+      ],
+      email_events: [
+        { opened_at: '2026-05-11T09:05:00.000Z', status: 'delivered', touch: 1, track: 'Track A' },
+        { status: 'delivered', touch: 1, track: 'Track A' },
+        { opened_at: '2026-05-12T10:05:00.000Z', status: 'delivered', touch: 2, track: 'Track C' },
+      ],
+      leads: [
+        {
+          contacted_at: '2026-05-11T09:05:00.000Z',
+          created_at: '2026-05-11T09:00:00.000Z',
+          source: 'Meta Ads',
+        },
+        {
+          contacted_at: '2026-05-12T10:15:00.000Z',
+          created_at: '2026-05-12T10:00:00.000Z',
+          source: 'reactivation',
+        },
+        {
+          created_at: '2026-05-13T13:00:00.000Z',
+          source: 'Google Ads',
+        },
+      ],
+      referrals: [
+        { count: 1, created_at: '2026-05-15' },
+        { count: 1, created_at: '2026-05-16' },
+      ],
+      reviews: [
+        { created_at: '2026-05-12', rating: 5, responded_at: '2026-05-13' },
+        { created_at: '2026-05-14', rating: 4 },
+      ],
+      sms_events: [
+        { status: 'delivered' },
+        { status: 'delivered' },
+        { keyword: 'STOP', status: 'delivered' },
+        { status: 'failed' },
+      ],
+      source_freshness: [
+        {
+          affected_metrics: ['Bookings', 'Replies'],
+          freshness_status: 'green',
+          last_updated_at: '2026-05-18T08:00:00.000Z',
+          source_name: 'GHL',
+        },
+        {
+          affected_metrics: ['Total Marketing Investment'],
+          freshness_status: 'red',
+          last_updated_at: '2026-05-09T08:00:00.000Z',
+          source_name: 'Meta Ads export',
+        },
+      ],
+      spend: [
+        { amount: 600, source: 'Meta Ads', track: 'Track A' },
+        { amount: 300, source: 'Google Ads' },
+        { amount: 100, source: 'reactivation', track: 'Track C' },
+      ],
+      track_touches: [
+        { replies: 3, sent: 10, touch: 1, track: 'Track A' },
+        { replies: 2, sent: 8, touch: 2, track: 'Track A' },
+        { replies: 4, sent: 12, touch: 1, track: 'Track C' },
+      ],
+    },
+    period_end: '2026-05-17',
+    period_start: '2026-05-11',
+    period_type: 'weekly',
     ...overrides,
   }
 }
@@ -285,10 +417,45 @@ describe('admin clinic reporting foundations', () => {
       clientId: IDS.CLIENT,
       repositories,
       viewer: createAdminViewer(),
-    }).records).toEqual([
+    })).toMatchObject({
+      records: [
+        expect.objectContaining({
+          layer: DENTAL_GROWTH_REVIEW_LAYER,
+          layerMeta: expect.objectContaining({ label: 'Dental Growth Review' }),
+        }),
+      ],
+      sourceBatches: [],
+    })
+  })
+
+  it('lists dental growth source imports with generated draft lineage', () => {
+    const repositories = createRepositories()
+    const ids = ['source-a', 'generated-period-a']
+
+    importDentalGrowthReviewSourceAndGenerateDraft({
+      clientId: IDS.CLIENT,
+      idGenerator: () => ids.shift(),
+      now: () => '2026-05-20T08:00:00.000Z',
+      rawJson: createDentalGrowthReviewSourcePayload(),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(getAdminClinicReportingPage({
+      clientId: IDS.CLIENT,
+      repositories,
+      viewer: createAdminViewer(),
+    }).sourceBatches).toEqual([
       expect.objectContaining({
-        layer: DENTAL_GROWTH_REVIEW_LAYER,
-        layerMeta: expect.objectContaining({ label: 'Dental Growth Review' }),
+        generatedPeriodId: 'generated-period-a',
+        generatedPublishState: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
+        id: 'source-a',
+        importedAt: '2026-05-20T08:00:00.000Z',
+        periodEnd: '2026-05-17',
+        periodStart: '2026-05-11',
+        sourceType: 'json_import',
+        validationState: 'valid',
+        worstFreshnessStatus: 'red',
       }),
     ])
   })
@@ -352,49 +519,254 @@ describe('admin clinic reporting foundations', () => {
     })
   })
 
-  it('creates editable dental growth review drafts with valid operating review defaults', () => {
+  it('previews dental growth source imports without saving records', () => {
     const repositories = createRepositories()
-    const result = createAdminDentalGrowthReviewDraft({
+    const ids = ['source-a', 'generated-period-a']
+
+    const result = previewAdminDentalGrowthReviewSourceImport({
       clientId: IDS.CLIENT,
-      idGenerator: () => 'growth-review-draft',
+      idGenerator: () => ids.shift(),
       now: () => '2026-05-20T08:00:00.000Z',
+      rawJson: createDentalGrowthReviewSourcePayload(),
       repositories,
       viewer: createAdminViewer(),
     })
 
     expect(result).toMatchObject({
-      id: 'growth-review-draft',
-      layer: DENTAL_GROWTH_REVIEW_LAYER,
-      periodLabel: 'Week ending 2026-05-20',
-      publishState: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
-      title: 'Green Dental Dental Growth Review',
+      contractVersion: 'dental-growth-review-source/v1',
+      generatedPeriod: {
+        calculation_source_batch_id: 'source-a',
+        content: {
+          hero_metrics: expect.arrayContaining([
+            expect.objectContaining({ id: 'bookings', title: 'Bookings This Period', value: 3 }),
+            expect.objectContaining({ id: 'biggest-leak', title: 'Biggest Funnel Leak' }),
+          ]),
+        },
+        id: 'generated-period-a',
+        publish_state: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
+      },
+      isValid: true,
+      sourceReadiness: expect.arrayContaining([
+        expect.objectContaining({ id: 'hero_metrics', status: 'ready' }),
+        expect.objectContaining({ id: 'speed_to_lead_channel', status: 'ready' }),
+        expect.objectContaining({ id: 'source_freshness', status: 'ready' }),
+      ]),
+      sourceBatch: {
+        id: 'source-a',
+        period_end: '2026-05-17',
+        period_start: '2026-05-11',
+      },
+      warnings: [],
     })
-    expect(getAdminDentalGrowthReviewDraft({
-      periodId: 'growth-review-draft',
+    expect(repositories.dentalGrowthReviewPeriods.list()).toHaveLength(0)
+    expect(repositories.dentalGrowthReviewSourceBatches.list()).toHaveLength(0)
+  })
+
+  it('imports dental growth source data and generates draft only', () => {
+    const repositories = createRepositories()
+    const ids = ['source-a', 'generated-period-a']
+
+    const result = importDentalGrowthReviewSourceAndGenerateDraft({
+      clientId: IDS.CLIENT,
+      idGenerator: () => ids.shift(),
+      now: () => '2026-05-20T08:00:00.000Z',
+      rawJson: createDentalGrowthReviewSourcePayload(),
       repositories,
       viewer: createAdminViewer(),
-    })).toMatchObject({
+    })
+
+    expect(result).toMatchObject({
+      contractVersion: 'dental-growth-review-source/v1',
+      generatedPeriod: {
+        id: 'generated-period-a',
+        layer: DENTAL_GROWTH_REVIEW_LAYER,
+        periodLabel: 'Week ending 2026-05-17',
+        publishState: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
+      },
+      isValid: true,
+      sourceBatch: {
+        generated_period_id: 'generated-period-a',
+        id: 'source-a',
+      },
+    })
+    expect(repositories.dentalGrowthReviewSourceBatches.findById('source-a')).toMatchObject({
+      generated_period_id: 'generated-period-a',
+      validation_state: 'valid',
+    })
+    expect(repositories.dentalGrowthReviewPeriods.findById('generated-period-a')).toMatchObject({
+      calculation_source_batch_id: 'source-a',
       content: {
+        front_desk_health: expect.arrayContaining([
+          expect.objectContaining({ id: 'calls-made-vs-target', value: '3 / 4' }),
+          expect.objectContaining({ id: 'disposition-completion-rate', value: '100%' }),
+        ]),
         hero_metrics: expect.arrayContaining([
-          expect.objectContaining({ title: 'Bookings This Period' }),
-          expect.objectContaining({ title: 'Biggest Funnel Leak' }),
+          expect.objectContaining({ id: 'bookings', value: 3 }),
+          expect.objectContaining({ id: 'investment', value: '$1,000' }),
+        ]),
+        heatmaps: {
+          email_open_by_track: expect.arrayContaining([
+            expect.objectContaining({ touch_1: 50, track: 'Track A' }),
+            expect.objectContaining({ touch_2: 100, track: 'Track C' }),
+          ]),
+          reply_rate_by_track_touch: expect.arrayContaining([
+            expect.objectContaining({ touch_1: 30, touch_2: 25, track: 'Track A' }),
+            expect.objectContaining({ touch_1: 33, track: 'Track C' }),
+          ]),
+        },
+        metrics: expect.arrayContaining([
+          expect.objectContaining({ id: 'sms-deliverability-rate', value: '75%' }),
+          expect.objectContaining({ id: 'sms-opt-out-rate', value: '25%' }),
+          expect.objectContaining({ id: 'email-deliverability-rate', value: '100%' }),
+        ]),
+        operations_chips: expect.arrayContaining([
+          expect.objectContaining({ id: 'show-rate-chip', value: '67%' }),
+          expect.objectContaining({ id: 'chair-utilization-chip', value: '86%' }),
+          expect.objectContaining({ id: 'hygiene-reappointment-chip', value: '72%' }),
+        ]),
+        reactivation_tracks: expect.arrayContaining([
+          expect.objectContaining({
+            bookings: 2,
+            cost_per_booking: 300,
+            reply_rate: 28,
+            saturday_slot_fill_rate: 75,
+            track: 'Track A',
+          }),
+          expect.objectContaining({
+            bookings: 1,
+            cost_per_booking: 100,
+            reply_rate: 33,
+            saturday_slot_fill_rate: 50,
+            track: 'Track C',
+          }),
+        ]),
+        reputation_referral: expect.arrayContaining([
+          expect.objectContaining({ id: 'star-rating', value: 4.5 }),
+          expect.objectContaining({ id: 'new-reviews', value: 2 }),
+          expect.objectContaining({ id: 'review-response-rate', value: '50%' }),
+          expect.objectContaining({ id: 'patient-referrals-received', value: 2 }),
+        ]),
+        speed_to_lead: expect.arrayContaining([
+          expect.objectContaining({ id: 'median-first-reply', value: '12 min' }),
+          expect.objectContaining({ id: 'reply-within-5-min', value: '50%' }),
+          expect.objectContaining({ id: 'leads-never-contacted', value: '33%' }),
+          expect.objectContaining({ id: 'reply-outliers-over-15', value: 1 }),
         ]),
       },
-      zones: expect.arrayContaining([
-        expect.objectContaining({ number: 1 }),
-        expect.objectContaining({ number: 9 }),
-      ]),
+      publish_state: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
     })
   })
 
-  it('saves dental growth review edits as draft even when the source record was published', () => {
+  it('rejects patient-level fields from dental growth source imports', () => {
     const repositories = createRepositories()
-
-    importAdminClinicReportingJson({
+    const result = previewAdminDentalGrowthReviewSourceImport({
       clientId: IDS.CLIENT,
-      idGenerator: () => 'growth-review-a',
-      layer: DENTAL_GROWTH_REVIEW_LAYER,
-      rawJson: createDentalGrowthReviewImportPayload(),
+      idGenerator: () => 'source-a',
+      rawJson: createDentalGrowthReviewSourcePayload({
+        payload: {
+          appointments: [
+            { created_at: '2026-05-11T09:30:00.000Z', patient_name: 'Jane Patient', status: 'attended' },
+          ],
+        },
+      }),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result).toMatchObject({
+      contractVersion: 'dental-growth-review-source/v1',
+      generatedPeriod: null,
+      isValid: false,
+      sourceBatch: null,
+    })
+    expect(result.errors[0].message).toContain('patient-level field')
+    expect(repositories.dentalGrowthReviewPeriods.list()).toHaveLength(0)
+    expect(repositories.dentalGrowthReviewSourceBatches.list()).toHaveLength(0)
+  })
+
+  it('rejects invalid source freshness metadata', () => {
+    const repositories = createRepositories()
+    const result = previewAdminDentalGrowthReviewSourceImport({
+      clientId: IDS.CLIENT,
+      idGenerator: () => 'source-a',
+      rawJson: createDentalGrowthReviewSourcePayload({
+        payload: {
+          source_freshness: [
+            {
+              affected_metrics: ['Bookings'],
+              freshness_status: 'stale',
+              last_updated_at: '2026-05-18T08:00:00.000Z',
+              source_name: 'GHL',
+            },
+          ],
+        },
+      }),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result).toMatchObject({
+      generatedPeriod: null,
+      isValid: false,
+      sourceBatch: null,
+      sourceReadiness: [],
+    })
+    expect(result.errors[0].message).toContain('freshness_status')
+  })
+
+  it('warns when source payload cannot fully calculate diagnostic sections', () => {
+    const repositories = createRepositories()
+    const ids = ['source-a', 'generated-period-a']
+    const result = previewAdminDentalGrowthReviewSourceImport({
+      clientId: IDS.CLIENT,
+      idGenerator: () => ids.shift(),
+      rawJson: createDentalGrowthReviewSourcePayload({
+        payload: {
+          appointments: [
+            {
+              appointment_date: '2026-05-13',
+              created_at: '2026-05-11T09:30:00.000Z',
+              patient_type: 'new',
+              status: 'attended',
+            },
+          ],
+          source_freshness: [
+            {
+              affected_metrics: ['Bookings'],
+              freshness_status: 'green',
+              last_updated_at: '2026-05-18T08:00:00.000Z',
+              source_name: 'GHL',
+            },
+          ],
+        },
+      }),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result).toMatchObject({
+      isValid: true,
+      sourceReadiness: expect.arrayContaining([
+        expect.objectContaining({ id: 'hero_metrics', status: 'partial' }),
+        expect.objectContaining({ id: 'deliverability_team_health', status: 'missing' }),
+        expect.objectContaining({ id: 'source_freshness', status: 'ready' }),
+      ]),
+    })
+    expect(result.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining('Hero metrics is partial'),
+      expect.stringContaining('Deliverability and team health is missing'),
+    ]))
+  })
+
+  it('saves only editable dental growth narrative fields as draft', () => {
+    const repositories = createRepositories()
+    const ids = ['source-a', 'growth-review-a']
+
+    importDentalGrowthReviewSourceAndGenerateDraft({
+      clientId: IDS.CLIENT,
+      idGenerator: () => ids.shift(),
+      now: () => '2026-05-20T08:00:00.000Z',
+      rawJson: createDentalGrowthReviewSourcePayload(),
       repositories,
       viewer: createAdminViewer(),
     })
@@ -417,10 +789,33 @@ describe('admin clinic reporting foundations', () => {
         ...current,
         content: {
           ...current.content,
+          hero_metrics: current.content.hero_metrics.map((metric) => (
+            metric.id === 'bookings'
+              ? { ...metric, value: 999 }
+              : metric
+          )),
+          channel_attribution: [
+            { channel: 'meta', cost_per_booking: 1 },
+          ],
           period_context: {
             ...current.content.period_context,
             auto_summary: 'Bookings improved and the main leak is confirmed-to-attended.',
           },
+          reputation_referral: [
+            { id: 'star-rating', title: 'Star Rating', value: 1 },
+          ],
+          speed_to_lead: [
+            { id: 'median-first-reply', title: 'Median Time to First Reply', value: '999 min' },
+          ],
+          watching: [
+            {
+              id: 'watching-a',
+              owner: 'Roman',
+              status: 'watching',
+              title: 'Monitor Meta source quality',
+              why_watch: 'Unknown source share rose in the generated attribution.',
+            },
+          ],
         },
         title: 'Edited Dental Growth Review',
       },
@@ -434,9 +829,24 @@ describe('admin clinic reporting foundations', () => {
     })
     expect(repositories.dentalGrowthReviewPeriods.findById('growth-review-a')).toMatchObject({
       content: {
+        hero_metrics: expect.arrayContaining([
+          expect.objectContaining({ id: 'bookings', value: 3 }),
+        ]),
         period_context: expect.objectContaining({
           auto_summary: 'Bookings improved and the main leak is confirmed-to-attended.',
         }),
+        reputation_referral: expect.arrayContaining([
+          expect.objectContaining({ id: 'star-rating', value: 4.5 }),
+        ]),
+        speed_to_lead: expect.arrayContaining([
+          expect.objectContaining({ id: 'median-first-reply', value: '12 min' }),
+        ]),
+        watching: [
+          expect.objectContaining({
+            owner: 'Roman',
+            title: 'Monitor Meta source quality',
+          }),
+        ],
       },
       publish_state: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
       updated_at: '2026-05-20T09:00:00.000Z',
@@ -445,10 +855,12 @@ describe('admin clinic reporting foundations', () => {
 
   it('rejects patient-level fields when saving dental growth review drafts', () => {
     const repositories = createRepositories()
+    const ids = ['source-a', 'growth-review-draft']
 
-    createAdminDentalGrowthReviewDraft({
+    importDentalGrowthReviewSourceAndGenerateDraft({
       clientId: IDS.CLIENT,
-      idGenerator: () => 'growth-review-draft',
+      idGenerator: () => ids.shift(),
+      rawJson: createDentalGrowthReviewSourcePayload(),
       repositories,
       viewer: createAdminViewer(),
     })
@@ -461,13 +873,8 @@ describe('admin clinic reporting foundations', () => {
           viewer: createAdminViewer(),
         }),
         content: {
-          hero_metrics: [
-            { id: 'bookings', patient_name: 'Jane Patient', title: 'Bookings This Period' },
-            { id: 'attended', title: 'Attended Appointments' },
-            { id: 'revenue', title: 'Projected 90-Day Revenue Range' },
-            { id: 'investment', title: 'Total Marketing Investment' },
-            { id: 'cost', title: 'Cost Per New/Reactivated Patient' },
-            { id: 'leak', title: 'Biggest Funnel Leak' },
+          narrative_items: [
+            { id: 'narrative-a', patient_name: 'Jane Patient', title: 'Unsafe narrative', type: 'win' },
           ],
         },
       },

@@ -61,23 +61,34 @@ function SelectField({ children, label, onChange, value }) {
   )
 }
 
-export function PeriodFields({ draft, updateDraft }) {
+function ReadOnlyValue({ label, value }) {
+  return (
+    <div className="rounded-control bg-block p-control">
+      <p className="text-label text-text-muted">{label}</p>
+      <p className="mt-tag text-ui font-medium text-text-primary">{value || 'Not supplied'}</p>
+    </div>
+  )
+}
+
+export function PeriodFields({ draft }) {
   return (
     <section className="grid gap-control rounded-control bg-block-subtle p-control">
       <SectionHeader
-        helper="Controls which review period this draft will appear under."
-        title="Period"
+        helper="Period and cadence are calculated from the imported source batch."
+        title="Calculated period"
       />
-      <div className="grid gap-control md:grid-cols-2">
-        <FormField label="Dashboard title" onValueChange={(value) => updateDraft((next) => { next.title = value })} value={draft.title} />
-        <FormField label="Period label" onValueChange={(value) => updateDraft((next) => { next.label = value })} value={draft.label} />
-        <FormField label="Start date" onValueChange={(value) => updateDraft((next) => { next.period_start = value })} type="date" value={draft.period_start} />
-        <FormField label="End date" onValueChange={(value) => updateDraft((next) => { next.period_end = value })} type="date" value={draft.period_end} />
-        <SelectField label="Cadence" onChange={(value) => updateDraft((next) => { next.period_type = value })} value={draft.period_type}>
-          {Object.values(DENTAL_GROWTH_REVIEW_PERIOD_TYPES).map((periodType) => (
-            <option key={periodType} value={periodType}>{PERIOD_TYPE_LABELS[periodType]}</option>
-          ))}
-        </SelectField>
+      <div className="grid gap-control md:grid-cols-4">
+        {[
+          ['Dashboard title', draft.title],
+          ['Period label', draft.label],
+          ['Date range', `${draft.period_start} to ${draft.period_end}`],
+          ['Cadence', PERIOD_TYPE_LABELS[draft.period_type]],
+        ].map(([label, value]) => (
+          <div className="rounded-control bg-block p-control" key={label}>
+            <p className="text-label text-text-muted">{label}</p>
+            <p className="mt-tag text-ui font-medium text-text-primary">{value}</p>
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -101,33 +112,33 @@ export function ContextFields({ draft, updateDraft }) {
               <option key={status} value={status}>{formatStatusLabel(status)}</option>
             ))}
           </SelectField>
-          <FormField label="Freshness summary" onValueChange={(value) => updateDraft((next) => { next.content.period_context.freshness_summary = value })} value={context.freshness_summary} />
+          <ReadOnlyValue label="Freshness summary" value={context.freshness_summary} />
         </div>
       </div>
     </section>
   )
 }
 
-export function HeroMetricFields({ draft, updateDraft }) {
+export function HeroMetricFields({ draft }) {
   return (
     <section className="grid gap-control rounded-control bg-block-subtle p-control">
       <SectionHeader
-        helper="Keep this to exactly six outcome metrics. LTV:CAC does not belong here."
-        title="Hero metrics"
+        helper="These values are calculated from the source batch. Import new source data to change them."
+        title="Calculated hero metrics"
       />
       <div className="grid gap-control md:grid-cols-2">
         {draft.content.hero_metrics.map((metric, index) => (
           <div className="grid gap-item rounded-control bg-block p-control" key={metric.id || index}>
-            <FormField label="Metric title" onValueChange={(value) => updateDraft((next) => { next.content.hero_metrics[index].title = value })} value={metric.title} />
-            <div className="grid gap-item sm:grid-cols-2">
-              <FormField label="Value" onValueChange={(value) => updateDraft((next) => { next.content.hero_metrics[index].value = value })} value={metric.value} />
-              <SelectField label="Status" onChange={(value) => updateDraft((next) => { next.content.hero_metrics[index].status = value })} value={metric.status}>
-                {Object.values(DENTAL_GROWTH_REVIEW_STATUSES).map((status) => (
-                  <option key={status} value={status}>{formatStatusLabel(status)}</option>
-                ))}
-              </SelectField>
+            <div className="flex items-start justify-between gap-control">
+              <div className="min-w-0">
+                <p className="text-label text-text-muted">{metric.title}</p>
+                <p className="mt-tag text-ui font-semibold text-text-primary">{metric.value}</p>
+              </div>
+              <span className="rounded-control bg-control px-2 py-1 text-label text-text-secondary">
+                {formatStatusLabel(metric.status)}
+              </span>
             </div>
-            <FormField label="Source" onValueChange={(value) => updateDraft((next) => { next.content.hero_metrics[index].source = value })} value={metric.source} />
+            <p className="text-label font-normal text-text-muted">{metric.source}</p>
           </div>
         ))}
       </div>
@@ -191,22 +202,18 @@ export function DecisionFields({ draft, updateDraft }) {
   )
 }
 
-export function DataSourceFields({ draft, updateDraft }) {
+export function DataSourceFields({ draft }) {
   return (
     <section className="grid gap-control rounded-control bg-block-subtle p-control">
       <SectionHeader
-        helper="These warnings determine which metrics should be trusted before publishing."
+        helper="These warnings are calculated from the imported source batch. Import new source data to change them."
         title="Data freshness"
       />
       {draft.data_sources.slice(0, 4).map((source, index) => (
         <div className="grid gap-item rounded-control bg-block p-control md:grid-cols-3" key={source.id || index}>
-          <FormField label="Source" onValueChange={(value) => updateDraft((next) => { next.data_sources[index].source_name = value })} value={source.source_name} />
-          <FormField label="Last updated" onValueChange={(value) => updateDraft((next) => { next.data_sources[index].last_updated_at = value })} value={source.last_updated_at} />
-          <SelectField label="Freshness" onChange={(value) => updateDraft((next) => { next.data_sources[index].freshness_status = value })} value={source.freshness_status}>
-            {Object.values(DENTAL_GROWTH_REVIEW_STATUSES).map((status) => (
-              <option key={status} value={status}>{formatStatusLabel(status)}</option>
-            ))}
-          </SelectField>
+          <ReadOnlyValue label="Source" value={source.source_name} />
+          <ReadOnlyValue label="Last updated" value={source.last_updated_at} />
+          <ReadOnlyValue label="Freshness" value={formatStatusLabel(source.freshness_status)} />
         </div>
       ))}
     </section>

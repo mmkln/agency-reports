@@ -411,7 +411,7 @@ describe('adminClientService', () => {
       },
       repositories: createRepositories([]),
       viewer: createAdminViewer(),
-    })).toThrow('Client type is invalid.')
+    })).toThrow('Account type is invalid.')
   })
 
   it('rejects non-admin viewers', () => {
@@ -427,7 +427,7 @@ describe('adminClientService', () => {
         clientId: IDS.CLIENT_A,
         role: USER_ROLES.CLIENT_USER,
       },
-    })).toThrow('Only agency admins can manage clients.')
+    })).toThrow('Only admins can manage accounts.')
   })
 
   it('deletes clinic foundation records when deleting a client', () => {

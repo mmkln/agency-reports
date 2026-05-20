@@ -134,7 +134,7 @@ export function ReportsTable({
           <TableHeader>
             <TableRow>
               <TableHead>Report</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Published</TableHead>
@@ -223,7 +223,7 @@ export function ReportsTable({
         confirmLabel="Delete report"
         description={
           reportPendingDelete
-            ? `This removes "${reportPendingDelete.title}" from local demo data. Client users will no longer see it.`
+            ? `This removes "${reportPendingDelete.title}" from local demo data. Portal users will no longer see it.`
             : ''
         }
         onConfirm={confirmDeleteReport}

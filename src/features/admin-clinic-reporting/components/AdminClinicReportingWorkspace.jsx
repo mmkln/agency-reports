@@ -16,6 +16,7 @@ import {
 } from '../../admin-client-workspace'
 import { useAdminClinicReportingWorkflow } from '../useAdminClinicReportingWorkflow'
 import { AdminDentalGrowthReviewEditorDialog } from './AdminDentalGrowthReviewEditorDialog'
+import { AdminDentalGrowthReviewSourceDialog } from './AdminDentalGrowthReviewSourceDialog'
 import { AdminClinicReportingImportDialog } from './AdminClinicReportingImportDialog'
 
 function LoadingState() {
@@ -81,6 +82,20 @@ function growthReviewPreviewLabel(row) {
     : 'Open dashboard'
 }
 
+function sourceBatchDraftHref(row, clientId) {
+  if (!row.generatedPeriodId) {
+    return ''
+  }
+
+  const search = new URLSearchParams({
+    clientId,
+    periodId: row.generatedPeriodId,
+    preview: 'draft',
+  })
+
+  return `/dashboards/dental-growth-review?${search.toString()}`
+}
+
 export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
   const {
@@ -91,21 +106,29 @@ export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
     importRawJson,
     isImportOpen,
     isReviewEditorOpen,
+    isSourceImportOpen,
     layerOptions,
     openImportDialog,
     openReviewEditor,
+    openSourceImportDialog,
     page,
     applyImport,
     closeImportDialog,
     closeReviewEditor,
-    createGrowthReviewDraft,
+    closeSourceImportDialog,
+    generateGrowthReviewDraftFromSource,
     previewImport,
+    previewSourceImport,
     reviewEditorError,
     reviewEditorPeriod,
     saveState,
     saveGrowthReviewDraft,
     setImportLayer,
     setImportRawJson,
+    setSourceRawJson,
+    sourceImportError,
+    sourceImportPlan,
+    sourceRawJson,
     status,
     updatePublishState,
   } = useAdminClinicReportingWorkflow({ clientId, runtime })
@@ -134,8 +157,8 @@ export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
                 { href: '/team/clinic-operator', label: 'Weekly operator' },
               ]}
             />
-            <Button onClick={createGrowthReviewDraft} size="sm" type="button" variant="outline">
-              New Growth Review
+            <Button onClick={openSourceImportDialog} size="sm" type="button" variant="outline">
+              Import Source Data
             </Button>
             <Button onClick={openImportDialog} size="sm" type="button">
               Import JSON
@@ -242,6 +265,62 @@ export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
           rows={page.records}
           title="Reporting Records"
         />
+
+        <TablePanel
+          columns={[
+            { key: 'id', label: 'Source batch' },
+            {
+              key: 'sourceType',
+              label: 'Source type',
+              render: (row) => formatStatusLabel(row.sourceType),
+            },
+            {
+              key: 'period',
+              label: 'Period',
+              render: (row) => `${row.periodStart} to ${row.periodEnd}`,
+            },
+            {
+              key: 'validationState',
+              label: 'Validation',
+              render: (row) => (
+                <TableBadge tone={row.validationState === 'valid' ? 'green' : 'red'}>
+                  {formatStatusLabel(row.validationState)}
+                </TableBadge>
+              ),
+            },
+            {
+              key: 'freshness',
+              label: 'Freshness',
+              render: (row) => formatStatusLabel(row.worstFreshnessStatus),
+            },
+            {
+              key: 'generated',
+              label: 'Generated draft',
+              render: (row) => row.generatedTitle || row.generatedPeriodId || 'Not generated',
+            },
+            {
+              key: 'importedAt',
+              label: 'Imported',
+              render: (row) => row.importedAt ? new Date(row.importedAt).toLocaleDateString() : 'Unknown',
+            },
+            {
+              isAction: true,
+              key: 'actions',
+              label: 'Actions',
+              render: (row) => {
+                const href = sourceBatchDraftHref(row, page.client.id)
+
+                return href ? (
+                  <Button asChild size="sm" type="button" variant="outline">
+                    <Link to={href}>Preview generated draft</Link>
+                  </Button>
+                ) : null
+              },
+            },
+          ]}
+          rows={page.sourceBatches ?? []}
+          title="Dental Growth Source Imports"
+        />
       </PageShell>
 
       <AdminClinicReportingImportDialog
@@ -256,6 +335,16 @@ export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
         onPreview={previewImport}
         onRawJsonChange={setImportRawJson}
         rawJson={importRawJson}
+      />
+      <AdminDentalGrowthReviewSourceDialog
+        importError={sourceImportError}
+        importPlan={sourceImportPlan}
+        isOpen={isSourceImportOpen}
+        onApply={generateGrowthReviewDraftFromSource}
+        onClose={closeSourceImportDialog}
+        onPreview={previewSourceImport}
+        onRawJsonChange={setSourceRawJson}
+        rawJson={sourceRawJson}
       />
       <AdminDentalGrowthReviewEditorDialog
         error={reviewEditorError}

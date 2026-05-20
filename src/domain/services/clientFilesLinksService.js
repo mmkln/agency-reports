@@ -106,7 +106,7 @@ function normalizeVisibility(visibility) {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
-    throw new Error('Only agency admins can manage files and links.')
+    throw new Error('Only admins can manage files and links.')
   }
 }
 

@@ -39,7 +39,7 @@ export function LatestUpdateEditor({ draft, onDeleteUpdate, onUpdateUpdates }) {
               <SelectValue placeholder="Visibility" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
+              <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Visible in portal</SelectItem>
               <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
             </SelectContent>
           </Select>

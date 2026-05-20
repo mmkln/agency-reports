@@ -135,9 +135,9 @@ export function useUpdateTaskWorkflow({
     }
 
     if (!selectedTask.clientSafeSummary?.trim()) {
-      setError('Client-safe update is required before sending this work to admin review.')
+      setError('Portal-ready update is required before sending this work to admin review.')
       setSaveState('')
-      toast.warning('Client-safe update required', 'Add a short client-safe summary, save it, then send it for review.')
+      toast.warning('Portal-ready update required', 'Add a short portal-ready summary, save it, then send it for review.')
       return
     }
 
@@ -163,7 +163,7 @@ export function useUpdateTaskWorkflow({
       .then((workItem) => {
         setError('')
         setSaveState('Sent to admin review.')
-        toast.success('Sent to review', `${selectedTask.title} is queued for client-facing review.`)
+        toast.success('Sent to review', `${selectedTask.title} is queued for published work review.`)
         onUpdated(workItem)
       })
       .catch((caughtError) => {

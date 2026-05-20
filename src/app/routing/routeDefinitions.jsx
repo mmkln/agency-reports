@@ -58,6 +58,7 @@ import {
   AdminPerformanceDashboardsPageRoute,
   AdminReportsPageRoute,
   AdminTasksPageRoute,
+  AccountSettingsPageRoute,
   ClientActionNeededPageRoute,
   ClientCallsBookingsPageRoute,
   ClientComplianceApprovalsPageRoute,
@@ -128,6 +129,22 @@ export const routeDefinitions = [
     layout: 'auth',
     showInNav: false,
     element: <AccessDeniedPage />,
+  },
+  {
+    path: '/account/settings',
+    id: 'account-settings',
+    label: 'Account Settings',
+    pageTitle: 'Account Settings',
+    allowedRoles: [
+      USER_ROLES.AGENCY_ADMIN,
+      USER_ROLES.AGENCY_TEAM,
+      USER_ROLES.CLIENT_ADMIN,
+      USER_ROLES.CLIENT_TEAM,
+    ],
+    contentWidth: 'content',
+    iconName: 'user',
+    showInNav: false,
+    element: <AccountSettingsPageRoute />,
   },
   {
     path: '/client/overview',
@@ -933,7 +950,7 @@ function buildRouteElement(route) {
   if (!route.allowedRoles?.length) {
     if (route.requiredCapabilities?.length) {
       return (
-        <ProtectedRoute requiredCapabilities={route.requiredCapabilities}>
+        <ProtectedRoute requiredCapabilities={route.requiredCapabilities} route={route}>
           {routeElement}
         </ProtectedRoute>
       )
@@ -943,7 +960,7 @@ function buildRouteElement(route) {
   }
 
   return (
-    <ProtectedRoute allowedRoles={route.allowedRoles} requiredCapabilities={route.requiredCapabilities}>
+    <ProtectedRoute allowedRoles={route.allowedRoles} requiredCapabilities={route.requiredCapabilities} route={route}>
       {routeElement}
     </ProtectedRoute>
   )

@@ -94,7 +94,7 @@ export function ReportsFilters({
               ) : null}
             </div>
             <div className="grid gap-control">
-              <FilterField label="Client">
+              <FilterField label="Account">
                 <Select onValueChange={(value) => onUpdateFilter('clientId', value)} value={filters.clientId}>
                   <SelectTrigger className={filterSelectTriggerClass} id="report-client-filter" size="sm">
                     <SelectValue placeholder="All clients" />

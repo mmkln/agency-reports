@@ -1,7 +1,6 @@
 import { PageHeader, StatusBadge } from '@/shared/ui'
 
 import {
-  getClientReportsDashboardsFallbackTitle,
   getClientReportsDashboardsPage,
 } from '../../../domain/services/clientReportsDashboardsService'
 import { USER_ROLES } from '../../../entities/profile'
@@ -20,10 +19,6 @@ function HeaderActions({ page }) {
 
 export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const fallbackTitle = getClientReportsDashboardsFallbackTitle({
-    clientId,
-    repositories: runtime.repositories,
-  })
   const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
   const performancePeriodId = routeParams.performancePeriodId ?? routeParams.periodId
   const pageResource = useAsyncResource({
@@ -41,7 +36,7 @@ export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {
   const page = pageResource.data
 
   if (pageResource.status === 'loading' || !page) {
-    return <PageHeader title={fallbackTitle} width={activeRoute?.contentWidth} />
+    return <PageHeader title="Reports & Dashboards" width={activeRoute?.contentWidth} />
   }
 
   if (pageResource.status === 'error' || page.status === 'error') {

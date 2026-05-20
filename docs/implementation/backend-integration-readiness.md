@@ -227,4 +227,4 @@ Current data-client migration progress:
 - [ ] Add server audit logging for publish, archive, invitation, client response, and compliance approval transitions.
 - [x] Replace demo reset behavior with environment-gated admin/dev tooling.
 - [x] Route the first admin client setup, task workspace, access, and activity workflows through `runtime.dataClient`.
-- [ ] Migrate remaining navigation/header/legacy client read paths away from direct `runtime.repositories`.
+- [x] Migrate remaining navigation/header/legacy client read paths away from direct `runtime.repositories`.

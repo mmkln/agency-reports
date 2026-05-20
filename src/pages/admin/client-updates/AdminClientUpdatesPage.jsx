@@ -42,7 +42,7 @@ export function AdminClientUpdatesPage({ routeParams = {}, runtime }) {
   }
 
   if (workflow.updatesResource.status === 'error' || !workflow.client) {
-    return <WorkspaceErrorState message={workflow.updatesResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workflow.updatesResource.error || 'Account was not found.'} />
   }
 
   return (

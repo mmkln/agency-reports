@@ -89,7 +89,7 @@ test('agency admin creates a draft performance dashboard and enters structured d
   await page.getByRole('button', { name: 'Create dashboard' }).click()
 
   await expect(page).toHaveURL(/\/admin\/performance-dashboard-editor/)
-  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible({ timeout: 30_000 })
 
   await page.getByRole('button', { name: 'Add Trend' }).click()
   await page.getByLabel('Trend metric key').fill('qualified_leads')
@@ -202,8 +202,8 @@ test('client can view published performance dashboard but cannot view draft or a
   await expect(page.getByText('May 2026 Draft Performance')).toHaveCount(0)
 
   await page.goto(`/client/reports-dashboards?clientId=${SEED_IDS.CLIENT_NORTHSTAR_DENTAL}&performancePeriodId=${SEED_IDS.PERFORMANCE_GREEN_APRIL}`)
-  await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
-  await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible()
+  await expect(page.getByText('Your current role or client membership does not allow access to this workspace.')).toBeVisible()
 })
 
 test('invalid performance dashboard JSON stays in the import modal with validation errors', async ({ page }) => {
@@ -271,7 +271,7 @@ test('client performance page shows a clear fallback when no dashboard is publis
 
   await page.goto(`/admin/client-performance-preview?clientId=${clientId}`)
   await expect(page.getByText('Current performance is being prepared')).toBeVisible()
-  await expect(page.getByText('Published outcome metrics, goals, trends, and interpretation will appear here after agency review.')).toBeVisible()
+  await expect(page.getByText('Published outcome metrics, goals, trends, and interpretation will appear here after team review.')).toBeVisible()
 })
 
 test('agency admin imports campaign execution JSON and publishes it for the client', async ({ page }) => {

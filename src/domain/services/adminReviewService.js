@@ -16,7 +16,7 @@ const RECENT_DAYS = 7
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can review client-facing work.')
+    throw new Error('Only admins can review published work.')
   }
 }
 

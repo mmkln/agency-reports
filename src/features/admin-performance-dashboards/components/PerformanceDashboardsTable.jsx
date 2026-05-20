@@ -149,7 +149,7 @@ export function PerformanceDashboardsTable({
           <TableHeader>
             <TableRow>
               <TableHead>Dashboard</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Period</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Data</TableHead>

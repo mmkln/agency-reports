@@ -71,7 +71,7 @@ function normalizeDateTime(value = '', fieldName = 'Published date') {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage client updates.')
+    throw new Error('Only admins can manage portal updates.')
   }
 }
 

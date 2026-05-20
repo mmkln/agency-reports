@@ -19,7 +19,7 @@ function assertTaskWorkspaceViewer(viewer) {
     ![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role)
     || !viewer.agencyId
   ) {
-    throw new Error('Only agency users can manage tasks.')
+    throw new Error('Only team users can manage tasks.')
   }
 }
 
@@ -365,7 +365,7 @@ export function createTask({
   }
 
   if (requestedVisibility !== VISIBILITY.INTERNAL) {
-    throw new Error('New tasks are internal. Publish client-facing work through the review workflow.')
+    throw new Error('New tasks are internal. Publish portal work through the review workflow.')
   }
 
   const status = input.status ?? TASK_STATUSES.TODO
@@ -449,7 +449,7 @@ export function updateWorkspaceTask({
   }
 
   if (hasVisibilityInput && nextVisibility !== VISIBILITY.INTERNAL) {
-    throw new Error('Task visibility no longer publishes client-facing work. Use the client work review workflow.')
+    throw new Error('Task visibility no longer publishes portal work. Use the work review workflow.')
   }
 
   const updatedTask = {

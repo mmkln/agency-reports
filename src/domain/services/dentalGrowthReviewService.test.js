@@ -18,6 +18,7 @@ const IDS = Object.freeze({
   AGENCY: 'agency-a',
   CLIENT: 'client-a',
   OTHER_CLIENT: 'client-b',
+  SOURCE_BATCH: 'source-batch-a',
   PERIOD_DRAFT: 'period-draft',
   PERIOD: 'period-current',
   PREVIOUS: 'period-previous',
@@ -41,6 +42,9 @@ function createPeriod(
 ) {
   return {
     client_id: IDS.CLIENT,
+    calculated_at: '2026-05-20T08:00:00.000Z',
+    calculation_source_batch_id: id === IDS.PERIOD_DRAFT ? IDS.SOURCE_BATCH : '',
+    calculation_version: id === IDS.PERIOD_DRAFT ? 'dental-growth-review-calculation-v1' : '',
     content: {
       decisions: [
         { id: 'decision-1', title: 'Approve added hygiene capacity' },
@@ -94,6 +98,18 @@ function createRepositories() {
       createPeriod(IDS.PREVIOUS, '2026-05-10'),
       createPeriod(IDS.PERIOD_DRAFT, '2026-05-24', DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT),
     ]),
+    dentalGrowthReviewSourceBatches: createEntityRepository([
+      {
+        client_id: IDS.CLIENT,
+        id: IDS.SOURCE_BATCH,
+        imported_at: '2026-05-20T07:55:00.000Z',
+        payload: {},
+        period_end: '2026-05-24',
+        period_start: '2026-05-18',
+        source_type: 'json_import',
+        validation_state: 'valid',
+      },
+    ]),
   }
 }
 
@@ -125,6 +141,7 @@ describe('dentalGrowthReviewService', () => {
     })
 
     expect(page.status).toBe('ready')
+    expect(page.calculationMeta).toBeNull()
     expect(page.preset).toBe(DENTAL_GROWTH_REVIEW_VIEW_PRESETS.EXECUTIVE)
     expect(page.zones).toHaveLength(9)
     expect(page.period.content.hero_metrics).toHaveLength(6)
@@ -204,6 +221,14 @@ describe('dentalGrowthReviewService', () => {
     })
 
     expect(page).toMatchObject({
+      calculationMeta: {
+        calculatedAt: '2026-05-20T08:00:00.000Z',
+        calculationVersion: 'dental-growth-review-calculation-v1',
+        importedAt: '2026-05-20T07:55:00.000Z',
+        sourceBatchId: IDS.SOURCE_BATCH,
+        sourceType: 'json_import',
+        validationState: 'valid',
+      },
       period: {
         id: IDS.PERIOD_DRAFT,
         publish_state: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
@@ -248,6 +273,7 @@ describe('dentalGrowthReviewService', () => {
     })
 
     expect(page).toMatchObject({
+      calculationMeta: null,
       period: null,
       reason: 'period_not_found',
       source: 'published',

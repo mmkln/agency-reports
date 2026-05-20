@@ -295,7 +295,7 @@ function ApprovalEditor({
         <NotesField
           label="Decision comment"
           onChange={(value) => onUpdate(index, 'decision_comment', value)}
-          placeholder="Client-safe decision note"
+          placeholder="Portal-ready decision note"
           value={approval.decision_comment}
         />
       </div>

@@ -9,6 +9,7 @@ import { iconNames } from '../../shared/icons'
 import { routeMetadata } from './routeDefinitions'
 import {
   canAccessRoute,
+  canAccessRouteWithContext,
   filterRoutesForNavigation,
   filterRoutesForViewer,
 } from './roleAccess'
@@ -39,7 +40,7 @@ function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
   return {
     clients: {
       findById(id) {
-        return id === 'client-a'
+        return ['client-a', 'client-b'].includes(id)
           ? {
               id,
               type: clientType,
@@ -127,6 +128,47 @@ describe('route role access', () => {
     expect(clientNavIds).not.toContain('client-service-lines')
   })
 
+  it('keeps account settings accessible to every authenticated role outside primary navigation', () => {
+    const accountSettingsRoute = routeMetadata.find((route) => route.id === 'account-settings')
+
+    expect(accountSettingsRoute).toBeTruthy()
+    expect(accountSettingsRoute.showInNav).toBe(false)
+    ;[
+      USER_ROLES.AGENCY_ADMIN,
+      USER_ROLES.AGENCY_TEAM,
+      USER_ROLES.CLIENT_ADMIN,
+      USER_ROLES.CLIENT_TEAM,
+    ].forEach((role) => {
+      expect(canAccessRoute({ role }, accountSettingsRoute)).toBe(true)
+    })
+
+    expect(visibleNavIdsFor({
+      viewer: createClientViewer(),
+    })).not.toContain('account-settings')
+  })
+
+  it('keeps default client team navigation limited to client-owned essentials', () => {
+    const clientTeamNavIds = visibleNavIdsFor({
+      viewer: {
+        capabilities: [],
+        clientId: 'client-a',
+        clientIds: ['client-a'],
+        role: USER_ROLES.CLIENT_TEAM,
+      },
+    })
+
+    expect(clientTeamNavIds).toEqual([
+      'client-overview',
+      'client-action-needed',
+      'client-reports-dashboards',
+      'client-requests',
+      'client-files-links',
+      'client-updates',
+      'client-settings',
+    ])
+    expect(clientTeamNavIds).not.toContain('client-projects')
+  })
+
   it('uses the clinic client navigation template for clinic clients', () => {
     const clientNavIds = visibleNavIdsFor({
       clientType: CLIENT_TYPES.CLINIC,
@@ -181,7 +223,10 @@ describe('route role access', () => {
       },
     })
 
-    expect(frontDeskNavIds).toEqual(['clinic-daily-ops'])
+    expect(frontDeskNavIds).toEqual([
+      'clinic-daily-ops',
+      'client-settings',
+    ])
   })
 
   it('shows agency operational clinic routes without exposing client finance routes in agency navigation', () => {
@@ -244,6 +289,48 @@ describe('route role access', () => {
       capabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
       role: USER_ROLES.CLIENT_ADMIN,
     }, monthlyStrategyRoute)).toBe(true)
+  })
+
+  it('blocks direct URL access when the client type does not match the route', () => {
+    const executiveRoute = routeMetadata.find((route) => route.id === 'client-executive-performance')
+    const projectsRoute = routeMetadata.find((route) => route.id === 'client-projects')
+
+    expect(canAccessRouteWithContext(createClientViewer(), executiveRoute, {
+      defaultClientId: 'client-a',
+      repositories: createRepositories(CLIENT_TYPES.GENERIC),
+    })).toBe(false)
+    expect(canAccessRouteWithContext(createClientViewer(), executiveRoute, {
+      defaultClientId: 'client-a',
+      repositories: createRepositories(CLIENT_TYPES.CLINIC),
+    })).toBe(true)
+    expect(canAccessRouteWithContext(createClientViewer(), projectsRoute, {
+      defaultClientId: 'client-a',
+      repositories: createRepositories(CLIENT_TYPES.CLINIC),
+    })).toBe(false)
+  })
+
+  it('can evaluate client type routes from an async-loaded client type context', () => {
+    const executiveRoute = routeMetadata.find((route) => route.id === 'client-executive-performance')
+
+    expect(canAccessRouteWithContext(createClientViewer(), executiveRoute, {
+      clientType: CLIENT_TYPES.CLINIC,
+      defaultClientId: 'client-a',
+    })).toBe(true)
+    expect(canAccessRouteWithContext(createClientViewer(), executiveRoute, {
+      clientType: CLIENT_TYPES.GENERIC,
+      defaultClientId: 'client-a',
+    })).toBe(false)
+  })
+
+  it('blocks client users from changing client context through URL params', () => {
+    const overviewRoute = routeMetadata.find((route) => route.id === 'client-overview')
+
+    expect(canAccessRouteWithContext(createClientViewer(), overviewRoute, {
+      repositories: createRepositories(CLIENT_TYPES.GENERIC),
+      routeParams: {
+        clientId: 'client-b',
+      },
+    })).toBe(false)
   })
 
   it('keeps admin workspace routes inaccessible to client users', () => {

@@ -12,6 +12,12 @@ import {
 } from '@/shared/ui'
 
 import {
+  ActionNarrativeFields,
+} from './AdminDentalGrowthReviewActionSections'
+import {
+  CalculatedDiagnosticFields,
+} from './AdminDentalGrowthReviewCalculatedSections'
+import {
   ContextFields,
   DataSourceFields,
   DecisionFields,
@@ -70,8 +76,10 @@ export function AdminDentalGrowthReviewEditorDialog({
           <PeriodFields draft={draft} updateDraft={updateDraft} />
           <ContextFields draft={draft} updateDraft={updateDraft} />
           <HeroMetricFields draft={draft} updateDraft={updateDraft} />
+          <CalculatedDiagnosticFields draft={draft} />
           <NarrativeFields draft={draft} updateDraft={updateDraft} />
           <DecisionFields draft={draft} updateDraft={updateDraft} />
+          <ActionNarrativeFields draft={draft} updateDraft={updateDraft} />
           <DataSourceFields draft={draft} updateDraft={updateDraft} />
           {error ? <p className="rounded-control bg-danger-muted p-control text-ui text-danger">{error}</p> : null}
           <DialogFooter className="sticky bottom-0 items-center bg-material-vibrant py-control">

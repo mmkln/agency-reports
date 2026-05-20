@@ -136,7 +136,7 @@ function appendHistory(action, event) {
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can process needed actions.')
+    throw new Error('Only admins can process needed actions.')
   }
 }
 
@@ -645,8 +645,8 @@ function getClinicComplianceSuggestionDefaults({ review, suggestionType }) {
 function getClinicMedicalApprovalSuggestionDefaults({ approval, suggestionType }) {
   const dueText = approval.due_date ? ` by ${approval.due_date}` : ''
   const base = {
-    complianceRisk: 'The approval response must avoid patient identifiers and should only approve client-safe claim, copy, pricing, or policy language.',
-    description: approval.instructions || 'Review the pending medical approval and approve, request changes, or reject it with a client-safe comment.',
+    complianceRisk: 'The approval response must avoid patient identifiers and should only approve portal-ready claim, copy, pricing, or policy language.',
+    description: approval.instructions || 'Review the pending medical approval and approve, request changes, or reject it with a portal-ready comment.',
     impactIfDelayed: 'Campaigns, landing pages, or medical claims may stay blocked until the clinic approves the item.',
     patientImpact: 'Approved, accurate information helps patients understand the service and next step.',
     priority: approval.due_date ? NEEDED_ACTION_PRIORITIES.HIGH : NEEDED_ACTION_PRIORITIES.MEDIUM,

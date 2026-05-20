@@ -4,15 +4,17 @@ import { AppSidebar } from './AppSidebar'
 
 export function AppShell({
   activeRoute,
+  activeSidebarNavigationId,
   children,
   hasUnsavedChanges = false,
+  sidebarNavigationItems,
+  sidebarWorkspaceSwitcher,
   onAuthChange,
   routeParams = {},
   runtime,
   showRouteHeader = true,
   routes,
 }) {
-  const navRoutes = routes.filter((route) => route.showInNav !== false)
   const RouteHeader = activeRoute.header
   const routeKey = activeRoute.remountOnParamsChange
     ? `${activeRoute.id}:${JSON.stringify(routeParams)}`
@@ -22,11 +24,14 @@ export function AppShell({
   return (
     <SidebarProvider className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
       <AppSidebar
+        activeNavigationId={activeSidebarNavigationId}
         activeRoute={activeRoute}
         hasUnsavedChanges={hasUnsavedChanges}
+        navigationItems={sidebarNavigationItems}
         onAuthChange={onAuthChange}
         runtime={runtime}
-        routes={navRoutes}
+        routes={routes}
+        workspaceSwitcher={sidebarWorkspaceSwitcher}
       />
       <SidebarInset className="min-h-screen overflow-x-hidden">
         <SidebarTrigger className="fixed left-control top-control z-40 md:hidden" />

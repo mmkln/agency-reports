@@ -45,7 +45,7 @@ export function ReportModal({
             <DialogHeader>
               <DialogTitle className="text-heading text-text-primary">{title}</DialogTitle>
               <DialogDescription>
-                Write the client-facing narrative for a reporting period. Draft and ready reports stay hidden.
+                Write the portal-ready narrative for a reporting period. Draft and ready reports stay hidden.
               </DialogDescription>
             </DialogHeader>
           </OverlayHeader>

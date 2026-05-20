@@ -242,7 +242,7 @@ export function useAdminOverviewEditorWorkflow({ clientId, runtime }) {
         setIsDirty(false)
         setSaveState('Published successfully')
         setIsPublishConfirmationOpen(false)
-        toast.success('Overview published', `${publishedEditor.client.name}'s client portal is up to date.`)
+        toast.success('Overview published', `${publishedEditor.client.name}'s portal is up to date.`)
       })
       .catch((caughtError) => {
         setPageState((currentPageState) => ({
@@ -301,7 +301,7 @@ export function useAdminOverviewEditorWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Restored from published')
-        toast.success('Published overview restored', 'The draft has been reset to the current client-facing version.')
+        toast.success('Published overview restored', 'The draft has been reset to the current portal version.')
       })
       .catch((caughtError) => {
         setPageState((currentPageState) => ({

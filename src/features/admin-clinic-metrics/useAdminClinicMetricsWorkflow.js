@@ -259,7 +259,7 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Clinic metric published', `${page.client.name}'s metric record is now client-visible.`)
+        toast.success('Clinic metric published', `${page.client.name}'s metric record is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({

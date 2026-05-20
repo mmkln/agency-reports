@@ -71,6 +71,7 @@ import { TeamTasksPage } from '../../pages/team/tasks/TeamTasksPage'
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 import { ClinicDailyOpsPage } from '../../pages/clinic/daily-ops/ClinicDailyOpsPage'
 import { TeamClinicOperatorPage } from '../../pages/team/clinic-operator/TeamClinicOperatorPage'
+import { AccountSettingsPage } from '../../pages/account/settings/AccountSettingsPage'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
 
@@ -154,6 +155,7 @@ export const AdminClinicReportingPageRoute = withPageProps(AdminClinicReportingP
 export const AdminClinicReputationPageRoute = withPageProps(AdminClinicReputationPage, undefined)
 export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)
 export const AdminTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)
+export const AccountSettingsPageRoute = withPageProps(AccountSettingsPage, undefined)
 export const ClinicDailyOpsPageRoute = withPageProps(ClinicDailyOpsPage, undefined)
 export const TeamClinicOperatorPageRoute = withPageProps(TeamClinicOperatorPage, undefined)
 export const TeamTasksPageRoute = withPageProps(TeamTasksPage, TeamTasksPageHeader)

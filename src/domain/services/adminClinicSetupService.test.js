@@ -279,7 +279,7 @@ describe('adminClinicSetupService', () => {
         clientId: IDS.CLIENT_A,
         role: USER_ROLES.CLIENT_USER,
       },
-    })).toThrow('Only agency admins can manage clinic setup.')
+    })).toThrow('Only admins can manage clinic setup.')
   })
 
   it('rejects patient-level fields in clinic setup records', () => {

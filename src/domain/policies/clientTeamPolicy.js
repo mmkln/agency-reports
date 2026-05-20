@@ -1,4 +1,4 @@
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import { CLIENT_MEMBERSHIP_ROLES, isActiveClientMembership } from '../../entities/client-membership'
 import { USER_ROLES } from '../../entities/profile'
 
 function findClientMembership({ clientId, repositories, viewer }) {
@@ -8,6 +8,7 @@ function findClientMembership({ clientId, repositories, viewer }) {
 
   return repositories.clientMemberships
     .listByClientId(clientId)
+    .filter(isActiveClientMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
 }
 

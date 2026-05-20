@@ -61,7 +61,7 @@ export function DashboardLinksTable({
           <TableHeader>
             <TableRow>
               <TableHead>Dashboard</TableHead>
-              <TableHead>Client</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Provider</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Visibility</TableHead>
@@ -103,7 +103,7 @@ export function DashboardLinksTable({
                   <TableCell>
                     <StatusBadge
                       icon={isClientVisible ? 'user' : 'lock'}
-                      label={isClientVisible ? 'Client visible' : 'Internal'}
+                      label={isClientVisible ? 'Visible in portal' : 'Internal'}
                       tone={isClientVisible ? 'blue' : 'neutral'}
                     />
                   </TableCell>
@@ -175,7 +175,7 @@ export function DashboardLinksTable({
         confirmLabel="Delete dashboard"
         description={
           dashboardLinkPendingDelete
-            ? `This removes "${dashboardLinkPendingDelete.name}" from local demo data. Client users will no longer see this dashboard.`
+            ? `This removes "${dashboardLinkPendingDelete.name}" from local demo data. Portal users will no longer see this dashboard.`
             : ''
         }
         onConfirm={confirmDeleteDashboardLink}

@@ -6,7 +6,7 @@ import {
   ClientSettingsWorkspace,
 } from '../../../widgets/client-settings'
 
-export function ClientSettingsPage({ routeParams = {}, runtime }) {
+export function ClientSettingsPage({ onAuthChange, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:client-settings:${clientId}`,
@@ -30,5 +30,12 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
     return <AccessDeniedState />
   }
 
-  return <ClientSettingsWorkspace page={page} routeParams={routeParams} runtime={runtime} />
+  return (
+    <ClientSettingsWorkspace
+      onAuthChange={onAuthChange}
+      page={page}
+      routeParams={routeParams}
+      runtime={runtime}
+    />
+  )
 }

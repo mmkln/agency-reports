@@ -67,6 +67,13 @@ export function AccountMenu({ activeRole, hasUnsavedChanges, onAuthChange, viewe
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onSelect={() => navigate('/account/settings')}
+          >
+            Account settings
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <ThemeModeControl />
           <DropdownMenuSeparator />
           <DropdownMenuItem

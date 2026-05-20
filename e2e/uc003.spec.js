@@ -82,7 +82,7 @@ test('agency admin can publish a monthly report and client can read it in the ar
   await page.getByLabel('Wins').fill(wins)
   await page.getByLabel('Problems / blockers').fill(problems)
   await page.getByLabel('Next actions').fill(nextActions)
-  await page.getByLabel('Needed from client').fill(needed)
+  await page.getByLabel('Needed from account').fill(needed)
   await page.getByLabel('Dashboard URL').fill('https://example.com/report-dashboard')
   await page.getByLabel('PDF / full report URL').fill('https://example.com/report.pdf')
   await page.getByRole('button', { name: 'Create report' }).click()
@@ -171,7 +171,7 @@ test('client report archive hides draft reports', async ({ page }) => {
   )
   await expect(page).toHaveURL(/\/admin\/client-report-preview/)
   await expect(page.getByText(reportTitle).first()).toBeVisible()
-  await expect(page.getByText('Preview only. This report is not visible to the client.')).toBeVisible()
+  await expect(page.getByText('Preview only. This report is not visible in the portal.')).toBeVisible()
   await expect(page.locator('#selected-report').getByText('Draft').first()).toBeVisible()
 
   await signInAsClient(page)

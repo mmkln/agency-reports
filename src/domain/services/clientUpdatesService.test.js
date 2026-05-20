@@ -266,7 +266,7 @@ describe('getClientUpdatesPage', () => {
       clientId: IDS.CLIENT_A,
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage client updates.')
+    })).toThrow('Only admins can manage portal updates.')
 
     expect(() => createClientUpdate({
       idGenerator: () => IDS.UPDATE,
@@ -276,6 +276,6 @@ describe('getClientUpdatesPage', () => {
       },
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage client updates.')
+    })).toThrow('Only admins can manage portal updates.')
   })
 })

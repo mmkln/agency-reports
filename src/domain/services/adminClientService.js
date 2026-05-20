@@ -10,7 +10,7 @@ const VALID_CLIENT_TYPES = new Set(Object.values(CLIENT_TYPES))
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage clients.')
+    throw new Error('Only admins can manage accounts.')
   }
 }
 
@@ -83,7 +83,7 @@ function assertClientType(type) {
   const normalizedType = type || CLIENT_TYPES.GENERIC
 
   if (!VALID_CLIENT_TYPES.has(normalizedType)) {
-    throw new Error('Client type is invalid.')
+    throw new Error('Account type is invalid.')
   }
 
   return normalizedType
@@ -143,6 +143,24 @@ export function listAdminClients({ repositories, viewer }) {
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
+export function listAgencyWorkspaceClients({ repositories, viewer }) {
+  if (![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role) || !viewer.agencyId) {
+    return []
+  }
+
+  const assignedClientIds = viewer.role === USER_ROLES.AGENCY_TEAM
+    ? new Set(viewer.clientIds ?? [])
+    : null
+
+  return repositories.clients
+    .list()
+    .filter((client) => (
+      client.agency_id === viewer.agencyId
+      && (!assignedClientIds || assignedClientIds.has(client.id))
+    ))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export function listAdminClientPendingInvitations({ repositories, viewer }) {
   const clients = listAdminClients({ repositories, viewer })
   const clientIds = new Set(clients.map((client) => client.id))
@@ -170,7 +188,7 @@ export function createAdminClient({
     throw new Error('idGenerator is required.')
   }
 
-  const name = requireText(input.name, 'Client name')
+  const name = requireText(input.name, 'Account name')
   const primaryContactEmail = assertEmail(input.primaryContactEmail, 'Primary contact email')
   const primaryContactName = requireText(input.primaryContactName, 'Primary contact name')
   const portalSlug = normalizePortalSlug(input.portalSlug || name)
@@ -233,7 +251,7 @@ export function updateAdminClient({
     throw new Error('Client was not found.')
   }
 
-  const name = requireText(input.name, 'Client name')
+  const name = requireText(input.name, 'Account name')
   const primaryContactEmail = assertEmail(input.primaryContactEmail, 'Primary contact email')
   const primaryContactName = requireText(input.primaryContactName, 'Primary contact name')
   const portalSlug = normalizePortalSlug(input.portalSlug || name)

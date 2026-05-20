@@ -26,7 +26,6 @@ import { AccountMenu } from './AccountMenu'
 import {
   roleMeta,
 } from './appSidebarStyles'
-import { NotificationsMenu } from './NotificationsMenu'
 import { SidebarNavItem } from './SidebarNavItem'
 import { SidebarSearch } from './SidebarSearch'
 
@@ -112,8 +111,8 @@ function SidebarSettingsItem({ isActive, route }) {
   )
 }
 
-function SidebarNavGroup({ activeRoute, group, isExpanded, onExpandedChange }) {
-  const isActive = group.children.some((route) => route.id === activeRoute.id)
+function SidebarNavGroup({ activeNavigationId, group, isExpanded, onExpandedChange }) {
+  const isActive = group.children.some((route) => route.id === activeNavigationId)
   const isOpen = isActive || isExpanded
 
   return (
@@ -141,7 +140,7 @@ function SidebarNavGroup({ activeRoute, group, isExpanded, onExpandedChange }) {
           <SidebarMenuSub>
             {group.children.map((route) => {
               const label = route.navLabel ?? route.label
-              const childActive = route.id === activeRoute.id
+              const childActive = route.id === activeNavigationId
 
               return (
                 <SidebarMenuSubItem key={route.id}>
@@ -166,22 +165,33 @@ function SidebarNavGroup({ activeRoute, group, isExpanded, onExpandedChange }) {
 
 export function AppSidebar({
   activeRoute,
+  activeNavigationId,
   hasUnsavedChanges = false,
+  navigationItems,
   onAuthChange,
   runtime,
   routes,
+  workspaceSwitcher,
 }) {
   const viewer = runtime.viewer
   const activeRole = roleMeta[viewer.role] ?? {
     label: viewer.role,
     searchPlaceholder: 'Search...',
   }
-  const settingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
+  const workspaceSettingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
+  const accountSettingsRoute = routes.find((route) => route.id === 'account-settings') ?? null
+  const settingsRoute = workspaceSettingsRoute ?? accountSettingsRoute
   const primaryRoutes = useMemo(
-    () => routes.filter((route) => route.id !== 'client-settings'),
+    () => routes.filter((route) => (
+      route.showInNav !== false
+      && route.id !== 'client-settings'
+      && route.id !== 'account-settings'
+    )),
     [routes],
   )
-  const navItems = useMemo(() => createSidebarNavItems(primaryRoutes), [primaryRoutes])
+  const routeNavItems = useMemo(() => createSidebarNavItems(primaryRoutes), [primaryRoutes])
+  const navItems = navigationItems ?? routeNavItems
+  const resolvedActiveNavigationId = activeNavigationId ?? activeRoute.id
   const [expandedGroups, setExpandedGroups] = useState(() => new Set())
 
   function setGroupExpanded(groupId, isExpanded) {
@@ -217,6 +227,14 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
+        {workspaceSwitcher ? (
+          <SidebarGroup>
+            <SidebarMenu>
+              {workspaceSwitcher}
+            </SidebarMenu>
+          </SidebarGroup>
+        ) : null}
+
         <SidebarGroup>
           <SidebarMenu>
             <SidebarSearch placeholder={activeRole.searchPlaceholder} />
@@ -229,7 +247,7 @@ export function AppSidebar({
               if (item.type === 'group') {
                 return (
                   <SidebarNavGroup
-                    activeRoute={activeRoute}
+                    activeNavigationId={resolvedActiveNavigationId}
                     group={item}
                     isExpanded={expandedGroups.has(item.id)}
                     key={item.id}
@@ -238,11 +256,13 @@ export function AppSidebar({
                 )
               }
 
+              const route = item.route ?? item
+
               return (
                 <SidebarNavItem
-                  isActive={item.route.id === activeRoute.id}
-                  key={item.route.id}
-                  route={item.route}
+                  isActive={route.id === resolvedActiveNavigationId}
+                  key={route.id}
+                  route={route}
                 />
               )
             })}
@@ -252,7 +272,6 @@ export function AppSidebar({
 
       <SidebarFooter>
         <SidebarMenu>
-          <NotificationsMenu />
           <SidebarSettingsItem
             isActive={activeRoute.id === settingsRoute?.id}
             route={settingsRoute}

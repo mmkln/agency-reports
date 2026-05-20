@@ -18,27 +18,3 @@ export const roleMeta = {
     searchPlaceholder: 'Search portal...',
   },
 }
-
-export const demoNotifications = [
-  {
-    body: 'Green Dental Clinic approved the creative batch and left a note.',
-    id: 'notification-creative-approved',
-    isUnread: true,
-    time: '4m ago',
-    title: 'Creative batch approved',
-  },
-  {
-    body: 'GA4 conversion tracking still needs a final event mapping check.',
-    id: 'notification-ga4-check',
-    isUnread: true,
-    time: '22m ago',
-    title: 'Tracking task needs review',
-  },
-  {
-    body: 'April 2026 report is ready for the workspace preview.',
-    id: 'notification-report-ready',
-    isUnread: false,
-    time: 'Yesterday',
-    title: 'Report draft ready',
-  },
-]

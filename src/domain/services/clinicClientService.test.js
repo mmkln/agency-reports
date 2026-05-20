@@ -813,7 +813,7 @@ describe('clinicClientService', () => {
     expect(adminPreviewPage.source).toBe('draft')
     expect(adminPreviewPage.dataTrust).toMatchObject({
       recordCount: 2,
-      visibilityLabel: 'Draft preview for agency admins',
+      visibilityLabel: 'Draft admin preview',
     })
     expect(adminPreviewPage.snapshots).toHaveLength(1)
   })

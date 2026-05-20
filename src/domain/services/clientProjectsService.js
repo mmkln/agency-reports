@@ -396,7 +396,7 @@ export function getClientProjectsPage({
   const projects = [...workItemsByProjectId.entries()]
     .map(([resolvedProjectId, workItems]) => {
       const project = projectsById.get(resolvedProjectId) ?? {
-        description: 'General client-visible work.',
+        description: 'General published work.',
         id: resolvedProjectId,
         name: 'General Work',
       }

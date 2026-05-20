@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import { CLIENT_REQUEST_STATUSES, CLIENT_REQUEST_TYPES } from '../../entities/client-request'
 import { USER_ROLES } from '../../entities/profile'
-import { getClientSettingsPage, updateClientProfileSettings } from './clientSettingsService'
+import { getClientSettingsPage } from './clientSettingsService'
 
 const IDS = Object.freeze({
   CLIENT_A: '11111111-1111-4111-8111-111111111111',
@@ -54,6 +55,7 @@ function createRepositories() {
         user_id: IDS.USER_B,
       },
     ]),
+    clientRequests: createEntityRepository([]),
     clients: createEntityRepository([
       {
         agency_id: 'agency-a',
@@ -120,7 +122,7 @@ function createClientViewer(clientId = IDS.CLIENT_A) {
 }
 
 describe('getClientSettingsPage', () => {
-  it('returns profile, company, and member settings for the current client', () => {
+  it('returns company, access, and member settings for the current client', () => {
     const page = getClientSettingsPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
@@ -128,11 +130,7 @@ describe('getClientSettingsPage', () => {
     })
 
     expect(page.status).toBe('ready')
-    expect(page.profile).toMatchObject({
-      email: 'owner@example.com',
-      name: 'Owner User',
-      roleLabel: 'Client admin',
-    })
+    expect(page.profile).toBeUndefined()
     expect(page.currentMembership).toMatchObject({
       role: CLIENT_MEMBERSHIP_ROLES.OWNER,
       roleLabel: 'Owner',
@@ -145,8 +143,8 @@ describe('getClientSettingsPage', () => {
       'owner@example.com',
       'viewer@example.com',
     ])
-    expect(page.sections.notifications.isAvailable).toBe(false)
-    expect(page.sections.security.isAvailable).toBe(false)
+    expect(page.sections.notifications).toBeUndefined()
+    expect(page.sections.security).toBeUndefined()
     expect(page.sections.team).toMatchObject({
       allowedInviteRoles: [CLIENT_MEMBERSHIP_ROLES.VIEWER],
       canManage: true,
@@ -171,6 +169,35 @@ describe('getClientSettingsPage', () => {
     expect(page.sections.team.canManage).toBe(false)
   })
 
+  it('exposes an open business deletion request in access settings', () => {
+    const repositories = createRepositories()
+
+    repositories.clientRequests.upsert({
+      client_id: IDS.CLIENT_A,
+      created_at: '2026-05-20T12:00:00.000Z',
+      description: 'Please delete this business workspace.',
+      id: '77777777-7777-4777-8777-777777777777',
+      request_type: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      status: CLIENT_REQUEST_STATUSES.SUBMITTED,
+      title: 'Business deletion request - Client A',
+    })
+
+    const page = getClientSettingsPage({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(page.sections.access).toMatchObject({
+      businessDeletionRequest: {
+        id: '77777777-7777-4777-8777-777777777777',
+        status: CLIENT_REQUEST_STATUSES.SUBMITTED,
+        title: 'Business deletion request - Client A',
+      },
+      canRequestBusinessDeletion: true,
+    })
+  })
+
   it('denies cross-client access', () => {
     const page = getClientSettingsPage({
       clientId: IDS.CLIENT_B,
@@ -184,96 +211,4 @@ describe('getClientSettingsPage', () => {
     })
   })
 
-  it('updates only the authenticated client viewer profile name and email', () => {
-    const repositories = createRepositories()
-    const updatedProfile = updateClientProfileSettings({
-      clientId: IDS.CLIENT_A,
-      input: {
-        email: 'OWNER.UPDATED@example.com',
-        name: 'Owner Updated',
-      },
-      now: () => '2026-05-20T10:00:00.000Z',
-      repositories,
-      viewer: createClientViewer(),
-    })
-
-    expect(updatedProfile).toMatchObject({
-      email: 'owner.updated@example.com',
-      name: 'Owner Updated',
-      userId: IDS.USER_A,
-    })
-    expect(repositories.profiles.findByUserId(IDS.USER_A)).toMatchObject({
-      email: 'owner.updated@example.com',
-      name: 'Owner Updated',
-      updated_at: '2026-05-20T10:00:00.000Z',
-    })
-    expect(repositories.profiles.findByUserId(IDS.USER_B)).toMatchObject({
-      email: 'viewer@example.com',
-      name: 'Viewer User',
-    })
-  })
-
-  it('lets client team members update their own profile', () => {
-    const repositories = createRepositories()
-    const updatedProfile = updateClientProfileSettings({
-      clientId: IDS.CLIENT_A,
-      input: {
-        email: 'viewer.updated@example.com',
-        name: 'Viewer Updated',
-      },
-      repositories,
-      viewer: {
-        clientId: IDS.CLIENT_A,
-        clientIds: [IDS.CLIENT_A],
-        email: 'viewer@example.com',
-        name: 'Viewer User',
-        role: USER_ROLES.CLIENT_TEAM,
-        userId: IDS.USER_B,
-      },
-    })
-
-    expect(updatedProfile).toMatchObject({
-      email: 'viewer.updated@example.com',
-      name: 'Viewer Updated',
-      userId: IDS.USER_B,
-    })
-    expect(repositories.profiles.findByUserId(IDS.USER_A)).toMatchObject({
-      email: 'owner@example.com',
-      name: 'Owner User',
-    })
-  })
-
-  it('blocks profile updates for another client workspace', () => {
-    expect(() => updateClientProfileSettings({
-      clientId: IDS.CLIENT_B,
-      input: {
-        email: 'owner.updated@example.com',
-        name: 'Owner Updated',
-      },
-      repositories: createRepositories(),
-      viewer: createClientViewer(IDS.CLIENT_A),
-    })).toThrow('You do not have permission to view this client portal.')
-  })
-
-  it('rejects invalid and duplicate profile emails', () => {
-    expect(() => updateClientProfileSettings({
-      clientId: IDS.CLIENT_A,
-      input: {
-        email: 'not-an-email',
-        name: 'Owner Updated',
-      },
-      repositories: createRepositories(),
-      viewer: createClientViewer(),
-    })).toThrow('Email must be a valid email address.')
-
-    expect(() => updateClientProfileSettings({
-      clientId: IDS.CLIENT_A,
-      input: {
-        email: 'viewer@example.com',
-        name: 'Owner Updated',
-      },
-      repositories: createRepositories(),
-      viewer: createClientViewer(),
-    })).toThrow('Email is already used by another account.')
-  })
 })

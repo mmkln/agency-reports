@@ -1,4 +1,5 @@
 export const CLIENT_REQUEST_TYPES = Object.freeze({
+  BUSINESS_DELETION: 'business_deletion',
   CHANGE_REQUEST: 'change_request',
   FILE_SHARE: 'file_share',
   NEW_WORK: 'new_work',
@@ -19,6 +20,11 @@ export const CLIENT_REQUEST_STATUSES = Object.freeze({
 })
 
 export const CLIENT_REQUEST_TYPE_META = Object.freeze({
+  [CLIENT_REQUEST_TYPES.BUSINESS_DELETION]: {
+    icon: 'warning',
+    label: 'Business deletion',
+    tone: 'rose',
+  },
   [CLIENT_REQUEST_TYPES.NEW_WORK]: {
     icon: 'plus',
     label: 'New work',
@@ -59,7 +65,7 @@ export const CLIENT_REQUEST_STATUS_META = Object.freeze({
   },
   [CLIENT_REQUEST_STATUSES.WAITING_ON_AGENCY]: {
     icon: 'clock',
-    label: 'Waiting on agency',
+    label: 'Waiting on team',
     tone: 'amber',
   },
   [CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT]: {

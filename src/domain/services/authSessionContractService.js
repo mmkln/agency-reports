@@ -75,7 +75,7 @@ export function createServerAuthSessionContract() {
         }]),
     ),
     invariants: [
-      'Client users derive portal access from active client_memberships, never profile.client_id fallback.',
+      'Portal users derive access from active client_memberships, never profile.client_id fallback.',
       'Route clientId is a requested resource identifier, not proof of access.',
       'Expired sessions are denied before profile or membership data reaches read models.',
       'Agency team users are limited to assigned client memberships unless server policy explicitly grants broader agency scope.',

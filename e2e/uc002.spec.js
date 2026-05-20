@@ -75,7 +75,7 @@ test('agency admin can add a dashboard link in a modal and preview it', async ({
   const dashboardRow = page.getByRole('row').filter({ hasText: dashboardName })
   await expect(dashboardRow).toBeVisible()
   await expect(dashboardRow).toContainText('Active')
-  await expect(dashboardRow).toContainText('Client visible')
+  await expect(dashboardRow).toContainText('Visible in portal')
 
   await dashboardRow.getByLabel('Dashboard actions').click()
   await page.getByRole('menuitem', { name: 'Preview dashboard' }).click()
@@ -104,8 +104,8 @@ test('clinic client legacy dashboard route opens the Clinic Results source dashb
     { waitUntil: 'domcontentloaded' },
   )
 
-  await expect(page.getByRole('heading', { name: 'Access denied' }).nth(1)).toBeVisible()
-  await expect(page.getByText('You do not have permission to view this client portal.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Access denied' })).toBeVisible()
+  await expect(page.getByText('Your current role or client membership does not allow access to this workspace.')).toBeVisible()
 })
 
 test('unavailable dashboard shows a controlled client fallback', async ({ page }) => {

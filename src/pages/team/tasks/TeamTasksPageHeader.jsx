@@ -5,8 +5,10 @@ import {
   normalizeTeamTaskFilters,
 } from './teamTaskFilterState'
 import { USER_ROLES } from '../../../entities/profile'
-import { listAdminClients } from '../../../domain/services/adminClientService'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  useAdminRouteClient,
+} from '../../../features/admin-client-workspace'
 import { Button, PageHeader } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
 import { Link } from 'react-router-dom'
@@ -15,21 +17,17 @@ function getTaskWorkspacePath(viewer) {
   return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
 }
 
-function getRouteClient(clientId, runtime) {
-  if (!clientId || clientId === 'all' || runtime.viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
-    return null
-  }
-
-  return listAdminClients({
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }).find((client) => client.id === clientId) ?? null
-}
-
 export function TeamTasksPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const filters = normalizeTeamTaskFilters(routeParams)
   const basePath = activeRoute?.path ?? getTaskWorkspacePath(runtime.viewer)
-  const client = getRouteClient(filters.clientId, runtime)
+  const routeClientId = filters.clientId && filters.clientId !== 'all' && runtime.viewer?.role === USER_ROLES.AGENCY_ADMIN
+    ? filters.clientId
+    : null
+  const clientResource = useAdminRouteClient({
+    clientId: routeClientId,
+    runtime,
+  })
+  const client = clientResource.data
   const primaryAction = { children: 'New Task', to: getTaskCreatePath(filters, basePath) }
   const actions = (
     <>

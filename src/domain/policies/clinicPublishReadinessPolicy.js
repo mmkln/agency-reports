@@ -74,7 +74,7 @@ function getNarrativeWarnings(record) {
   const warnings = []
 
   if (!hasText(record.summary)) {
-    warnings.push('Add a client-safe summary before publishing when possible.')
+    warnings.push('Add a portal-ready summary before publishing when possible.')
   }
 
   if (!hasText(record.data_source)) {

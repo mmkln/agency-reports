@@ -37,6 +37,17 @@ export const DENTAL_GROWTH_REVIEW_PUBLISH_STATES = Object.freeze({
   PUBLISHED: 'published',
 })
 
+export const DENTAL_GROWTH_REVIEW_SOURCE_TYPES = Object.freeze({
+  API_SYNC: 'api_sync',
+  JSON_IMPORT: 'json_import',
+  WEBHOOK: 'webhook',
+})
+
+export const DENTAL_GROWTH_REVIEW_SOURCE_VALIDATION_STATES = Object.freeze({
+  INVALID: 'invalid',
+  VALID: 'valid',
+})
+
 export const DENTAL_GROWTH_REVIEW_VIEW_PRESETS = Object.freeze({
   EXECUTIVE: 'executive',
   OPERATOR: 'operator',
@@ -308,6 +319,62 @@ function normalizeContent(value = {}) {
   }
 }
 
+export function normalizeDentalGrowthReviewSourcePayload(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return {
+    appointments: normalizeArray(source.appointments).map((item) => (isPlainObject(item) ? item : {})),
+    assumptions: isPlainObject(source.assumptions) ? source.assumptions : {},
+    call_logs: normalizeArray(source.call_logs).map((item) => (isPlainObject(item) ? item : {})),
+    capacity_slots: normalizeArray(source.capacity_slots).map((item) => (isPlainObject(item) ? item : {})),
+    conversations: normalizeArray(source.conversations).map((item) => (isPlainObject(item) ? item : {})),
+    deliverability: isPlainObject(source.deliverability) ? source.deliverability : {},
+    email_events: normalizeArray(source.email_events).map((item) => (isPlainObject(item) ? item : {})),
+    leads: normalizeArray(source.leads).map((item) => (isPlainObject(item) ? item : {})),
+    reactivation_tracks: normalizeArray(source.reactivation_tracks).map((item) => (isPlainObject(item) ? item : {})),
+    referrals: normalizeArray(source.referrals).map((item) => (isPlainObject(item) ? item : {})),
+    reviews: normalizeArray(source.reviews).map((item) => (isPlainObject(item) ? item : {})),
+    reviews_referrals: isPlainObject(source.reviews_referrals) ? source.reviews_referrals : {},
+    sms_events: normalizeArray(source.sms_events).map((item) => (isPlainObject(item) ? item : {})),
+    source_freshness: normalizeArray(source.source_freshness).map((item) => (isPlainObject(item) ? item : {})),
+    spend: normalizeArray(source.spend).map((item) => (isPlainObject(item) ? item : {})),
+    track_touches: normalizeArray(source.track_touches).map((item) => (isPlainObject(item) ? item : {})),
+    workflow_events: normalizeArray(source.workflow_events).map((item) => (isPlainObject(item) ? item : {})),
+  }
+}
+
+export function normalizeDentalGrowthReviewSourceBatch(record = {}) {
+  const source = isPlainObject(record) ? record : {}
+
+  return {
+    client_id: normalizeText(source.client_id),
+    generated_period_id: normalizeText(source.generated_period_id),
+    id: normalizeText(source.id),
+    imported_at: normalizeText(source.imported_at),
+    imported_by: normalizeText(source.imported_by),
+    payload: normalizeDentalGrowthReviewSourcePayload(source.payload),
+    period_end: normalizeText(source.period_end),
+    period_start: normalizeText(source.period_start),
+    period_type: normalizeEnum(
+      source.period_type,
+      DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
+      DENTAL_GROWTH_REVIEW_PERIOD_TYPES.WEEKLY,
+    ),
+    source_metadata: isPlainObject(source.source_metadata) ? source.source_metadata : {},
+    source_type: normalizeEnum(
+      source.source_type,
+      DENTAL_GROWTH_REVIEW_SOURCE_TYPES,
+      DENTAL_GROWTH_REVIEW_SOURCE_TYPES.JSON_IMPORT,
+    ),
+    validation_errors: normalizeArray(source.validation_errors).map(normalizeText).filter(Boolean),
+    validation_state: normalizeEnum(
+      source.validation_state,
+      DENTAL_GROWTH_REVIEW_SOURCE_VALIDATION_STATES,
+      DENTAL_GROWTH_REVIEW_SOURCE_VALIDATION_STATES.VALID,
+    ),
+  }
+}
+
 export function assertNoDentalGrowthReviewPatientFields(record, context = 'Dental growth review') {
   function visit(value, path) {
     if (Array.isArray(value)) {
@@ -331,10 +398,33 @@ export function assertNoDentalGrowthReviewPatientFields(record, context = 'Denta
   visit(record, '')
 }
 
+export function validateDentalGrowthReviewSourceBatch(record) {
+  assertNoDentalGrowthReviewPatientFields(record, 'Dental growth review source batch')
+  const batch = normalizeDentalGrowthReviewSourceBatch(record)
+  assertNoDentalGrowthReviewPatientFields(batch, 'Dental growth review source batch')
+
+  if (!batch.client_id) {
+    throw new Error('Dental growth review source batch requires a client_id.')
+  }
+
+  if (!batch.period_start || !batch.period_end) {
+    throw new Error('Dental growth review source batch requires period_start and period_end.')
+  }
+
+  if (batch.validation_state === DENTAL_GROWTH_REVIEW_SOURCE_VALIDATION_STATES.INVALID) {
+    throw new Error(batch.validation_errors[0] || 'Dental growth review source batch is invalid.')
+  }
+
+  return batch
+}
+
 export function normalizeDentalGrowthReviewPeriod(record = {}) {
   const source = isPlainObject(record) ? record : {}
 
   return {
+    calculated_at: normalizeText(source.calculated_at),
+    calculation_source_batch_id: normalizeText(source.calculation_source_batch_id),
+    calculation_version: normalizeText(source.calculation_version),
     client_id: normalizeText(source.client_id),
     content: normalizeContent(source.content),
     created_at: normalizeText(source.created_at),

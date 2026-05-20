@@ -81,7 +81,7 @@ test('UC-005 request lifecycle stays client-safe from create to resolve', async 
   await expect(page.getByText(internalNote)).toHaveCount(0)
   await clientRequestCard.getByRole('button', { name: 'View details' }).click()
   const actionDialog = page.getByRole('dialog', { name: title })
-  await actionDialog.getByPlaceholder('Write a short response for the agency...').fill('Approved for launch.')
+  await actionDialog.getByLabel('Response').fill('Approved for launch.')
   await actionDialog.getByRole('button', { name: 'Send response' }).click()
   await page.getByRole('button', { name: 'Answered' }).click()
   await expect(page.getByText('Approved for launch.')).toBeVisible()
@@ -119,7 +119,7 @@ test('client-submitted request clarification creates linked Action Needed item',
   await expect(triageDialog).toBeVisible()
   await triageDialog.getByRole('combobox', { name: 'Status' }).click()
   await page.getByRole('option', { name: 'Waiting on you' }).click()
-  await triageDialog.getByLabel('Agency response').fill(agencyResponse)
+  await triageDialog.getByLabel('Team response').fill(agencyResponse)
   await triageDialog.getByRole('button', { name: 'Save triage' }).click()
   await expect(page.getByText(agencyResponse)).toBeVisible()
 

@@ -130,7 +130,7 @@ export function AdminClientFilesLinksWorkspace({
         <Panel>
           <PanelBody>
             <EmptyState
-              description="Published deliverables, files, and shared links for the client portal will appear here."
+              description="Published deliverables, files, and shared links for the portal will appear here."
               iconName="fileText"
               title="No files or links"
             />

@@ -302,7 +302,7 @@ describe('clientFilesLinksService', () => {
       clientId: IDS.CLIENT_A,
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage files and links.')
+    })).toThrow('Only admins can manage files and links.')
 
     expect(() => createClientFileLink({
       idGenerator: () => IDS.FILE_LINK,
@@ -313,6 +313,6 @@ describe('clientFilesLinksService', () => {
       },
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage files and links.')
+    })).toThrow('Only admins can manage files and links.')
   })
 })

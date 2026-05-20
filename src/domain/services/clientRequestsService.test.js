@@ -4,12 +4,14 @@ import {
   CLIENT_REQUEST_STATUSES,
   CLIENT_REQUEST_TYPES,
 } from '../../entities/client-request'
+import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
 import { USER_ROLES } from '../../entities/profile'
 import {
+  createBusinessDeletionRequest,
   createClientRequest,
   getClientRequestsPage,
   listAdminClientRequestsWorkspace,
@@ -17,6 +19,7 @@ import {
 } from './clientRequestsService'
 
 const IDS = Object.freeze({
+  ACTIVITY: '99999999-9999-4999-8999-999999999999',
   CLIENT_A: '11111111-1111-4111-8111-111111111111',
   CLIENT_B: '22222222-2222-4222-8222-222222222222',
   NEEDED_ACTION: '77777777-7777-4777-8777-777777777777',
@@ -84,6 +87,15 @@ function createRepositories(overrides = {}) {
         request_type: CLIENT_REQUEST_TYPES.QUESTION,
         status: CLIENT_REQUEST_STATUSES.SUBMITTED,
         title: 'Other client request',
+      },
+    ]),
+    activityEvents: createEntityRepository([]),
+    clientMemberships: createEntityRepository([
+      {
+        client_id: IDS.CLIENT_A,
+        id: '12121212-1212-4121-8121-121212121212',
+        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+        user_id: IDS.USER,
       },
     ]),
     clients: createEntityRepository([
@@ -178,6 +190,91 @@ describe('clientRequestsService', () => {
     })
     expect(repositories.clientRequests.listByClientId(IDS.CLIENT_A)).toHaveLength(1)
     expect(repositories.tasks.list()).toHaveLength(0)
+  })
+
+  it('lets a workspace owner submit a business deletion request for admin review', () => {
+    const repositories = createRepositories({
+      clientRequests: createEntityRepository([]),
+    })
+
+    const request = createBusinessDeletionRequest({
+      activityIdGenerator: () => IDS.ACTIVITY,
+      idGenerator: () => IDS.REQUEST_A,
+      input: {
+        clientId: IDS.CLIENT_A,
+      },
+      now: () => '2026-05-20T12:00:00.000Z',
+      repositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(request).toMatchObject({
+      requestType: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      status: CLIENT_REQUEST_STATUSES.SUBMITTED,
+      title: 'Business deletion request - Client A',
+    })
+    expect(listAdminClientRequestsWorkspace({
+      clientId: IDS.CLIENT_A,
+      repositories,
+      viewer: createAdminViewer(),
+    }).requests).toEqual([
+      expect.objectContaining({
+        clientName: 'Client A',
+        requestType: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      }),
+    ])
+    expect(repositories.activityEvents.findById(IDS.ACTIVITY)).toMatchObject({
+      client_id: IDS.CLIENT_A,
+      event_type: 'client_request_created',
+      metadata: {
+        requestId: IDS.REQUEST_A,
+        type: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      },
+    })
+  })
+
+  it('blocks non-owners and duplicate business deletion requests', () => {
+    const repositories = createRepositories({
+      clientMemberships: createEntityRepository([
+        {
+          client_id: IDS.CLIENT_A,
+          id: '12121212-1212-4121-8121-121212121212',
+          role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+          user_id: IDS.USER,
+        },
+      ]),
+    })
+
+    expect(() => createBusinessDeletionRequest({
+      idGenerator: () => IDS.REQUEST_A,
+      input: {
+        clientId: IDS.CLIENT_A,
+      },
+      repositories,
+      viewer: createClientViewer(),
+    })).toThrow('Only workspace owners can request business deletion.')
+
+    const ownerRepositories = createRepositories({
+      clientRequests: createEntityRepository([]),
+    })
+
+    createBusinessDeletionRequest({
+      idGenerator: () => IDS.REQUEST_A,
+      input: {
+        clientId: IDS.CLIENT_A,
+      },
+      repositories: ownerRepositories,
+      viewer: createClientViewer(),
+    })
+
+    expect(() => createBusinessDeletionRequest({
+      idGenerator: () => IDS.REQUEST_B,
+      input: {
+        clientId: IDS.CLIENT_A,
+      },
+      repositories: ownerRepositories,
+      viewer: createClientViewer(),
+    })).toThrow('A business deletion request is already open.')
   })
 
   it('denies cross-client access and submission', () => {
@@ -342,7 +439,7 @@ describe('clientRequestsService', () => {
     expect(() => listAdminClientRequestsWorkspace({
       repositories,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage client requests.')
+    })).toThrow('Only admins can manage requests.')
 
     expect(() => updateClientRequestTriage({
       input: {
@@ -351,6 +448,6 @@ describe('clientRequestsService', () => {
       repositories,
       requestId: IDS.REQUEST_A,
       viewer: createClientViewer(),
-    })).toThrow('Only agency admins can manage client requests.')
+    })).toThrow('Only admins can manage requests.')
   })
 })

@@ -13,7 +13,7 @@ const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 
 function assertAgencyAdmin(viewer) {
   if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage dashboard links.')
+    throw new Error('Only admins can manage dashboard links.')
   }
 }
 
@@ -71,7 +71,7 @@ function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.clients.findById(clientId)
 
   if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+    throw new Error('Account was not found.')
   }
 
   return client

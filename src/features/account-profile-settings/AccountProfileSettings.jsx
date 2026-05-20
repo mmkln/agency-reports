@@ -9,7 +9,7 @@ import {
   PanelHeader,
 } from '@/shared/ui'
 
-import { updateClientProfileSettings } from '../../domain/services/clientSettingsService'
+import { updateOwnProfileSettings } from '../../domain/services/accountProfileService'
 import { useToast } from '../../shared/notifications'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -33,7 +33,15 @@ function createProfileForm(profile) {
   }
 }
 
-export function ClientProfileSettings({ clientId, membership, profile, runtime }) {
+export function AccountProfileSettings({
+  onAuthChange,
+  profile,
+  roleLabel,
+  roleLabelTitle = 'Account role',
+  runtime,
+  subtitle = 'Your account identity and sign-in email.',
+  title = 'Profile',
+}) {
   const toast = useToast()
   const [savedProfile, setSavedProfile] = useState(profile)
   const [form, setForm] = useState(() => createProfileForm(profile))
@@ -63,6 +71,7 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
 
   function updateForm(fieldName, value) {
     setError('')
+    setStatus('idle')
     setForm((currentForm) => ({
       ...currentForm,
       [fieldName]: value,
@@ -71,6 +80,7 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
 
   function resetForm() {
     setError('')
+    setStatus('idle')
     setForm(createProfileForm(savedProfile))
   }
 
@@ -83,8 +93,7 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
 
     setStatus('saving')
 
-    void runtime.dataClient.write((repositories) => updateClientProfileSettings({
-      clientId,
+    void runtime.dataClient.write((repositories) => updateOwnProfileSettings({
       input: form,
       repositories,
       viewer: runtime.viewer,
@@ -92,6 +101,7 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
       setSavedProfile(updatedProfile)
       setForm(createProfileForm(updatedProfile))
       setStatus('saved')
+      onAuthChange?.()
       toast.success('Profile updated', 'Your name and email were saved.')
     }).catch((caughtError) => {
       setError(caughtError.message)
@@ -104,8 +114,8 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
     <Panel>
       <PanelHeader
         divided
-        subtitle="Your portal identity and client access role."
-        title="Profile"
+        subtitle={subtitle}
+        title={title}
       />
       <PanelBody>
         <form className="grid gap-component" onSubmit={saveProfile}>
@@ -137,8 +147,8 @@ export function ClientProfileSettings({ clientId, membership, profile, runtime }
           </div>
           <div className="flex flex-wrap items-center justify-between gap-control">
             <div className="flex items-center gap-control">
-              <span className="text-label text-text-secondary">Portal role</span>
-              <Badge tone="blue">{membership?.roleLabel ?? savedProfile.roleLabel}</Badge>
+              <span className="text-label text-text-secondary">{roleLabelTitle}</span>
+              <Badge tone="blue">{roleLabel ?? savedProfile.roleLabel}</Badge>
             </div>
             <div className="flex items-center gap-control">
               {status === 'saved' ? (

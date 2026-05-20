@@ -95,7 +95,7 @@ function TeamTaskDetailsContent({
             <span>
               <span className="inline-flex items-center gap-2 text-ui text-text-primary">
                 <Icon className="text-text-quaternary" name="messageSquare" size={14} />
-                Client-safe update
+                Portal-ready update
               </span>
               <span className="mt-1 block text-label font-normal text-text-muted">Short summary Admin can use on the Client Overview.</span>
             </span>
@@ -114,7 +114,7 @@ function TeamTaskDetailsContent({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex items-center gap-2 text-ui text-text-primary">
                 <Icon className="text-text-quaternary" name="eye" size={14} />
-                Client review state
+                Publication review state
               </span>
               {task.clientWorkItem?.publishStateMeta ? (
                 <StatusBadge meta={task.clientWorkItem.publishStateMeta} />
@@ -129,7 +129,7 @@ function TeamTaskDetailsContent({
                   : 'No published work item exists yet. Sending this creates a review item for Admin.'}
               </p>
               {task.clientWorkItem?.title ? (
-                <p className="text-text-muted">Client title: {task.clientWorkItem.title}</p>
+                <p className="text-text-muted">Portal title: {task.clientWorkItem.title}</p>
               ) : null}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">

@@ -6,6 +6,7 @@ import {
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
   normalizeDentalGrowthReviewPeriod,
+  normalizeDentalGrowthReviewSourceBatch,
   validateDentalGrowthReviewPeriod,
 } from '../../entities/dental-growth-review'
 import { USER_ROLES } from '../../entities/profile'
@@ -121,6 +122,28 @@ function mapZoneState(preset) {
   }))
 }
 
+function getDraftCalculationMeta({ period, repositories, source }) {
+  if (!period || source !== 'draft') {
+    return null
+  }
+
+  const sourceBatch = period.calculation_source_batch_id
+    ? repositories.dentalGrowthReviewSourceBatches?.findById(period.calculation_source_batch_id)
+    : null
+  const normalizedSourceBatch = sourceBatch
+    ? normalizeDentalGrowthReviewSourceBatch(sourceBatch)
+    : null
+
+  return {
+    calculatedAt: period.calculated_at,
+    calculationVersion: period.calculation_version,
+    importedAt: normalizedSourceBatch?.imported_at ?? '',
+    sourceBatchId: period.calculation_source_batch_id,
+    sourceType: normalizedSourceBatch?.source_type ?? '',
+    validationState: normalizedSourceBatch?.validation_state ?? '',
+  }
+}
+
 export function getDentalGrowthReviewDashboardPage({
   clientId,
   periodId,
@@ -161,6 +184,11 @@ export function getDentalGrowthReviewDashboardPage({
   const reviewPeriodOptions = createReviewPeriodOptions(periods)
 
   return {
+    calculationMeta: getDraftCalculationMeta({
+      period: selectedPeriod,
+      repositories,
+      source: normalizedSource,
+    }),
     client: {
       id: client.id,
       name: client.name,
