@@ -67,7 +67,7 @@ export const clientWorkspaceSections = [
         clientTypes: [CLIENT_TYPES.CLINIC],
         id: 'clinic-reporting',
         label: 'Reporting',
-        previewRoute: '/dashboards/dental-growth-review',
+        previewRoute: '/client/growth-review',
         route: '/admin/clinic-reporting',
       },
       {

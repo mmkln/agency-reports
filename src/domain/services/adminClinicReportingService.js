@@ -83,6 +83,11 @@ function sortByImportedDesc(left, right) {
     || String(left.id).localeCompare(String(right.id))
 }
 
+function sortDentalGrowthPeriodsDesc(left, right) {
+  return new Date(right.period_end || 0).getTime() - new Date(left.period_end || 0).getTime()
+    || String(left.label).localeCompare(String(right.label))
+}
+
 function parsePayload(rawJson) {
   if (typeof rawJson !== 'string') {
     return rawJson
@@ -261,6 +266,14 @@ function mapAdminReportingPeriodSummary(period, layer) {
     : mapClinicReportingPeriodSummary(period)
 }
 
+function getPreviousDentalGrowthReviewPeriod({ batch, repositories }) {
+  return (repositories.dentalGrowthReviewPeriods?.listByClientId(batch.client_id) ?? [])
+    .map((record) => normalizeDentalGrowthReviewPeriod(record))
+    .filter((period) => period.period_type === batch.period_type)
+    .filter((period) => new Date(period.period_end).getTime() < new Date(batch.period_end).getTime())
+    .sort(sortDentalGrowthPeriodsDesc)[0] ?? null
+}
+
 export function previewAdminClinicReportingImport({
   clientId,
   idGenerator,
@@ -361,6 +374,7 @@ export function previewAdminDentalGrowthReviewSourceImport({
       batch: sourceBatch,
       idGenerator,
       now,
+      previousPeriod: getPreviousDentalGrowthReviewPeriod({ batch: sourceBatch, repositories }),
       viewer,
     })
 
@@ -984,36 +998,313 @@ function createReputationReferralMetrics({ referrals, reviews, timestamp }) {
   ]
 }
 
-function createGeneratedNarrative({ attended, biggestLeak, bookings }) {
-  const baseItems = [
-    ['generated-win-1', 'win', 'Booking volume calculated', `${bookings.length} appointments were booked from the supplied source batch.`, `${bookings.length} bookings`],
-    ['generated-win-2', 'win', 'Attendance calculated', `${attended.length} appointments were marked attended/completed in the period.`, `${attended.length} attended`],
-    ['generated-win-3', 'win', 'Data trust attached', 'Source freshness and affected metrics were calculated from the source payload.', 'Freshness attached'],
-    ['generated-loss-1', 'loss', 'Biggest funnel leak identified', `${biggestLeak.stage_name} is the biggest underperforming stage versus target.`, `${biggestLeak.conversion_rate}% vs ${biggestLeak.target}% target`],
-    ['generated-loss-2', 'loss', 'Source hygiene needs review', 'Review unnormalized or unknown source values before publishing.', 'Source hygiene check'],
-    ['generated-loss-3', 'loss', 'Revenue projection depends on assumptions', 'Confirm manual assumptions before using projected revenue in the review.', 'Assumption-based revenue'],
-    ['generated-next-1', 'next', 'Write operating narrative', 'Edit the executive narrative so it explains what happened, why, and what changes next.', 'Narrative needed'],
-    ['generated-next-2', 'next', 'Assign leak owner', `Assign an owner to address ${biggestLeak.stage_name}.`, biggestLeak.stage_name],
-    ['generated-next-3', 'next', 'Preview before publish', 'Preview the generated dashboard, then publish explicitly only after review.', 'Draft only'],
+function parseMetricNumber(value) {
+  if (typeof value === 'number') {
+    return value
+  }
+
+  const match = String(value ?? '').replaceAll(',', '').match(/-?\d+(\.\d+)?/)
+  return match ? Number(match[0]) : 0
+}
+
+function findPreviousMetric(previousPeriod, metricId) {
+  return [
+    ...(previousPeriod?.content?.hero_metrics ?? []),
+    ...(previousPeriod?.content?.speed_to_lead ?? []),
+    ...(previousPeriod?.content?.metrics ?? []),
+    ...(previousPeriod?.content?.front_desk_health ?? []),
+    ...(previousPeriod?.content?.operations_chips ?? []),
+    ...(previousPeriod?.content?.reputation_referral ?? []),
+  ].find((metric) => metric.id === metricId)
+}
+
+function findPreviousFunnelStage(previousPeriod, stage) {
+  return (previousPeriod?.content?.funnel ?? [])
+    .find((previousStage) => (previousStage.id && previousStage.id === stage.id) || previousStage.stage_name === stage.stage_name)
+}
+
+function findPreviousChannel(previousPeriod, channel) {
+  return (previousPeriod?.content?.channel_attribution ?? [])
+    .find((previousChannel) => previousChannel.channel === channel.channel)
+}
+
+function createDeltaCandidate({
+  currentValue,
+  id,
+  label,
+  lowerIsBetter = false,
+  previousValue,
+  source,
+  unit = '',
+}) {
+  const delta = currentValue - previousValue
+  const score = lowerIsBetter ? -delta : delta
+  const displayDelta = `${delta >= 0 ? '+' : ''}${Math.round(delta)}${unit}`
+
+  return {
+    body: `${label} moved from ${Math.round(previousValue)}${unit} to ${Math.round(currentValue)}${unit}.`,
+    id,
+    label,
+    metric_delta: displayDelta,
+    score,
+    source,
+  }
+}
+
+function createDeltaCandidates({
+  channelAttribution,
+  funnel,
+  heroMetrics,
+  previousPeriod,
+}) {
+  if (!previousPeriod) {
+    return []
+  }
+
+  const metricCandidates = heroMetrics
+    .filter((metric) => ['bookings', 'attended', 'cost-per-patient'].includes(metric.id))
+    .map((metric) => {
+      const previousMetric = findPreviousMetric(previousPeriod, metric.id)
+
+      if (!previousMetric) {
+        return null
+      }
+
+      return createDeltaCandidate({
+        currentValue: parseMetricNumber(metric.value),
+        id: `metric-${metric.id}`,
+        label: metric.title,
+        lowerIsBetter: metric.id === 'cost-per-patient',
+        previousValue: parseMetricNumber(previousMetric.value),
+        source: 'metric',
+        unit: metric.id === 'cost-per-patient' ? '$' : '',
+      })
+    })
+    .filter(Boolean)
+
+  const funnelCandidates = funnel.map((stage) => {
+    const previousStage = findPreviousFunnelStage(previousPeriod, stage)
+
+    if (!previousStage) {
+      return null
+    }
+
+    return createDeltaCandidate({
+      currentValue: toNumber(stage.conversion_rate),
+      id: `funnel-${stage.id}`,
+      label: `${stage.stage_name} conversion`,
+      previousValue: toNumber(previousStage.conversion_rate),
+      source: 'funnel',
+      unit: '%',
+    })
+  }).filter(Boolean)
+
+  const channelCandidates = channelAttribution.flatMap((channel) => {
+    const previousChannel = findPreviousChannel(previousPeriod, channel)
+
+    if (!previousChannel) {
+      return []
+    }
+
+    return [
+      createDeltaCandidate({
+        currentValue: toNumber(channel.bookings),
+        id: `channel-${channel.channel}-bookings`,
+        label: `${channel.channel} bookings`,
+        previousValue: toNumber(previousChannel.bookings),
+        source: 'channel',
+      }),
+      createDeltaCandidate({
+        currentValue: toNumber(channel.cost_per_booking),
+        id: `channel-${channel.channel}-cpb`,
+        label: `${channel.channel} cost per booking`,
+        lowerIsBetter: true,
+        previousValue: toNumber(previousChannel.cost_per_booking),
+        source: 'channel',
+        unit: '$',
+      }),
+    ]
+  })
+
+  return [...metricCandidates, ...funnelCandidates, ...channelCandidates]
+}
+
+function createConsecutiveThresholdCandidates({ funnel, previousPeriod }) {
+  if (!previousPeriod) {
+    return []
+  }
+
+  return funnel
+    .map((stage) => {
+      const previousStage = findPreviousFunnelStage(previousPeriod, stage)
+
+      if (!previousStage) {
+        return null
+      }
+
+      const currentBelowTarget = toNumber(stage.conversion_rate) < toNumber(stage.target)
+      const previousBelowTarget = toNumber(previousStage.conversion_rate) < toNumber(previousStage.target ?? stage.target)
+
+      if (!currentBelowTarget || !previousBelowTarget) {
+        return null
+      }
+
+      return {
+        body: `${stage.stage_name} has missed target for 2 consecutive periods: ${stage.conversion_rate}% now and ${previousStage.conversion_rate}% prior, target ${stage.target}%.`,
+        id: `threshold-${stage.id}`,
+        label: `${stage.stage_name} below target`,
+        metric_delta: `${stage.conversion_rate}% vs ${stage.target}% target`,
+        score: toNumber(stage.target) - toNumber(stage.conversion_rate) + 100,
+        source: 'threshold',
+      }
+    })
+    .filter(Boolean)
+}
+
+function formatFunnelChange({ delta, previousStage, stage }) {
+  const signedDelta = `${delta >= 0 ? '+' : ''}${Math.round(delta)} pts`
+
+  return `${stage.stage_name}: ${stage.conversion_rate}% (${signedDelta} vs prior ${previousStage.conversion_rate}%)`
+}
+
+function createFunnelHighlights({ biggestLeak, funnel, previousPeriod }) {
+  const comparisons = funnel
+    .map((stage) => {
+      const previousStage = findPreviousFunnelStage(previousPeriod, stage)
+
+      if (!previousStage) {
+        return null
+      }
+
+      return {
+        delta: toNumber(stage.conversion_rate) - toNumber(previousStage.conversion_rate),
+        previousStage,
+        stage,
+      }
+    })
+    .filter(Boolean)
+
+  const bestImprovement = comparisons
+    .filter((comparison) => comparison.delta > 0)
+    .sort((left, right) => right.delta - left.delta)[0]
+  const worstChange = comparisons
+    .filter((comparison) => comparison.delta < 0)
+    .sort((left, right) => left.delta - right.delta)[0]
+
+  return {
+    best_improvement: bestImprovement ? formatFunnelChange(bestImprovement) : 'No positive funnel improvement vs prior period',
+    biggest_leak: `${biggestLeak.stage_name}: ${biggestLeak.conversion_rate}% vs ${biggestLeak.target}% target`,
+    worst_change: worstChange ? formatFunnelChange(worstChange) : 'No negative funnel change vs prior period',
+  }
+}
+
+function mapInsightItem(candidate, index, type) {
+  const typeLabel = type === 'win'
+    ? 'worked'
+    : type === 'loss' ? "didn't work" : 'next'
+
+  return {
+    body: candidate.body,
+    created_by: 'auto',
+    id: `generated-${type}-${index + 1}`,
+    impact_level: Math.abs(candidate.score ?? 0) >= 20 ? 'high' : 'medium',
+    metric_delta: candidate.metric_delta,
+    next_implication: candidate.next_implication ?? '',
+    owner: candidate.owner ?? 'Agency',
+    supporting_metric_id: candidate.id,
+    title: candidate.title ?? `Top ${typeLabel}: ${candidate.label}`,
+    type,
+    why_it_matters: candidate.why_it_matters ?? 'Selected from the strongest period-over-period movement in the operating data.',
+  }
+}
+
+function createBacklogNextCandidates(backlogItems, biggestLeak) {
+  const normalizedBacklog = (backlogItems ?? [])
+    .map((item, index) => {
+      const expectedRevenueImpact = toNumber(item.expected_revenue_impact ?? item.revenue_impact)
+      const effortToShip = toNumber(item.effort_to_ship ?? item.effort)
+      const score = toNumber(item.priority_score, expectedRevenueImpact + effortToShip)
+
+      return {
+        body: item.body ?? item.description ?? `Prioritized by expected revenue impact ${formatCurrency(expectedRevenueImpact)} and effort score ${effortToShip}.`,
+        id: item.id ?? `backlog-${index + 1}`,
+        label: item.title ?? item.name ?? 'Backlog item',
+        metric_delta: `Score ${Math.round(score)}`,
+        next_implication: item.ghl_url ? `Tracked in GHL: ${item.ghl_url}` : 'Track alongside the campaign backlog for Matt and Mike comments.',
+        owner: item.owner ?? 'Matt',
+        score,
+        title: item.title ?? item.name ?? 'Backlog item',
+        why_it_matters: `Expected revenue impact ${formatCurrency(expectedRevenueImpact)}; effort to ship ${effortToShip}.`,
+      }
+    })
+    .sort((left, right) => right.score - left.score)
+
+  if (normalizedBacklog.length) {
+    return normalizedBacklog
+  }
+
+  return [
+    {
+      body: `Address ${biggestLeak.stage_name}, currently ${biggestLeak.conversion_rate}% against a ${biggestLeak.target}% target.`,
+      id: 'fallback-next-leak',
+      label: `Improve ${biggestLeak.stage_name}`,
+      metric_delta: `${biggestLeak.conversion_rate}% vs ${biggestLeak.target}% target`,
+      owner: 'Matt',
+      score: 1,
+      title: `Improve ${biggestLeak.stage_name}`,
+      why_it_matters: 'No backlog source was supplied, so the biggest calculated leak is the default next action.',
+    },
+  ]
+}
+
+function createGeneratedNarrative({
+  attended,
+  backlogItems,
+  biggestLeak,
+  bookings,
+  channelAttribution,
+  funnel,
+  heroMetrics,
+  previousPeriod,
+}) {
+  const deltaCandidates = createDeltaCandidates({
+    channelAttribution,
+    funnel,
+    heroMetrics,
+    previousPeriod,
+  })
+  const winCandidates = deltaCandidates
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score)
+  const lossCandidates = [
+    ...deltaCandidates
+      .filter((candidate) => candidate.score < 0)
+      .map((candidate) => ({ ...candidate, score: Math.abs(candidate.score) })),
+    ...createConsecutiveThresholdCandidates({ funnel, previousPeriod }),
+  ].sort((left, right) => right.score - left.score)
+  const fallbackWins = [
+    { body: `${bookings.length} appointments were booked from the supplied source batch.`, id: 'fallback-win-bookings', label: 'Booking volume calculated', metric_delta: `${bookings.length} bookings`, score: bookings.length, title: 'Booking volume calculated' },
+    { body: `${attended.length} appointments were marked attended/completed in the period.`, id: 'fallback-win-attended', label: 'Attendance calculated', metric_delta: `${attended.length} attended`, score: attended.length, title: 'Attendance calculated' },
+    { body: 'Source freshness and affected metrics were calculated from the source payload.', id: 'fallback-win-trust', label: 'Data trust attached', metric_delta: 'Freshness attached', score: 1, title: 'Data trust attached' },
+  ]
+  const fallbackLosses = [
+    { body: `${biggestLeak.stage_name} is the biggest underperforming stage versus target.`, id: 'fallback-loss-leak', label: 'Biggest funnel leak identified', metric_delta: `${biggestLeak.conversion_rate}% vs ${biggestLeak.target}% target`, score: 1, title: 'Biggest funnel leak identified' },
+    { body: 'Review unnormalized or unknown source values before publishing.', id: 'fallback-loss-source', label: 'Source hygiene needs review', metric_delta: 'Source hygiene check', score: 1, title: 'Source hygiene needs review' },
+    { body: 'Confirm manual assumptions before using projected revenue in the review.', id: 'fallback-loss-revenue', label: 'Revenue projection depends on assumptions', metric_delta: 'Assumption-based revenue', score: 1, title: 'Revenue projection depends on assumptions' },
   ]
 
-  return baseItems.map(([id, type, title, body, metricDelta]) => ({
-    body,
-    created_by: 'auto',
-    id,
-    impact_level: type === 'loss' || type === 'next' ? 'high' : 'medium',
-    metric_delta: metricDelta,
-    owner: 'Agency',
-    title,
-    type,
-    why_it_matters: 'Keeps the review tied to a measurable operating change.',
-  }))
+  return [
+    ...(winCandidates.length ? winCandidates : fallbackWins).slice(0, 3).map((candidate, index) => mapInsightItem(candidate, index, 'win')),
+    ...(lossCandidates.length ? lossCandidates : fallbackLosses).slice(0, 3).map((candidate, index) => mapInsightItem(candidate, index, 'loss')),
+    ...createBacklogNextCandidates(backlogItems, biggestLeak).slice(0, 3).map((candidate, index) => mapInsightItem(candidate, index, 'next')),
+  ]
 }
 
 function generateDentalGrowthReviewPeriodFromSourceBatch({
   batch,
   idGenerator,
   now,
+  previousPeriod,
   viewer,
 }) {
   const timestamp = now()
@@ -1061,6 +1352,15 @@ function generateDentalGrowthReviewPeriodFromSourceBatch({
     trackTouches,
   })
   const reputationReferral = createReputationReferralMetrics({ referrals, reviews, timestamp })
+  const channelAttribution = createChannelAttribution({ appointments: bookings, leads, spend: payload.spend })
+  const heroMetrics = [
+    createCalculatedMetric({ confidence: 'high', formula: 'count(appointments where created_at/booked_at is inside period)', id: 'bookings', lastUpdatedAt: timestamp, source: 'Source batch appointments', status: bookings.length > 0 ? DENTAL_GROWTH_REVIEW_STATUSES.GREEN : DENTAL_GROWTH_REVIEW_STATUSES.RED, target: 'Set per clinic', title: 'Bookings This Period', tooltipDefinition: `${newPatients} new / ${reactivatedPatients} reactivated / ${recallPatients} recall`, value: bookings.length }),
+    createCalculatedMetric({ confidence: 'high', formula: 'count(appointments where appointment_date is inside period and status is attended/completed)', id: 'attended', lastUpdatedAt: timestamp, source: 'Source batch appointments', status: getStatusForRate(showRate, 90, 75), target: '90% show rate', title: 'Attended Appointments', tooltipDefinition: `${showRate}% show rate`, value: attended.length }),
+    createCalculatedMetric({ confidence: 'medium', formula: 'attended appointments x estimated 90-day revenue per attended patient', id: 'projected-revenue', lastUpdatedAt: timestamp, source: 'Source batch appointments + manual assumptions', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Projection range, not hard revenue', title: 'Projected 90-Day Revenue Range', tooltipDefinition: `Median ${formatCurrency(projectedMedian)} using ${formatCurrency(revenuePerAttended)} per attended patient.`, value: `${formatCurrency(projectedLow)}-${formatCurrency(projectedHigh)}` }),
+    createCalculatedMetric({ confidence: 'medium', formula: 'sum(source spend amount)', id: 'investment', lastUpdatedAt: timestamp, source: 'Source batch spend', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Review against budget', title: 'Total Marketing Investment', tooltipDefinition: 'Total supplied campaign spend and manual cost allocations.', value: formatCurrency(marketingInvestment) }),
+    createCalculatedMetric({ confidence: 'medium', formula: 'total marketing investment / (new patients + reactivated patients)', id: 'cost-per-patient', lastUpdatedAt: timestamp, source: 'Source batch spend + appointments', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Set per clinic', title: 'Cost Per New/Reactivated Patient', tooltipDefinition: `${newPatients + reactivatedPatients} new/reactivated booked patients.`, value: formatCurrency(costPerPatient) }),
+    createCalculatedMetric({ confidence: 'high', formula: 'funnel stage with largest gap versus target', id: 'biggest-leak', lastUpdatedAt: timestamp, source: 'Calculated funnel', status: biggestLeak.gap > 10 ? DENTAL_GROWTH_REVIEW_STATUSES.RED : DENTAL_GROWTH_REVIEW_STATUSES.YELLOW, target: `${formatPercent(biggestLeak.target)} target`, title: 'Biggest Funnel Leak', tooltipDefinition: `${biggestLeak.stage_name}: ${biggestLeak.conversion_rate}%`, value: biggestLeak.stage_name }),
+  ]
 
   return validateDentalGrowthReviewPeriod({
     calculated_at: timestamp,
@@ -1068,7 +1368,7 @@ function generateDentalGrowthReviewPeriodFromSourceBatch({
     calculation_version: 'dental-growth-review-calculation-v1',
     client_id: batch.client_id,
     content: {
-      channel_attribution: createChannelAttribution({ appointments: bookings, leads, spend: payload.spend }),
+      channel_attribution: channelAttribution,
       decisions: [{
         context: `${biggestLeak.stage_name} is the largest calculated leak for this period.`,
         decision_due_by: batch.period_end,
@@ -1082,26 +1382,24 @@ function generateDentalGrowthReviewPeriodFromSourceBatch({
         title: `Address ${biggestLeak.stage_name}`,
       }],
       funnel,
-      funnel_highlights: {
-        best_improvement: 'Pending prior source comparison',
-        biggest_leak: `${biggestLeak.stage_name}: ${biggestLeak.conversion_rate}% vs ${biggestLeak.target}% target`,
-        worst_change: 'Pending prior source comparison',
-      },
+      funnel_highlights: createFunnelHighlights({ biggestLeak, funnel, previousPeriod }),
       front_desk_health: frontDeskHealth,
       heatmaps: {
         email_open_by_track: createEmailOpenHeatmap(emailEvents),
         reply_rate_by_track_touch: createReplyRateHeatmap(trackTouches),
       },
-      hero_metrics: [
-        createCalculatedMetric({ confidence: 'high', formula: 'count(appointments where created_at/booked_at is inside period)', id: 'bookings', lastUpdatedAt: timestamp, source: 'Source batch appointments', status: bookings.length > 0 ? DENTAL_GROWTH_REVIEW_STATUSES.GREEN : DENTAL_GROWTH_REVIEW_STATUSES.RED, target: 'Set per clinic', title: 'Bookings This Period', tooltipDefinition: `${newPatients} new / ${reactivatedPatients} reactivated / ${recallPatients} recall`, value: bookings.length }),
-        createCalculatedMetric({ confidence: 'high', formula: 'count(appointments where appointment_date is inside period and status is attended/completed)', id: 'attended', lastUpdatedAt: timestamp, source: 'Source batch appointments', status: getStatusForRate(showRate, 90, 75), target: '90% show rate', title: 'Attended Appointments', tooltipDefinition: `${showRate}% show rate`, value: attended.length }),
-        createCalculatedMetric({ confidence: 'medium', formula: 'attended appointments x estimated 90-day revenue per attended patient', id: 'projected-revenue', lastUpdatedAt: timestamp, source: 'Source batch appointments + manual assumptions', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Projection range, not hard revenue', title: 'Projected 90-Day Revenue Range', tooltipDefinition: `Median ${formatCurrency(projectedMedian)} using ${formatCurrency(revenuePerAttended)} per attended patient.`, value: `${formatCurrency(projectedLow)}-${formatCurrency(projectedHigh)}` }),
-        createCalculatedMetric({ confidence: 'medium', formula: 'sum(source spend amount)', id: 'investment', lastUpdatedAt: timestamp, source: 'Source batch spend', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Review against budget', title: 'Total Marketing Investment', tooltipDefinition: 'Total supplied campaign spend and manual cost allocations.', value: formatCurrency(marketingInvestment) }),
-        createCalculatedMetric({ confidence: 'medium', formula: 'total marketing investment / (new patients + reactivated patients)', id: 'cost-per-patient', lastUpdatedAt: timestamp, source: 'Source batch spend + appointments', status: DENTAL_GROWTH_REVIEW_STATUSES.GREY, target: 'Set per clinic', title: 'Cost Per New/Reactivated Patient', tooltipDefinition: `${newPatients + reactivatedPatients} new/reactivated booked patients.`, value: formatCurrency(costPerPatient) }),
-        createCalculatedMetric({ confidence: 'high', formula: 'funnel stage with largest gap versus target', id: 'biggest-leak', lastUpdatedAt: timestamp, source: 'Calculated funnel', status: biggestLeak.gap > 10 ? DENTAL_GROWTH_REVIEW_STATUSES.RED : DENTAL_GROWTH_REVIEW_STATUSES.YELLOW, target: `${formatPercent(biggestLeak.target)} target`, title: 'Biggest Funnel Leak', tooltipDefinition: `${biggestLeak.stage_name}: ${biggestLeak.conversion_rate}%`, value: biggestLeak.stage_name }),
-      ],
+      hero_metrics: heroMetrics,
       metrics: deliverabilityMetrics,
-      narrative_items: createGeneratedNarrative({ attended, biggestLeak, bookings }),
+      narrative_items: createGeneratedNarrative({
+        attended,
+        backlogItems: payload.backlog_items,
+        biggestLeak,
+        bookings,
+        channelAttribution,
+        funnel,
+        heroMetrics,
+        previousPeriod,
+      }),
       operations_chips: operationsChips,
       period_context: {
         auto_summary: `${bookings.length} bookings and ${attended.length} attended appointments were calculated for this period. Biggest leak: ${biggestLeak.stage_name}.`,

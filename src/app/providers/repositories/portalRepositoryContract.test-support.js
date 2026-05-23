@@ -96,3 +96,96 @@ export function runPortalRepositoryContractSuite({ createRepository, name }) {
     })
   })
 }
+
+export function runPortalDataClientRepositoryContractSuite({ createDataClient, name }) {
+  describe(`${name} portal data client repository contract`, () => {
+    it('implements every required collection and extension method', async () => {
+      const dataClient = createDataClient()
+
+      await dataClient.read((repository) => {
+        expectRepositoryShape(repository)
+      })
+    })
+
+    it('round-trips records through every entity collection', async () => {
+      for (const { key: repositoryKey } of PORTAL_REPOSITORY_COLLECTIONS) {
+        const dataClient = createDataClient()
+        const clientId = `contract-client-${repositoryKey}`
+        const recordId = `contract-${repositoryKey}`
+        const record = createContractRecord({ clientId, repositoryKey, recordId })
+
+        await dataClient.read((repository) => {
+          const collection = repository[repositoryKey]
+
+          expect(collection.findById(recordId), `${repositoryKey}.findById before upsert`).toBeNull()
+          expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId before upsert`).toEqual([])
+        })
+
+        await expect(dataClient.write((repository) => (
+          repository[repositoryKey].upsert(record)
+        )), `${repositoryKey}.upsert create`).resolves.toEqual(record)
+
+        await dataClient.read((repository) => {
+          const collection = repository[repositoryKey]
+
+          expect(collection.findById(recordId), `${repositoryKey}.findById after create`).toMatchObject(record)
+          expect(collection.list(), `${repositoryKey}.list after create`).toEqual(
+            expect.arrayContaining([expect.objectContaining(record)]),
+          )
+          expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after create`).toEqual([
+            expect.objectContaining(record),
+          ])
+        })
+
+        const updatedRecord = {
+          ...record,
+          title: `${repositoryKey} updated contract record`,
+        }
+
+        await expect(dataClient.write((repository) => (
+          repository[repositoryKey].upsert(updatedRecord)
+        )), `${repositoryKey}.upsert update`).resolves.toEqual(updatedRecord)
+
+        await dataClient.read((repository) => {
+          const collection = repository[repositoryKey]
+
+          expect(collection.findById(recordId), `${repositoryKey}.findById after update`).toMatchObject(updatedRecord)
+          expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after update`).toHaveLength(1)
+        })
+
+        await expect(dataClient.write((repository) => (
+          repository[repositoryKey].deleteById(recordId)
+        )), `${repositoryKey}.deleteById existing`).resolves.toBe(true)
+
+        await dataClient.read((repository) => {
+          const collection = repository[repositoryKey]
+
+          expect(collection.findById(recordId), `${repositoryKey}.findById after delete`).toBeNull()
+          expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after delete`).toEqual([])
+        })
+
+        await expect(dataClient.write((repository) => (
+          repository[repositoryKey].deleteById(recordId)
+        )), `${repositoryKey}.deleteById missing`).resolves.toBe(false)
+      }
+    })
+
+    it('supports explicit adapter extension behavior', async () => {
+      const dataClient = createDataClient()
+      const profile = createContractRecord({
+        clientId: 'contract-client-profile',
+        recordId: 'contract-profile',
+        repositoryKey: 'profiles',
+      })
+
+      await dataClient.write((repository) => {
+        repository.profiles.upsert(profile)
+      })
+
+      await dataClient.read((repository) => {
+        expect(repository.profiles.findByUserId(profile.user_id)).toMatchObject(profile)
+        expect(repository.profiles.findByUserId('missing-user')).toBeNull()
+      })
+    })
+  })
+}

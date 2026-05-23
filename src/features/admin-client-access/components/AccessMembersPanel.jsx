@@ -1,66 +1,100 @@
 import {
   Button,
   ConfirmationDialog,
-  ListPanel,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  Panel,
+  PanelBody,
+  PanelHeader,
 } from '@/shared/ui'
+import { ClientMemberList } from '@/entities/client-membership'
+import { Icon } from '@/shared/icons'
 
-import { FieldError, InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
+import { FieldError } from '../../admin-client-workspace'
 import { useAccessMembersPanel } from '../useAccessMembersPanel'
-import { AccessMemberCard } from './AccessMemberCard'
+import { AccessMemberEditDialog } from './AccessMemberEditDialog'
 import { AccessMemberForm } from './AccessMemberForm'
 
 export function AccessMembersPanel({ clientId, runtime }) {
   const membersPanel = useAccessMembersPanel({ clientId, runtime })
+  const canSubmitMember = Boolean(
+    membersPanel.form.name.trim()
+    && membersPanel.form.email.trim()
+    && !membersPanel.memberNameIssue
+    && !membersPanel.memberEmailIssue,
+  )
 
   return (
-    <WorkspaceCard
-      action={(
-        <Button
-          onClick={() => membersPanel.setIsMemberFormOpen((isOpen) => !isOpen)}
-          size="sm"
-          type="button"
-          variant={membersPanel.isMemberFormOpen ? 'ghost' : 'outline'}
-        >
-          {membersPanel.isMemberFormOpen ? 'Cancel' : 'Add member'}
-        </Button>
-      )}
-      description="Manage who can open this workspace."
-      iconName="users"
-      title="Members"
-    >
-      <div className="grid grid-cols-1 gap-4">
-        {membersPanel.status === 'loading' ? (
-          <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading members...</div>
-        ) : membersPanel.status === 'error' ? (
-          <FieldError>Members could not be loaded.</FieldError>
-        ) : membersPanel.members.length > 0 ? (
-          <ListPanel className="rounded-control">
-            {membersPanel.members.map((member) => (
-              <AccessMemberCard
-                key={member.id}
-                member={member}
-                onRemove={membersPanel.setMemberPendingRemoval}
-                onRoleChange={membersPanel.changeRole}
-              />
-            ))}
-          </ListPanel>
-        ) : (
-          <InlineEmptyState iconName="users" title="No workspace users yet">
-            Add a member or send an invitation before a client can open this portal.
-          </InlineEmptyState>
+    <Panel>
+      <PanelHeader
+        action={(
+          <Button
+            icon={<Icon name="plus" size={14} />}
+            onClick={() => membersPanel.setIsMemberFormOpen(true)}
+            size="sm"
+            type="button"
+          >
+            Add client user
+          </Button>
         )}
-
-        {membersPanel.isMemberFormOpen ? (
+        divided
+        subtitle="People with access to this workspace."
+        title="Members"
+      />
+      <PanelBody className="p-0">
+        {membersPanel.status === 'loading' ? (
+          <div className="m-card rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading members...</div>
+        ) : membersPanel.status === 'error' ? (
+          <div className="m-card">
+            <FieldError>Members could not be loaded.</FieldError>
+          </div>
+        ) : (
+          <ClientMemberList
+            canEdit
+            canRemove
+            emptyDescription="No members are currently attached to this workspace."
+            emptyTitle="No members"
+            members={membersPanel.members}
+            onEditMember={membersPanel.startEditingMember}
+            onRemoveMember={membersPanel.setMemberPendingRemoval}
+          />
+        )}
+      </PanelBody>
+      <Dialog onOpenChange={membersPanel.setIsMemberFormOpen} open={membersPanel.isMemberFormOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sheet-md gap-component p-panel">
+          <DialogHeader className="pr-control-xl">
+            <DialogTitle>Add client user</DialogTitle>
+            <DialogDescription>
+              Add a user who can open this workspace.
+            </DialogDescription>
+          </DialogHeader>
           <AccessMemberForm
+            canSubmit={canSubmitMember}
             error={membersPanel.error}
             form={membersPanel.form}
             memberEmailIssue={membersPanel.memberEmailIssue}
             memberNameIssue={membersPanel.memberNameIssue}
+            onCancel={() => membersPanel.setIsMemberFormOpen(false)}
             onSubmit={membersPanel.addMember}
             onUpdateForm={membersPanel.updateForm}
           />
-        ) : null}
-      </div>
+        </DialogContent>
+      </Dialog>
+      <AccessMemberEditDialog
+        error={membersPanel.error}
+        member={membersPanel.memberPendingEdit}
+        onOpenChange={(open) => {
+          if (!open) {
+            membersPanel.setMemberPendingEdit(null)
+          }
+        }}
+        onRoleChange={membersPanel.setEditRole}
+        onSubmit={membersPanel.saveMemberEdit}
+        role={membersPanel.editRole}
+      />
       <ConfirmationDialog
         confirmLabel="Remove access"
         description={
@@ -78,6 +112,6 @@ export function AccessMembersPanel({ clientId, runtime }) {
         title="Remove member access?"
         tone="destructive"
       />
-    </WorkspaceCard>
+    </Panel>
   )
 }

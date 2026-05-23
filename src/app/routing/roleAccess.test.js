@@ -12,6 +12,7 @@ import {
   canAccessRouteWithContext,
   filterRoutesForNavigation,
   filterRoutesForViewer,
+  NAVIGATION_SCOPES,
 } from './roleAccess'
 
 const routes = [
@@ -191,6 +192,10 @@ describe('route role access', () => {
       'client-updates',
       'client-settings',
     ])
+    expect(routeMetadata.find((route) => route.id === 'dental-growth-review')).toMatchObject({
+      navLabel: 'Dental Growth Review',
+      path: '/client/growth-review',
+    })
     expect(clientNavIds).not.toContain('client-projects')
     expect(clientNavIds).not.toContain('client-monthly-strategy')
   })
@@ -229,7 +234,7 @@ describe('route role access', () => {
     ])
   })
 
-  it('shows agency operational clinic routes without exposing client finance routes in agency navigation', () => {
+  it('keeps general agency navigation limited to agency-wide destinations', () => {
     const adminNavIds = visibleNavIdsFor({
       clientType: CLIENT_TYPES.CLINIC,
       viewer: {
@@ -241,13 +246,14 @@ describe('route role access', () => {
     expect(adminNavIds).toEqual([
       'admin-clients',
       'admin-tasks',
-      'dental-growth-review',
-      'team-clinic-operator',
-      'clinic-daily-ops',
       'admin-dashboard-links',
       'admin-performance-dashboards',
       'admin-reports',
     ])
+    expect(adminNavIds).not.toContain('dental-growth-review')
+    expect(adminNavIds).not.toContain('team-clinic-operator')
+    expect(adminNavIds).not.toContain('clinic-daily-ops')
+    expect(adminNavIds).not.toContain('admin-client-overview')
     expect(adminNavIds).not.toContain('client-executive-performance')
     expect(adminNavIds).not.toContain('client-monthly-strategy')
   })
@@ -398,6 +404,20 @@ describe('route role access', () => {
       if (route.navGroup?.iconName) {
         expect(iconNames).toContain(route.navGroup.iconName)
       }
+    })
+  })
+
+  it('assigns every visible navigation route to an explicit sidebar container', () => {
+    const validScopes = new Set(Object.values(NAVIGATION_SCOPES))
+    const visibleRoutes = routeMetadata.filter((route) => route.showInNav !== false)
+
+    visibleRoutes.forEach((route) => {
+      const scopes = route.navigationScopes ?? [route.navigationScope]
+
+      expect(scopes, `${route.id} should define navigationScope or navigationScopes`).not.toContain(undefined)
+      scopes.forEach((scope) => {
+        expect(validScopes.has(scope), `${route.id} uses an unknown navigation scope`).toBe(true)
+      })
     })
   })
 })

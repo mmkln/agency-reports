@@ -161,6 +161,33 @@ function createDentalGrowthReviewSourcePayload(overrides = {}) {
         revenue_p25_multiplier: 0.75,
         revenue_p75_multiplier: 1.25,
       },
+      backlog_items: [
+        {
+          description: 'Use the winning Track C response pattern on the next eligible lapsed-patient list.',
+          effort_to_ship: 2,
+          expected_revenue_impact: 5200,
+          ghl_url: 'https://app.gohighlevel.com/backlog/track-c',
+          id: 'backlog-expand-track-c',
+          owner: 'Roman',
+          title: 'Expand Track C list',
+        },
+        {
+          description: 'Tighten confirmation workflow copy and timing before the next review period.',
+          effort_to_ship: 3,
+          expected_revenue_impact: 4100,
+          id: 'backlog-confirmation-workflow',
+          owner: 'Matt',
+          title: 'Tighten confirmation workflow',
+        },
+        {
+          description: 'Normalize GHL contact source values before the next source import.',
+          effort_to_ship: 1,
+          expected_revenue_impact: 900,
+          id: 'backlog-source-normalization',
+          owner: 'Roman',
+          title: 'Clean source tags',
+        },
+      ],
       call_logs: [
         { disposition: 'booked', outcome: 'booked', status: 'completed', weekly_target: 4 },
         { disposition: 'left voicemail', outcome: 'no_answer', status: 'completed', weekly_target: 4 },
@@ -655,6 +682,81 @@ describe('admin clinic reporting foundations', () => {
       },
       publish_state: DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT,
     })
+  })
+
+  it('generates Zone 3 wins, losses, and next actions from prior-period data and backlog', () => {
+    const repositories = createRepositories()
+
+    importAdminClinicReportingJson({
+      clientId: IDS.CLIENT,
+      idGenerator: () => 'previous-growth-review',
+      layer: DENTAL_GROWTH_REVIEW_LAYER,
+      rawJson: createDentalGrowthReviewImportPayload({
+        content: {
+          channel_attribution: [
+            { bookings: 0, channel: 'meta', cost_per_booking: 800 },
+            { bookings: 1, channel: 'google_ads', cost_per_booking: 200 },
+          ],
+          funnel: [
+            { conversion_rate: 80, id: 'lead-contacted', stage_name: 'Lead -> Contacted', target: 95 },
+            { conversion_rate: 30, id: 'lead-booked', stage_name: 'Lead -> Booked', target: 35 },
+            { conversion_rate: 100, id: 'booked-confirmed', stage_name: 'Booked -> Confirmed', target: 90 },
+            { conversion_rate: 80, id: 'confirmed-attended', stage_name: 'Confirmed -> Attended', target: 90 },
+          ],
+          hero_metrics: [
+            { id: 'bookings', title: 'Bookings This Period', value: 1 },
+            { id: 'attended', title: 'Attended Appointments', value: 1 },
+            { id: 'projected-revenue', title: 'Projected 90-Day Revenue Range', value: '$800-$1,200' },
+            { id: 'investment', title: 'Total Marketing Investment', value: '$900' },
+            { id: 'cost-per-patient', title: 'Cost Per New/Reactivated Patient', value: '$700' },
+            { id: 'biggest-leak', title: 'Biggest Funnel Leak', value: 'Confirmed -> Attended' },
+          ],
+        },
+        label: 'Week ending May 10, 2026',
+        period_end: '2026-05-10',
+        period_start: '2026-05-04',
+      }),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    const ids = ['source-a', 'generated-period-a']
+    const result = previewAdminDentalGrowthReviewSourceImport({
+      clientId: IDS.CLIENT,
+      idGenerator: () => ids.shift(),
+      now: () => '2026-05-20T08:00:00.000Z',
+      rawJson: createDentalGrowthReviewSourcePayload(),
+      repositories,
+      viewer: createAdminViewer(),
+    })
+
+    expect(result.isValid).toBe(true)
+    expect(result.generatedPeriod.content.funnel_highlights).toMatchObject({
+      best_improvement: 'Lead -> Booked: 100% (+70 pts vs prior 30%)',
+      biggest_leak: 'Lead -> Contacted: 67% vs 95% target',
+      worst_change: 'Lead -> Contacted: 67% (-13 pts vs prior 80%)',
+    })
+    const narrativeItems = result.generatedPeriod.content.narrative_items
+    expect(narrativeItems.filter((item) => item.type === 'win')).toHaveLength(3)
+    expect(narrativeItems.filter((item) => item.type === 'loss')).toHaveLength(3)
+    expect(narrativeItems.filter((item) => item.type === 'next')).toHaveLength(3)
+    expect(narrativeItems).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        created_by: 'auto',
+        supporting_metric_id: 'funnel-lead-booked',
+        type: 'win',
+      }),
+      expect.objectContaining({
+        supporting_metric_id: 'threshold-lead-contacted',
+        type: 'loss',
+      }),
+      expect.objectContaining({
+        next_implication: 'Tracked in GHL: https://app.gohighlevel.com/backlog/track-c',
+        supporting_metric_id: 'backlog-expand-track-c',
+        title: 'Expand Track C list',
+        type: 'next',
+      }),
+    ]))
   })
 
   it('rejects patient-level fields from dental growth source imports', () => {

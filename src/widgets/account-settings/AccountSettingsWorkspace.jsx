@@ -19,7 +19,6 @@ import {
 } from '@/shared/ui'
 import { useTheme } from '@/shared/theme'
 import { deactivateOwnProfile } from '../../domain/services/accountLifecycleService'
-import { clearAuthSession } from '../../domain/services/authService'
 import { useToast } from '../../shared/notifications'
 
 const THEME_OPTIONS = Object.freeze([
@@ -71,7 +70,7 @@ function AppearanceSettings() {
   )
 }
 
-function DangerZoneSettings({ onAuthChange, runtime }) {
+function DangerZoneSettings({ onAuthChange, onSignOut, runtime }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -88,8 +87,11 @@ function DangerZoneSettings({ onAuthChange, runtime }) {
       viewer: runtime.viewer,
     })).then(() => {
       setIsConfirmOpen(false)
-      clearAuthSession()
-      onAuthChange?.()
+      if (onSignOut) {
+        onSignOut()
+      } else {
+        onAuthChange?.()
+      }
       toast.info('Account deactivated', 'You have been signed out.')
       navigate('/login', { replace: true })
     }).catch((error) => {
@@ -135,7 +137,7 @@ function DangerZoneSettings({ onAuthChange, runtime }) {
   )
 }
 
-export function AccountSettingsWorkspace({ onAuthChange, profile, runtime }) {
+export function AccountSettingsWorkspace({ onAuthChange, onSignOut, profile, runtime }) {
   return (
     <div className="grid gap-card">
       <AccountProfileSettings
@@ -146,7 +148,7 @@ export function AccountSettingsWorkspace({ onAuthChange, profile, runtime }) {
       <AppearanceSettings />
       <AccountSecuritySettings runtime={runtime} />
       <AccountNotificationSettings runtime={runtime} />
-      <DangerZoneSettings onAuthChange={onAuthChange} runtime={runtime} />
+      <DangerZoneSettings onAuthChange={onAuthChange} onSignOut={onSignOut} runtime={runtime} />
     </div>
   )
 }

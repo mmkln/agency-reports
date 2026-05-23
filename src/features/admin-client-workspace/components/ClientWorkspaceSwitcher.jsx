@@ -17,6 +17,7 @@ import {
 } from '@/shared/ui'
 import { cn } from '@/lib/utils'
 import { CLIENT_STATUS_META, CLIENT_TYPE_META } from '@/entities/client'
+import { Icon } from '@/shared/icons'
 
 function getClientInitials(client) {
   return String(client?.name ?? '')
@@ -60,8 +61,10 @@ function AccountAvatar({ client, size = 'default' }) {
 export function ClientWorkspaceSwitcher({
   clients = [],
   isLoading = false,
+  onExitWorkspace,
   onSelectClient,
   selectedClientId,
+  showExitWorkspace = false,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -105,69 +108,84 @@ export function ClientWorkspaceSwitcher({
   }
 
   return (
-    <SidebarMenuItem>
-      <Popover onOpenChange={setIsOpen} open={isOpen}>
-        <PopoverTrigger asChild>
+    <>
+      {showExitWorkspace ? (
+        <SidebarMenuItem>
           <SidebarMenuButton
-            aria-label={triggerLabel}
-            aria-expanded={isOpen}
-            tooltip={triggerLabel}
+            onClick={onExitWorkspace}
+            tooltip="Back to agency"
             type="button"
             variant="quiet"
           >
-            <AccountAvatar client={selectedClient} size="small" />
-            <span className="min-w-0 text-left">
-              <span className="block truncate text-ui text-text-primary">{triggerLabel}</span>
-              <span className="block truncate text-label text-text-muted">{getClientMeta(selectedClient)}</span>
-            </span>
+            <Icon className="text-current" name="arrowRight" size={18} />
+            <span>Back to agency</span>
           </SidebarMenuButton>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-80 p-tag" side="right" sideOffset={10}>
-          <Command className="rounded-island bg-transparent">
-            <CommandInput
-              aria-label="Search accounts"
-              className="h-control-small py-0"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search accounts..."
-              value={query}
-            />
-            <CommandList>
-              {isLoading ? (
-                <CommandEmpty>Loading accounts...</CommandEmpty>
-              ) : filteredClients.length === 0 ? (
-                <CommandEmpty>No accounts found.</CommandEmpty>
-              ) : (
-                <CommandGroup className="p-tag" heading="Account workspaces">
-                  {filteredClients.map((client) => {
-                    const isSelected = client.id === selectedClientId
+        </SidebarMenuItem>
+      ) : null}
+      <SidebarMenuItem>
+        <Popover onOpenChange={setIsOpen} open={isOpen}>
+          <PopoverTrigger asChild>
+            <SidebarMenuButton
+              aria-label={triggerLabel}
+              aria-expanded={isOpen}
+              tooltip={triggerLabel}
+              type="button"
+              variant="quiet"
+            >
+              <AccountAvatar client={selectedClient} size="small" />
+              <span className="min-w-0 text-left">
+                <span className="block truncate text-ui text-text-primary">{triggerLabel}</span>
+                <span className="block truncate text-label text-text-muted">{getClientMeta(selectedClient)}</span>
+              </span>
+            </SidebarMenuButton>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 p-tag" side="right" sideOffset={10}>
+            <Command className="rounded-island bg-transparent">
+              <CommandInput
+                aria-label="Search accounts"
+                className="h-control-small py-0"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search accounts..."
+                value={query}
+              />
+              <CommandList>
+                {isLoading ? (
+                  <CommandEmpty>Loading accounts...</CommandEmpty>
+                ) : filteredClients.length === 0 ? (
+                  <CommandEmpty>No accounts found.</CommandEmpty>
+                ) : (
+                  <CommandGroup className="p-tag" heading="Account workspaces">
+                    {filteredClients.map((client) => {
+                      const isSelected = client.id === selectedClientId
 
-                    return (
-                      <CommandItem
-                        aria-selected={isSelected}
-                        className={cn(
-                          'cursor-pointer gap-item px-control py-item',
-                          isSelected && 'bg-control-selected text-text-primary',
-                        )}
-                        data-selected={isSelected}
-                        key={client.id}
-                        onClick={() => selectClient(client.id)}
-                        onKeyDown={(event) => handleOptionKeyDown(event, client.id)}
-                        tabIndex={0}
-                      >
-                        <AccountAvatar client={client} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-ui text-text-primary">{client.name}</span>
-                          <span className="block truncate text-label text-text-muted">{getClientMeta(client)}</span>
-                        </span>
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </SidebarMenuItem>
+                      return (
+                        <CommandItem
+                          aria-selected={isSelected}
+                          className={cn(
+                            'cursor-pointer gap-item px-control py-item',
+                            isSelected && 'bg-control-selected text-text-primary',
+                          )}
+                          data-selected={isSelected}
+                          key={client.id}
+                          onClick={() => selectClient(client.id)}
+                          onKeyDown={(event) => handleOptionKeyDown(event, client.id)}
+                          tabIndex={0}
+                        >
+                          <AccountAvatar client={client} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-ui text-text-primary">{client.name}</span>
+                            <span className="block truncate text-label text-text-muted">{getClientMeta(client)}</span>
+                          </span>
+                        </CommandItem>
+                      )
+                    })}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </SidebarMenuItem>
+    </>
   )
 }

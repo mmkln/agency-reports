@@ -325,6 +325,7 @@ export function normalizeDentalGrowthReviewSourcePayload(value = {}) {
   return {
     appointments: normalizeArray(source.appointments).map((item) => (isPlainObject(item) ? item : {})),
     assumptions: isPlainObject(source.assumptions) ? source.assumptions : {},
+    backlog_items: normalizeArray(source.backlog_items).map((item) => (isPlainObject(item) ? item : {})),
     call_logs: normalizeArray(source.call_logs).map((item) => (isPlainObject(item) ? item : {})),
     capacity_slots: normalizeArray(source.capacity_slots).map((item) => (isPlainObject(item) ? item : {})),
     conversations: normalizeArray(source.conversations).map((item) => (isPlainObject(item) ? item : {})),

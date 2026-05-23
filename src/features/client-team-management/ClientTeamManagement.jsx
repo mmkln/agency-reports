@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
-  AvatarFallback,
-  Badge,
   Button,
   ConfirmationDialog,
   Dialog,
@@ -11,23 +9,20 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  EmptyState,
   Input,
-  ListPanel,
-  ListRow,
   Panel,
   PanelBody,
   PanelHeader,
-  RadixSelect as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  ReadOnlyField,
   StatusBadge,
 } from '@/shared/ui'
 
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../entities/client-invitation'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import {
+  CLIENT_MEMBERSHIP_ROLES,
+  ClientMemberList,
+  ClientMembershipRoleSelect,
+} from '../../entities/client-membership'
 import { Icon } from '../../shared/icons'
 import { useClientTeamManagement } from './useClientTeamManagement'
 
@@ -53,33 +48,6 @@ function formatInvitationDate(date) {
     month: 'short',
     year: 'numeric',
   }).format(new Date(date))
-}
-
-function TeamMembersList({ members }) {
-  if (!members.length) {
-    return (
-      <EmptyState
-        className="m-card"
-        description="No members are currently attached to this client."
-        iconName="users"
-        title="No team members"
-      />
-    )
-  }
-
-  return (
-    <ListPanel>
-      {members.map((member) => (
-        <ListRow
-          description={member.email}
-          key={member.id}
-          leading={<AvatarFallback name={member.name} />}
-          title={member.name}
-          trailing={<Badge tone={member.role === CLIENT_MEMBERSHIP_ROLES.OWNER ? 'blue' : 'neutral'}>{member.roleLabel}</Badge>}
-        />
-      ))}
-    </ListPanel>
-  )
 }
 
 function InviteForm({
@@ -119,14 +87,12 @@ function InviteForm({
         </label>
       </div>
       <div className="grid gap-control sm:grid-cols-[1fr_auto]">
-        <Select onValueChange={(role) => onUpdateForm('role', role)} value={form.role}>
-          <SelectTrigger className="bg-block">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={CLIENT_MEMBERSHIP_ROLES.VIEWER}>Team member</SelectItem>
-          </SelectContent>
-        </Select>
+        <ClientMembershipRoleSelect
+          allowedRoles={[CLIENT_MEMBERSHIP_ROLES.VIEWER]}
+          className="bg-block"
+          onValueChange={(role) => onUpdateForm('role', role)}
+          value={form.role}
+        />
       </div>
       <FieldError>{error}</FieldError>
       <div className="flex justify-end gap-control">
@@ -138,6 +104,53 @@ function InviteForm({
         </Button>
       </div>
     </form>
+  )
+}
+
+function EditMemberDialog({
+  error,
+  member,
+  onOpenChange,
+  onRoleChange,
+  onSubmit,
+  role,
+}) {
+  return (
+    <Dialog onOpenChange={onOpenChange} open={Boolean(member)}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sheet-md gap-component p-panel">
+        <DialogHeader className="pr-control-xl">
+          <DialogTitle>Edit member</DialogTitle>
+          <DialogDescription>
+            Update this user's workspace access.
+          </DialogDescription>
+        </DialogHeader>
+        {member ? (
+          <form className="grid gap-component" onSubmit={onSubmit}>
+            <div className="grid gap-control sm:grid-cols-2">
+              <ReadOnlyField label="Name" value={member.name} />
+              <ReadOnlyField label="Email" value={member.email} />
+            </div>
+            <label className="grid gap-1.5">
+              <span className="text-label text-text-secondary">Role</span>
+              <ClientMembershipRoleSelect
+                className="bg-block"
+                onValueChange={onRoleChange}
+                value={role}
+              />
+            </label>
+            <FieldError>{error}</FieldError>
+            <div className="flex justify-end gap-control">
+              <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+                Cancel
+              </Button>
+              <Button type="submit">
+                Save changes
+              </Button>
+            </div>
+          </form>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -217,6 +230,12 @@ function PendingInvitations({ invitations, onCancel, onCopy, status }) {
 export function ClientTeamManagement({ clientId, page, runtime }) {
   const canManage = Boolean(page.sections.team?.canManage)
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+  const [memberOverrides, setMemberOverrides] = useState({})
+  const [memberPendingEdit, setMemberPendingEdit] = useState(null)
+  const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
+  const [removedMemberIds, setRemovedMemberIds] = useState(() => new Set())
+  const [editRole, setEditRole] = useState(CLIENT_MEMBERSHIP_ROLES.VIEWER)
+  const [editError, setEditError] = useState('')
   const teamManagement = useClientTeamManagement({
     canManage,
     clientId,
@@ -228,6 +247,57 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
     && !teamManagement.emailIssue
     && !teamManagement.nameIssue,
   )
+  const members = page.members
+    .filter((member) => !removedMemberIds.has(member.id))
+    .map((member) => ({
+      ...member,
+      ...(memberOverrides[member.id] ?? {}),
+    }))
+
+  function startEditingMember(member) {
+    setEditError('')
+    setEditRole(member.role)
+    setMemberPendingEdit(member)
+  }
+
+  function saveMemberEdit(event) {
+    event.preventDefault()
+
+    if (!memberPendingEdit) {
+      return
+    }
+
+    void teamManagement.updateMemberRole({
+      member: memberPendingEdit,
+      role: editRole,
+    }).then((updatedMember) => {
+      setMemberOverrides((currentOverrides) => ({
+        ...currentOverrides,
+        [updatedMember.id]: {
+          ...(currentOverrides[updatedMember.id] ?? {}),
+          ...updatedMember,
+        },
+      }))
+      setMemberPendingEdit(null)
+    }).catch((error) => {
+      setEditError(error.message)
+    })
+  }
+
+  function removeMember() {
+    if (!memberPendingRemoval) {
+      return
+    }
+
+    void teamManagement.removeMember(memberPendingRemoval)
+      .then((removedMember) => {
+        setRemovedMemberIds((currentIds) => new Set([...currentIds, removedMember.id]))
+        setMemberPendingRemoval(null)
+      })
+      .catch(() => {
+        setMemberPendingRemoval(null)
+      })
+  }
 
   return (
     <Panel>
@@ -249,7 +319,15 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
         title="Team Members"
       />
       <PanelBody className="p-0">
-        <TeamMembersList members={page.members} />
+        <ClientMemberList
+          canEdit={canManage}
+          canRemove={canManage}
+          emptyDescription="No members are currently attached to this workspace."
+          emptyTitle="No team members"
+          members={members}
+          onEditMember={startEditingMember}
+          onRemoveMember={setMemberPendingRemoval}
+        />
         {canManage ? (
           <div className="grid gap-card px-card pb-card pt-0">
             <PendingInvitations
@@ -283,6 +361,20 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
           </DialogContent>
         </Dialog>
       ) : null}
+      {canManage ? (
+        <EditMemberDialog
+          error={editError}
+          member={memberPendingEdit}
+          onOpenChange={(open) => {
+            if (!open) {
+              setMemberPendingEdit(null)
+            }
+          }}
+          onRoleChange={setEditRole}
+          onSubmit={saveMemberEdit}
+          role={editRole}
+        />
+      ) : null}
       <ConfirmationDialog
         confirmLabel="Revoke invite"
         description={
@@ -298,6 +390,23 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
         }}
         open={Boolean(teamManagement.invitationPendingCancel)}
         title="Revoke invitation?"
+        tone="destructive"
+      />
+      <ConfirmationDialog
+        confirmLabel="Remove access"
+        description={
+          memberPendingRemoval
+            ? `${memberPendingRemoval.name} will lose access to this workspace immediately.`
+            : ''
+        }
+        onConfirm={removeMember}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMemberPendingRemoval(null)
+          }
+        }}
+        open={Boolean(memberPendingRemoval)}
+        title="Remove member access?"
         tone="destructive"
       />
     </Panel>

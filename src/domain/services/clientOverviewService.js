@@ -236,7 +236,7 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
       : null,
     clientId,
     dentalGrowthReviewHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
-      ? `/dashboards/dental-growth-review?clientId=${clientId}`
+      ? `/client/growth-review?clientId=${clientId}`
       : null,
     executivePerformanceHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
       ? `/client/executive-performance?clientId=${clientId}`

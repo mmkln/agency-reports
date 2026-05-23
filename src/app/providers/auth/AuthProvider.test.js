@@ -4,18 +4,6 @@ import { USER_ROLES } from '../../../entities/profile'
 import { buildAuthRuntime } from './authRuntime'
 
 const CLIENT_A_ID = 'client-a'
-const CLIENT_B_ID = 'client-b'
-
-function createRepositories() {
-  return {
-    clients: {
-      list: () => [
-        { id: CLIENT_A_ID },
-        { id: CLIENT_B_ID },
-      ],
-    },
-  }
-}
 
 describe('buildAuthRuntime', () => {
   it('preserves agency team client assignments instead of broadening to every agency client', () => {
@@ -26,7 +14,6 @@ describe('buildAuthRuntime', () => {
 
     const runtime = buildAuthRuntime({
       dataClient: {},
-      repositories: createRepositories(),
       viewer,
     })
 
@@ -34,7 +21,7 @@ describe('buildAuthRuntime', () => {
     expect(runtime.viewer.clientIds).toEqual([CLIENT_A_ID])
   })
 
-  it('defaults agency admins to the first client without mutating viewer scope', () => {
+  it('does not derive agency admin defaults from repository state', () => {
     const viewer = {
       agencyId: 'agency-a',
       role: USER_ROLES.AGENCY_ADMIN,
@@ -42,11 +29,23 @@ describe('buildAuthRuntime', () => {
 
     const runtime = buildAuthRuntime({
       dataClient: {},
-      repositories: createRepositories(),
       viewer,
     })
 
-    expect(runtime.defaultClientId).toBe(CLIENT_A_ID)
+    expect(runtime.defaultClientId).toBeNull()
     expect(runtime.viewer).toBe(viewer)
+  })
+
+  it('accepts an explicit default client id from an auth adapter or bootstrapper', () => {
+    const runtime = buildAuthRuntime({
+      dataClient: {},
+      defaultClientId: CLIENT_A_ID,
+      viewer: {
+        agencyId: 'agency-a',
+        role: USER_ROLES.AGENCY_ADMIN,
+      },
+    })
+
+    expect(runtime.defaultClientId).toBe(CLIENT_A_ID)
   })
 })

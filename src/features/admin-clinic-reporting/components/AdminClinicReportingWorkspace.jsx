@@ -73,7 +73,7 @@ function growthReviewHref(row, clientId) {
     search.set('preview', 'draft')
   }
 
-  return `/dashboards/dental-growth-review?${search.toString()}`
+  return `/client/growth-review?${search.toString()}`
 }
 
 function growthReviewPreviewLabel(row) {
@@ -93,7 +93,7 @@ function sourceBatchDraftHref(row, clientId) {
     preview: 'draft',
   })
 
-  return `/dashboards/dental-growth-review?${search.toString()}`
+  return `/client/growth-review?${search.toString()}`
 }
 
 export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
@@ -150,7 +150,7 @@ export function AdminClinicReportingWorkspace({ routeParams = {}, runtime }) {
             <ClinicClientPreviewLinks
               clientId={page.client.id}
               links={[
-                { href: '/dashboards/dental-growth-review', label: 'Growth Review' },
+                { href: '/client/growth-review', label: 'Dental Growth Review' },
                 { href: '/client/executive-performance', label: 'Executive dashboard' },
                 { href: '/client/monthly-strategy', label: 'Monthly strategy' },
                 { href: '/clinic/daily-ops', label: 'Daily ops' },

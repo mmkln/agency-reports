@@ -67,6 +67,7 @@
 
 - Put page-level entity context, primary status, filters, and main actions in the route header when they control the whole screen.
 - Keep global navigation quiet and structural. It should orient and switch major destinations, not compete with page content, search, or primary workflow actions.
+- The sidebar should show stable destinations for the current container, not every route the user has permission to access.
 - Choose top navigation, sidebar, or split navigation from the actual information architecture: use a top nav for a small flat set of destinations, a sidebar for many stable destinations or nested workspaces, and avoid role-specific shells until the role workflows truly diverge.
 - Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
 - Before changing navigation, identify the exact navigation layer: app shell navigation, workspace tabs, page tabs, table actions, or command buttons. Do not edit nearby navigation-looking UI by assumption.

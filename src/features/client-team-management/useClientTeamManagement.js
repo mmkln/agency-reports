@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
 import {
+  removeClientMembership,
+  updateClientMembershipRole,
+} from '../../domain/services/clientMembershipService'
+import {
   cancelClientTeamInvitation,
   createClientTeamInvitation,
   listClientTeamInvitations,
@@ -128,6 +132,35 @@ export function useClientTeamManagement({ canManage, clientId, onInvitationCreat
     })
   }
 
+  function updateMemberRole({ member, role }) {
+    return runtime.dataClient.write((repositories) => updateClientMembershipRole({
+      membershipId: member.id,
+      repositories,
+      role,
+      viewer: runtime.viewer,
+    })).then((updatedMember) => {
+      toast.success('Member updated', `${updatedMember.name}'s access role was updated.`)
+      return updatedMember
+    }).catch((caughtError) => {
+      toast.error('Member was not updated', caughtError.message)
+      throw caughtError
+    })
+  }
+
+  function removeMember(member) {
+    return runtime.dataClient.write((repositories) => removeClientMembership({
+      membershipId: member.id,
+      repositories,
+      viewer: runtime.viewer,
+    })).then(() => {
+      toast.success('Member removed', `${member.name} no longer has access to this workspace.`)
+      return member
+    }).catch((caughtError) => {
+      toast.error('Member was not removed', caughtError.message)
+      throw caughtError
+    })
+  }
+
   return {
     cancelInvitation,
     copyInviteLink,
@@ -139,7 +172,9 @@ export function useClientTeamManagement({ canManage, clientId, onInvitationCreat
     invitationsStatus: invitationsResource.status,
     invitationPendingCancel,
     nameIssue,
+    removeMember,
     setInvitationPendingCancel,
+    updateMemberRole,
     updateForm,
   }
 }

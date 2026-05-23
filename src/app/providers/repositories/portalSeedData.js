@@ -4,7 +4,7 @@ import {
   CLIENT_FILE_LINK_STATUSES,
   CLIENT_FILE_LINK_TYPES,
 } from '../../../entities/client-file-link'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
+import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership/model'
 import {
   CLIENT_REQUEST_STATUSES,
   CLIENT_REQUEST_TYPES,

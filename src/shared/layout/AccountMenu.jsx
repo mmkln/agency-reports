@@ -11,7 +11,6 @@ import {
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { useNavigate } from 'react-router-dom'
 
-import { clearAuthSession } from '../../domain/services/authService'
 import { Icon } from '../icons'
 import { useToast } from '../notifications'
 import { useTheme } from '../theme'
@@ -36,7 +35,7 @@ function ThemeModeControl() {
   )
 }
 
-export function AccountMenu({ activeRole, hasUnsavedChanges, onAuthChange, viewer }) {
+export function AccountMenu({ activeRole, hasUnsavedChanges, onSignOut, viewer }) {
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -87,8 +86,7 @@ export function AccountMenu({ activeRole, hasUnsavedChanges, onAuthChange, viewe
               }
 
               toast.info('Signed out', 'You have returned to the login screen.')
-              clearAuthSession()
-              onAuthChange?.()
+              onSignOut?.()
               navigate('/login', { replace: true })
             }}
           >

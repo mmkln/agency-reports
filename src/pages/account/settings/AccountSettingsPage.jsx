@@ -7,7 +7,7 @@ import {
   UnavailableState,
 } from '@/shared/ui'
 
-export function AccountSettingsPage({ onAuthChange, runtime }) {
+export function AccountSettingsPage({ onAuthChange, onSignOut, runtime }) {
   const profileResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:account-settings`,
     load: () => runtime.dataClient.read((repositories) => getOwnProfileSettings({
@@ -43,6 +43,7 @@ export function AccountSettingsPage({ onAuthChange, runtime }) {
   return (
     <AccountSettingsWorkspace
       onAuthChange={onAuthChange}
+      onSignOut={onSignOut}
       profile={profile}
       runtime={runtime}
     />

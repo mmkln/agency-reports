@@ -4,6 +4,7 @@ import {
   isActiveClientMembership,
 } from '../../entities/client-membership'
 import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
+import { canManageClientTeam } from '../policies/clientTeamPolicy'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_MEMBERSHIP_ROLES = new Set(Object.values(CLIENT_MEMBERSHIP_ROLES))
@@ -159,19 +160,33 @@ export function updateClientMembershipRole({
   role,
   viewer,
 }) {
-  assertAgencyAdmin(viewer)
-
   const membership = repositories.clientMemberships.findById(membershipId)
 
   if (!membership) {
     throw new Error('Membership was not found.')
   }
 
-  getAdminClient({ clientId: membership.client_id, repositories, viewer })
+  if (!canManageClientTeam({ clientId: membership.client_id, repositories, viewer })) {
+    throw new Error('Only workspace owners can manage members.')
+  }
+
+  const normalizedRole = normalizeRole(role)
+
+  if (membership.role === CLIENT_MEMBERSHIP_ROLES.OWNER && normalizedRole !== CLIENT_MEMBERSHIP_ROLES.OWNER) {
+    const ownerCount = repositories.clientMemberships
+      .listByClientId(membership.client_id)
+      .filter(isActiveClientMembership)
+      .filter((item) => item.role === CLIENT_MEMBERSHIP_ROLES.OWNER)
+      .length
+
+    if (ownerCount <= 1) {
+      throw new Error('Transfer ownership to another owner before changing this role.')
+    }
+  }
 
   const updatedMembership = repositories.clientMemberships.upsert({
     ...membership,
-    role: normalizeRole(role),
+    role: normalizedRole,
     updated_at: now(),
   })
 
@@ -183,20 +198,43 @@ export function updateClientMembershipRole({
 
 export function removeClientMembership({
   membershipId,
+  now = () => new Date().toISOString(),
   repositories,
   viewer,
 }) {
-  assertAgencyAdmin(viewer)
-
   const membership = repositories.clientMemberships.findById(membershipId)
 
   if (!membership) {
     throw new Error('Membership was not found.')
   }
 
-  getAdminClient({ clientId: membership.client_id, repositories, viewer })
+  if (!canManageClientTeam({ clientId: membership.client_id, repositories, viewer })) {
+    throw new Error('Only workspace owners can manage members.')
+  }
 
-  return repositories.clientMemberships.deleteById(membershipId)
+  if (membership.role === CLIENT_MEMBERSHIP_ROLES.OWNER) {
+    const ownerCount = repositories.clientMemberships
+      .listByClientId(membership.client_id)
+      .filter(isActiveClientMembership)
+      .filter((item) => item.role === CLIENT_MEMBERSHIP_ROLES.OWNER)
+      .length
+
+    if (ownerCount <= 1) {
+      throw new Error('Transfer ownership to another owner before removing this member.')
+    }
+  }
+
+  const timestamp = now()
+
+  repositories.clientMemberships.upsert({
+    ...membership,
+    removed_at: timestamp,
+    removed_by: viewer.userId,
+    status: CLIENT_MEMBERSHIP_STATUSES.REMOVED,
+    updated_at: timestamp,
+  })
+
+  return true
 }
 
 export function leaveClientWorkspace({

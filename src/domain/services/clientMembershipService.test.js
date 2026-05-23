@@ -124,6 +124,11 @@ describe('clientMembershipService', () => {
       repositories,
       viewer: createAdminViewer(),
     })).toHaveLength(1)
+    addMembership(repositories, {
+      id: 'membership-backup-owner',
+      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      userId: 'backup-owner-user',
+    })
 
     expect(updateClientMembershipRole({
       membershipId: IDS.MEMBERSHIP,
@@ -143,7 +148,7 @@ describe('clientMembershipService', () => {
       clientId: IDS.CLIENT,
       repositories,
       viewer: createAdminViewer(),
-    })).toHaveLength(0)
+    })).toHaveLength(1)
   })
 
   it('uses memberships as the client user access source', () => {

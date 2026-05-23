@@ -25,6 +25,8 @@ function createUuid() {
 export function useAccessMembersPanel({ clientId, runtime }) {
   const toast = useToast()
   const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
+  const [memberPendingEdit, setMemberPendingEdit] = useState(null)
+  const [editRole, setEditRole] = useState(CLIENT_MEMBERSHIP_ROLES.VIEWER)
   const [form, setForm] = useState(initialMemberForm)
   const [isMemberFormOpen, setIsMemberFormOpen] = useState(false)
   const [error, setError] = useState('')
@@ -95,6 +97,34 @@ export function useAccessMembersPanel({ clientId, runtime }) {
     })
   }
 
+  function startEditingMember(member) {
+    setError('')
+    setMemberPendingEdit(member)
+    setEditRole(member.role)
+  }
+
+  function saveMemberEdit(event) {
+    event.preventDefault()
+
+    if (!memberPendingEdit) {
+      return
+    }
+
+    void runtime.dataClient.write((repositories) => updateClientMembershipRole({
+      membershipId: memberPendingEdit.id,
+      repositories,
+      role: editRole,
+      viewer: runtime.viewer,
+    })).then((member) => {
+      setMemberPendingEdit(null)
+      refreshMembers()
+      toast.success('Member updated', `${member.name}'s access role was updated.`)
+    }).catch((caughtError) => {
+      setError(caughtError.message)
+      toast.error('Member was not updated', caughtError.message)
+    })
+  }
+
   function removeMember() {
     if (!memberPendingRemoval) {
       return
@@ -118,15 +148,21 @@ export function useAccessMembersPanel({ clientId, runtime }) {
     addMember,
     changeRole,
     error,
+    editRole,
     form,
     isMemberFormOpen,
     memberEmailIssue,
     memberNameIssue,
     memberPendingRemoval,
+    memberPendingEdit,
     members,
     removeMember,
+    saveMemberEdit,
+    setEditRole,
     setIsMemberFormOpen,
+    setMemberPendingEdit,
     setMemberPendingRemoval,
+    startEditingMember,
     status: membersResource.status,
     updateForm,
   }

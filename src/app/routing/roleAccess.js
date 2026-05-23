@@ -4,6 +4,12 @@ import {
   USER_ROLES,
 } from '../../entities/profile'
 
+export const NAVIGATION_SCOPES = Object.freeze({
+  AGENCY: 'agency',
+  CLIENT_PORTAL: 'clientPortal',
+  TEAM_OPS: 'teamOps',
+})
+
 export function canAccessRoute(viewer, route) {
   if (!route?.allowedRoles?.length && !route?.requiredCapabilities?.length) {
     return true
@@ -104,6 +110,42 @@ function isRouteAvailableForNavigationRole(route, viewer) {
   return !route.navAllowedRoles?.length || route.navAllowedRoles.includes(viewer?.role)
 }
 
+export function getDefaultNavigationScopeForViewer(viewer) {
+  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
+    return NAVIGATION_SCOPES.AGENCY
+  }
+
+  if (viewer?.role === USER_ROLES.AGENCY_TEAM) {
+    return NAVIGATION_SCOPES.TEAM_OPS
+  }
+
+  if ([USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(viewer?.role)) {
+    return NAVIGATION_SCOPES.CLIENT_PORTAL
+  }
+
+  return null
+}
+
+function getRouteNavigationScopes(route) {
+  if (Array.isArray(route.navigationScopes)) {
+    return route.navigationScopes
+  }
+
+  return route.navigationScope ? [route.navigationScope] : []
+}
+
+function isRouteAvailableForNavigationScope(route, navigationScope) {
+  if (route.showInNav === false) {
+    return true
+  }
+
+  if (!navigationScope) {
+    return true
+  }
+
+  return getRouteNavigationScopes(route).includes(navigationScope)
+}
+
 const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
   'client-overview',
   'client-action-needed',
@@ -147,13 +189,16 @@ function sortRoutesForNavigation(routes) {
 export function filterRoutesForNavigation({
   clientType = null,
   defaultClientId = null,
+  navigationScope = null,
   repositories,
   routeParams = {},
   routes,
   viewer,
 }) {
+  const resolvedNavigationScope = navigationScope ?? getDefaultNavigationScopeForViewer(viewer)
   const roleRoutes = filterRoutesForViewer(routes, viewer)
     .filter((route) => isRouteAvailableForNavigationRole(route, viewer))
+    .filter((route) => isRouteAvailableForNavigationScope(route, resolvedNavigationScope))
 
   if (![USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(viewer?.role)) {
     return sortRoutesForNavigation(roleRoutes)

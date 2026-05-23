@@ -22,6 +22,13 @@ describe('createPortalRepository', () => {
     expect(resolvePortalRepositoryAdapter()).toBe(PORTAL_REPOSITORY_ADAPTERS.LOCAL_STORAGE)
   })
 
+  it('recognizes the API snapshot adapter as a data-client-only backend option', () => {
+    expect(resolvePortalRepositoryAdapter('apiSnapshot')).toBe(PORTAL_REPOSITORY_ADAPTERS.API_SNAPSHOT)
+    expect(() => createPortalRepository({
+      adapter: PORTAL_REPOSITORY_ADAPTERS.API_SNAPSHOT,
+    })).toThrow('The apiSnapshot adapter is a data-client transport adapter.')
+  })
+
   it('uses provided seed data when creating the localStorage adapter', () => {
     const seedData = createSeedDataForRepositoryContract({
       clients: [
@@ -59,7 +66,7 @@ describe('createPortalRepository', () => {
   })
 
   it('fails fast for unsupported adapters', () => {
-    expect(() => resolvePortalRepositoryAdapter('api')).toThrow('Unsupported portal repository adapter: api')
-    expect(() => createPortalRepository({ adapter: 'api' })).toThrow('Unsupported portal repository adapter: api')
+    expect(() => resolvePortalRepositoryAdapter('unsupported')).toThrow('Unsupported portal repository adapter: unsupported')
+    expect(() => createPortalRepository({ adapter: 'unsupported' })).toThrow('Unsupported portal repository adapter: unsupported')
   })
 })

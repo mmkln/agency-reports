@@ -19,7 +19,7 @@ export const CLIENT_TYPE_META = Object.freeze({
     tone: 'neutral',
   },
   [CLIENT_TYPES.CLINIC]: {
-    icon: 'barChart',
+    icon: 'stethoscope',
     label: 'Clinic',
     tone: 'blue',
   },

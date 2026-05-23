@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
 import {
-  authenticateWithEmail,
   DEMO_AUTH_PASSWORD,
   getHomeHrefForViewer,
-  listLoginProfiles,
 } from '../../../domain/services/authService'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
 import { useAuth } from '../../../app/providers/auth/useAuth'
@@ -35,9 +34,9 @@ function SignInButton({ onClick, profile }) {
   )
 }
 
-export function LoginPage({ onAuthChange, runtime }) {
+export function LoginPage({ onAuthChange }) {
   const auth = useAuth()
-  const resolvedRuntime = runtime ?? auth.runtime
+  const authClient = auth.authClient
   const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -45,19 +44,18 @@ export function LoginPage({ onAuthChange, runtime }) {
   const [email, setEmail] = useState(DEFAULT_EMAIL)
   const [password, setPassword] = useState(DEMO_AUTH_PASSWORD)
   const [error, setError] = useState('')
-  const loginProfiles = useMemo(
-    () => listLoginProfiles({ repositories: resolvedRuntime.repositories }),
-    [resolvedRuntime.repositories],
-  )
+  const loginProfilesResource = useAsyncResource({
+    dependencyKey: `login-profiles:${auth.authRevision ?? 0}`,
+    initialData: [],
+    load: () => authClient.listLoginProfiles(),
+  })
+  const loginProfiles = loginProfilesResource.data ?? []
 
   function signIn(nextEmail, nextPassword) {
-    try {
-      const viewer = authenticateWithEmail({
+    void authClient.signInWithEmail({
         email: nextEmail,
         password: nextPassword,
-        repositories: resolvedRuntime.repositories,
-      })
-
+      }).then((viewer) => {
       resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
       const nextHref = searchParams.get('next')
@@ -66,10 +64,10 @@ export function LoginPage({ onAuthChange, runtime }) {
         : null
 
       navigate(safeNextHref ?? getHomeHrefForViewer(viewer), { replace: true })
-    } catch (caughtError) {
+    }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Sign in failed', caughtError.message)
-    }
+    })
   }
 
   function handleSubmit(event) {

@@ -35,6 +35,7 @@ import { ClientUpdatesPageHeader } from '../../pages/client/updates/ClientUpdate
 import { TeamTasksPageHeader } from '../../pages/team/tasks/TeamTasksPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
+import { NAVIGATION_SCOPES } from './roleAccess'
 import { ProtectedRoute } from './ProtectedRoute'
 import {
   AdminClientAccessPageRoute,
@@ -96,6 +97,11 @@ const MarketingReportsPage = lazyNamed(() => import('../../pages/legacy/marketin
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
 const CLIENT_PORTAL_ALLOWED_ROLES = [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM]
+const {
+  AGENCY,
+  CLIENT_PORTAL,
+  TEAM_OPS,
+} = NAVIGATION_SCOPES
 
 export const routeDefinitions = [
   {
@@ -155,6 +161,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientOverviewPageHeader,
     iconName: 'layoutDashboard',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 10,
     element: <ClientOverviewPageRoute />,
   },
@@ -181,6 +188,7 @@ export const routeDefinitions = [
     iconName: 'barChart',
     navAllowedRoles: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
     navLabel: 'Executive',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 25,
     requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW],
     element: <ClientExecutivePerformancePageRoute />,
@@ -195,12 +203,13 @@ export const routeDefinitions = [
     contentWidth: 'content',
     iconName: 'dollarSign',
     navAllowedRoles: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
+    navigationScope: CLIENT_PORTAL,
     navOrder: 45,
     requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
     element: <ClientMonthlyStrategyPageRoute />,
   },
   {
-    path: '/dashboards/dental-growth-review',
+    path: '/client/growth-review',
     id: 'dental-growth-review',
     label: 'Dental Growth Review',
     pageTitle: 'Dental Growth Review',
@@ -208,7 +217,8 @@ export const routeDefinitions = [
     clientTypes: [CLIENT_TYPES.CLINIC],
     contentWidth: 'content',
     iconName: 'target',
-    navLabel: 'Growth Review',
+    navLabel: 'Dental Growth Review',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 23,
     requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
     element: <DentalGrowthReviewPageRoute />,
@@ -222,6 +232,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientActionNeededPageHeader,
     iconName: 'bell',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 20,
     element: <ClientActionNeededPageRoute />,
   },
@@ -246,6 +257,7 @@ export const routeDefinitions = [
     header: ClientPatientAcquisitionPageHeader,
     iconName: 'target',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-performance-group',
       label: 'Performance',
@@ -264,6 +276,7 @@ export const routeDefinitions = [
     header: ClientCallsBookingsPageHeader,
     iconName: 'phone',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-performance-group',
       label: 'Performance',
@@ -283,6 +296,7 @@ export const routeDefinitions = [
     header: ClientProjectsPageHeader,
     iconName: 'checkCircle2',
     excludeClientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navOrder: 30,
     element: <ClientProjectsPageRoute />,
   },
@@ -296,6 +310,7 @@ export const routeDefinitions = [
     header: ClientServiceLinesPageHeader,
     iconName: 'stethoscope',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-performance-group',
       label: 'Performance',
@@ -315,6 +330,7 @@ export const routeDefinitions = [
     header: ClientReputationPageHeader,
     iconName: 'messageSquare',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-performance-group',
       label: 'Performance',
@@ -333,6 +349,7 @@ export const routeDefinitions = [
     header: ClientComplianceApprovalsPageHeader,
     iconName: 'shieldCheck',
     clientTypes: [CLIENT_TYPES.CLINIC],
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-resources-group',
       label: 'Resources',
@@ -350,6 +367,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientReportsDashboardsPageHeader,
     iconName: 'barChart',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 40,
     element: <ClientReportsDashboardsPageRoute />,
   },
@@ -362,6 +380,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientFilesLinksPageHeader,
     iconName: 'fileText',
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-resources-group',
       label: 'Resources',
@@ -380,6 +399,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientRequestsPageHeader,
     iconName: 'messageSquare',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 50,
     element: <ClientRequestsPageRoute />,
   },
@@ -392,6 +412,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientUpdatesPageHeader,
     iconName: 'clock',
+    navigationScope: CLIENT_PORTAL,
     navGroup: {
       id: 'client-resources-group',
       label: 'Resources',
@@ -409,6 +430,7 @@ export const routeDefinitions = [
     contentWidth: 'content',
     header: ClientSettingsPageHeader,
     iconName: 'settings',
+    navigationScope: CLIENT_PORTAL,
     navOrder: 70,
     element: <ClientSettingsPageRoute />,
   },
@@ -432,6 +454,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminClientsPageHeader,
     iconName: 'users',
+    navigationScope: AGENCY,
     navOrder: 10,
     element: <AdminClientsPageRoute />,
   },
@@ -443,6 +466,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    navigationScope: AGENCY,
     navOrder: 20,
     element: <AdminTasksPageRoute />,
   },
@@ -454,6 +478,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminDashboardLinksPageHeader,
     iconName: 'layoutDashboard',
+    navigationScope: AGENCY,
     navOrder: 50,
     element: <AdminDashboardLinksPageRoute />,
   },
@@ -465,6 +490,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminPerformanceDashboardsPageHeader,
     iconName: 'barChart',
+    navigationScope: AGENCY,
     navOrder: 60,
     element: <AdminPerformanceDashboardsPageRoute />,
   },
@@ -487,6 +513,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN],
     header: AdminReportsPageHeader,
     iconName: 'fileText',
+    navigationScope: AGENCY,
     navOrder: 70,
     element: <AdminReportsPageRoute />,
   },
@@ -862,6 +889,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_TEAM],
     header: TeamTasksPageHeader,
     iconName: 'checkCircle2',
+    navigationScope: TEAM_OPS,
     navOrder: 10,
     element: <TeamTasksPageRoute />,
   },
@@ -873,6 +901,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM, USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM],
     contentWidth: 'content',
     iconName: 'phone',
+    navigationScopes: [CLIENT_PORTAL, TEAM_OPS],
     navOrder: 40,
     requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
     element: <ClinicDailyOpsPageRoute />,
@@ -885,6 +914,7 @@ export const routeDefinitions = [
     allowedRoles: [USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM],
     contentWidth: 'content',
     iconName: 'barChart',
+    navigationScope: TEAM_OPS,
     navOrder: 30,
     requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.WEEKLY_OPERATOR_VIEW],
     element: <TeamClinicOperatorPageRoute />,

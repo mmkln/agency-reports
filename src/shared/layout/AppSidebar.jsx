@@ -169,6 +169,7 @@ export function AppSidebar({
   hasUnsavedChanges = false,
   navigationItems,
   onAuthChange,
+  onSignOut,
   runtime,
   routes,
   workspaceSwitcher,
@@ -279,7 +280,7 @@ export function AppSidebar({
           <AccountMenu
             activeRole={activeRole}
             hasUnsavedChanges={hasUnsavedChanges}
-            onAuthChange={onAuthChange}
+            onSignOut={onSignOut ?? onAuthChange}
             viewer={viewer}
           />
         </SidebarMenu>

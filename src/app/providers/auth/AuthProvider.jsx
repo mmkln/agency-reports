@@ -1,11 +1,19 @@
 import { useCallback, useMemo, useState } from 'react'
-import { getCurrentViewer, setAuthSession } from '../../../domain/services/authService'
 import { portalRepository } from '../repositories/portalRepository'
-import { createAsyncPortalDataClient } from '../repositories/createAsyncPortalDataClient'
+import {
+  createPortalDataClient,
+  PORTAL_DATA_CLIENT_ADAPTERS,
+} from '../repositories/createPortalDataClient'
 import { buildAuthRuntime } from './authRuntime'
 import { AuthContext } from './AuthContext'
+import { createLocalAuthClient } from './localAuthClient'
 
-const portalDataClient = createAsyncPortalDataClient({
+const portalDataClient = createPortalDataClient({
+  adapter: import.meta.env.VITE_PORTAL_DATA_CLIENT_ADAPTER ?? PORTAL_DATA_CLIENT_ADAPTERS.LOCAL_REPOSITORY,
+  repositories: portalRepository,
+})
+const portalAuthClient = createLocalAuthClient({
+  dataClient: portalDataClient,
   repositories: portalRepository,
 })
 
@@ -14,12 +22,11 @@ export function AuthProvider({ children }) {
 
   const viewer = useMemo(() => {
     void authRevision
-    return getCurrentViewer({ repositories: portalRepository })
+    return portalAuthClient.getCurrentViewer()
   }, [authRevision])
 
   const runtime = useMemo(() => buildAuthRuntime({
     dataClient: portalDataClient,
-    repositories: portalRepository,
     viewer,
   }), [viewer])
 
@@ -28,7 +35,12 @@ export function AuthProvider({ children }) {
   }, [])
 
   const handleLogin = useCallback((userId) => {
-    setAuthSession(userId)
+    void portalAuthClient.startDemoSession(userId)
+    handleAuthChange()
+  }, [handleAuthChange])
+
+  const handleSignOut = useCallback(() => {
+    void portalAuthClient.signOut()
     handleAuthChange()
   }, [handleAuthChange])
 
@@ -36,8 +48,10 @@ export function AuthProvider({ children }) {
     viewer,
     runtime,
     authRevision,
+    authClient: portalAuthClient,
     onAuthChange: handleAuthChange,
     onLogin: handleLogin,
+    onSignOut: handleSignOut,
     dataClient: portalDataClient,
     repositories: portalRepository,
   }

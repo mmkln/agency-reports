@@ -4,36 +4,60 @@ import { useNavigate } from 'react-router-dom'
 import { PageShell } from '@/shared/ui'
 
 import {
+  DENTAL_GROWTH_REVIEW_VIEW_PRESETS,
   DENTAL_GROWTH_REVIEW_ZONE_IDS,
 } from '../../entities/dental-growth-review'
 import {
-  ChannelTable,
   DecisionCards,
   DentalGrowthReviewState,
   FreshnessFooter,
   FunnelView,
+  GrowthReviewExecutiveSummary,
+  GrowthReviewSection,
+  GrowthReviewToolbar,
   HeatmapTable,
   HeroMetrics,
   MetricList,
   NarrativeColumns,
-  ReactivationTrackTable,
-  ReviewHeader,
+  ReactivationPerformance,
+  SpeedChannelDiagnostics,
+  TeamHealthDiagnostics,
   SimpleListCards,
-  ZonePanel,
 } from './DentalGrowthReviewBlocks'
 
-function getInitialOpenZones(page) {
-  return Object.fromEntries((page.zones ?? []).map((zone) => [zone.id, !zone.defaultCollapsed]))
+function getOpenZonesForMode(page, viewMode) {
+  return Object.fromEntries((page.zones ?? []).map((zone) => [
+    zone.id,
+    viewMode === DENTAL_GROWTH_REVIEW_VIEW_PRESETS.OPERATOR
+      ? !zone.defaultCollapsedForOperator
+      : !zone.defaultCollapsedForExecutive,
+  ]))
 }
 
-function getPreferenceKey(page) {
-  return page?.client?.id && page?.preset
-    ? `dental-growth-review.zone-state.${page.client.id}.${page.preset}`
+function getZonePreferenceKey(page, viewMode) {
+  return page?.client?.id && viewMode
+    ? `dental-growth-review.zone-state.${page.client.id}.${viewMode}`
     : null
 }
 
-function readOpenZonePreference(page) {
-  const preferenceKey = getPreferenceKey(page)
+function getViewModePreferenceKey(page) {
+  return page?.client?.id ? `dental-growth-review.view-mode.${page.client.id}` : null
+}
+
+function readViewModePreference(page) {
+  const preferenceKey = getViewModePreferenceKey(page)
+
+  if (!preferenceKey || typeof window === 'undefined') {
+    return null
+  }
+
+  const value = window.localStorage.getItem(preferenceKey)
+
+  return Object.values(DENTAL_GROWTH_REVIEW_VIEW_PRESETS).includes(value) ? value : null
+}
+
+function readOpenZonePreference(page, viewMode) {
+  const preferenceKey = getZonePreferenceKey(page, viewMode)
 
   if (!preferenceKey || typeof window === 'undefined') {
     return null
@@ -45,6 +69,10 @@ function readOpenZonePreference(page) {
   } catch {
     return null
   }
+}
+
+function getZoneDomId(zone) {
+  return `growth-review-zone-${zone.number}`
 }
 
 function filterMetrics(metrics, ids) {
@@ -79,15 +107,15 @@ function ZoneContent({ content, zone }) {
       return <FunnelView funnel={content.funnel} highlights={content.funnel_highlights} />
     case DENTAL_GROWTH_REVIEW_ZONE_IDS.SPEED_TO_LEAD_CHANNEL:
       return (
-        <div className="grid gap-card">
-          <MetricList metrics={content.speed_to_lead} />
-          <ChannelTable channels={content.channel_attribution} />
-        </div>
+        <SpeedChannelDiagnostics
+          channels={content.channel_attribution}
+          metrics={content.speed_to_lead}
+        />
       )
     case DENTAL_GROWTH_REVIEW_ZONE_IDS.REACTIVATION_TRACKS:
       return (
         <div className="grid gap-card">
-          <ReactivationTrackTable tracks={content.reactivation_tracks} />
+          <ReactivationPerformance tracks={content.reactivation_tracks} />
           <div className="grid gap-card xl:grid-cols-2">
             <HeatmapTable rows={content.heatmaps.reply_rate_by_track_touch} title="Reply Rate by Track by Touch" />
             <HeatmapTable rows={content.heatmaps.email_open_by_track} title="Email Open Rate by Track" />
@@ -96,16 +124,15 @@ function ZoneContent({ content, zone }) {
       )
     case DENTAL_GROWTH_REVIEW_ZONE_IDS.DELIVERABILITY_TEAM_HEALTH:
       return (
-        <div className="grid gap-card">
-          <MetricList metrics={filterMetrics(content.metrics, [
+        <TeamHealthDiagnostics
+          deliverabilityMetrics={filterMetrics(content.metrics, [
             'sms-deliverability-rate',
             'sms-opt-out-rate',
             'email-deliverability-rate',
           ])}
-          />
-          <MetricList metrics={content.front_desk_health} />
-          <MetricList metrics={content.operations_chips} />
-        </div>
+          frontDeskHealth={content.front_desk_health}
+          operationsChips={content.operations_chips}
+        />
       )
     case DENTAL_GROWTH_REVIEW_ZONE_IDS.REPUTATION_REFERRAL:
       return <MetricList metrics={content.reputation_referral} />
@@ -127,18 +154,46 @@ function ZoneContent({ content, zone }) {
 
 export function DentalGrowthReviewDashboard({ page }) {
   const navigate = useNavigate()
-  const initialOpenZones = useMemo(() => readOpenZonePreference(page) ?? getInitialOpenZones(page), [page])
-  const [openZones, setOpenZones] = useState(initialOpenZones)
+  const pageKey = page?.client?.id ?? 'unknown-client'
+  const initialViewMode = useMemo(
+    () => readViewModePreference(page) ?? page.preset ?? DENTAL_GROWTH_REVIEW_VIEW_PRESETS.EXECUTIVE,
+    [page],
+  )
+  const [viewModeState, setViewModeState] = useState(() => ({
+    pageKey,
+    value: initialViewMode,
+  }))
+  const viewMode = viewModeState.pageKey === pageKey ? viewModeState.value : initialViewMode
+  const openZonesKey = `${pageKey}:${viewMode}`
+  const initialOpenZones = useMemo(
+    () => readOpenZonePreference(page, viewMode) ?? getOpenZonesForMode(page, viewMode),
+    [page, viewMode],
+  )
+  const [openZonesState, setOpenZonesState] = useState(() => ({
+    key: openZonesKey,
+    value: initialOpenZones,
+  }))
+  const openZones = openZonesState.key === openZonesKey ? openZonesState.value : initialOpenZones
 
   useEffect(() => {
-    const preferenceKey = getPreferenceKey(page)
+    const preferenceKey = getViewModePreferenceKey(page)
+
+    if (!preferenceKey || typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(preferenceKey, viewMode)
+  }, [page, viewMode])
+
+  useEffect(() => {
+    const preferenceKey = getZonePreferenceKey(page, viewMode)
 
     if (!preferenceKey || typeof window === 'undefined') {
       return
     }
 
     window.localStorage.setItem(preferenceKey, JSON.stringify(openZones))
-  }, [openZones, page])
+  }, [openZones, page, viewMode])
 
   if (page.status === 'error' || !page.period) {
     return (
@@ -166,34 +221,69 @@ export function DentalGrowthReviewDashboard({ page }) {
       search.set('periodType', selected.periodType)
     }
 
-    navigate(`/dashboards/dental-growth-review?${search.toString()}`)
+    navigate(`/client/growth-review?${search.toString()}`)
   }
 
   function toggleZone(zoneId) {
-    setOpenZones((current) => ({
-      ...current,
-      [zoneId]: !current[zoneId],
-    }))
+    setOpenZonesState((current) => {
+      const currentValue = current.key === openZonesKey ? current.value : initialOpenZones
+
+      return {
+        key: openZonesKey,
+        value: {
+          ...currentValue,
+          [zoneId]: !currentValue[zoneId],
+        },
+      }
+    })
   }
 
+  function handleViewModeChange(nextViewMode) {
+    setViewModeState({
+      pageKey,
+      value: nextViewMode,
+    })
+
+    const nextOpenZonesKey = `${pageKey}:${nextViewMode}`
+    setOpenZonesState({
+      key: nextOpenZonesKey,
+      value: readOpenZonePreference(page, nextViewMode) ?? getOpenZonesForMode(page, nextViewMode),
+    })
+  }
+
+  const zoneNavItems = page.zones.map((zone) => ({
+    href: `#${getZoneDomId(zone)}`,
+    id: zone.id,
+    label: `Zone ${zone.number}`,
+  }))
+
   return (
-    <PageShell className="py-section" width="full">
-      <ReviewHeader
+    <PageShell className="pb-section" width="full">
+      <GrowthReviewToolbar
         onPeriodChange={handlePeriodChange}
+        onViewModeChange={handleViewModeChange}
+        page={page}
+        selectedPeriodOptionKey={page.selectedReviewPeriodOptionKey}
+        viewMode={viewMode}
+        zoneNavItems={zoneNavItems}
+      />
+
+      <GrowthReviewExecutiveSummary
         page={page}
         selectedPeriodOptionKey={page.selectedReviewPeriodOptionKey}
       />
 
-      <div className="grid gap-card">
+      <div className="grid gap-section">
         {page.zones.map((zone) => (
-          <ZonePanel
+          <GrowthReviewSection
+            id={getZoneDomId(zone)}
             key={zone.id}
             onToggle={() => toggleZone(zone.id)}
             open={openZones[zone.id] ?? !zone.defaultCollapsed}
             zone={zone}
           >
             <ZoneContent content={content} zone={zone} />
-          </ZonePanel>
+          </GrowthReviewSection>
         ))}
       </div>
 

@@ -10,6 +10,7 @@ export function AppShell({
   sidebarNavigationItems,
   sidebarWorkspaceSwitcher,
   onAuthChange,
+  onSignOut,
   routeParams = {},
   runtime,
   showRouteHeader = true,
@@ -29,6 +30,7 @@ export function AppShell({
         hasUnsavedChanges={hasUnsavedChanges}
         navigationItems={sidebarNavigationItems}
         onAuthChange={onAuthChange}
+        onSignOut={onSignOut}
         runtime={runtime}
         routes={routes}
         workspaceSwitcher={sidebarWorkspaceSwitcher}

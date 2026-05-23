@@ -99,13 +99,19 @@ JSON / webhook / API sync
   - [x] Total Marketing Investment
   - [x] Cost Per New/Reactivated Patient
   - [x] Biggest Funnel Leak
-- [x] Calculate funnel conversion.
+- [x] Calculate funnel conversion:
+  - [x] Biggest leak vs target.
+  - [x] Worst conversion change vs prior period.
+  - [x] Best conversion improvement vs prior period.
 - [x] Calculate speed-to-lead and channel attribution.
 - [x] Calculate reactivation track performance.
 - [x] Calculate deliverability and team health.
 - [x] Calculate reputation and referral health.
 - [x] Calculate source freshness.
-- [x] Generate draft narrative suggestions.
+- [x] Generate draft narrative suggestions:
+  - [x] Top 3 worked from strongest positive prior-period deltas in metrics, funnel conversion, and source/channel performance.
+  - [x] Top 3 did not work from strongest negative deltas and funnel stages below target for 2 consecutive periods.
+  - [x] Top 3 next actions from source `backlog_items`, prioritized by expected revenue impact plus effort to ship, with GHL/backlog tracking context.
 - [x] Generate max 3 draft decisions.
 - [x] Never publish from generation.
 
@@ -156,7 +162,7 @@ JSON / webhook / API sync
 
 ## Phase 6 - Dashboard Preview And Publish Boundary
 
-- [x] Keep `/dashboards/dental-growth-review?preview=draft` agency-admin only.
+- [x] Keep `/client/growth-review?preview=draft` agency-admin only.
 - [x] Show source batch and calculation timestamp in draft preview.
 - [x] Show `Draft preview` badge.
 - [x] Published client dashboard must ignore draft records.

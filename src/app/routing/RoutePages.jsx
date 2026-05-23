@@ -77,7 +77,7 @@ const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loadi
 
 function withPageProps(PageComponent, HeaderComponent) {
   return function PageWithProps() {
-    const { runtime, onAuthChange } = useAuth()
+    const { runtime, onAuthChange, onSignOut } = useAuth()
     const [searchParams] = useSearchParams()
     const routeParams = Object.fromEntries(searchParams.entries())
 
@@ -86,6 +86,7 @@ function withPageProps(PageComponent, HeaderComponent) {
         <PageComponent
           header={HeaderComponent}
           onAuthChange={onAuthChange}
+          onSignOut={onSignOut}
           routeParams={routeParams}
           runtime={runtime}
         />

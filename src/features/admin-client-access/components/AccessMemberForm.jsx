@@ -1,28 +1,24 @@
 import {
   Button,
   Input,
-  RadixSelect as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@/shared/ui'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
+import { ClientMembershipRoleSelect } from '../../../entities/client-membership'
 import { FieldError } from '../../admin-client-workspace'
 
 export function AccessMemberForm({
+  canSubmit = true,
   error,
   form,
   memberEmailIssue,
   memberNameIssue,
+  onCancel,
   onSubmit,
   onUpdateForm,
 }) {
   return (
-    <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={onSubmit}>
-      <p className="text-label text-text-secondary uppercase">Add client user</p>
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_132px_auto] xl:items-start">
+    <form className="grid grid-cols-1 gap-component" noValidate onSubmit={onSubmit}>
+      <div className="grid gap-control sm:grid-cols-2">
         <label className="grid gap-1.5">
           <span className="text-label text-text-secondary">Name</span>
           <Input
@@ -48,24 +44,26 @@ export function AccessMemberForm({
           />
           <FieldError>{memberEmailIssue}</FieldError>
         </label>
+      </div>
+      <div className="grid gap-control sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
         <label className="grid gap-1.5">
           <span className="text-label text-text-secondary">Role</span>
-          <Select onValueChange={(role) => onUpdateForm('role', role)} value={form.role}>
-            <SelectTrigger className="bg-block">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                <SelectItem key={role} value={role}>{role}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ClientMembershipRoleSelect
+            className="bg-block"
+            onValueChange={(role) => onUpdateForm('role', role)}
+            value={form.role}
+          />
         </label>
-        <Button className="xl:mt-[22px]" disabled={Boolean(memberNameIssue || memberEmailIssue)} type="submit">
-          Add member
-        </Button>
       </div>
       <FieldError>{error}</FieldError>
+      <div className="flex justify-end gap-control">
+        <Button onClick={onCancel} type="button" variant="outline">
+          Cancel
+        </Button>
+        <Button disabled={!canSubmit} type="submit">
+          Add client user
+        </Button>
+      </div>
     </form>
   )
 }

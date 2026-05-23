@@ -7,6 +7,7 @@ import { DemoRoleSwitcher } from '../components/DemoRoleSwitcher'
 import {
   canAccessRouteWithContext,
   filterRoutesForNavigation,
+  getDefaultNavigationScopeForViewer,
   getRouteClientId,
   isClientScopedRoute,
 } from '../routing/roleAccess'
@@ -47,7 +48,7 @@ const legacyHashRouteMap = Object.freeze({
 })
 
 export function RootLayout() {
-  const { onAuthChange, onLogin, runtime, viewer } = useAuth()
+  const { onAuthChange, onLogin, onSignOut, runtime, viewer } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -119,6 +120,10 @@ export function RootLayout() {
     navigate(`/admin/client-overview?clientId=${clientId}`)
   }
 
+  const handleExitClientWorkspace = () => {
+    navigate('/admin/clients')
+  }
+
   if (!viewer) {
     return <Outlet />
   }
@@ -145,6 +150,7 @@ export function RootLayout() {
   const accessibleRoutes = filterRoutesForNavigation({
     clientType: routeAccessContext?.clientType,
     defaultClientId: runtime.defaultClientId,
+    navigationScope: getDefaultNavigationScopeForViewer(viewer),
     routeParams,
     routes: routeMetadata,
     viewer,
@@ -169,6 +175,7 @@ export function RootLayout() {
         activeRoute={activeRoute}
         activeSidebarNavigationId={isClientWorkspaceNavigationActive ? currentClientWorkspacePageId : undefined}
         onAuthChange={onAuthChange}
+        onSignOut={onSignOut}
         routeParams={routeParams}
         runtime={runtime}
         sidebarNavigationItems={sidebarNavigationItems}
@@ -176,8 +183,10 @@ export function RootLayout() {
           <ClientWorkspaceSwitcher
             clients={workspaceClients}
             isLoading={workspaceClientsResource.status === 'loading'}
+            onExitWorkspace={handleExitClientWorkspace}
             onSelectClient={handleClientWorkspaceSelect}
             selectedClientId={selectedWorkspaceClientId}
+            showExitWorkspace={isClientWorkspaceNavigationActive}
           />
         ) : null}
         routes={accessibleRoutes}
