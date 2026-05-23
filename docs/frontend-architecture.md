@@ -4,6 +4,11 @@ This document defines the frontend architecture for implementing UC-001, UC-002,
 
 The current product direction is Agency Client Portal Aggregator. Legacy DentalFlow demo pages are preserved only as visual/reference code under `src/pages/legacy`.
 
+Business-domain ownership is defined in `docs/domain-ownership-model.md`.
+Frontend route, shell, sidebar, and settings work must follow that model when
+distinguishing personal user account data from agency-owned data and
+company/workspace-owned data.
+
 ## Architecture Style
 
 Use a pragmatic Feature-Sliced / domain-first structure:

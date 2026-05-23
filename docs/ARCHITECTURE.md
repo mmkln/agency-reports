@@ -4,6 +4,11 @@
 
 Agency Client Portal Aggregator follows a clean, layered architecture with clear separation of concerns. The application uses React Router v7 for client-side routing with role-based access control.
 
+Business-domain ownership is defined separately in `docs/domain-ownership-model.md`.
+Use that document as the source of truth before changing users, agencies, company
+workspaces, memberships, roles, profile semantics, access rules, or
+account/workspace deletion behavior.
+
 ## Directory Structure
 
 ```

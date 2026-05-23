@@ -37,6 +37,7 @@ Primary clinic planning references:
 ```text
 docs/research/clinic-client-portal-information-architecture.md
 docs/implementation/clinic-client-portal-refactor-checklist.md
+docs/domain-ownership-model.md
 ```
 
 ## Implemented Use Cases
@@ -111,6 +112,8 @@ The current frontend architecture expects:
 - route pages using runtime data clients
 - localStorage as a replaceable adapter
 - string UUIDs for entity IDs
+- `User`, `Agency`, and `Company Workspace` to be treated as separate business entities
+- user access to be derived from agency/workspace memberships rather than profile fallback fields
 - client-facing visibility enforced in domain services
 - internal notes/drafts hidden from client read models
 - internal `Task` records are not the client-facing active-work contract

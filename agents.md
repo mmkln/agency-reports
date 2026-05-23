@@ -10,6 +10,7 @@
 ## Sources Of Truth
 
 - Read the relevant use-case document before changing product flow, permissions, data shape, or screen behavior.
+- Before changing users, agencies, company/workspace ownership, memberships, roles, profile semantics, access rules, or account/workspace deletion behavior, read `docs/domain-ownership-model.md`.
 - Read the frontend architecture guide before changing structure, ownership boundaries, or cross-layer responsibilities.
 - Read the design system before UI or styling work, and treat it as the baseline unless the user provides newer visual evidence.
 - Before designing or implementing client-facing analytics dashboards, read `docs/research/client-analytics-dashboard-ui-recommendations.md` and use only research-backed dashboard UI patterns unless the user explicitly changes the product direction.
