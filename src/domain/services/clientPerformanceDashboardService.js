@@ -15,7 +15,7 @@ import {
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   isDashboardVisibleToClient,
   isNeededActionVisibleToClient,
@@ -165,7 +165,7 @@ function mapClientVisibleUpdate(update) {
 }
 
 function createWorkSummary({ repositories, clientId }) {
-  const publishedWorkItems = (repositories.clientWorkItems?.listByClientId(clientId) ?? [])
+  const publishedWorkItems = (repositories.clientWorkItems?.listByWorkspaceId(clientId) ?? [])
     .filter((item) => item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED)
     .sort(sortByUpdatedDesc)
   const completedWorkItems = publishedWorkItems
@@ -176,7 +176,7 @@ function createWorkSummary({ repositories, clientId }) {
     .filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
     .map(mapWorkItem)
-  const recentUpdates = (repositories.updates?.listByClientId(clientId) ?? [])
+  const recentUpdates = (repositories.updates?.listByWorkspaceId(clientId) ?? [])
     .filter(isUpdateVisibleToClient)
     .sort(sortByUpdatedDesc)
     .slice(0, 3)
@@ -192,7 +192,7 @@ function createWorkSummary({ repositories, clientId }) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  return Boolean(client) && canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessWorkspaceResource(viewer, clientId)
 }
 
 function isDashboardPeriodVisibleForMode(period, mode) {
@@ -232,7 +232,7 @@ export function getClientPerformanceDashboardPage({
   }
 
   const periods = repositories.performanceDashboardPeriods
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter((period) => isDashboardPeriodVisibleForMode(period, mode))
     .sort(sortByPeriodDesc)
   const latestClientVisiblePeriod = periods.find(isPerformanceDashboardPeriodVisibleToClient) ?? null
@@ -240,15 +240,15 @@ export function getClientPerformanceDashboardPage({
     ? periods.find((period) => period.id === periodId) ?? null
     : latestClientVisiblePeriod ?? periods[0] ?? null
   const sourceLinks = repositories.dashboardLinks
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isDashboardVisibleToClient)
     .map(mapDashboardLink)
   const latestReport = repositories.reports
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isReportVisibleToClient)
     .sort(sortByPeriodDesc)[0] ?? null
   const neededFromClient = repositories.neededFromClient
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isNeededActionVisibleToClient)
     .map(mapNeededAction)
   const resolvedNow = now()

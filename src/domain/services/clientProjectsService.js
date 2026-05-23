@@ -1,6 +1,6 @@
 import { CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { getClientDashboardPage } from './clientDashboardService'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import { getClientReportsPage } from './clientReportsService'
@@ -296,7 +296,7 @@ export function getClientProjectsPage({
   const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -340,7 +340,7 @@ export function getClientProjectsPage({
 
   const projectsById = new Map(
     repositories.projects
-      .listByClientId(normalizedClientId)
+      .listByWorkspaceId(normalizedClientId)
       .map((project) => [project.id, project]),
   )
   const workItemProjectIds = new Map(

@@ -2,7 +2,7 @@ import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const VALID_CLIENT_STATUSES = new Set(Object.values(CLIENT_STATUSES))
@@ -22,7 +22,7 @@ function getEditableClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Client overview is not available for this admin.')
   }
 
@@ -146,7 +146,7 @@ function clone(value) {
 }
 
 function getClientWorkItems({ clientId, repositories }) {
-  return repositories.clientWorkItems?.listByClientId?.(clientId)
+  return repositories.clientWorkItems?.listByWorkspaceId?.(clientId)
     ?.sort(sortByUpdatedDesc) ?? []
 }
 
@@ -169,23 +169,23 @@ function readPublishedAdminClientOverviewEditor({ client, clientId, repositories
     clientWorkItems: getClientWorkItems({ clientId, repositories }),
     currentFocus: client.current_focus ?? [],
     dashboardLinks: repositories.dashboardLinks
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortByUpdatedDesc),
     neededActions: repositories.neededFromClient
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort((a, b) => new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime()),
     projects: repositories.projects
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortByOrderThenDate),
     reports: repositories.reports
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortReports),
     status: 'ready',
     tasks: repositories.tasks
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortByOrderThenDate),
     updates: repositories.updates
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortByUpdatedDesc),
   }
 }
@@ -210,13 +210,13 @@ function readDraftAdminClientOverviewEditor({ client, clientId, draft, repositor
     currentFocus: clone(draft.currentFocus ?? []),
     dashboardLinks: clone(draft.dashboardLinks ?? []).sort(sortByUpdatedDesc),
     neededActions: repositories.neededFromClient
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort((a, b) => new Date(a.due_date ?? 0).getTime() - new Date(b.due_date ?? 0).getTime()),
     projects: clone(draft.projects ?? []).sort(sortByOrderThenDate),
     reports: clone(draft.reports ?? []).sort(sortReports),
     status: 'ready',
     tasks: repositories.tasks
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .sort(sortByOrderThenDate),
     updates: clone(draft.updates ?? []).sort(sortByUpdatedDesc),
   }
@@ -262,7 +262,7 @@ function deleteRemovedClientRecords({ clientId, inputRecords = [], repository })
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
   repository
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .forEach((record) => {
       if (!retainedIds.has(record.id)) {
         repository.deleteById(record.id)
@@ -479,7 +479,7 @@ function createMemoryEntityRepository(initialRecords = []) {
     list() {
       return records
     },
-    listByClientId(clientId) {
+    listByWorkspaceId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
     upsert(record) {

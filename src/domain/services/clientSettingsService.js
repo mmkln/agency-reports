@@ -4,7 +4,7 @@ import {
   CLIENT_REQUEST_TYPES,
   normalizeClientRequest,
 } from '../../entities/client-request'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { canManageClientTeam } from '../policies/clientTeamPolicy'
 import { canRequestWorkspaceDeletion } from '../policies/workspaceAccessPolicy'
 
@@ -16,7 +16,7 @@ function requireClientAccess({ clientId, repositories, viewer }) {
   const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     throw new Error('You do not have permission to view this workspace.')
   }
 
@@ -50,7 +50,7 @@ function getCurrentMembership({ clientId, repositories, viewer }) {
 
 function findOpenBusinessDeletionRequest({ clientId, repositories }) {
   return repositories.clientRequests
-    ?.listByClientId(clientId)
+    ?.listByWorkspaceId(clientId)
     .map(normalizeClientRequest)
     .find((request) => (
       request.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION

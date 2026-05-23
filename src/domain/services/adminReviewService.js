@@ -9,7 +9,7 @@ import {
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const DEFAULT_STALE_DAYS = 14
@@ -37,7 +37,7 @@ function getAgencyClients({ repositories, viewer }) {
 
   return repositories.workspaces
     .list()
-    .filter((client) => canAccessClient(viewer, client.id))
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
 }
 
 function getClientIds(clients) {

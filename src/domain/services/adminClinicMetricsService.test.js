@@ -48,7 +48,7 @@ function createRepository(initialRecords = []) {
     list() {
       return records
     },
-    listByClientId(clientId) {
+    listByWorkspaceId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
     upsert(record) {

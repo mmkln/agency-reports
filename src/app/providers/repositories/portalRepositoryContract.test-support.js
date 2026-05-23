@@ -16,6 +16,7 @@ export function createSeedDataForRepositoryContract(overrides = {}) {
 }
 
 function createContractRecord({ clientId, repositoryKey, recordId }) {
+  const workspaceId = clientId
   const record = {
     client_id: clientId,
     id: recordId,
@@ -25,7 +26,7 @@ function createContractRecord({ clientId, repositoryKey, recordId }) {
   }
 
   if (repositoryKey === 'workspaceMemberships') {
-    record.workspace_id = clientId
+    record.workspace_id = workspaceId
   }
 
   return record
@@ -55,12 +56,13 @@ export function runPortalRepositoryContractSuite({ createRepository, name }) {
       for (const { key: repositoryKey } of PORTAL_REPOSITORY_COLLECTIONS) {
         const repository = createRepository()
         const collection = repository[repositoryKey]
-        const clientId = `contract-client-${repositoryKey}`
         const recordId = `contract-${repositoryKey}`
+        const clientId = repositoryKey === 'workspaces' ? recordId : `contract-client-${repositoryKey}`
         const record = createContractRecord({ clientId, repositoryKey, recordId })
 
         expect(collection.findById(recordId), `${repositoryKey}.findById before upsert`).toBeNull()
         expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId before upsert`).toEqual([])
+        expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId before upsert`).toEqual([])
 
         expect(collection.upsert(record), `${repositoryKey}.upsert create`).toEqual(record)
         expect(collection.findById(recordId), `${repositoryKey}.findById after create`).toMatchObject(record)
@@ -68,6 +70,9 @@ export function runPortalRepositoryContractSuite({ createRepository, name }) {
           expect.arrayContaining([expect.objectContaining(record)]),
         )
         expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after create`).toEqual([
+          expect.objectContaining(record),
+        ])
+        expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after create`).toEqual([
           expect.objectContaining(record),
         ])
 
@@ -79,10 +84,12 @@ export function runPortalRepositoryContractSuite({ createRepository, name }) {
         expect(collection.upsert(updatedRecord), `${repositoryKey}.upsert update`).toEqual(updatedRecord)
         expect(collection.findById(recordId), `${repositoryKey}.findById after update`).toMatchObject(updatedRecord)
         expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after update`).toHaveLength(1)
+        expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after update`).toHaveLength(1)
 
         expect(collection.deleteById(recordId), `${repositoryKey}.deleteById existing`).toBe(true)
         expect(collection.findById(recordId), `${repositoryKey}.findById after delete`).toBeNull()
         expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after delete`).toEqual([])
+        expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after delete`).toEqual([])
         expect(collection.deleteById(recordId), `${repositoryKey}.deleteById missing`).toBe(false)
       }
     })
@@ -116,8 +123,8 @@ export function runPortalDataClientRepositoryContractSuite({ createDataClient, n
     it('round-trips records through every entity collection', async () => {
       for (const { key: repositoryKey } of PORTAL_REPOSITORY_COLLECTIONS) {
         const dataClient = createDataClient()
-        const clientId = `contract-client-${repositoryKey}`
         const recordId = `contract-${repositoryKey}`
+        const clientId = repositoryKey === 'workspaces' ? recordId : `contract-client-${repositoryKey}`
         const record = createContractRecord({ clientId, repositoryKey, recordId })
 
         await dataClient.read((repository) => {
@@ -125,6 +132,7 @@ export function runPortalDataClientRepositoryContractSuite({ createDataClient, n
 
           expect(collection.findById(recordId), `${repositoryKey}.findById before upsert`).toBeNull()
           expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId before upsert`).toEqual([])
+          expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId before upsert`).toEqual([])
         })
 
         await expect(dataClient.write((repository) => (
@@ -139,6 +147,9 @@ export function runPortalDataClientRepositoryContractSuite({ createDataClient, n
             expect.arrayContaining([expect.objectContaining(record)]),
           )
           expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after create`).toEqual([
+            expect.objectContaining(record),
+          ])
+          expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after create`).toEqual([
             expect.objectContaining(record),
           ])
         })
@@ -157,6 +168,7 @@ export function runPortalDataClientRepositoryContractSuite({ createDataClient, n
 
           expect(collection.findById(recordId), `${repositoryKey}.findById after update`).toMatchObject(updatedRecord)
           expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after update`).toHaveLength(1)
+          expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after update`).toHaveLength(1)
         })
 
         await expect(dataClient.write((repository) => (
@@ -168,6 +180,7 @@ export function runPortalDataClientRepositoryContractSuite({ createDataClient, n
 
           expect(collection.findById(recordId), `${repositoryKey}.findById after delete`).toBeNull()
           expect(collection.listByClientId(clientId), `${repositoryKey}.listByClientId after delete`).toEqual([])
+          expect(collection.listByWorkspaceId(clientId), `${repositoryKey}.listByWorkspaceId after delete`).toEqual([])
         })
 
         await expect(dataClient.write((repository) => (

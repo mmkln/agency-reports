@@ -1,5 +1,5 @@
 import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../entities/client-work-item'
-import { canAccessClient } from './accessPolicy'
+import { canAccessWorkspaceResource } from './accessPolicy'
 import {
   hasAgencyAdminMembership,
   hasAgencyMembership,
@@ -15,7 +15,7 @@ export function canClientViewClientWorkItem({ item, viewer }) {
     return false
   }
 
-  return isClientWorkItemPublished(item) && canAccessClient(viewer, item.client_id)
+  return isClientWorkItemPublished(item) && canAccessWorkspaceResource(viewer, item.client_id)
 }
 
 export function canAgencyViewClientWorkItem({ item, viewer }) {
@@ -23,7 +23,7 @@ export function canAgencyViewClientWorkItem({ item, viewer }) {
     return false
   }
 
-  return hasAgencyMembership(viewer) && canAccessClient(viewer, item.client_id)
+  return hasAgencyMembership(viewer) && canAccessWorkspaceResource(viewer, item.client_id)
 }
 
 export function canManageClientWorkItem({ client, item, viewer }) {
@@ -32,10 +32,10 @@ export function canManageClientWorkItem({ client, item, viewer }) {
   }
 
   if (client) {
-    return client.id === item?.client_id && canAccessClient(viewer, client.id)
+    return client.id === item?.client_id && canAccessWorkspaceResource(viewer, client.id)
   }
 
-  return canAccessClient(viewer, item?.client_id)
+  return canAccessWorkspaceResource(viewer, item?.client_id)
 }
 
 export function canPublishClientWorkItem({ client, item, viewer }) {
@@ -45,7 +45,7 @@ export function canPublishClientWorkItem({ client, item, viewer }) {
 export function canTeamPrepareClientWorkItem({ item, viewer }) {
   return hasAgencyMembership(viewer)
     && !hasAgencyAdminMembership(viewer)
-    && canAccessClient(viewer, item?.client_id)
+    && canAccessWorkspaceResource(viewer, item?.client_id)
 }
 
 const allowedPublishTransitions = Object.freeze({

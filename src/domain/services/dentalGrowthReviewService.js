@@ -9,7 +9,7 @@ import {
   normalizeDentalGrowthReviewSourceBatch,
   validateDentalGrowthReviewPeriod,
 } from '../../entities/dental-growth-review'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 function sortByPeriodDesc(left, right) {
@@ -35,7 +35,7 @@ function isVisiblePeriod(period, source) {
 function getClinicClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.type !== CLIENT_TYPES.CLINIC || !canAccessClient(viewer, clientId)) {
+  if (!client || client.type !== CLIENT_TYPES.CLINIC || !canAccessWorkspaceResource(viewer, clientId)) {
     return null
   }
 
@@ -165,7 +165,7 @@ export function getDentalGrowthReviewDashboardPage({
     }
   }
 
-  const periods = (repositories.dentalGrowthReviewPeriods?.listByClientId(clientId) ?? [])
+  const periods = (repositories.dentalGrowthReviewPeriods?.listByWorkspaceId(clientId) ?? [])
     .map((record) => validateDentalGrowthReviewPeriod(record))
     .filter((period) => isVisiblePeriod(period, normalizedSource))
     .sort(sortByPeriodDesc)

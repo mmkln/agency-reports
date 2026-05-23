@@ -339,7 +339,7 @@ export function previewTaskMarkdownImport({
   })
   const existingTasksByTitle = new Set(
     repositories.tasks
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .filter((task) => (resolvedProjectId ? task.project_id === resolvedProjectId : true))
       .map((task) => normalizeKey(task.title)),
   )

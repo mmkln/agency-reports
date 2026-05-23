@@ -8,7 +8,7 @@ import { normalizeNeededAction } from '../../entities/needed-from-client'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
 import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../policies/taskPolicy'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   hasAgencyAdminMembership,
   hasAgencyMembership,
@@ -198,7 +198,7 @@ export function listTeamTasks({
   const clientIds = getAssignedClientIds(viewer)
   const clients = repositories.workspaces
     .list()
-    .filter((client) => clientIds.includes(client.id) && canAccessClient(viewer, client.id))
+    .filter((client) => clientIds.includes(client.id) && canAccessWorkspaceResource(viewer, client.id))
   const clientsById = new Map(clients.map((client) => [client.id, client]))
   const projectsById = new Map(
     repositories.projects

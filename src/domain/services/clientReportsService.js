@@ -1,7 +1,7 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -99,7 +99,7 @@ function mapReport(report, { client }) {
 export function getClientReportsPage({ clientId, reportId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -108,7 +108,7 @@ export function getClientReportsPage({ clientId, reportId, repositories, viewer 
 
   const canPreviewAllClientReports = hasAgencyAdminMembership(viewer)
   const reports = repositories.reports
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter((report) => canPreviewAllClientReports || isReportVisibleToClient(report))
     .sort(sortByPeriodDesc)
     .map((report) => mapReport({ ...report }, { client }))

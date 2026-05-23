@@ -50,9 +50,6 @@ function createRepository(initialRecords = []) {
     list() {
       return records
     },
-    listByClientId(clientId) {
-      return records.filter((record) => record.client_id === clientId)
-    },
     listByWorkspaceId(workspaceId) {
       return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
     },

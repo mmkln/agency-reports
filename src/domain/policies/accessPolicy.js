@@ -1,10 +1,14 @@
 import { canManageAgencyWorkspace } from './agencyAccessPolicy'
 import { canAccessWorkspace } from './workspaceAccessPolicy'
 
-export function canAccessClient(viewer, clientId) {
-  if (!viewer || !clientId) {
+export function canAccessWorkspaceResource(viewer, workspaceId) {
+  if (!viewer || !workspaceId) {
     return false
   }
 
-  return canAccessWorkspace(viewer, clientId) || canManageAgencyWorkspace(viewer, clientId)
+  return canAccessWorkspace(viewer, workspaceId) || canManageAgencyWorkspace(viewer, workspaceId)
+}
+
+export function canAccessClient(viewer, clientId) {
+  return canAccessWorkspaceResource(viewer, clientId)
 }

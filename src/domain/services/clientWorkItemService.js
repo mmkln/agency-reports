@@ -19,7 +19,7 @@ import {
   canTransitionClientWorkItemPublishState,
   isClientWorkItemPublished,
 } from '../policies/clientWorkItemPolicy'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   hasAgencyAdminMembership,
   hasAgencyMembership,
@@ -136,7 +136,7 @@ function getAdminClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 
@@ -172,7 +172,7 @@ function canPrepareClientWorkItemFromTask({ client, task, viewer }) {
     return false
   }
 
-  return hasAgencyMembership(viewer) && canAccessClient(viewer, task.client_id)
+  return hasAgencyMembership(viewer) && canAccessWorkspaceResource(viewer, task.client_id)
 }
 
 function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
@@ -322,7 +322,7 @@ export function listAdminClientWorkItems({
   const projectsById = getProjectMap(repositories)
   const tasksById = getTaskMap(repositories)
   const workItems = repositories.clientWorkItems
-    .listByClientId(client.id)
+    .listByWorkspaceId(client.id)
     .filter((item) => canAgencyViewClientWorkItem({ item, viewer }))
     .map((item) => mapAdminWorkItem({
       client,
@@ -371,7 +371,7 @@ export function listPublishedClientWorkItems({
   const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -380,7 +380,7 @@ export function listPublishedClientWorkItems({
 
   const projectsById = getProjectMap(repositories)
   const workItems = repositories.clientWorkItems
-    .listByClientId(normalizedClientId)
+    .listByWorkspaceId(normalizedClientId)
     .filter((item) => {
       if (!isClientWorkItemPublished(item)) {
         return false

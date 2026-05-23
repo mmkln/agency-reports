@@ -19,7 +19,7 @@ import {
   CLINIC_REPORTING_PUBLISH_STATES,
   normalizeClinicReportingPeriod,
 } from '../../entities/clinic-reporting'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   assertClientFacingClinicReportingPayload,
@@ -59,7 +59,7 @@ function assertAdminCanPublish(viewer) {
 function getAdminClinicClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic account was not found.')
   }
 
@@ -268,7 +268,7 @@ function mapAdminReportingPeriodSummary(period, layer) {
 }
 
 function getPreviousDentalGrowthReviewPeriod({ batch, repositories }) {
-  return (repositories.dentalGrowthReviewPeriods?.listByClientId(batch.client_id) ?? [])
+  return (repositories.dentalGrowthReviewPeriods?.listByWorkspaceId(batch.client_id) ?? [])
     .map((record) => normalizeDentalGrowthReviewPeriod(record))
     .filter((period) => period.period_type === batch.period_type)
     .filter((period) => new Date(period.period_end).getTime() < new Date(batch.period_end).getTime())
@@ -431,7 +431,7 @@ export function getAdminClinicReportingPage({ clientId, repositories, viewer }) 
   assertAdminCanImport(viewer)
   const client = getAdminClinicClient({ clientId, repositories, viewer })
   const records = ADMIN_REPORTING_LAYERS.flatMap((layer) => {
-    const layerRecords = getRepositoryForLayer(repositories, layer)?.listByClientId(clientId) ?? []
+    const layerRecords = getRepositoryForLayer(repositories, layer)?.listByWorkspaceId(clientId) ?? []
 
     return layerRecords.map((record) => {
       const recordLayer = record.layer ?? (record.zones ? DENTAL_GROWTH_REVIEW_LAYER : layer)
@@ -441,7 +441,7 @@ export function getAdminClinicReportingPage({ clientId, repositories, viewer }) 
   })
     .filter((record) => record.layer)
     .sort(sortByPeriodDesc)
-  const sourceBatches = (repositories.dentalGrowthReviewSourceBatches?.listByClientId(clientId) ?? [])
+  const sourceBatches = (repositories.dentalGrowthReviewSourceBatches?.listByWorkspaceId(clientId) ?? [])
     .map((batch) => {
       const normalized = normalizeDentalGrowthReviewSourceBatch(batch)
       const generatedPeriod = normalized.generated_period_id

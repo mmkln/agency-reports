@@ -1,4 +1,4 @@
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyMembership } from '../policies/routeAccessPolicy'
 
 export const ACTIVITY_EVENT_TYPES = Object.freeze({
@@ -76,7 +76,7 @@ export function isActivityEventVisibleToClient(eventOrType) {
 function assertCanRecordActivity({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Client activity is not available.')
   }
 
@@ -173,7 +173,7 @@ export function listClientVisibleActivityEvents({
   assertCanRecordActivity({ clientId, repositories, viewer })
 
   return repositories.activityEvents
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isActivityEventVisibleToClient)
     .sort(sortActivityDesc)
     .slice(0, limit)
@@ -190,7 +190,7 @@ export function listClientActivityEvents({
   assertCanReadActivity({ clientId, repositories, viewer })
 
   return repositories.activityEvents
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .sort(sortActivityDesc)
     .slice(0, limit)
     .map((event) => mapActivityEvent({ event, repositories }))

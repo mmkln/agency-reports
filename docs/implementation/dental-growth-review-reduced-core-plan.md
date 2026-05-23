@@ -381,25 +381,25 @@ Keep:
 
 ### Phase 2 - Client Page UI Reduction
 
-- [ ] Remove 9-zone rendering from `/client/growth-review`.
-- [ ] Remove zone jump navigation.
-- [ ] Remove Executive/Operator mode toggle from the client-facing core page.
-- [ ] Render compact header.
-- [ ] Render top data trust alert only when needed.
-- [ ] Render simplified hero metrics.
-- [ ] Render `What Worked / Needs Attention / Next Actions`.
-- [ ] Render core funnel.
-- [ ] Render compact funnel summary.
-- [ ] Render Decisions Needed as bottom action section.
-- [ ] Render compact freshness footer.
+- [x] Remove 9-zone rendering from `/client/growth-review`.
+- [x] Remove zone jump navigation.
+- [x] Remove Executive/Operator mode toggle from the client-facing core page.
+- [x] Render compact header.
+- [x] Render top data trust alert only when needed.
+- [x] Render simplified hero metrics.
+- [x] Render `What Worked / Needs Attention / Next Actions`.
+- [x] Render core funnel.
+- [x] Render compact funnel summary.
+- [x] Render Decisions Needed as bottom action section.
+- [x] Render compact freshness footer.
 
 ### Phase 3 - Remove Or Relocate Diagnostic UI
 
-- [ ] Remove Zone 5 client UI from the Growth Review page.
-- [ ] Remove Zone 6 client UI from the Growth Review page.
-- [ ] Remove Zone 7 client UI from the Growth Review page.
-- [ ] Remove Zone 8 client UI from the Growth Review page.
-- [ ] Remove Watching/Shipped/Experiments from the main client page.
+- [x] Remove Zone 5 client UI from the Growth Review page.
+- [x] Remove Zone 6 client UI from the Growth Review page.
+- [x] Remove Zone 7 client UI from the Growth Review page.
+- [x] Remove Zone 8 client UI from the Growth Review page.
+- [x] Remove Watching/Shipped/Experiments from the main client page.
 - [ ] Decide whether diagnostic components stay unused for future internal route or are deleted.
 - [ ] If keeping diagnostics, document that they are not part of client core v1.
 

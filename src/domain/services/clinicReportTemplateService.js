@@ -1,6 +1,6 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   getClientCallsBookingsPage,
@@ -122,7 +122,7 @@ export function mapClinicReportSections(sections) {
 function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 

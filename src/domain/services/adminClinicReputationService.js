@@ -11,7 +11,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   assertClinicPublishReady,
   getReputationSnapshotPublishReadiness,
@@ -29,7 +29,7 @@ function getEditableClinicClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic reputation is not available for this admin.')
   }
 
@@ -148,7 +148,7 @@ function preservePublishState(existingRecord) {
 
 function getLocations({ clientId, repositories }) {
   return repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
 }
@@ -171,7 +171,7 @@ function filterMeaningfulRecords(records = []) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
@@ -193,7 +193,7 @@ function createReputationActionKey(snapshotId, suggestionType) {
 }
 
 function getOpenReputationActionsBySuggestionKey({ clientId, repositories }) {
-  const actions = repositories.neededFromClient?.listByClientId?.(clientId) ?? []
+  const actions = repositories.neededFromClient?.listByWorkspaceId?.(clientId) ?? []
 
   return new Map(
     actions
@@ -350,7 +350,7 @@ export function getAdminClinicReputationPage({ clientId, repositories, viewer })
     locations,
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     reputationSnapshots: repositories.reputationSnapshots
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeReputationSnapshot)
       .map((record) => ({
         ...record,
@@ -381,7 +381,7 @@ export function saveAdminClinicReputation({
   const validLocationIds = new Set(locations.map((location) => location.id))
   const snapshots = filterMeaningfulRecords(input?.reputationSnapshots)
   const existingSnapshotsById = new Map(
-    repositories.reputationSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.reputationSnapshots.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
 
   deleteRemovedRecords({

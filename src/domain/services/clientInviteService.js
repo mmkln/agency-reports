@@ -3,7 +3,7 @@ import {
   getWorkspaceRoleDefaultCapabilities,
   WORKSPACE_ROLES,
 } from '../../entities/workspace-membership'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { assertCanManageClientTeam } from '../policies/clientTeamPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
@@ -68,7 +68,7 @@ function assertClientBelongsToAgency({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Client was not found.')
   }
 
@@ -251,7 +251,7 @@ export function listClientInvitations({
   assertClientBelongsToAgency({ clientId, repositories, viewer })
 
   return repositories.workspaceInvitations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map((invitation) => mapInvitation(invitation, now))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
@@ -265,7 +265,7 @@ export function listClientTeamInvitations({
   assertCanManageClientTeam({ clientId, repositories, viewer })
 
   return repositories.workspaceInvitations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map((invitation) => mapInvitation(invitation, now))
     .filter((invitation) => invitation.status === CLIENT_INVITATION_STATUSES.PENDING)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

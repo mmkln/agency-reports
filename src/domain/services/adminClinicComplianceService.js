@@ -21,7 +21,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   assertClinicPublishReady,
   getComplianceReviewPublishReadiness,
@@ -148,7 +148,7 @@ function getEditableClinicClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic compliance is not available for this admin.')
   }
 
@@ -276,11 +276,11 @@ function preservePublishState(existingRecord) {
 
 function getClinicFoundation({ clientId, repositories }) {
   const locations = repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
   const serviceLines = repositories.clinicServiceLines
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicServiceLine)
     .sort(sortByDisplayOrder)
 
@@ -301,7 +301,7 @@ function validateReference(value, validIds, fieldName) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
@@ -317,7 +317,7 @@ function createComplianceActionKey(recordId, suggestionType) {
 }
 
 function getOpenComplianceActionsBySuggestionKey({ clientId, repositories }) {
-  const actions = repositories.neededFromClient?.listByClientId?.(clientId) ?? []
+  const actions = repositories.neededFromClient?.listByWorkspaceId?.(clientId) ?? []
   const entries = []
 
   for (const action of actions.filter(isOpenNeededAction)) {
@@ -859,7 +859,7 @@ export function getAdminClinicCompliancePage({ clientId, repositories, viewer })
     approvalTypeMeta: CLINIC_APPROVAL_TYPE_META,
     client: mapClient(client),
     complianceReviews: repositories.complianceReviews
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeComplianceReview)
       .map((record) => ({
         ...record,
@@ -873,7 +873,7 @@ export function getAdminClinicCompliancePage({ clientId, repositories, viewer })
     complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META,
     locations: foundation.locations,
     medicalApprovals: repositories.medicalApprovals
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeMedicalApproval)
       .map((record) => ({
         ...record,
@@ -906,10 +906,10 @@ export function saveAdminClinicCompliance({
   const complianceReviews = filterMeaningfulReviews(input?.complianceReviews)
   const medicalApprovals = filterMeaningfulApprovals(input?.medicalApprovals)
   const existingReviewsById = new Map(
-    repositories.complianceReviews.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.complianceReviews.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingApprovalsById = new Map(
-    repositories.medicalApprovals.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.medicalApprovals.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
 
   deleteRemovedRecords({

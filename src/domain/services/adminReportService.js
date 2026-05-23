@@ -1,6 +1,6 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../entities/report'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   mapClinicReportSections,
@@ -74,7 +74,7 @@ function normalizeStatus(value, fallback = REPORT_STATUSES.DRAFT) {
 function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 
@@ -147,7 +147,7 @@ export function listAdminReports({ repositories, viewer }) {
   const clientsById = new Map(
     repositories.workspaces
       .list()
-      .filter((client) => canAccessClient(viewer, client.id))
+      .filter((client) => canAccessWorkspaceResource(viewer, client.id))
       .map((client) => [client.id, client]),
   )
 

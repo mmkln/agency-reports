@@ -10,7 +10,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   canCreateWorkspaceRequests,
@@ -162,7 +162,7 @@ function countBy(requests, predicate) {
 }
 
 function assertClientUserCanSubmit({ clientId, viewer }) {
-  if (!canAccessClient(viewer, clientId) || !canCreateWorkspaceRequests(viewer, clientId)) {
+  if (!canAccessWorkspaceResource(viewer, clientId) || !canCreateWorkspaceRequests(viewer, clientId)) {
     throw new Error('Only client users can submit requests for their client.')
   }
 }
@@ -251,7 +251,7 @@ function findOpenClarificationAction({ repositories, request }) {
   }
 
   return repositories.neededFromClient
-    ?.listByClientId(request.client_id)
+    ?.listByWorkspaceId(request.client_id)
     .find((action) => action.related_request_id === request.id && isOpenNeededAction(action))
     ?? null
 }
@@ -306,14 +306,14 @@ export function getClientRequestsPage({
   const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
     }
   }
 
-  const requests = (repositories.clientRequests?.listByClientId(normalizedClientId) ?? [])
+  const requests = (repositories.clientRequests?.listByWorkspaceId(normalizedClientId) ?? [])
     .map(mapClientRequest)
     .sort(sortRequests)
 
@@ -428,7 +428,7 @@ export function createBusinessDeletionRequest({
   })
 
   const existingRequest = repositories.clientRequests
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .find(isOpenBusinessDeletionRequest)
 
   if (existingRequest) {
@@ -460,7 +460,7 @@ export function listAdminClientRequestsWorkspace({
 
   const clients = repositories.workspaces
     .list()
-    .filter((client) => canAccessClient(viewer, client.id))
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
   const clientIds = new Set(clients.map((client) => client.id))
   const requests = filterAdminRequestsByClient(
     (repositories.clientRequests?.list() ?? []).filter((request) => clientIds.has(request.client_id)).map((request) => {
@@ -515,7 +515,7 @@ export function updateClientRequestTriage({
 
   const request = repositories.clientRequests.findById(requestId)
 
-  if (!request || !canAccessClient(viewer, request.client_id)) {
+  if (!request || !canAccessWorkspaceResource(viewer, request.client_id)) {
     throw new Error('Client request was not found.')
   }
 

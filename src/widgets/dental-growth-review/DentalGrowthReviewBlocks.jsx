@@ -60,6 +60,102 @@ function createFreshnessItems(sources = []) {
   }))
 }
 
+function getProblemSources(sources = []) {
+  return sources.filter((source) => ['red', 'yellow'].includes(source.freshness_status))
+}
+
+function formatPeriodRange(period) {
+  return `${formatDate(period.period_start)} - ${formatDate(period.period_end)}`
+}
+
+function getHeroMetricTitle(metric) {
+  if (metric.id === 'cost-per-new-reactivated-patient') {
+    return 'Cost Per Attended / New Patient'
+  }
+
+  return metric.title
+}
+
+export function GrowthReviewCoreHeader({ onPeriodChange, page, selectedPeriodOptionKey }) {
+  const period = page.period
+  const context = period.content.period_context
+  const comparisonLabel = page.previousPeriod
+    ? `Compare: ${page.previousPeriod.label} (${formatPeriodRange(page.previousPeriod)})`
+    : 'Compare: previous equivalent period unavailable'
+
+  return (
+    <header className="grid gap-component">
+      <div className="flex min-w-0 flex-col gap-control lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-tag">
+            <h1 className="text-display text-text-primary">Dental Growth Review</h1>
+            {page.source === 'draft' ? <Badge tone="amber">Draft preview</Badge> : null}
+          </div>
+          <div className="mt-tag flex flex-wrap items-center gap-tag text-ui font-normal text-text-muted">
+            <span>{period.label}</span>
+            <span>{formatPeriodRange(period)}</span>
+            <span>{comparisonLabel}</span>
+            <span>{context.cadence_label}</span>
+          </div>
+          <p className="mt-component max-w-readable text-body text-text-primary">{context.auto_summary}</p>
+        </div>
+        <label className="grid min-w-search-compact gap-tag text-label text-text-muted">
+          Review period
+          <NativeSelect
+            className="h-control-small text-label"
+            onChange={(event) => onPeriodChange(event.target.value)}
+            value={selectedPeriodOptionKey}
+          >
+            {page.reviewPeriodOptions.map((option) => (
+              <option disabled={option.disabled} key={option.key} value={option.key}>
+                {option.label} - {option.periodLabel}
+              </option>
+            ))}
+          </NativeSelect>
+        </label>
+      </div>
+      {page.calculationMeta ? (
+        <div className="flex flex-wrap gap-tag text-label font-normal text-text-muted">
+          <span>Source batch: {page.calculationMeta.sourceBatchId || 'Not linked'}</span>
+          <span>Calculated: {formatDate(page.calculationMeta.calculatedAt)}</span>
+          <span>Validation: {formatLabel(page.calculationMeta.validationState || 'unknown')}</span>
+        </div>
+      ) : null}
+    </header>
+  )
+}
+
+export function DataTrustAlert({ sources = [] }) {
+  const problemSources = getProblemSources(sources)
+
+  if (!problemSources.length) {
+    return null
+  }
+
+  const primarySource = problemSources[0]
+
+  return (
+    <section className={`rounded-block p-component ${statusClass(primarySource.freshness_status)}`}>
+      <p className="text-label">Data trust alert</p>
+      <p className="mt-tag text-ui font-semibold">
+        {primarySource.source_name} data is {formatLabel(primarySource.freshness_status)}.
+        {' '}
+        {primarySource.freshness_note || primarySource.failure_reason}
+      </p>
+      {primarySource.affected_metrics?.length ? (
+        <p className="mt-tag text-label font-normal">
+          Affects: {primarySource.affected_metrics.join(', ')}.
+        </p>
+      ) : null}
+      {problemSources.length > 1 ? (
+        <p className="mt-tag text-label font-normal">
+          {problemSources.length - 1} more source{problemSources.length > 2 ? 's' : ''} need attention in the footer.
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
 export function GrowthReviewToolbar({
   onPeriodChange,
   onViewModeChange,
@@ -188,18 +284,22 @@ export function GrowthReviewExecutiveSummary({ page }) {
 }
 
 export function MetricCard({ metric }) {
+  const meta = [
+    { label: `Prior ${metric.prior_period_value}` },
+    { label: `Target: ${metric.target}` },
+  ]
+
+  if (metric.confidence && metric.confidence !== 'high') {
+    meta.push({ label: `${formatLabel(metric.confidence)} confidence` })
+  }
+
   return (
     <MetricTile
       helper={`${metric.delta_absolute}${metric.delta_percent ? ` / ${metric.delta_percent}` : ''}`}
-      meta={[
-        { label: `Prior ${metric.prior_period_value}` },
-        { label: `Target: ${metric.target}` },
-        { label: metric.source },
-        { label: `Updated ${formatDate(metric.last_updated_at)} | ${formatLabel(metric.confidence)} confidence` },
-      ]}
-      statusLabel={formatLabel(metric.status)}
+      meta={meta}
+      statusLabel={metric.confidence && metric.confidence !== 'high' ? formatLabel(metric.confidence) : formatLabel(metric.status)}
       statusTone={metric.status}
-      title={metric.title}
+      title={getHeroMetricTitle(metric)}
       value={formatMetricValue(metric)}
     />
   )
@@ -207,25 +307,21 @@ export function MetricCard({ metric }) {
 
 export function HeroMetrics({ metrics }) {
   return (
-    <div className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
-      {metrics.map((metric, index) => (
-        <div className={index === 0 ? 'md:col-span-2 xl:col-span-1' : ''} key={metric.id}>
-          <MetricCard metric={metric} />
-        </div>
-      ))}
-    </div>
+    <section className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
+      {metrics.slice(0, 6).map((metric) => <MetricCard key={metric.id} metric={metric} />)}
+    </section>
   )
 }
 
 export function NarrativeColumns({ items }) {
   const groups = [
-    ['3 Wins', 'win', 'What worked'],
-    ['3 Losses', 'loss', 'What leaked'],
-    ['3 Next', 'next', 'What changes next'],
+    ['What Worked', 'win', 'Measured improvements worth keeping'],
+    ['Needs Attention', 'loss', 'Problems, risks, or leaks to address'],
+    ['Next Actions', 'next', 'What changes before the next review'],
   ]
 
   return (
-    <div className="grid gap-card lg:grid-cols-3">
+    <section className="grid gap-card lg:grid-cols-3">
       {groups.map(([title, type, helper]) => (
         <section className="grid content-start gap-component" key={type}>
           <div>
@@ -252,7 +348,7 @@ export function NarrativeColumns({ items }) {
           </ol>
         </section>
       ))}
-    </div>
+    </section>
   )
 }
 
@@ -339,13 +435,23 @@ function FunnelStage({ stage }) {
 }
 
 export function FunnelView({ funnel, highlights }) {
-  const rows = funnel.map((stage) => ({
-    ...stage,
-    id: stage.id ?? stage.stage_name,
-  }))
+  const rows = funnel
+    .filter((stage) => {
+      const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
+
+      return !isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence)
+    })
+    .map((stage) => ({
+      ...stage,
+      id: stage.id ?? stage.stage_name,
+    }))
+  const treatmentUnavailable = funnel.some((stage) => (
+    String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
+    && ['low', 'unavailable'].includes(stage.confidence)
+  ))
 
   return (
-    <div className="grid gap-component">
+    <section className="grid gap-component">
       <div className="grid gap-component rounded-block bg-block p-component">
         <div className="flex flex-wrap items-start justify-between gap-control">
           <div>
@@ -362,6 +468,11 @@ export function FunnelView({ funnel, highlights }) {
         <div className="grid gap-component">
           {rows.map((stage) => <FunnelStage key={stage.stage_name} stage={stage} />)}
         </div>
+        {treatmentUnavailable ? (
+          <p className="rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+            Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
+          </p>
+        ) : null}
       </div>
       <div className="grid gap-control md:grid-cols-3">
         {[
@@ -375,18 +486,7 @@ export function FunnelView({ funnel, highlights }) {
           </div>
         ))}
       </div>
-      <TablePanel
-        columns={[
-          { key: 'stage_name', label: 'Stage' },
-          { key: 'stage_count', label: 'Count', align: 'right' },
-          { key: 'conversion_rate', label: 'Conversion', align: 'right', render: (row) => `${row.conversion_rate}${row.unit ? ` ${row.unit}` : '%'}` },
-          { key: 'drop_off_count', label: 'Drop-off', align: 'right' },
-          { key: 'target', label: 'Target', align: 'right', render: (row) => `${row.target}${row.unit ? ` ${row.unit}` : '%'}` },
-        ]}
-        rows={rows}
-        title="Exact Funnel Numbers"
-      />
-    </div>
+    </section>
   )
 }
 
@@ -732,8 +832,15 @@ export function ReactivationTrackTable({ tracks }) {
 
 export function DecisionCards({ decisions }) {
   return (
-    <div className="grid gap-control lg:grid-cols-2">
-      {decisions.map((decision) => (
+    <section className="grid gap-component rounded-block bg-block p-component">
+      <div>
+        <h2 className="text-heading text-text-primary">Decisions Needed</h2>
+        <p className="mt-tag max-w-readable text-ui font-normal text-text-secondary">
+          The review should end with the owner or team decision that changes the next period.
+        </p>
+      </div>
+      <div className="grid gap-control lg:grid-cols-2">
+        {decisions.slice(0, 3).map((decision) => (
         <div className="grid gap-item rounded-control bg-block-subtle p-control" key={decision.id}>
           <div className="flex items-start justify-between gap-control">
             <p className="text-ui font-semibold text-text-primary">{decision.title}</p>
@@ -744,8 +851,9 @@ export function DecisionCards({ decisions }) {
           <p className="text-label font-normal text-text-muted">Impact: {decision.estimated_impact}</p>
           <p className="text-label font-normal text-text-muted">Owner: {decision.owner} | Due {decision.decision_due_by}</p>
         </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -798,6 +906,34 @@ export function FreshnessFooter({ sources }) {
       rows={sources}
       title="Data Freshness"
     />
+  )
+}
+
+export function CompactFreshnessFooter({ sources = [] }) {
+  return (
+    <footer className="grid gap-control border-t border-separator pt-card">
+      <div>
+        <h2 className="text-ui font-semibold text-text-primary">Data freshness details</h2>
+        <p className="mt-tag text-label font-normal text-text-muted">
+          Technical source status for the metrics shown above.
+        </p>
+      </div>
+      <div className="grid gap-tag">
+        {sources.map((source) => (
+          <div
+            className="grid gap-tag rounded-control bg-block-subtle p-control text-label md:grid-cols-[minmax(150px,1fr)_120px_90px_minmax(180px,1.4fr)] md:items-center"
+            key={source.id ?? source.source_name}
+          >
+            <span className="font-semibold text-text-primary">{source.source_name}</span>
+            <span className="font-normal text-text-muted">{formatDate(source.last_updated_at)}</span>
+            <span className={`w-fit rounded-full px-control py-tag leading-none ${statusClass(source.freshness_status)}`}>
+              {formatLabel(source.freshness_status)}
+            </span>
+            <span className="font-normal text-text-muted">{source.affected_metrics?.join(', ')}</span>
+          </div>
+        ))}
+      </div>
+    </footer>
   )
 }
 

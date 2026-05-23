@@ -24,6 +24,9 @@ function createEntityRepository(initialRecords = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       records.push(record)
       return record

@@ -34,11 +34,8 @@ function createRepository(records = []) {
     list() {
       return this.records
     },
-    listByClientId(clientId) {
-      return this.records.filter((record) => record.client_id === clientId)
-    },
     listByWorkspaceId(workspaceId) {
-      return this.records.filter((record) => record.workspace_id === workspaceId)
+      return this.records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
     },
     upsert(record) {
       const index = this.records.findIndex((item) => item.id === record.id)

@@ -42,9 +42,6 @@ function createEntityRepository(initialRecords = []) {
     list() {
       return records
     },
-    listByClientId(clientId) {
-      return records.filter((record) => record.client_id === clientId)
-    },
     listByWorkspaceId(workspaceId) {
       return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
     },
@@ -203,7 +200,7 @@ describe('clientRequestsService', () => {
       status: CLIENT_REQUEST_STATUSES.SUBMITTED,
       title: 'Create landing page variant',
     })
-    expect(repositories.clientRequests.listByClientId(IDS.CLIENT_A)).toHaveLength(1)
+    expect(repositories.clientRequests.listByWorkspaceId(IDS.CLIENT_A)).toHaveLength(1)
     expect(repositories.tasks.list()).toHaveLength(0)
   })
 
@@ -442,7 +439,7 @@ describe('clientRequestsService', () => {
     })
 
     expect(updatedRequest.relatedNeededActionId).toBe(IDS.NEEDED_ACTION)
-    expect(repositories.neededFromClient.listByClientId(IDS.CLIENT_A)).toHaveLength(1)
+    expect(repositories.neededFromClient.listByWorkspaceId(IDS.CLIENT_A)).toHaveLength(1)
   })
 
   it('denies client users from admin request triage', () => {

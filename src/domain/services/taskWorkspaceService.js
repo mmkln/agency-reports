@@ -7,7 +7,7 @@ import {
 import { normalizeNeededAction } from '../../entities/needed-from-client'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   hasAgencyAdminMembership,
   hasAgencyMembership,
@@ -54,7 +54,7 @@ function getWorkspaceClients({ repositories, viewer }) {
 
   const agencyClients = repositories.workspaces
     .list()
-    .filter((client) => canAccessClient(viewer, client.id))
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
   const assignedClientIds = new Set(listManagedWorkspaceIds(viewer))
 
   return agencyClients.filter((client) => assignedClientIds.has(client.id))
@@ -329,7 +329,7 @@ function getWorkspaceProject({ clientId, projectId, repositories }) {
 
 function getNextTaskSortOrder({ clientId, repositories }) {
   const highestSortOrder = repositories.tasks
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .reduce((highest, task) => Math.max(highest, Number(task.sort_order) || 0), 0)
 
   return highestSortOrder + 10

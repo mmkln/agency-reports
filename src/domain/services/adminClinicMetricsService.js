@@ -17,7 +17,7 @@ import {
   normalizePatientAcquisitionSnapshot,
   normalizeServiceLinePerformance,
 } from '../../entities/clinic'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
@@ -61,7 +61,7 @@ function getEditableClinicClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic metrics are not available for this admin.')
   }
 
@@ -170,11 +170,11 @@ function preservePublishState(existingRecord) {
 
 function getClinicFoundation({ clientId, repositories }) {
   const locations = repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
   const serviceLines = repositories.clinicServiceLines
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicServiceLine)
     .sort(sortByDisplayOrder)
 
@@ -195,7 +195,7 @@ function validateReference(value, validIds, fieldName) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
@@ -369,7 +369,7 @@ function createBookingActionKey(metricId, suggestionType) {
 }
 
 function getOpenBookingActionsBySuggestionKey({ clientId, repositories }) {
-  const actions = repositories.neededFromClient?.listByClientId?.(clientId) ?? []
+  const actions = repositories.neededFromClient?.listByWorkspaceId?.(clientId) ?? []
 
   return new Map(
     actions
@@ -602,7 +602,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
   return {
     acquisitionChannelMeta: CLINIC_ACQUISITION_CHANNEL_META,
     bookingPipelineSnapshots: repositories.bookingPipelineSnapshots
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeBookingPipelineSnapshot)
       .map((record) => ({
         ...record,
@@ -610,7 +610,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
       }))
       .sort(sortByPeriodDesc),
     callBookingMetrics: repositories.callBookingMetrics
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeCallBookingMetric)
       .map((record) => ({
         ...record,
@@ -625,7 +625,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
     client: mapClient(client),
     complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META,
     locationPerformance: repositories.locationPerformance
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeLocationPerformance)
       .map((record) => ({
         ...record,
@@ -634,7 +634,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
       .sort(sortByPeriodDesc),
     locations: foundation.locations,
     patientAcquisitionSnapshots: repositories.patientAcquisitionSnapshots
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizePatientAcquisitionSnapshot)
       .map((record) => ({
         ...record,
@@ -644,7 +644,7 @@ export function getAdminClinicMetricsPage({ clientId, repositories, viewer }) {
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
     serviceLinePerformance: repositories.serviceLinePerformance
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeServiceLinePerformance)
       .map((record) => ({
         ...record,
@@ -674,19 +674,19 @@ export function saveAdminClinicMetrics({
   const locationPerformanceRecords = filterMeaningfulRecords(input?.locationPerformance)
   const serviceLinePerformanceRecords = filterMeaningfulRecords(input?.serviceLinePerformance)
   const existingAcquisitionById = new Map(
-    repositories.patientAcquisitionSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.patientAcquisitionSnapshots.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingBookingPipelineById = new Map(
-    repositories.bookingPipelineSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.bookingPipelineSnapshots.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingCallBookingById = new Map(
-    repositories.callBookingMetrics.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.callBookingMetrics.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingLocationPerformanceById = new Map(
-    repositories.locationPerformance.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.locationPerformance.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingServiceLinePerformanceById = new Map(
-    repositories.serviceLinePerformance.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.serviceLinePerformance.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
 
   deleteRemovedRecords({

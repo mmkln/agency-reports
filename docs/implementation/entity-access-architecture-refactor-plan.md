@@ -349,6 +349,7 @@ Replace scattered role checks with domain policies.
 [x] Add agency access policy helpers.
 [x] Add workspace access policy helpers.
 [x] Add route/action capability helpers.
+[x] Add `canAccessWorkspaceResource` as the production resource access helper.
 [x] Replace local `assertAgencyAdmin` copies in migrated services with shared policy assertions.
 [x] Replace `isClientPortalRole(viewer.role)` checks in services/pages with workspace membership/capability checks.
 [x] Keep compatibility wrappers named `canAccessClient` only where needed during migration.
@@ -419,9 +420,11 @@ Do this service by service, not by bulk rename.
 [ ] Keep route/query params as `clientId` until URLs are deliberately changed.
 [x] Keep repository storage methods such as `listByClientId` until storage migration.
 [x] Add adapter helpers that map `workspaceId` to persisted `client_id`.
+[x] Add `listByWorkspaceId` as the standard repository workspace-scope lookup method.
 [x] Move production domain identity lookups from `repositories.clients.findById/list()` to `repositories.workspaces.findById/list()`.
 [x] Update domain test repositories to expose explicit workspace adapters instead of relying on client-only fixtures.
 [x] Move production domain workspace mutations/listing from `repositories.clients` to `repositories.workspaces`.
+[x] Move production domain/feature workspace-scope collection reads from `listByClientId` to `listByWorkspaceId`.
 [ ] Update admin client workspace services to say workspace in domain names where possible.
 ```
 
@@ -444,6 +447,7 @@ Verification:
 [x] Search count for new `viewer.role` usages is zero outside negative tests.
 [x] Search count for production `repositories.clients.findById/list()` usages in domain services is zero.
 [x] Search count for production `repositories.clients` usages in domain services is zero.
+[x] Search count for production `listByClientId` usages outside repository compatibility is zero.
 ```
 
 ### Phase 7 - Settings and deletion lifecycle hardening

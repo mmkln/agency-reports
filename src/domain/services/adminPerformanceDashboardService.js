@@ -7,7 +7,7 @@ import {
   PERFORMANCE_DATA_MODE_META,
   validatePerformanceDashboardPeriod,
 } from '../../entities/performance-dashboard'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 function assertAgencyAdmin(viewer) {
@@ -45,7 +45,7 @@ function normalizeRequiredDate(value, fieldName) {
 function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, client.id)) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 
@@ -123,7 +123,7 @@ export function listAdminPerformanceDashboardPeriods({ repositories, viewer }) {
   const clientsById = new Map(
     repositories.workspaces
       .list()
-      .filter((client) => canAccessClient(viewer, client.id))
+      .filter((client) => canAccessWorkspaceResource(viewer, client.id))
       .map((client) => [client.id, client]),
   )
 

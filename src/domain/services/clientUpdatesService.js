@@ -4,7 +4,7 @@ import {
   normalizeClientUpdate,
   VISIBILITY,
 } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isUpdateVisibleToClient } from '../policies/visibilityPolicy'
 import { listManagedWorkspaceIds } from './viewerAccessContextService'
@@ -81,7 +81,7 @@ function getAdminClient({ clientId, repositories, viewer }) {
 
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Client was not found.')
   }
 
@@ -176,7 +176,7 @@ export function listClientVisibleUpdates({
   const normalizedClientId = String(clientId || viewer?.clientId || '').trim()
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -188,7 +188,7 @@ export function listClientVisibleUpdates({
   const fileLinksById = getFileLinkMap(repositories)
   const clientsById = new Map([[client.id, client]])
   const updates = repositories.updates
-    .listByClientId(normalizedClientId)
+    .listByWorkspaceId(normalizedClientId)
     .filter(isUpdateVisibleToClient)
     .map((update) => mapClientUpdate({
       clientsById,

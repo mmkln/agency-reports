@@ -1,6 +1,6 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
 
 function sortByDateDesc(a, b, fieldName) {
@@ -37,7 +37,7 @@ function mapReport(report) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  return Boolean(client) && canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessWorkspaceResource(viewer, clientId)
 }
 
 function isDashboardVisibleForMode(dashboardLink, mode) {
@@ -75,7 +75,7 @@ export function getClientDashboardPage({
   }
 
   const visibleDashboards = repositories.dashboardLinks
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter((dashboardLink) => isDashboardVisibleForMode(dashboardLink, mode))
     .sort((a, b) => (
       Number(b.show_on_overview) - Number(a.show_on_overview)
@@ -88,7 +88,7 @@ export function getClientDashboardPage({
     : visibleDashboards[0] ?? null
 
   const latestReport = repositories.reports
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isReportVisibleToClient)
     .sort((a, b) => sortByDateDesc(a, b, 'period_end'))[0] ?? null
 

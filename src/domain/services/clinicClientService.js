@@ -25,7 +25,7 @@ import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
 } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isDashboardVisibleToClient } from '../policies/visibilityPolicy'
 import { listClientNeededActions } from './neededFromClientService'
@@ -1015,13 +1015,13 @@ function canReadClinicClient({ client, clientId, viewer }) {
     return false
   }
 
-  return canAccessClient(viewer, clientId)
+  return canAccessWorkspaceResource(viewer, clientId)
 }
 
 function canPreviewClinicDrafts({ client, source, viewer }) {
   return source === 'draft'
     && hasAgencyAdminMembership(viewer)
-    && canAccessClient(viewer, client?.id)
+    && canAccessWorkspaceResource(viewer, client?.id)
 }
 
 function isPublishedClinicRecord(record) {
@@ -1029,7 +1029,7 @@ function isPublishedClinicRecord(record) {
 }
 
 function listClientVisibleClinicRecords({ clientId, repository, source }) {
-  const records = repository?.listByClientId(clientId) ?? []
+  const records = repository?.listByWorkspaceId(clientId) ?? []
 
   if (source === 'draft') {
     return records
@@ -1053,14 +1053,14 @@ export function getClientClinicFoundationPage({
     }
   }
 
-  const locations = (repositories.clinicLocations?.listByClientId(clientId) ?? [])
+  const locations = (repositories.clinicLocations?.listByWorkspaceId(clientId) ?? [])
     .sort(sortRawByDisplayOrder)
     .map(mapLocation)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
-  const serviceLines = (repositories.clinicServiceLines?.listByClientId(clientId) ?? [])
+  const serviceLines = (repositories.clinicServiceLines?.listByWorkspaceId(clientId) ?? [])
     .sort(sortRawByDisplayOrder)
     .map((serviceLine) => mapServiceLine(serviceLine, locationsById))
-  const profileRecord = repositories.clinicProfiles?.listByClientId(clientId)?.[0] ?? null
+  const profileRecord = repositories.clinicProfiles?.listByWorkspaceId(clientId)?.[0] ?? null
 
   return {
     client: {
@@ -1246,7 +1246,7 @@ export function getClientPatientAcquisitionPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,
-    sourceLinks: (input.repositories.dashboardLinks?.listByClientId(input.clientId) ?? [])
+    sourceLinks: (input.repositories.dashboardLinks?.listByWorkspaceId(input.clientId) ?? [])
       .filter(isDashboardVisibleToClient)
       .map(mapSourceDashboardLink),
     source: foundationPage.source,

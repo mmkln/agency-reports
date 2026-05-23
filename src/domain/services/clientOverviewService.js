@@ -11,7 +11,7 @@ import {
 import {
   CLINIC_REPORTING_CAPABILITIES,
 } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import {
@@ -80,7 +80,7 @@ function getSnapshotOverviewCollections({ client, clientId, repositories, snapsh
     clientStatus: snapshot.client?.status ?? client.status,
     currentFocus: snapshot.currentFocus ?? [],
     dashboardLinks: snapshot.dashboardLinks ?? [],
-    neededActions: repositories.neededFromClient.listByClientId(clientId),
+    neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
     projects: snapshot.projects ?? [],
     reports: snapshot.reports ?? [],
     updates: snapshot.updates ?? [],
@@ -99,7 +99,7 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
         clientStatus: client.overview_draft.client?.status ?? client.status,
         currentFocus: client.overview_draft.currentFocus ?? [],
         dashboardLinks: client.overview_draft.dashboardLinks ?? [],
-        neededActions: repositories.neededFromClient.listByClientId(clientId),
+        neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
         projects: client.overview_draft.projects ?? [],
         reports: client.overview_draft.reports ?? [],
         updates: client.overview_draft.updates ?? [],
@@ -121,11 +121,11 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
     activeWorkItems: getPublishedActiveWorkItems({ clientId, repositories, viewer }),
     clientStatus: client.status,
     currentFocus: client.current_focus ?? [],
-    dashboardLinks: repositories.dashboardLinks.listByClientId(clientId),
-    neededActions: repositories.neededFromClient.listByClientId(clientId),
-    projects: repositories.projects.listByClientId(clientId),
-    reports: repositories.reports.listByClientId(clientId),
-    updates: repositories.updates.listByClientId(clientId),
+    dashboardLinks: repositories.dashboardLinks.listByWorkspaceId(clientId),
+    neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
+    projects: repositories.projects.listByWorkspaceId(clientId),
+    reports: repositories.reports.listByWorkspaceId(clientId),
+    updates: repositories.updates.listByWorkspaceId(clientId),
   }
 }
 
@@ -250,7 +250,7 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
 export function getClientOverviewPage({ clientId, repositories, source = 'published', viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     return {
       reason: 'access_denied',
       status: 'error',

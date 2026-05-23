@@ -6,7 +6,7 @@ import {
   normalizeClientFileLink,
 } from '../../entities/client-file-link'
 import { VISIBILITY } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { listManagedWorkspaceIds } from './viewerAccessContextService'
 import {
@@ -120,7 +120,7 @@ function getAdminClient({ clientId, repositories, viewer }) {
     throw new Error('Client was not found.')
   }
 
-  if (!canAccessClient(viewer, clientId)) {
+  if (!canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Client was not found.')
   }
 
@@ -236,7 +236,7 @@ export function listClientVisibleFileLinks({
   const normalizedClientId = String(clientId || viewer?.clientId || '').trim()
   const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -245,7 +245,7 @@ export function listClientVisibleFileLinks({
 
   const projectsById = getProjectMap(repositories)
   const reportsById = getReportMap(repositories)
-  const fileLinks = (repositories.clientFileLinks?.listByClientId(normalizedClientId) ?? [])
+  const fileLinks = (repositories.clientFileLinks?.listByWorkspaceId(normalizedClientId) ?? [])
     .filter((fileLink) => isClientFileLinkVisibleToClient(fileLink)
       || (includeArchived && isClientFileLinkArchivedVisibleToClient(fileLink)))
     .map((fileLink) => mapClientFileLink({
@@ -312,7 +312,7 @@ export function listAdminClientFileLinksWorkspace({
   const projectsById = getProjectMap(repositories)
   const reportsById = getReportMap(repositories)
   const fileLinks = (selectedClientId
-    ? repositories.clientFileLinks?.listByClientId(selectedClientId) ?? []
+    ? repositories.clientFileLinks?.listByWorkspaceId(selectedClientId) ?? []
     : repositories.clientFileLinks?.list() ?? [])
     .map((fileLink) => mapClientFileLink({
       fileLink,

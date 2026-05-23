@@ -22,7 +22,7 @@ import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
 } from './activityTrackingService'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   canAgencyProcessNeededAction,
   canClientRespondToNeededAction,
@@ -103,7 +103,7 @@ function requireText(value, fieldName) {
 function getAction({ actionId, repositories, viewer }) {
   const action = repositories.neededFromClient.findById(actionId)
 
-  if (!action || !canAccessClient(viewer, action.client_id)) {
+  if (!action || !canAccessWorkspaceResource(viewer, action.client_id)) {
     throw new Error('Needed action was not found.')
   }
 
@@ -200,7 +200,7 @@ function getAdminClients({ repositories, viewer }) {
 
   return repositories.workspaces
     .list()
-    .filter((client) => canAccessClient(viewer, client.id))
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
@@ -558,7 +558,7 @@ function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
 
 function assertNoOpenClinicBookingSuggestionDuplicate({ metric, repositories, suggestionType }) {
   const duplicate = repositories.neededFromClient
-    .listByClientId(metric.client_id)
+    .listByWorkspaceId(metric.client_id)
     .some((action) => isOpenNeededAction(action)
       && action.clinic_action_type === suggestionType
       && action.related_call_booking_metric_id === metric.id)
@@ -602,7 +602,7 @@ function getClinicReputationSuggestionDefaults({ snapshot, suggestionType }) {
 
 function assertNoOpenClinicReputationSuggestionDuplicate({ repositories, snapshot, suggestionType }) {
   const duplicate = repositories.neededFromClient
-    .listByClientId(snapshot.client_id)
+    .listByWorkspaceId(snapshot.client_id)
     .some((action) => isOpenNeededAction(action)
       && action.clinic_action_type === suggestionType
       && action.related_reputation_snapshot_id === snapshot.id)
@@ -689,7 +689,7 @@ function assertNoOpenClinicComplianceSuggestionDuplicate({
   clientId,
 }) {
   const duplicate = repositories.neededFromClient
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .some((action) => isOpenNeededAction(action)
       && action.clinic_action_type === suggestionType
       && (!complianceReviewId || action.related_compliance_review_id === complianceReviewId)
@@ -747,7 +747,7 @@ export function listClientNeededActions({
 }) {
   const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
 
-  if (!normalizedClientId || !canAccessClient(viewer, normalizedClientId)) {
+  if (!normalizedClientId || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -764,7 +764,7 @@ export function listClientNeededActions({
   }
 
   const actions = repositories.neededFromClient
-    .listByClientId(normalizedClientId)
+    .listByWorkspaceId(normalizedClientId)
     .filter(isNeededActionVisibleToClient)
     .sort((a, b) => {
       const priority = {
@@ -1234,7 +1234,7 @@ export function listOpenNeededActionsForWorkItem({
   const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
   const client = repositories.workspaces.findById(workItem.client_id)
   const actions = repositories.neededFromClient
-    .listByClientId(workItem.client_id)
+    .listByWorkspaceId(workItem.client_id)
     .filter((action) => action.related_work_item_id === workItem.id)
     .filter(isOpenNeededAction)
     .map((action) => mapNeededAction({ action, client }))

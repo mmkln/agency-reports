@@ -5,7 +5,7 @@ import {
   DASHBOARD_PROVIDER_META,
 } from '../../entities/dashboard-link'
 import { VISIBILITY } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
@@ -72,7 +72,7 @@ function normalizeDisplayOrder(value) {
 function getAdminClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Account was not found.')
   }
 
@@ -224,7 +224,7 @@ export function saveAdminDashboardLink({
 
   if (showOnOverview) {
     repositories.dashboardLinks
-      .listByClientId(client.id)
+      .listByWorkspaceId(client.id)
       .forEach((dashboardLink) => {
         if (dashboardLink.id !== id && dashboardLink.show_on_overview) {
           repositories.dashboardLinks.upsert({

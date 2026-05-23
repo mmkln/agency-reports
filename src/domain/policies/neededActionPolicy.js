@@ -1,5 +1,5 @@
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { canAccessClient } from './accessPolicy'
+import { canAccessWorkspaceResource } from './accessPolicy'
 import {
   hasAgencyAdminMembership,
   hasWorkspaceMembership,
@@ -82,6 +82,6 @@ export function canClientRespondToNeededAction({ action, viewer }) {
 
 export function canAgencyProcessNeededAction({ action, viewer, targetStatus }) {
   return hasAgencyAdminMembership(viewer)
-    && canAccessClient(viewer, action?.client_id)
+    && canAccessWorkspaceResource(viewer, action?.client_id)
     && canTransitionNeededActionStatus(action?.status, targetStatus)
 }

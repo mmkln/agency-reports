@@ -35,7 +35,7 @@ function createClientsRepository(initialClients = []) {
     findById(id) {
       return records.find((record) => record.id === id) ?? null
     },
-    listByClientId(clientId) {
+    listByWorkspaceId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
     upsert(record) {
@@ -531,11 +531,11 @@ describe('adminClientService', () => {
     })).toBe(true)
 
     expect(repositories.workspaces.findById(IDS.CLIENT_A)).toBeNull()
-    expect(repositories.clinicProfiles.listByClientId(IDS.CLIENT_A)).toEqual([])
-    expect(repositories.clinicLocations.listByClientId(IDS.CLIENT_A)).toEqual([])
-    expect(repositories.clinicServiceLines.listByClientId(IDS.CLIENT_A)).toEqual([])
-    expect(repositories.bookingPipelineSnapshots.listByClientId(IDS.CLIENT_A)).toEqual([])
-    expect(repositories.locationPerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
-    expect(repositories.serviceLinePerformance.listByClientId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.clinicProfiles.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.clinicLocations.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.clinicServiceLines.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.bookingPipelineSnapshots.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.locationPerformance.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
+    expect(repositories.serviceLinePerformance.listByWorkspaceId(IDS.CLIENT_A)).toEqual([])
   })
 })

@@ -27,7 +27,7 @@ function createEntityRepository(records) {
     findById(id) {
       return records.find((record) => record.id === id) ?? null
     },
-    listByClientId(clientId) {
+    listByWorkspaceId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
   }
