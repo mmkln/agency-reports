@@ -17,7 +17,6 @@ import {
   NEEDED_ACTION_TYPES,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import {
   ACTIVITY_EVENT_TYPES,
@@ -28,6 +27,10 @@ import {
   canAgencyProcessNeededAction,
   canClientRespondToNeededAction,
 } from '../policies/neededActionPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasWorkspaceMembership,
+} from '../policies/routeAccessPolicy'
 import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
@@ -104,15 +107,13 @@ function getAction({ actionId, repositories, viewer }) {
     throw new Error('Needed action was not found.')
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN && repositories.clients?.findById) {
-    const client = repositories.clients.findById(action.client_id)
-
-    if (!client || client.agency_id !== viewer.agencyId) {
-      throw new Error('Needed action was not found.')
-    }
-  }
-
   return action
+}
+
+function getViewerActorRole(viewer) {
+  return viewer?.agencyMemberships?.[0]?.role
+    ?? viewer?.workspaceMemberships?.[0]?.role
+    ?? null
 }
 
 function createHistoryEvent({ metadata = {}, now, type, viewer }) {
@@ -120,7 +121,7 @@ function createHistoryEvent({ metadata = {}, now, type, viewer }) {
     created_at: now(),
     created_by: viewer?.userId ?? null,
     metadata: {
-      actor_role: viewer?.role ?? null,
+      actor_role: getViewerActorRole(viewer),
       ...metadata,
     },
     type,
@@ -135,7 +136,7 @@ function appendHistory(action, event) {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can process needed actions.')
   }
 }
@@ -197,9 +198,9 @@ function normalizeOptionalUrl(value = '', fieldName) {
 function getAdminClients({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  return repositories.clients
+  return repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => canAccessClient(viewer, client.id))
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
@@ -744,7 +745,7 @@ export function listClientNeededActions({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
 
   if (!normalizedClientId || !canAccessClient(viewer, normalizedClientId)) {
     return {
@@ -753,7 +754,7 @@ export function listClientNeededActions({
     }
   }
 
-  const client = repositories.clients?.findById(normalizedClientId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client) {
     return {
@@ -1231,7 +1232,7 @@ export function listOpenNeededActionsForWorkItem({
   workItemId,
 }) {
   const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
-  const client = repositories.clients.findById(workItem.client_id)
+  const client = repositories.workspaces.findById(workItem.client_id)
   const actions = repositories.neededFromClient
     .listByClientId(workItem.client_id)
     .filter((action) => action.related_work_item_id === workItem.id)
@@ -1310,7 +1311,7 @@ export function answerNeededAction({
 }) {
   const action = getAction({ actionId, repositories, viewer })
 
-  if (!isClientPortalRole(viewer?.role)) {
+  if (!hasWorkspaceMembership(viewer)) {
     throw new Error('Only client users can respond to needed actions.')
   }
 

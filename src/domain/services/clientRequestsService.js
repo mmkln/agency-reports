@@ -6,16 +6,16 @@ import {
   normalizeClientRequest,
 } from '../../entities/client-request'
 import {
-  CLIENT_MEMBERSHIP_ROLES,
-  isActiveClientMembership,
-} from '../../entities/client-membership'
-import {
   NEEDED_ACTION_PRIORITIES,
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import {
+  canCreateWorkspaceRequests,
+  canRequestWorkspaceDeletion,
+} from '../policies/workspaceAccessPolicy'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
@@ -117,7 +117,9 @@ function createHistoryEvent({ metadata = {}, now, type, viewer }) {
     created_at: now(),
     created_by: viewer?.userId ?? null,
     metadata: {
-      actor_role: viewer?.role ?? null,
+      actor_role: viewer?.agencyMemberships?.[0]?.role
+        ?? viewer?.workspaceMemberships?.[0]?.role
+        ?? null,
       ...metadata,
     },
     type,
@@ -160,26 +162,21 @@ function countBy(requests, predicate) {
 }
 
 function assertClientUserCanSubmit({ clientId, viewer }) {
-  if (!isClientPortalRole(viewer?.role) || !canAccessClient(viewer, clientId)) {
+  if (!canAccessClient(viewer, clientId) || !canCreateWorkspaceRequests(viewer, clientId)) {
     throw new Error('Only client users can submit requests for their client.')
   }
 }
 
-function assertClientOwnerCanRequestBusinessDeletion({ clientId, repositories, viewer }) {
+function assertClientOwnerCanRequestBusinessDeletion({ clientId, viewer }) {
   assertClientUserCanSubmit({ clientId, viewer })
 
-  const membership = repositories.clientMemberships
-    .listByClientId(clientId)
-    .filter(isActiveClientMembership)
-    .find((item) => item.user_id === viewer.userId)
-
-  if (membership?.role !== CLIENT_MEMBERSHIP_ROLES.OWNER) {
+  if (!canRequestWorkspaceDeletion(viewer, clientId)) {
     throw new Error('Only workspace owners can request business deletion.')
   }
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage requests.')
   }
 }
@@ -306,8 +303,8 @@ export function getClientRequestsPage({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     return {
@@ -354,8 +351,8 @@ export function createClientRequest({
   repositories,
   viewer,
 }) {
-  const clientId = normalizeText(input.clientId || viewer?.clientId)
-  const client = repositories.clients.findById(clientId)
+  const clientId = normalizeText(input.clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
     throw new Error('Client is not available for requests.')
@@ -418,8 +415,8 @@ export function createBusinessDeletionRequest({
   repositories,
   viewer,
 }) {
-  const clientId = normalizeText(input.clientId || viewer?.clientId)
-  const client = repositories.clients.findById(clientId)
+  const clientId = normalizeText(input.clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
     throw new Error('Client is not available for deletion requests.')
@@ -427,7 +424,6 @@ export function createBusinessDeletionRequest({
 
   assertClientOwnerCanRequestBusinessDeletion({
     clientId,
-    repositories,
     viewer,
   })
 
@@ -462,9 +458,12 @@ export function listAdminClientRequestsWorkspace({
 }) {
   assertAgencyAdmin(viewer)
 
-  const clients = repositories.clients.list()
+  const clients = repositories.workspaces
+    .list()
+    .filter((client) => canAccessClient(viewer, client.id))
+  const clientIds = new Set(clients.map((client) => client.id))
   const requests = filterAdminRequestsByClient(
-    (repositories.clientRequests?.list() ?? []).map((request) => {
+    (repositories.clientRequests?.list() ?? []).filter((request) => clientIds.has(request.client_id)).map((request) => {
       const mappedRequest = mapClientRequest(request)
 
       return {
@@ -516,7 +515,7 @@ export function updateClientRequestTriage({
 
   const request = repositories.clientRequests.findById(requestId)
 
-  if (!request) {
+  if (!request || !canAccessClient(viewer, request.client_id)) {
     throw new Error('Client request was not found.')
   }
 

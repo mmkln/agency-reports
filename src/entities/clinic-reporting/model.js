@@ -1,7 +1,6 @@
 import {
   CLINIC_REPORTING_CAPABILITIES,
   hasCapability,
-  USER_ROLES,
 } from '../profile'
 
 export const CLINIC_REPORTING_LAYERS = Object.freeze({
@@ -334,8 +333,4 @@ export function isClientFacingClinicReportingLayer(layer) {
     CLINIC_REPORTING_LAYERS.EXECUTIVE_PERFORMANCE,
     CLINIC_REPORTING_LAYERS.MONTHLY_STRATEGY,
   ].includes(layer)
-}
-
-export function isClientRole(role) {
-  return [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(role)
 }

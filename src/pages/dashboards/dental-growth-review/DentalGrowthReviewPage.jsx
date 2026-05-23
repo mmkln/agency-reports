@@ -5,9 +5,8 @@ import { DentalGrowthReviewDashboard } from '../../../widgets/dental-growth-revi
 
 export function DentalGrowthReviewPage({ routeParams = {}, runtime }) {
   const clientId = routeParams.clientId
-    ?? runtime.viewer?.clientId
     ?? runtime.defaultClientId
-    ?? runtime.viewer?.clientIds?.[0]
+    ?? runtime.viewer?.activeWorkspaceId
     ?? null
   const source = routeParams.preview === 'draft' ? 'draft' : 'published'
   const pageResource = useAsyncResource({

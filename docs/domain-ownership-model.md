@@ -533,9 +533,9 @@ A `WorkspaceMembership` connects a user to a company workspace.
 Current implementation mapping:
 
 ```text
-Current: src/entities/client-membership
-Current storage: client_memberships
-Future name: workspace_memberships
+Current: src/entities/workspace-membership
+Current storage: workspace_memberships
+Legacy migration input: client_memberships
 ```
 
 ### WorkspaceMembership-owned data
@@ -786,12 +786,12 @@ Scope:
 
 | Mature concept | Current code/storage | Notes |
 | --- | --- | --- |
-| User | `src/entities/profile`, `profiles`, `auth_credentials` | Contains legacy role/client/agency fields that should not remain authoritative. |
-| Agency | implicit `agency_id` | Needs explicit `agencies` model/table later. |
-| AgencyMembership | `profile.role`, `profile.agency_id` compatibility | Needs explicit `agency_memberships`. |
-| Company Workspace | `src/entities/client`, `clients` | `client` currently means business workspace. |
-| WorkspaceMembership | `src/entities/client-membership`, `client_memberships` | Should become the source of client portal access. |
-| WorkspaceInvitation | `src/entities/client-invitation`, `client_invitations` | Should remain lifecycle/audit controlled. |
+| User | `src/entities/user`, `src/entities/profile`, `profiles`, `auth_credentials` | User/profile owns identity and account data, not access authority. |
+| Agency | `src/entities/agency`, `agencies` | First-class agency record. |
+| AgencyMembership | `src/entities/agency-membership`, `agency_memberships` | Source of agency access and agency-scoped capabilities. |
+| Company Workspace | `src/entities/workspace`, `workspaces` | `client` route/product copy still exists, but persisted workspace storage is primary. |
+| WorkspaceMembership | `src/entities/workspace-membership`, `workspace_memberships` | Source of client portal access; legacy `client_memberships` is migration input only. |
+| WorkspaceInvitation | `src/entities/client-invitation`, `workspace_invitations` | Should remain lifecycle/audit controlled. |
 | Client-visible work | `client_work_items` | Mature client-facing active-work contract. |
 | Internal task | `tasks` | Agency/backstage workflow, not client-facing source of truth. |
 | Needed action | `needed_from_client` | Workspace-owned client obligation/response workflow. |
@@ -811,11 +811,11 @@ Scope:
 Checklist:
 
 ```text
-[ ] Treat `client` as `company workspace` in architecture decisions.
-[ ] Avoid adding new authoritative checks based on `profile.client_id`.
-[ ] Avoid adding new authoritative checks based on `profile.role`.
-[ ] Keep new role/capability logic membership-oriented.
-[ ] Keep user account settings separate from workspace/company settings.
+[x] Treat `client` as `company workspace` in architecture decisions.
+[x] Avoid adding new authoritative checks based on `profile.client_id`.
+[x] Avoid adding new authoritative checks based on `profile.role`.
+[x] Keep new role/capability logic membership-oriented.
+[x] Keep user account settings separate from workspace/company settings.
 ```
 
 ### Phase 2 - Introduce explicit Agency model
@@ -1561,4 +1561,3 @@ Recommended first refactor sequence:
 5. Migrate page actions away from profile.role/profile.client_id checks.
 6. Remove legacy fallback authority after tests cover membership revocation.
 ```
-

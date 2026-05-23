@@ -25,8 +25,8 @@ import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isDashboardVisibleToClient } from '../policies/visibilityPolicy'
 import { listClientNeededActions } from './neededFromClientService'
 
@@ -1015,17 +1015,13 @@ function canReadClinicClient({ client, clientId, viewer }) {
     return false
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId && client.agency_id === viewer.agencyId)
-  }
-
   return canAccessClient(viewer, clientId)
 }
 
 function canPreviewClinicDrafts({ client, source, viewer }) {
   return source === 'draft'
-    && viewer?.role === USER_ROLES.AGENCY_ADMIN
-    && Boolean(viewer.agencyId && client?.agency_id === viewer.agencyId)
+    && hasAgencyAdminMembership(viewer)
+    && canAccessClient(viewer, client?.id)
 }
 
 function isPublishedClinicRecord(record) {
@@ -1048,7 +1044,7 @@ export function getClientClinicFoundationPage({
   source = 'published',
   viewer,
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!canReadClinicClient({ client, clientId, viewer })) {
     return {

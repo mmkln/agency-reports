@@ -1,4 +1,3 @@
-import { USER_ROLES } from '../../../entities/profile'
 import { SEED_IDS } from '../repositories/portalSeedData'
 
 export const DEMO_ROLE_STORAGE_KEY = 'agency-reports.demo-role'
@@ -10,7 +9,6 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     iconName: 'shieldCheck',
     key: 'admin',
     label: 'Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
     userId: SEED_IDS.USER_ADMIN_GROWTHLAB,
   },
   {
@@ -19,7 +17,6 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     iconName: 'checkCircle2',
     key: 'team',
     label: 'Team',
-    role: USER_ROLES.AGENCY_TEAM,
     userId: SEED_IDS.USER_TEAM_MIA,
   },
   {
@@ -28,7 +25,6 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     iconName: 'user',
     key: 'client',
     label: 'Workspace Admin',
-    role: USER_ROLES.CLIENT_ADMIN,
     userId: SEED_IDS.USER_CLIENT_GREEN,
   },
   {
@@ -37,7 +33,6 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     iconName: 'dollarSign',
     key: 'finance',
     label: 'Finance',
-    role: USER_ROLES.CLIENT_ADMIN,
     userId: SEED_IDS.USER_CLIENT_GREEN_FINANCE,
   },
   {
@@ -46,7 +41,6 @@ export const DEMO_ROLE_OPTIONS = Object.freeze([
     iconName: 'stethoscope',
     key: 'frontdesk',
     label: 'Front Desk',
-    role: USER_ROLES.CLIENT_TEAM,
     userId: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN,
   },
 ])
@@ -55,13 +49,8 @@ export function getDemoRoleOption(roleKey) {
   return DEMO_ROLE_OPTIONS.find((option) => option.key === roleKey) ?? DEMO_ROLE_OPTIONS[0]
 }
 
-export function getDemoRoleOptionByRole(role) {
-  return DEMO_ROLE_OPTIONS.find((option) => option.role === role) ?? DEMO_ROLE_OPTIONS[0]
-}
-
 export function getDemoRoleOptionByViewer(viewer) {
-  return DEMO_ROLE_OPTIONS.find((option) => option.userId === viewer?.userId)
-    ?? getDemoRoleOptionByRole(viewer?.role)
+  return DEMO_ROLE_OPTIONS.find((option) => option.userId === viewer?.userId) ?? DEMO_ROLE_OPTIONS[0]
 }
 
 function getDefaultStorage() {

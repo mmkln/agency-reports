@@ -10,10 +10,9 @@ import {
 } from '../../entities/needed-from-client'
 import {
   CLINIC_REPORTING_CAPABILITIES,
-  hasCapability,
-  USER_ROLES,
 } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import {
   getClientCallsBookingsPage,
@@ -90,7 +89,7 @@ function getSnapshotOverviewCollections({ client, clientId, repositories, snapsh
 
 function getOverviewCollections({ client, clientId, repositories, source, viewer }) {
   if (source === 'draft') {
-    if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+    if (!hasAgencyAdminMembership(viewer)) {
       return null
     }
 
@@ -235,13 +234,13 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
         }
       : null,
     clientId,
-    dentalGrowthReviewHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
+    dentalGrowthReviewHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
       ? `/client/growth-review?clientId=${clientId}`
       : null,
-    executivePerformanceHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
+    executivePerformanceHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
       ? `/client/executive-performance?clientId=${clientId}`
       : null,
-    monthlyStrategyHref: hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW)
+    monthlyStrategyHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW)
       ? `/client/monthly-strategy?clientId=${clientId}`
       : null,
     serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
@@ -249,7 +248,7 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
 }
 
 export function getClientOverviewPage({ clientId, repositories, source = 'published', viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessClient(viewer, clientId)) {
     return {

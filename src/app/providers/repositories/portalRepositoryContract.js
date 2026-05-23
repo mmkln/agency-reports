@@ -1,11 +1,14 @@
 export const PORTAL_REPOSITORY_COLLECTIONS = Object.freeze([
   { key: 'activityEvents', tableName: 'activity_events' },
+  { key: 'agencies', tableName: 'agencies' },
+  { key: 'agencyMemberships', tableName: 'agency_memberships' },
+  { key: 'agencyWorkspaceRelationships', tableName: 'agency_workspace_relationships' },
   { key: 'authCredentials', tableName: 'auth_credentials' },
   { key: 'bookingPipelineSnapshots', tableName: 'booking_pipeline_snapshots' },
-  { key: 'clients', tableName: 'clients' },
+  { key: 'workspaces', tableName: 'workspaces' },
   { key: 'clientFileLinks', tableName: 'client_file_links' },
-  { key: 'clientInvitations', tableName: 'client_invitations' },
-  { key: 'clientMemberships', tableName: 'client_memberships' },
+  { key: 'workspaceInvitations', tableName: 'workspace_invitations' },
+  { key: 'workspaceMemberships', tableName: 'workspace_memberships' },
   { key: 'clientRequests', tableName: 'client_requests' },
   { key: 'clientWorkItems', tableName: 'client_work_items' },
   { key: 'callBookingMetrics', tableName: 'call_booking_metrics' },
@@ -48,6 +51,7 @@ export const PORTAL_ENTITY_REPOSITORY_METHODS = Object.freeze([
   'findById',
   'list',
   'listByClientId',
+  'listByWorkspaceId',
   'upsert',
 ])
 

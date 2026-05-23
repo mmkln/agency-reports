@@ -8,7 +8,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { createWorkspaceAccessViewer } from '../test/accessViewerTestHelpers'
 import { getClientActionNeededPage } from './clientActionNeededService'
 
 const IDS = Object.freeze({
@@ -31,6 +31,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         id: IDS.CLIENT_A,
@@ -92,11 +95,9 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({
+    workspaceId: clientId,
+  })
 }
 
 describe('getClientActionNeededPage', () => {

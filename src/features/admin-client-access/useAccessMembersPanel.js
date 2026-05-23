@@ -6,7 +6,7 @@ import {
   removeClientMembership,
   updateClientMembershipRole,
 } from '../../domain/services/clientMembershipService'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
 
@@ -15,7 +15,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const initialMemberForm = Object.freeze({
   email: '',
   name: '',
-  role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+  role: WORKSPACE_ROLES.VIEWER,
 })
 
 function createUuid() {
@@ -26,7 +26,7 @@ export function useAccessMembersPanel({ clientId, runtime }) {
   const toast = useToast()
   const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
   const [memberPendingEdit, setMemberPendingEdit] = useState(null)
-  const [editRole, setEditRole] = useState(CLIENT_MEMBERSHIP_ROLES.VIEWER)
+  const [editRole, setEditRole] = useState(WORKSPACE_ROLES.VIEWER)
   const [form, setForm] = useState(initialMemberForm)
   const [isMemberFormOpen, setIsMemberFormOpen] = useState(false)
   const [error, setError] = useState('')

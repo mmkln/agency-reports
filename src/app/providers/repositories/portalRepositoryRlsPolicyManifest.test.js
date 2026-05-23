@@ -35,20 +35,20 @@ describe('portalRepositoryRlsPolicyManifest', () => {
     }
   })
 
-  it('adds membership-based select policies only for client-readable tables', () => {
+  it('adds workspace-membership select policies only for workspace-readable tables', () => {
     const manifest = createPortalRepositoryRlsPolicyManifest()
 
     for (const entry of manifest) {
-      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.CLIENT_MEMBER)
+      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.WORKSPACE_MEMBER)
 
       if (entry.accessMode === PORTAL_ACCESS_MODES.CLIENT_READABLE) {
         expect(clientPolicy, entry.tableName).toBeDefined()
         expect(clientPolicy.operations, entry.tableName).toEqual([PORTAL_RLS_OPERATIONS.SELECT])
         expect(clientPolicy.checks, entry.tableName).toEqual(expect.arrayContaining([
-          expect.objectContaining({ type: 'client_membership' }),
+          expect.objectContaining({ type: 'workspace_membership' }),
         ]))
         expect(
-          isClientScopedRlsTable(entry) || entry.tableName === 'clients',
+          isClientScopedRlsTable(entry) || entry.tableName === 'workspaces',
           entry.tableName,
         ).toBe(true)
       } else {
@@ -60,7 +60,7 @@ describe('portalRepositoryRlsPolicyManifest', () => {
   it('carries published-state filters into client-facing clinic aggregate policies', () => {
     for (const tableName of PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES) {
       const entry = getPortalRepositoryRlsPolicies(tableName)
-      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.CLIENT_MEMBER)
+      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.WORKSPACE_MEMBER)
 
       expect(entry.aggregateOnly, tableName).toBe(true)
       expect(clientPolicy.checks, tableName).toEqual(expect.arrayContaining([
@@ -76,7 +76,7 @@ describe('portalRepositoryRlsPolicyManifest', () => {
   it('does not create client member policies for internal clinic reporting layers', () => {
     for (const tableName of ['clinic_daily_operations', 'clinic_weekly_operator_periods']) {
       const entry = getPortalRepositoryRlsPolicies(tableName)
-      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.CLIENT_MEMBER)
+      const clientPolicy = entry.policies.find((policy) => policy.actor === PORTAL_RLS_ACTORS.WORKSPACE_MEMBER)
 
       expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES, tableName).toContain(tableName)
       expect(entry.aggregateOnly, tableName).toBe(true)
@@ -92,7 +92,7 @@ describe('portalRepositoryRlsPolicyManifest', () => {
       }),
     ]))
 
-    expect(getPortalRepositoryRlsPolicies('client_invitations').policies).toEqual(expect.arrayContaining([
+    expect(getPortalRepositoryRlsPolicies('workspace_invitations').policies).toEqual(expect.arrayContaining([
       expect.objectContaining({
         actor: PORTAL_RLS_ACTORS.INVITATION_TOKEN,
         operations: [PORTAL_RLS_OPERATIONS.SELECT],

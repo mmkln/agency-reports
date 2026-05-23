@@ -34,7 +34,7 @@ const SERVER_AUDIT_TRANSITIONS = Object.freeze([
     group: SERVER_AUDIT_TRANSITION_GROUPS.CLIENT_ACCESS,
     requiredMetadata: ['invitationId', 'email', 'role', 'status'],
     severity: SERVER_AUDIT_SEVERITIES.HIGH,
-    sourceTable: 'client_invitations',
+    sourceTable: 'workspace_invitations',
     transition: 'create_client_invitation',
   },
   {
@@ -42,7 +42,7 @@ const SERVER_AUDIT_TRANSITIONS = Object.freeze([
     group: SERVER_AUDIT_TRANSITION_GROUPS.CLIENT_ACCESS,
     requiredMetadata: ['invitationId', 'email', 'role', 'status'],
     severity: SERVER_AUDIT_SEVERITIES.HIGH,
-    sourceTable: 'client_invitations',
+    sourceTable: 'workspace_invitations',
     transition: 'cancel_client_invitation',
   },
   {
@@ -50,7 +50,7 @@ const SERVER_AUDIT_TRANSITIONS = Object.freeze([
     group: SERVER_AUDIT_TRANSITION_GROUPS.CLIENT_ACCESS,
     requiredMetadata: ['invitationId', 'email', 'role', 'status'],
     severity: SERVER_AUDIT_SEVERITIES.HIGH,
-    sourceTable: 'client_invitations',
+    sourceTable: 'workspace_invitations',
     transition: 'accept_client_invitation',
   },
   {

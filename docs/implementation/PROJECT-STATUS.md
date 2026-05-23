@@ -139,6 +139,7 @@ The next major product move is replacing localStorage with backend-ready persist
 Primary planning tracker:
 
 ```text
+docs/implementation/entity-access-architecture-refactor-plan.md
 docs/implementation/backend-integration-readiness.md
 docs/implementation/clinic-client-portal-refactor-checklist.md
 docs/implementation/client-control-center-refactor-checklist.md

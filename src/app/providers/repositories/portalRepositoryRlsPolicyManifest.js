@@ -6,7 +6,7 @@ import { PORTAL_REPOSITORY_CLIENT_SCOPE } from './portalRepositorySchema'
 
 export const PORTAL_RLS_ACTORS = Object.freeze({
   AGENCY: 'agency',
-  CLIENT_MEMBER: 'client_member',
+  WORKSPACE_MEMBER: 'workspace_member',
   INVITATION_TOKEN: 'invitation_token',
   PROFILE_OWNER: 'profile_owner',
 })
@@ -33,19 +33,19 @@ function createAgencyPolicy(entry) {
 }
 
 function createClientReadPolicy(entry) {
-  const membershipRecordColumn = entry.tableName === 'clients' ? 'id' : 'client_id'
+  const membershipRecordColumn = entry.tableName === 'workspaces' ? 'id' : 'client_id'
 
   return {
-    actor: PORTAL_RLS_ACTORS.CLIENT_MEMBER,
+    actor: PORTAL_RLS_ACTORS.WORKSPACE_MEMBER,
     checks: [
       {
-        description: 'Authenticated user has an active membership for the record client.',
+        description: 'Authenticated user has an active workspace membership for the record workspace.',
         recordColumn: membershipRecordColumn,
-        type: 'client_membership',
+        type: 'workspace_membership',
       },
       ...entry.clientReadFilters.map((filter) => ({
         column: filter.column,
-        description: `Client reads are limited to ${filter.column} values allowed by the access manifest.`,
+        description: `Workspace-member reads are limited to ${filter.column} values allowed by the access manifest.`,
         type: 'record_filter',
         values: filter.values,
       })),

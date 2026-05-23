@@ -1,17 +1,86 @@
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { createClientInvitation } from './clientInviteService'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  AGENCY_WORKSPACE_RELATIONSHIP_STATUSES,
+} from '../../entities/agency-workspace-relationship'
+import {
+  canCreateWorkspaceForAgency,
+  canManageAgencyWorkspace,
+} from '../policies/agencyAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PORTAL_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const VALID_CLIENT_STATUSES = new Set(Object.values(CLIENT_STATUSES))
 const VALID_CLIENT_TYPES = new Set(Object.values(CLIENT_TYPES))
 
-function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+function getViewerAgencyId(viewer) {
+  return viewer?.activeAgencyId ?? null
+}
+
+function assertCanCreateWorkspace(viewer) {
+  const agencyId = getViewerAgencyId(viewer)
+
+  if (!canCreateWorkspaceForAgency(viewer, agencyId)) {
     throw new Error('Only admins can manage accounts.')
   }
+}
+
+function assertCanManageClientWorkspace({ clientId, repositories, viewer }) {
+  const client = repositories.workspaces.findById(clientId)
+
+  if (!client) {
+    throw new Error('Client was not found.')
+  }
+
+  if (!canManageAgencyWorkspace(viewer, clientId)) {
+    throw new Error('Client was not found.')
+  }
+
+  return client
+}
+
+function getManagedClientIds(viewer) {
+  return new Set(listManagedWorkspaceIds(viewer))
+}
+
+function listClientsForViewer({ clients, viewer }) {
+  const managedClientIds = getManagedClientIds(viewer)
+
+  return clients.filter((client) => managedClientIds.has(client.id))
+}
+
+function upsertAgencyWorkspaceRelationship({
+  agencyId,
+  clientId,
+  now,
+  repositories,
+}) {
+  if (!repositories.agencyWorkspaceRelationships) {
+    return null
+  }
+
+  const existingRelationship = repositories.agencyWorkspaceRelationships
+    .list()
+    .find((relationship) => (
+      relationship.agency_id === agencyId
+      && relationship.workspace_id === clientId
+    ))
+
+  const timestamp = now()
+  const relationship = {
+    agency_id: agencyId,
+    created_at: existingRelationship?.created_at ?? timestamp,
+    id: existingRelationship?.id ?? `${agencyId}:${clientId}:relationship`,
+    status: AGENCY_WORKSPACE_RELATIONSHIP_STATUSES.ACTIVE,
+    updated_at: timestamp,
+    workspace_id: clientId,
+  }
+
+  repositories.agencyWorkspaceRelationships.upsert(relationship)
+
+  return relationship
 }
 
 export function normalizePortalSlug(value = '') {
@@ -95,9 +164,10 @@ export function getPortalSlugIssueFromClients({
   viewer,
   portalSlug,
 }) {
-  assertAgencyAdmin(viewer)
+  assertCanCreateWorkspace(viewer)
 
   const normalizedSlug = normalizePortalSlug(portalSlug)
+  const agencyId = getViewerAgencyId(viewer)
 
   if (!normalizedSlug) {
     return 'Portal slug is required.'
@@ -113,7 +183,7 @@ export function getPortalSlugIssueFromClients({
 
   const existingClient = clients
     .find((client) => (
-      client.agency_id === viewer.agencyId
+      client.agency_id === agencyId
       && client.portal_slug === normalizedSlug
       && client.id !== ignoreClientId
     ))
@@ -127,7 +197,7 @@ export function getPortalSlugIssueFromClients({
 
 export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer, portalSlug }) {
   return getPortalSlugIssueFromClients({
-    clients: repositories.clients.list(),
+    clients: repositories.workspaces.list(),
     ignoreClientId,
     portalSlug,
     viewer,
@@ -135,37 +205,33 @@ export function getPortalSlugIssue({ ignoreClientId = null, repositories, viewer
 }
 
 export function listAdminClients({ repositories, viewer }) {
-  assertAgencyAdmin(viewer)
+  assertCanCreateWorkspace(viewer)
 
-  return repositories.clients
+  return repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => listClientsForViewer({
+      clients: [client],
+      viewer,
+    }).length > 0)
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function listAgencyWorkspaceClients({ repositories, viewer }) {
-  if (![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role) || !viewer.agencyId) {
+  if (!viewer) {
     return []
   }
 
-  const assignedClientIds = viewer.role === USER_ROLES.AGENCY_TEAM
-    ? new Set(viewer.clientIds ?? [])
-    : null
-
-  return repositories.clients
-    .list()
-    .filter((client) => (
-      client.agency_id === viewer.agencyId
-      && (!assignedClientIds || assignedClientIds.has(client.id))
-    ))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  return listClientsForViewer({
+    clients: repositories.workspaces.list(),
+    viewer,
+  }).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function listAdminClientPendingInvitations({ repositories, viewer }) {
   const clients = listAdminClients({ repositories, viewer })
   const clientIds = new Set(clients.map((client) => client.id))
 
-  return repositories.clientInvitations
+  return repositories.workspaceInvitations
     .list()
     .filter((invitation) => (
       clientIds.has(invitation.client_id)
@@ -182,7 +248,7 @@ export function createAdminClient({
   repositories,
   viewer,
 }) {
-  assertAgencyAdmin(viewer)
+  assertCanCreateWorkspace(viewer)
 
   if (!idGenerator) {
     throw new Error('idGenerator is required.')
@@ -198,13 +264,14 @@ export function createAdminClient({
     viewer,
   })
   const timestamp = now()
+  const agencyId = getViewerAgencyId(viewer)
 
   if (portalSlugIssue) {
     throw new Error(portalSlugIssue)
   }
 
   const client = {
-    agency_id: viewer.agencyId,
+    agency_id: agencyId,
     created_at: timestamp,
     current_focus: [],
     id: idGenerator(),
@@ -218,7 +285,27 @@ export function createAdminClient({
     updated_at: timestamp,
   }
 
-  repositories.clients.upsert(client)
+  repositories.workspaces.upsert(client)
+  const relationship = upsertAgencyWorkspaceRelationship({
+    agencyId,
+    clientId: client.id,
+    now,
+    repositories,
+  })
+  const invitationViewer = relationship
+    ? {
+        ...viewer,
+        managedWorkspaceRelationships: [
+          ...(viewer.managedWorkspaceRelationships ?? []),
+          {
+            agencyId: relationship.agency_id,
+            id: relationship.id,
+            status: relationship.status,
+            workspaceId: relationship.workspace_id,
+          },
+        ],
+      }
+    : viewer
   const invitation = createClientInvitation({
     activityIdGenerator,
     clientId: client.id,
@@ -227,7 +314,7 @@ export function createAdminClient({
     name: primaryContactName,
     now,
     repositories,
-    viewer,
+    viewer: invitationViewer,
   })
 
   return {
@@ -243,13 +330,7 @@ export function updateAdminClient({
   repositories,
   viewer,
 }) {
-  assertAgencyAdmin(viewer)
-
-  const existingClient = repositories.clients.findById(clientId)
-
-  if (!existingClient || existingClient.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found.')
-  }
+  const existingClient = assertCanManageClientWorkspace({ clientId, repositories, viewer })
 
   const name = requireText(input.name, 'Account name')
   const primaryContactEmail = assertEmail(input.primaryContactEmail, 'Primary contact email')
@@ -278,7 +359,7 @@ export function updateAdminClient({
     updated_at: now(),
   }
 
-  repositories.clients.upsert(updatedClient)
+  repositories.workspaces.upsert(updatedClient)
 
   return updatedClient
 }
@@ -288,13 +369,7 @@ export function deleteAdminClient({
   repositories,
   viewer,
 }) {
-  assertAgencyAdmin(viewer)
-
-  const client = repositories.clients.findById(clientId)
-
-  if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found.')
-  }
+  assertCanManageClientWorkspace({ clientId, repositories, viewer })
 
   repositories.projects.listByClientId(clientId).forEach((record) => repositories.projects.deleteById(record.id))
   repositories.tasks.listByClientId(clientId).forEach((record) => repositories.tasks.deleteById(record.id))
@@ -302,8 +377,9 @@ export function deleteAdminClient({
   repositories.neededFromClient.listByClientId(clientId).forEach((record) => repositories.neededFromClient.deleteById(record.id))
   repositories.dashboardLinks.listByClientId(clientId).forEach((record) => repositories.dashboardLinks.deleteById(record.id))
   repositories.reports.listByClientId(clientId).forEach((record) => repositories.reports.deleteById(record.id))
-  repositories.clientInvitations.listByClientId(clientId).forEach((record) => repositories.clientInvitations.deleteById(record.id))
-  repositories.clientMemberships.listByClientId(clientId).forEach((record) => repositories.clientMemberships.deleteById(record.id))
+  repositories.workspaceInvitations.listByClientId(clientId).forEach((record) => repositories.workspaceInvitations.deleteById(record.id))
+  repositories.workspaceMemberships.listByWorkspaceId(clientId)
+    .forEach((record) => repositories.workspaceMemberships.deleteById(record.id))
   repositories.clinicProfiles?.listByClientId(clientId).forEach((record) => repositories.clinicProfiles.deleteById(record.id))
   repositories.clinicLocations?.listByClientId(clientId).forEach((record) => repositories.clinicLocations.deleteById(record.id))
   repositories.clinicServiceLines?.listByClientId(clientId).forEach((record) => repositories.clinicServiceLines.deleteById(record.id))
@@ -313,7 +389,7 @@ export function deleteAdminClient({
     .forEach((record) => repositories.locationPerformance.deleteById(record.id))
   repositories.serviceLinePerformance?.listByClientId(clientId)
     .forEach((record) => repositories.serviceLinePerformance.deleteById(record.id))
-  repositories.clients.deleteById(clientId)
+  repositories.workspaces.deleteById(clientId)
 
   return true
 }

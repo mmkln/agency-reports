@@ -6,10 +6,7 @@ import {
   DENTAL_GROWTH_REVIEW_PUBLISH_STATES,
   DENTAL_GROWTH_REVIEW_ZONES,
 } from '../../entities/dental-growth-review'
-import {
-  CLINIC_REPORTING_CAPABILITIES,
-  USER_ROLES,
-} from '../../entities/profile'
+import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
 import {
   CLINIC_REPORTING_FRESHNESS_STATUSES,
   CLINIC_REPORTING_LAYERS,
@@ -25,6 +22,7 @@ import {
   updateAdminDentalGrowthReviewDraft,
   updateAdminClinicReportingPublishState,
 } from './adminClinicReportingService'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 
 const IDS = Object.freeze({
   AGENCY: 'agency-a',
@@ -58,6 +56,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -76,12 +77,12 @@ function createRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
     capabilities: Object.values(CLINIC_REPORTING_CAPABILITIES),
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT],
     userId: 'admin-user',
-  }
+  })
 }
 
 function createDentalGrowthReviewImportPayload(overrides = {}) {

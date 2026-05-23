@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import {
   discardAdminClientOverviewDraft,
   getAdminClientOverviewEditor,
@@ -65,6 +65,9 @@ function createEntityRepository(initialRecords = []) {
 
 function createRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY_A,
@@ -134,11 +137,11 @@ function createRepositories() {
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: agencyId === IDS.AGENCY_A ? [IDS.CLIENT_A] : [],
     userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-  }
+  })
 }
 
 describe('adminOverviewService', () => {
@@ -211,7 +214,7 @@ describe('adminOverviewService', () => {
       viewer: createAdminViewer(),
     })
 
-    const client = repositories.clients.findById(IDS.CLIENT_A)
+    const client = repositories.workspaces.findById(IDS.CLIENT_A)
 
     expect(client.status).toBe(CLIENT_STATUSES.ON_TRACK)
     expect(client.current_focus).toEqual(['Campaign launch'])
@@ -343,7 +346,7 @@ describe('adminOverviewService', () => {
 
     expect(editor.client.overviewPublishedAt).toBe('2026-05-09T10:00:00.000Z')
     expect(editor.client.overviewPublishedBy).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
-    expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_at).toBe('2026-05-09T10:00:00.000Z')
+    expect(repositories.workspaces.findById(IDS.CLIENT_A).overview_published_at).toBe('2026-05-09T10:00:00.000Z')
   })
 
   it('publishes the saved draft into the client-facing records', () => {
@@ -384,7 +387,7 @@ describe('adminOverviewService', () => {
 
     expect(editor.client.hasDraft).toBe(false)
     expect(editor.client.status).toBe(CLIENT_STATUSES.BLOCKED)
-    expect(repositories.clients.findById(IDS.CLIENT_A)).toMatchObject({
+    expect(repositories.workspaces.findById(IDS.CLIENT_A)).toMatchObject({
       current_focus: ['Fix attribution'],
       overview_draft: null,
       overview_published_at: '2026-05-10T10:00:00.000Z',
@@ -394,8 +397,8 @@ describe('adminOverviewService', () => {
       name: 'Attribution repair',
       progress_percent: 45,
     })
-    expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('tasks')
-    expect(repositories.clients.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('neededActions')
+    expect(repositories.workspaces.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('tasks')
+    expect(repositories.workspaces.findById(IDS.CLIENT_A).overview_published_snapshot).not.toHaveProperty('neededActions')
   })
 
   it('discards draft changes and restores the published editor state', () => {
@@ -429,6 +432,6 @@ describe('adminOverviewService', () => {
     expect(editor.client.hasDraft).toBe(false)
     expect(editor.client.status).toBe(CLIENT_STATUSES.ON_TRACK)
     expect(editor.currentFocus).toEqual(['Campaign launch'])
-    expect(repositories.clients.findById(IDS.CLIENT_A).overview_draft).toBeNull()
+    expect(repositories.workspaces.findById(IDS.CLIENT_A).overview_draft).toBeNull()
   })
 })

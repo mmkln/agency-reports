@@ -7,7 +7,10 @@ import {
   PageShell,
 } from '@/shared/ui'
 
-import { USER_ROLES } from '../../../entities/profile'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../../../domain/policies/routeAccessPolicy'
 import {
   CreateTaskDialog,
   useCreateTaskWorkflow,
@@ -31,13 +34,15 @@ import {
 import { getTeamTaskFilterPath, loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
 
 function getTaskWorkspacePath(viewer) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
+  return hasAgencyAdminMembership(viewer) ? '/admin/tasks' : '/team/tasks'
 }
 
 function createEmptyTaskData(filters, viewer) {
+  const hasAdminAccess = hasAgencyAdminMembership(viewer)
+
   return {
-    canCreateClientWorkItems: viewer?.role === USER_ROLES.AGENCY_ADMIN,
-    canUseMineFilter: viewer?.role === USER_ROLES.AGENCY_TEAM,
+    canCreateClientWorkItems: hasAdminAccess,
+    canUseMineFilter: hasAgencyMembership(viewer) && !hasAdminAccess,
     clients: [],
     filters,
     projects: [],

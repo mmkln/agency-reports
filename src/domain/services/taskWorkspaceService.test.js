@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_WORK_ITEM_PUBLISH_STATES, CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import { createTask, listTaskWorkspace, updateWorkspaceTask } from './taskWorkspaceService'
 
 const IDS = Object.freeze({
@@ -66,6 +67,9 @@ function createRepositories() {
         name: 'Other Client',
       },
     ]),
+    get workspaces() {
+      return this.clients
+    },
     clientWorkItems: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -103,20 +107,20 @@ function createRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     name: 'GrowthLab Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+  })
 }
 
 function createTeamViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    clientIds: [IDS.CLIENT_A],
+    managedWorkspaceIds: [IDS.CLIENT_A],
     name: 'Mia Carter',
-    role: USER_ROLES.AGENCY_TEAM,
-  }
+    role: AGENCY_ROLES.TEAM,
+  })
 }
 
 describe('taskWorkspaceService', () => {

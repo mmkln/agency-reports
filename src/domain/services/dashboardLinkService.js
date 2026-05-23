@@ -4,15 +4,17 @@ import {
   DASHBOARD_PROVIDERS,
   DASHBOARD_PROVIDER_META,
 } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
+import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const VALID_DASHBOARD_PROVIDERS = new Set(Object.values(DASHBOARD_PROVIDERS))
 const VALID_DASHBOARD_STATUSES = new Set(Object.values(DASHBOARD_LINK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage dashboard links.')
   }
 }
@@ -68,9 +70,9 @@ function normalizeDisplayOrder(value) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, clientId)) {
     throw new Error('Account was not found.')
   }
 
@@ -138,9 +140,9 @@ export function listAdminDashboardLinks({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
   const clientsById = new Map(
-    repositories.clients
+    repositories.workspaces
       .list()
-      .filter((client) => client.agency_id === viewer.agencyId)
+      .filter((client) => new Set(listManagedWorkspaceIds(viewer)).has(client.id))
       .map((client) => [client.id, client]),
   )
 

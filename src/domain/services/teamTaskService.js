@@ -5,23 +5,28 @@ import {
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
 import { normalizeNeededAction } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
 import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../policies/taskPolicy'
+import { canAccessClient } from '../policies/accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../policies/routeAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const VALID_TASK_STATUSES = new Set(Object.values(TASK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 const OPEN_NEEDED_ACTION_STATUSES = new Set(['answered', 'approved', 'changes_requested', 'pending'])
 
 function assertAgencyTeam(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_TEAM || !viewer.agencyId) {
+  if (!hasAgencyMembership(viewer) || hasAgencyAdminMembership(viewer)) {
     throw new Error('Only team members can update assigned tasks.')
   }
 }
 
 function getAssignedClientIds(viewer) {
-  return viewer.clientIds ?? []
+  return listManagedWorkspaceIds(viewer)
 }
 
 function canTeamAccessTask(viewer, task) {
@@ -191,9 +196,9 @@ export function listTeamTasks({
   assertAgencyTeam(viewer)
 
   const clientIds = getAssignedClientIds(viewer)
-  const clients = repositories.clients
+  const clients = repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId && clientIds.includes(client.id))
+    .filter((client) => clientIds.includes(client.id) && canAccessClient(viewer, client.id))
   const clientsById = new Map(clients.map((client) => [client.id, client]))
   const projectsById = new Map(
     repositories.projects

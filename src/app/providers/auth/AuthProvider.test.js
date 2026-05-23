@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../../entities/profile'
 import { buildAuthRuntime } from './authRuntime'
 
 const CLIENT_A_ID = 'client-a'
 
 describe('buildAuthRuntime', () => {
-  it('preserves agency team client assignments instead of broadening to every agency client', () => {
+  it('uses active workspace membership as the default client scope', () => {
     const viewer = {
-      clientIds: [CLIENT_A_ID],
-      role: USER_ROLES.AGENCY_TEAM,
+      activeWorkspaceId: CLIENT_A_ID,
     }
 
     const runtime = buildAuthRuntime({
@@ -18,13 +16,12 @@ describe('buildAuthRuntime', () => {
     })
 
     expect(runtime.defaultClientId).toBe(CLIENT_A_ID)
-    expect(runtime.viewer.clientIds).toEqual([CLIENT_A_ID])
+    expect(runtime.viewer.activeWorkspaceId).toBe(CLIENT_A_ID)
   })
 
   it('does not derive agency admin defaults from repository state', () => {
     const viewer = {
-      agencyId: 'agency-a',
-      role: USER_ROLES.AGENCY_ADMIN,
+      activeAgencyId: 'agency-a',
     }
 
     const runtime = buildAuthRuntime({
@@ -41,8 +38,7 @@ describe('buildAuthRuntime', () => {
       dataClient: {},
       defaultClientId: CLIENT_A_ID,
       viewer: {
-        agencyId: 'agency-a',
-        role: USER_ROLES.AGENCY_ADMIN,
+        activeAgencyId: 'agency-a',
       },
     })
 

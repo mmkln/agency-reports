@@ -19,7 +19,8 @@ import {
   CLINIC_REPORTING_PUBLISH_STATES,
   normalizeClinicReportingPeriod,
 } from '../../entities/clinic-reporting'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   assertClientFacingClinicReportingPayload,
   mapClinicReportingPeriodSummary,
@@ -44,21 +45,21 @@ const ADMIN_REPORTING_LAYERS = Object.freeze([
 ])
 
 function assertAdminCanImport(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId || !canViewerImportClinicReporting(viewer)) {
+  if (!hasAgencyAdminMembership(viewer) || !canViewerImportClinicReporting(viewer)) {
     throw new Error('Only admins can import clinic reporting records.')
   }
 }
 
 function assertAdminCanPublish(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId || !canViewerPublishClinicReporting(viewer)) {
+  if (!hasAgencyAdminMembership(viewer) || !canViewerPublishClinicReporting(viewer)) {
     throw new Error('Only admins can publish clinic reporting records.')
   }
 }
 
 function getAdminClinicClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Clinic account was not found.')
   }
 

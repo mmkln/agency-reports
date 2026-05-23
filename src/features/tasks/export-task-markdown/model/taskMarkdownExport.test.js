@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../../../entities/profile'
 import { TASK_STATUSES } from '../../../../entities/task'
 import { VISIBILITY } from '../../../../entities/update'
+import { createAgencyAccessViewer } from '../../../../domain/test/accessViewerTestHelpers'
 import { previewTaskMarkdownImport } from '../../import-task-markdown'
 import { exportTasksToMarkdown } from './taskMarkdownExport'
 
@@ -40,6 +40,9 @@ function createRepositories() {
         name: 'Client',
       },
     ]),
+    get workspaces() {
+      return this.clients
+    },
     projects: createEntityRepository([]),
     tasks: createEntityRepository([
       {
@@ -65,11 +68,11 @@ function createRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
+    managedWorkspaceIds: [IDS.CLIENT],
     name: 'Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+  })
 }
 
 describe('task Markdown export', () => {

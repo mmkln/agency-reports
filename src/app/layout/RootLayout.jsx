@@ -14,7 +14,13 @@ import {
 import { routeMetadata } from '../routing/routeDefinitions'
 import { listAgencyWorkspaceClients } from '../../domain/services/adminClientService'
 import { getRouteAccessClientContext } from '../../domain/services/routeAccessContextService'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  canUseAgencyWorkspaceSwitcher,
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../../domain/policies/routeAccessPolicy'
+import { AGENCY_ROLE_META } from '../../entities/agency-membership'
+import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
 import {
   ClientWorkspaceSwitcher,
   getClientWorkspacePageIdByRoutePath,
@@ -46,6 +52,33 @@ const legacyHashRouteMap = Object.freeze({
   '#performance': '/client/reports-dashboards',
   '#performance-dashboard': '/client/reports-dashboards',
 })
+
+function getSidebarViewerMeta(viewer) {
+  const agencyMembership = viewer?.agencyMemberships?.[0]
+
+  if (agencyMembership) {
+    return {
+      label: AGENCY_ROLE_META[agencyMembership.role]?.label ?? 'Agency member',
+      searchPlaceholder: hasAgencyAdminMembership(viewer)
+        ? 'Search accounts, reports...'
+        : 'Search tasks, accounts...',
+    }
+  }
+
+  const workspaceMembership = viewer?.workspaceMemberships?.[0]
+
+  if (workspaceMembership) {
+    return {
+      label: WORKSPACE_ROLE_META[workspaceMembership.role]?.label ?? 'Workspace member',
+      searchPlaceholder: 'Search portal...',
+    }
+  }
+
+  return {
+    label: hasAgencyMembership(viewer) ? 'Agency member' : 'Workspace',
+    searchPlaceholder: 'Search...',
+  }
+}
 
 export function RootLayout() {
   const { onAuthChange, onLogin, onSignOut, runtime, viewer } = useAuth()
@@ -85,6 +118,7 @@ export function RootLayout() {
       return runtime.dataClient.read((repositories) => getRouteAccessClientContext({
         clientId: routeClientId,
         repositories,
+        viewer,
       }))
     },
   })
@@ -159,7 +193,7 @@ export function RootLayout() {
   const selectedWorkspaceClientId = routeParams.clientId ?? null
   const selectedWorkspaceClient = workspaceClients.find((client) => client.id === selectedWorkspaceClientId) ?? null
   const currentClientWorkspacePageId = getClientWorkspacePageIdByRoutePath(location.pathname)
-  const canUseClientWorkspaceSelector = [USER_ROLES.AGENCY_ADMIN].includes(viewer.role)
+  const canUseClientWorkspaceSelector = canUseAgencyWorkspaceSwitcher(viewer)
   const isClientWorkspaceNavigationActive = Boolean(
     canUseClientWorkspaceSelector
     && selectedWorkspaceClient
@@ -179,6 +213,7 @@ export function RootLayout() {
         routeParams={routeParams}
         runtime={runtime}
         sidebarNavigationItems={sidebarNavigationItems}
+        sidebarViewerMeta={getSidebarViewerMeta(viewer)}
         sidebarWorkspaceSwitcher={canUseClientWorkspaceSelector ? (
           <ClientWorkspaceSwitcher
             clients={workspaceClients}

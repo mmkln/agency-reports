@@ -4,12 +4,16 @@ import {
   CLIENT_REQUEST_STATUSES,
   CLIENT_REQUEST_TYPES,
 } from '../../entities/client-request'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   createBusinessDeletionRequest,
   createClientRequest,
@@ -41,6 +45,9 @@ function createEntityRepository(initialRecords = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       const index = records.findIndex((item) => item.id === record.id)
 
@@ -56,6 +63,21 @@ function createEntityRepository(initialRecords = []) {
 }
 
 function createRepositories(overrides = {}) {
+  const clients = createEntityRepository([
+    {
+      agency_id: 'agency-a',
+      id: IDS.CLIENT_A,
+      name: 'Client A',
+      portal_slug: 'client-a',
+    },
+    {
+      agency_id: 'agency-a',
+      id: IDS.CLIENT_B,
+      name: 'Client B',
+      portal_slug: 'client-b',
+    },
+  ])
+
   return {
     clientRequests: createEntityRepository([
       {
@@ -90,53 +112,46 @@ function createRepositories(overrides = {}) {
       },
     ]),
     activityEvents: createEntityRepository([]),
-    clientMemberships: createEntityRepository([
+    workspaceMemberships: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
         id: '12121212-1212-4121-8121-121212121212',
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+        role: 'owner',
         user_id: IDS.USER,
       },
     ]),
-    clients: createEntityRepository([
-      {
-        agency_id: 'agency-a',
-        id: IDS.CLIENT_A,
-        name: 'Client A',
-        portal_slug: 'client-a',
-      },
-      {
-        agency_id: 'agency-a',
-        id: IDS.CLIENT_B,
-        name: 'Client B',
-        portal_slug: 'client-b',
-      },
-    ]),
+    clients,
     neededFromClient: createEntityRepository([]),
     tasks: createEntityRepository([]),
+    workspaces: clients,
     ...overrides,
   }
 }
 
-function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    email: 'client@example.com',
+function createClientViewer(clientId = IDS.CLIENT_A, {
+  capabilities = [
+    WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+    WORKSPACE_CAPABILITIES.CREATE_REQUESTS,
+    WORKSPACE_CAPABILITIES.REQUEST_DELETION,
+  ],
+  role = WORKSPACE_ROLES.CLINIC_OWNER,
+} = {}) {
+  return createWorkspaceAccessViewer({
+    capabilities,
     name: 'Client User',
-    role: USER_ROLES.CLIENT_USER,
+    role,
     userId: IDS.USER,
-  }
+    workspaceId: clientId,
+  })
 }
 
 function createAdminViewer() {
-  return {
-    email: 'admin@example.com',
+  return createAgencyAccessViewer({
     agencyId: 'agency-a',
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     name: 'Agency Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
     userId: IDS.USER,
-  }
+  })
 }
 
 describe('clientRequestsService', () => {
@@ -234,16 +249,7 @@ describe('clientRequestsService', () => {
   })
 
   it('blocks non-owners and duplicate business deletion requests', () => {
-    const repositories = createRepositories({
-      clientMemberships: createEntityRepository([
-        {
-          client_id: IDS.CLIENT_A,
-          id: '12121212-1212-4121-8121-121212121212',
-          role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-          user_id: IDS.USER,
-        },
-      ]),
-    })
+    const repositories = createRepositories()
 
     expect(() => createBusinessDeletionRequest({
       idGenerator: () => IDS.REQUEST_A,
@@ -251,7 +257,13 @@ describe('clientRequestsService', () => {
         clientId: IDS.CLIENT_A,
       },
       repositories,
-      viewer: createClientViewer(),
+      viewer: createClientViewer(IDS.CLIENT_A, {
+        capabilities: [
+          WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+          WORKSPACE_CAPABILITIES.CREATE_REQUESTS,
+        ],
+        role: WORKSPACE_ROLES.VIEWER,
+      }),
     })).toThrow('Only workspace owners can request business deletion.')
 
     const ownerRepositories = createRepositories({
@@ -345,7 +357,7 @@ describe('clientRequestsService', () => {
     expect(updatedRequest.responseHistory.at(-1)).toMatchObject({
       created_at: '2026-05-18T09:00:00.000Z',
       metadata: {
-        actor_role: USER_ROLES.AGENCY_ADMIN,
+        actor_role: AGENCY_ROLES.ADMIN,
         status: CLIENT_REQUEST_STATUSES.UNDER_REVIEW,
       },
       type: 'agency_triaged',

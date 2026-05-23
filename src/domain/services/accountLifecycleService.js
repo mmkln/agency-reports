@@ -1,13 +1,15 @@
 import {
-  isActiveProfile,
-  isClientPortalRole,
-  PROFILE_STATUSES,
-  USER_ROLES,
-} from '../../entities/profile'
+  AGENCY_ROLES,
+  isActiveAgencyMembership,
+} from '../../entities/agency-membership'
 import {
-  CLIENT_MEMBERSHIP_ROLES,
-  isActiveClientMembership,
-} from '../../entities/client-membership'
+  isActiveWorkspaceMembership,
+  WORKSPACE_ROLES,
+} from '../../entities/workspace-membership'
+import {
+  isActiveProfile,
+  PROFILE_STATUSES,
+} from '../../entities/profile'
 
 function requireAuthenticatedViewer(viewer) {
   if (!viewer?.userId) {
@@ -25,38 +27,63 @@ function getOwnProfile({ repositories, viewer }) {
   return profile
 }
 
-function assertNotLastAgencyAdmin({ profile, repositories }) {
-  if (profile.role !== USER_ROLES.AGENCY_ADMIN) {
-    return
-  }
+function isAgencyAdminRole(role) {
+  return role === AGENCY_ROLES.OWNER || role === AGENCY_ROLES.ADMIN
+}
 
-  const activeAgencyAdminCount = repositories.profiles
+function getActiveAgencyMembershipsForUser({ repositories, userId }) {
+  return repositories.agencyMemberships
     .list()
-    .filter((candidate) => (
-      candidate.agency_id === profile.agency_id
-      && candidate.role === USER_ROLES.AGENCY_ADMIN
-      && isActiveProfile(candidate)
+    .filter(isActiveAgencyMembership)
+    .filter((membership) => membership.user_id === userId)
+}
+
+function countActiveAgencyAdmins({ agencyId, repositories }) {
+  return repositories.agencyMemberships
+    .list()
+    .filter(isActiveAgencyMembership)
+    .filter((membership) => (
+      membership.agency_id === agencyId
+      && isAgencyAdminRole(membership.role)
+      && isActiveProfile(repositories.profiles.findByUserId(membership.user_id))
     ))
     .length
+}
 
-  if (activeAgencyAdminCount <= 1) {
-    throw new Error('Another agency admin is required before deactivating this account.')
+function assertNotLastAgencyAdmin({ profile, repositories }) {
+  const agencyMemberships = getActiveAgencyMembershipsForUser({
+    repositories,
+    userId: profile.user_id,
+  })
+  const adminAgencyMembership = agencyMemberships.find((membership) => isAgencyAdminRole(membership.role))
+
+  if (adminAgencyMembership) {
+    const activeAgencyAdminCount = countActiveAgencyAdmins({
+      agencyId: adminAgencyMembership.agency_id,
+      repositories,
+    })
+
+    if (activeAgencyAdminCount <= 1) {
+      throw new Error('Another agency admin is required before deactivating this account.')
+    }
+
+    return
   }
 }
 
 function getActiveMembershipsForProfile({ repositories, userId }) {
-  return repositories.clientMemberships
+  return repositories.workspaceMemberships
     .list()
-    .filter(isActiveClientMembership)
+    .filter(isActiveWorkspaceMembership)
     .filter((membership) => membership.user_id === userId)
 }
 
 function countActiveOwners({ clientId, repositories }) {
-  return repositories.clientMemberships
-    .listByClientId(clientId)
-    .filter(isActiveClientMembership)
+  return repositories.workspaceMemberships
+    .listByWorkspaceId(clientId)
+    .filter(isActiveWorkspaceMembership)
     .filter((membership) => {
-      if (membership.role !== CLIENT_MEMBERSHIP_ROLES.OWNER) {
+      if (membership.role !== WORKSPACE_ROLES.OWNER) {
         return false
       }
 
@@ -68,21 +95,17 @@ function countActiveOwners({ clientId, repositories }) {
 }
 
 function assertClientOwnershipCanSurviveDeactivation({ repositories, viewer }) {
-  if (!isClientPortalRole(viewer.role)) {
-    return
-  }
-
   const ownedMembership = getActiveMembershipsForProfile({
     repositories,
     userId: viewer.userId,
-  }).find((membership) => membership.role === CLIENT_MEMBERSHIP_ROLES.OWNER)
+  }).find((membership) => membership.role === WORKSPACE_ROLES.OWNER)
 
   if (!ownedMembership) {
     return
   }
 
   if (countActiveOwners({
-    clientId: ownedMembership.client_id,
+    clientId: ownedMembership.workspace_id,
     repositories,
   }) <= 1) {
     throw new Error('Transfer workspace ownership before deactivating this account.')

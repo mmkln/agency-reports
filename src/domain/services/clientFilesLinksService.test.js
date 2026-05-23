@@ -4,8 +4,11 @@ import {
   CLIENT_FILE_LINK_STATUSES,
   CLIENT_FILE_LINK_TYPES,
 } from '../../entities/client-file-link'
-import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   archiveClientFileLink,
   createClientFileLink,
@@ -52,6 +55,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clientFileLinks: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -127,19 +133,16 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
+    agencyId: 'agency-1',
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     name: 'Agency Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
     userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-  }
+  })
 }
 
 describe('clientFilesLinksService', () => {

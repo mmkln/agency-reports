@@ -57,7 +57,7 @@ describe('serverAuditContractService', () => {
     expect(getServerAuditTransition('publish_client_work_item')).toMatchObject({
       sourceTable: 'client_work_items',
     })
-    expect(getServerAuditTransitionsBySourceTable('client_invitations').map((transition) => (
+    expect(getServerAuditTransitionsBySourceTable('workspace_invitations').map((transition) => (
       transition.transition
     ))).toEqual([
       'create_client_invitation',

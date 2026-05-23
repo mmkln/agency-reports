@@ -5,9 +5,10 @@ import {
   CLIENT_FILE_LINK_TYPES,
   normalizeClientFileLink,
 } from '../../entities/client-file-link'
-import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 import {
   isClientFileLinkArchivedVisibleToClient,
   isClientFileLinkVisibleToClient,
@@ -105,7 +106,7 @@ function normalizeVisibility(visibility) {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage files and links.')
   }
 }
@@ -113,9 +114,13 @@ function assertAgencyAdmin(viewer) {
 function getAdminClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
+    throw new Error('Client was not found.')
+  }
+
+  if (!canAccessClient(viewer, clientId)) {
     throw new Error('Client was not found.')
   }
 
@@ -229,7 +234,7 @@ export function listClientVisibleFileLinks({
   viewer,
 }) {
   const normalizedClientId = String(clientId || viewer?.clientId || '').trim()
-  const client = repositories.clients.findById(normalizedClientId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     return {
@@ -298,7 +303,8 @@ export function listAdminClientFileLinksWorkspace({
   assertAgencyAdmin(viewer)
 
   const normalizedClientId = normalizeText(clientId)
-  const clients = repositories.clients.list()
+  const managedWorkspaceIds = new Set(listManagedWorkspaceIds(viewer))
+  const clients = repositories.workspaces.list().filter((client) => managedWorkspaceIds.has(client.id))
   const client = normalizedClientId
     ? getAdminClient({ clientId: normalizedClientId, repositories, viewer })
     : clients[0] ?? null

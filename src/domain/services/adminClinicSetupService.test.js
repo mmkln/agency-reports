@@ -6,7 +6,7 @@ import {
   CLINIC_PROFILE_SPECIALTIES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import {
   getAdminClinicSetupPage,
   saveAdminClinicSetup,
@@ -64,6 +64,9 @@ function createRepository(initialRecords = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createRepository([
       {
         agency_id: IDS.AGENCY_A,
@@ -91,11 +94,11 @@ function createRepositories(overrides = {}) {
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: agencyId === IDS.AGENCY_A ? [IDS.CLIENT_A, IDS.CLIENT_B] : [],
     userId: 'admin-user-id',
-  }
+  })
 }
 
 describe('adminClinicSetupService', () => {
@@ -275,10 +278,7 @@ describe('adminClinicSetupService', () => {
     expect(() => getAdminClinicSetupPage({
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
-      viewer: {
-        clientId: IDS.CLIENT_A,
-        role: USER_ROLES.CLIENT_USER,
-      },
+      viewer: {},
     })).toThrow('Only admins can manage clinic setup.')
   })
 

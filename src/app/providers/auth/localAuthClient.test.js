@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../../entities/profile'
 import { DEMO_AUTH_PASSWORD } from '../../../domain/services/authService'
 import { createLocalAuthClient } from './localAuthClient'
 
@@ -17,7 +16,6 @@ function createRepositories(profileOverrides = {}) {
     email: 'client@example.com',
     id: 'profile-1',
     name: 'Client User',
-    role: USER_ROLES.CLIENT_ADMIN,
     user_id: 'user-1',
     ...profileOverrides,
   }
@@ -26,13 +24,16 @@ function createRepositories(profileOverrides = {}) {
     authCredentials: {
       list: () => [],
     },
-    clientMemberships: {
+    workspaceMemberships: {
       list: () => [
         {
-          client_id: 'client-1',
+          workspace_id: 'client-1',
           user_id: profile.user_id,
         },
       ],
+    },
+    workspaces: {
+      findById: () => ({ id: 'client-1' }),
     },
     profiles: {
       findByUserId: (userId) => (userId === profile.user_id ? profile : null),
@@ -53,8 +54,11 @@ describe('createLocalAuthClient', () => {
       email: 'client@example.com',
       password: DEMO_AUTH_PASSWORD,
     })).resolves.toMatchObject({
-      clientId: 'client-1',
+      activeWorkspaceId: 'client-1',
       userId: 'user-1',
+      workspaceMemberships: [
+        expect.objectContaining({ workspaceId: 'client-1' }),
+      ],
     })
   })
 
@@ -66,7 +70,11 @@ describe('createLocalAuthClient', () => {
     })
 
     await expect(authClient.listLoginProfiles()).resolves.toEqual([
-      repositories.profiles.list()[0],
+      expect.objectContaining({
+        email: 'client@example.com',
+        roleLabel: 'Viewer',
+        user_id: 'user-1',
+      }),
     ])
   })
 })

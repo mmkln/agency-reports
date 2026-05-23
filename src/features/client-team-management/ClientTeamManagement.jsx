@@ -19,10 +19,10 @@ import {
 
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../entities/client-invitation'
 import {
-  CLIENT_MEMBERSHIP_ROLES,
-  ClientMemberList,
-  ClientMembershipRoleSelect,
-} from '../../entities/client-membership'
+  WORKSPACE_ROLES,
+  WorkspaceMemberList,
+  WorkspaceMembershipRoleSelect,
+} from '../../entities/workspace-membership'
 import { Icon } from '../../shared/icons'
 import { useClientTeamManagement } from './useClientTeamManagement'
 
@@ -87,8 +87,8 @@ function InviteForm({
         </label>
       </div>
       <div className="grid gap-control sm:grid-cols-[1fr_auto]">
-        <ClientMembershipRoleSelect
-          allowedRoles={[CLIENT_MEMBERSHIP_ROLES.VIEWER]}
+        <WorkspaceMembershipRoleSelect
+          allowedRoles={[WORKSPACE_ROLES.VIEWER]}
           className="bg-block"
           onValueChange={(role) => onUpdateForm('role', role)}
           value={form.role}
@@ -132,7 +132,7 @@ function EditMemberDialog({
             </div>
             <label className="grid gap-1.5">
               <span className="text-label text-text-secondary">Role</span>
-              <ClientMembershipRoleSelect
+              <WorkspaceMembershipRoleSelect
                 className="bg-block"
                 onValueChange={onRoleChange}
                 value={role}
@@ -234,7 +234,7 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
   const [memberPendingEdit, setMemberPendingEdit] = useState(null)
   const [memberPendingRemoval, setMemberPendingRemoval] = useState(null)
   const [removedMemberIds, setRemovedMemberIds] = useState(() => new Set())
-  const [editRole, setEditRole] = useState(CLIENT_MEMBERSHIP_ROLES.VIEWER)
+  const [editRole, setEditRole] = useState(WORKSPACE_ROLES.VIEWER)
   const [editError, setEditError] = useState('')
   const teamManagement = useClientTeamManagement({
     canManage,
@@ -319,7 +319,7 @@ export function ClientTeamManagement({ clientId, page, runtime }) {
         title="Team Members"
       />
       <PanelBody className="p-0">
-        <ClientMemberList
+        <WorkspaceMemberList
           canEdit={canManage}
           canRemove={canManage}
           emptyDescription="No members are currently attached to this workspace."

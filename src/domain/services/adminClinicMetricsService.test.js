@@ -13,7 +13,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import {
   getAdminClinicMetricsPage,
   publishBookingPipelineSnapshot,
@@ -77,6 +77,9 @@ function createRepository(initialRecords = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     bookingPipelineSnapshots: createRepository([]),
     callBookingMetrics: createRepository([]),
     clients: createRepository([
@@ -126,11 +129,11 @@ function createRepositories(overrides = {}) {
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: agencyId === IDS.AGENCY_A ? [IDS.CLIENT_A, IDS.CLIENT_B] : [],
     userId: 'admin-user-id',
-  }
+  })
 }
 
 describe('adminClinicMetricsService', () => {

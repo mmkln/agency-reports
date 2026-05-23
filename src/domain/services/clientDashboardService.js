@@ -1,6 +1,5 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
 
@@ -38,11 +37,7 @@ function mapReport(report) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  return canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessClient(viewer, clientId)
 }
 
 function isDashboardVisibleForMode(dashboardLink, mode) {
@@ -70,7 +65,7 @@ export function getClientDashboardPage({
   repositories,
   viewer,
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessDashboardClient({ client, clientId, viewer })) {
     return {

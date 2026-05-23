@@ -293,8 +293,8 @@ export function getClientProjectsPage({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     return {

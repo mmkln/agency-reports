@@ -1,6 +1,7 @@
 import { CLIENT_TYPES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../entities/report'
+import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   mapClinicReportSections,
   normalizeClinicReportSections,
@@ -9,7 +10,7 @@ import {
 const VALID_REPORT_STATUSES = new Set(Object.values(REPORT_STATUSES))
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage reports.')
   }
 }
@@ -71,9 +72,9 @@ function normalizeStatus(value, fallback = REPORT_STATUSES.DRAFT) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 
@@ -144,9 +145,9 @@ export function listAdminReports({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
   const clientsById = new Map(
-    repositories.clients
+    repositories.workspaces
       .list()
-      .filter((client) => client.agency_id === viewer.agencyId)
+      .filter((client) => canAccessClient(viewer, client.id))
       .map((client) => [client.id, client]),
   )
 

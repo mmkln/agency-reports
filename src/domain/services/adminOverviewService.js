@@ -1,8 +1,9 @@
 import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
+import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const VALID_CLIENT_STATUSES = new Set(Object.values(CLIENT_STATUSES))
 const VALID_DASHBOARD_PROVIDERS = new Set(Object.values(DASHBOARD_PROVIDERS))
@@ -11,7 +12,7 @@ const VALID_REPORT_STATUSES = new Set(Object.values(REPORT_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can edit workspace overviews.')
   }
 }
@@ -19,9 +20,9 @@ function assertAgencyAdmin(viewer) {
 function getEditableClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Client overview is not available for this admin.')
   }
 
@@ -398,7 +399,7 @@ export function saveAdminClientOverview({
   })
   const client = getEditableClient({ clientId, repositories, viewer })
 
-  repositories.clients.upsert({
+  repositories.workspaces.upsert({
     ...client,
     overview_draft: createOverviewDraftSnapshot({
       editor: draftEditor,
@@ -429,7 +430,7 @@ function materializeAdminClientOverview({
     'Client status',
   )
 
-  repositories.clients.upsert({
+  repositories.workspaces.upsert({
     ...client,
     current_focus: normalizeFocusItems(input.currentFocus),
     status,
@@ -447,7 +448,7 @@ function materializeAdminClientOverview({
   upsertReports({ clientId, idGenerator, reports: input.reports, repositories, timestamp })
 
   return readPublishedAdminClientOverviewEditor({
-    client: repositories.clients.findById(clientId),
+    client: repositories.workspaces.findById(clientId),
     clientId,
     repositories,
   })
@@ -506,8 +507,11 @@ function createMemoryEntityRepository(initialRecords = []) {
 }
 
 function createMemoryRepositoriesFrom(repositories) {
+  const clients = createMemoryEntityRepository(repositories.workspaces.list())
+
   return {
-    clients: createMemoryEntityRepository(repositories.clients.list()),
+    clients,
+    workspaces: clients,
     dashboardLinks: createMemoryEntityRepository(repositories.dashboardLinks.list()),
     neededFromClient: createMemoryEntityRepository(repositories.neededFromClient.list()),
     projects: createMemoryEntityRepository(repositories.projects.list()),
@@ -545,9 +549,9 @@ export function publishAdminClientOverview({
     viewer,
   })
 
-  const publishedClient = repositories.clients.findById(clientId)
+  const publishedClient = repositories.workspaces.findById(clientId)
 
-  repositories.clients.upsert({
+  repositories.workspaces.upsert({
     ...publishedClient,
     overview_draft: null,
     overview_draft_saved_at: null,
@@ -574,7 +578,7 @@ export function discardAdminClientOverviewDraft({
   const client = getEditableClient({ clientId, repositories, viewer })
   const timestamp = now()
 
-  repositories.clients.upsert({
+  repositories.workspaces.upsert({
     ...client,
     overview_draft: null,
     overview_draft_saved_at: null,

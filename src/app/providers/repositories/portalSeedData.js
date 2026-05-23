@@ -1,10 +1,14 @@
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../../entities/client'
+import { AGENCY_STATUSES } from '../../../entities/agency'
+import { AGENCY_ROLES } from '../../../entities/agency-membership'
+import {
+  AGENCY_WORKSPACE_RELATIONSHIP_STATUSES,
+} from '../../../entities/agency-workspace-relationship'
 import { CLIENT_INVITATION_STATUSES } from '../../../entities/client-invitation'
 import {
   CLIENT_FILE_LINK_STATUSES,
   CLIENT_FILE_LINK_TYPES,
 } from '../../../entities/client-file-link'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership/model'
 import {
   CLIENT_REQUEST_STATUSES,
   CLIENT_REQUEST_TYPES,
@@ -56,13 +60,17 @@ import {
   PERFORMANCE_SERVICE_TYPES,
   PERFORMANCE_TREND_GRANULARITIES,
 } from '../../../entities/performance-dashboard'
-import { CLINIC_REPORTING_CAPABILITIES, USER_ROLES } from '../../../entities/profile'
+import { WORKSPACE_ROLES } from '../../../entities/workspace-membership/model'
 import { REPORT_STATUSES } from '../../../entities/report'
 import { TASK_STATUSES } from '../../../entities/task'
 import { CLIENT_UPDATE_TYPES, VISIBILITY } from '../../../entities/update'
 
 export const SEED_IDS = Object.freeze({
   AGENCY_GROWTHLAB: '11111111-1111-4111-8111-111111111111',
+  AGENCY_MEMBERSHIP_ADMIN_GROWTHLAB: '10101010-1010-4010-9010-101010101010',
+  AGENCY_MEMBERSHIP_TEAM_MIA: '13131313-1313-4313-9313-131313131313',
+  AGENCY_WORKSPACE_GREEN_DENTAL: '12121212-1212-4212-9212-121212121212',
+  AGENCY_WORKSPACE_NORTHSTAR_DENTAL: '12121212-1212-4212-9212-121212121213',
   CLIENT_GREEN_DENTAL: '22222222-2222-4222-8222-222222222222',
   CALL_BOOKING_EMERGENCY: '38383838-3838-4838-9838-383838383838',
   CALL_BOOKING_IMPLANTS: '39393939-3939-4939-9939-393939393939',
@@ -604,6 +612,53 @@ function createDentalGrowthReviewPeriod({
 
 export const portalSeedData = Object.freeze({
   activity_events: [],
+  agencies: [
+    {
+      created_at: '2026-05-01T09:00:00.000Z',
+      id: SEED_IDS.AGENCY_GROWTHLAB,
+      name: 'GrowthLab',
+      status: AGENCY_STATUSES.ACTIVE,
+      updated_at: '2026-05-08T09:00:00.000Z',
+    },
+  ],
+  agency_memberships: [
+    {
+      agency_id: SEED_IDS.AGENCY_GROWTHLAB,
+      created_at: '2026-05-01T09:00:00.000Z',
+      id: SEED_IDS.AGENCY_MEMBERSHIP_ADMIN_GROWTHLAB,
+      role: AGENCY_ROLES.ADMIN,
+      status: 'active',
+      updated_at: '2026-05-08T09:00:00.000Z',
+      user_id: SEED_IDS.USER_ADMIN_GROWTHLAB,
+    },
+    {
+      agency_id: SEED_IDS.AGENCY_GROWTHLAB,
+      created_at: '2026-05-01T09:00:00.000Z',
+      id: SEED_IDS.AGENCY_MEMBERSHIP_TEAM_MIA,
+      role: AGENCY_ROLES.TEAM,
+      status: 'active',
+      updated_at: '2026-05-08T09:00:00.000Z',
+      user_id: SEED_IDS.USER_TEAM_MIA,
+    },
+  ],
+  agency_workspace_relationships: [
+    {
+      agency_id: SEED_IDS.AGENCY_GROWTHLAB,
+      created_at: '2026-05-01T09:00:00.000Z',
+      id: SEED_IDS.AGENCY_WORKSPACE_GREEN_DENTAL,
+      status: AGENCY_WORKSPACE_RELATIONSHIP_STATUSES.ACTIVE,
+      updated_at: '2026-05-08T09:00:00.000Z',
+      workspace_id: SEED_IDS.CLIENT_GREEN_DENTAL,
+    },
+    {
+      agency_id: SEED_IDS.AGENCY_GROWTHLAB,
+      created_at: '2026-05-02T09:00:00.000Z',
+      id: SEED_IDS.AGENCY_WORKSPACE_NORTHSTAR_DENTAL,
+      status: AGENCY_WORKSPACE_RELATIONSHIP_STATUSES.ACTIVE,
+      updated_at: '2026-05-08T09:00:00.000Z',
+      workspace_id: SEED_IDS.CLIENT_NORTHSTAR_DENTAL,
+    },
+  ],
   auth_credentials: [],
   booking_pipeline_snapshots: [],
   clinic_daily_operations: [
@@ -871,7 +926,7 @@ export const portalSeedData = Object.freeze({
       updated_by: SEED_IDS.USER_ADMIN_GROWTHLAB,
     },
   ],
-  client_invitations: [
+  workspace_invitations: [
     {
       accepted_at: null,
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
@@ -880,18 +935,18 @@ export const portalSeedData = Object.freeze({
       id: SEED_IDS.CLIENT_INVITATION_GREEN,
       invited_by: SEED_IDS.PROFILE_ADMIN_GROWTHLAB,
       name: 'New Green Dental Client',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-green-dental-client',
       updated_at: '2026-05-01T09:00:00.000Z',
     },
   ],
-  client_memberships: [
+  workspace_memberships: [
     {
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       id: SEED_IDS.MEMBERSHIP_CLIENT_GREEN,
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.CLINIC_OWNER,
       updated_at: '2026-05-01T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_GREEN,
     },
@@ -899,7 +954,7 @@ export const portalSeedData = Object.freeze({
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       id: SEED_IDS.MEMBERSHIP_CLIENT_GREEN_FINANCE,
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.FINANCE_CONTACT,
       updated_at: '2026-05-01T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_GREEN_FINANCE,
     },
@@ -907,7 +962,7 @@ export const portalSeedData = Object.freeze({
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       id: SEED_IDS.MEMBERSHIP_TEAM_GREEN,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       updated_at: '2026-05-01T09:00:00.000Z',
       user_id: SEED_IDS.USER_TEAM_MIA,
     },
@@ -915,7 +970,7 @@ export const portalSeedData = Object.freeze({
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       id: SEED_IDS.MEMBERSHIP_CLIENT_TEAM_GREEN,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.MARKETING_CONTACT,
       updated_at: '2026-05-01T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_TEAM_GREEN,
     },
@@ -923,7 +978,7 @@ export const portalSeedData = Object.freeze({
       client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       id: SEED_IDS.MEMBERSHIP_CLIENT_TEAM_OPS_GREEN,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.FRONT_DESK,
       updated_at: '2026-05-01T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN,
     },
@@ -944,7 +999,7 @@ export const portalSeedData = Object.freeze({
           created_at: '2026-05-11T10:00:00.000Z',
           created_by: SEED_IDS.USER_CLIENT_GREEN,
           metadata: {
-            actor_role: USER_ROLES.CLIENT_USER,
+            actor_role: WORKSPACE_ROLES.CLINIC_OWNER,
             title: 'Create emergency landing page variant',
           },
           type: 'client_submitted',
@@ -971,7 +1026,7 @@ export const portalSeedData = Object.freeze({
           created_at: '2026-05-07T11:00:00.000Z',
           created_by: SEED_IDS.USER_CLIENT_GREEN,
           metadata: {
-            actor_role: USER_ROLES.CLIENT_USER,
+            actor_role: WORKSPACE_ROLES.CLINIC_OWNER,
             title: 'Adjust whitening ad language',
           },
           type: 'client_submitted',
@@ -1681,7 +1736,7 @@ export const portalSeedData = Object.freeze({
       visibility: VISIBILITY.INTERNAL,
     },
   ],
-  clients: [
+  workspaces: [
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
       created_at: '2026-05-01T09:00:00.000Z',
@@ -2322,47 +2377,37 @@ export const portalSeedData = Object.freeze({
   profiles: [
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
-      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       email: 'client@greendental.example',
       id: SEED_IDS.PROFILE_CLIENT_GREEN,
       name: 'Green Dental Client',
-      role: USER_ROLES.CLIENT_ADMIN,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_GREEN,
     },
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
-      capabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
-      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       email: 'finance@greendental.example',
       id: SEED_IDS.PROFILE_CLIENT_GREEN_FINANCE,
       name: 'Green Dental Finance',
-      role: USER_ROLES.CLIENT_ADMIN,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_GREEN_FINANCE,
     },
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
-      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       email: 'frontdesk@greendental.example',
       id: SEED_IDS.PROFILE_CLIENT_TEAM_GREEN,
       name: 'Green Dental Front Desk',
-      role: USER_ROLES.CLIENT_TEAM,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_TEAM_GREEN,
     },
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
-      capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
-      client_id: SEED_IDS.CLIENT_GREEN_DENTAL,
       created_at: '2026-05-01T09:00:00.000Z',
       email: 'ops@greendental.example',
       id: SEED_IDS.PROFILE_CLIENT_TEAM_OPS_GREEN,
       name: 'Green Dental Ops Staff',
-      role: USER_ROLES.CLIENT_TEAM,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN,
     },
@@ -2373,19 +2418,15 @@ export const portalSeedData = Object.freeze({
       email: 'admin@growthlab.example',
       id: SEED_IDS.PROFILE_ADMIN_GROWTHLAB,
       name: 'GrowthLab Admin',
-      role: USER_ROLES.AGENCY_ADMIN,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_ADMIN_GROWTHLAB,
     },
     {
       agency_id: SEED_IDS.AGENCY_GROWTHLAB,
-      client_id: null,
-      client_ids: [SEED_IDS.CLIENT_GREEN_DENTAL],
       created_at: '2026-05-01T09:00:00.000Z',
       email: 'mia@growthlab.example',
       id: SEED_IDS.PROFILE_TEAM_MIA,
       name: 'Mia Carter',
-      role: USER_ROLES.AGENCY_TEAM,
       updated_at: '2026-05-08T09:00:00.000Z',
       user_id: SEED_IDS.USER_TEAM_MIA,
     },

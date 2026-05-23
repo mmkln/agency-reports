@@ -15,6 +15,7 @@ export function AppShell({
   runtime,
   showRouteHeader = true,
   routes,
+  sidebarViewerMeta,
 }) {
   const RouteHeader = activeRoute.header
   const routeKey = activeRoute.remountOnParamsChange
@@ -33,6 +34,7 @@ export function AppShell({
         onSignOut={onSignOut}
         runtime={runtime}
         routes={routes}
+        viewerMeta={sidebarViewerMeta}
         workspaceSwitcher={sidebarWorkspaceSwitcher}
       />
       <SidebarInset className="min-h-screen overflow-x-hidden">

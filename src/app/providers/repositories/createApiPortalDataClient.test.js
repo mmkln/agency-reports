@@ -26,7 +26,7 @@ describe('createApiPortalDataClient', () => {
       async loadSnapshot() {
         return {
           snapshot: {
-            clients: [
+            workspaces: [
               {
                 id: 'client-1',
                 name: 'Loaded Client',
@@ -67,7 +67,7 @@ describe('createApiPortalDataClient', () => {
         version: 'api-version-1',
       },
       snapshot: {
-        clients: [
+        workspaces: [
           expect.objectContaining({ id: 'client-1' }),
           expect.objectContaining({ id: 'client-2' }),
         ],
@@ -91,13 +91,13 @@ describe('createInMemoryApiPortalSnapshotTransport', () => {
     const firstLoad = await transport.loadSnapshot()
 
     await transport.saveSnapshot({
-      clients: [],
+      workspaces: [],
     }, {
       version: firstLoad.version,
     })
 
     await expect(transport.saveSnapshot({
-      clients: [],
+      workspaces: [],
     }, {
       version: firstLoad.version,
     })).rejects.toThrow('Snapshot version conflict. Reload before saving again.')

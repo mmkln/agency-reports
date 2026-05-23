@@ -15,7 +15,7 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import {
   approveMedicalApproval,
   expireMedicalApproval,
@@ -53,6 +53,9 @@ function createRepository(initialRecords = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       const index = records.findIndex((item) => item.id === record.id)
 
@@ -78,26 +81,28 @@ function createRepository(initialRecords = []) {
 }
 
 function createRepositories(overrides = {}) {
+  const clients = createRepository([
+    {
+      agency_id: IDS.AGENCY_A,
+      id: IDS.CLIENT_A,
+      name: 'Green Dental Clinic',
+      portal_slug: 'green-dental',
+      primary_contact_email: 'owner@green.test',
+      primary_contact_name: 'Owner',
+      status: CLIENT_STATUSES.SETUP,
+      type: CLIENT_TYPES.CLINIC,
+    },
+    {
+      agency_id: IDS.AGENCY_A,
+      id: IDS.CLIENT_B,
+      name: 'Generic Client',
+      status: CLIENT_STATUSES.SETUP,
+      type: CLIENT_TYPES.GENERIC,
+    },
+  ])
+
   return {
-    clients: createRepository([
-      {
-        agency_id: IDS.AGENCY_A,
-        id: IDS.CLIENT_A,
-        name: 'Green Dental Clinic',
-        portal_slug: 'green-dental',
-        primary_contact_email: 'owner@green.test',
-        primary_contact_name: 'Owner',
-        status: CLIENT_STATUSES.SETUP,
-        type: CLIENT_TYPES.CLINIC,
-      },
-      {
-        agency_id: IDS.AGENCY_A,
-        id: IDS.CLIENT_B,
-        name: 'Generic Client',
-        status: CLIENT_STATUSES.SETUP,
-        type: CLIENT_TYPES.GENERIC,
-      },
-    ]),
+    clients,
     clinicLocations: createRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -120,18 +125,18 @@ function createRepositories(overrides = {}) {
     complianceReviews: createRepository([]),
     medicalApprovals: createRepository([]),
     neededFromClient: createRepository([]),
+    workspaces: clients,
     ...overrides,
   }
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    email: 'admin@agency.test',
+    managedWorkspaceIds: agencyId === IDS.AGENCY_A ? [IDS.CLIENT_A, IDS.CLIENT_B] : [],
     name: 'Agency Admin',
-    role: USER_ROLES.AGENCY_ADMIN,
     userId: 'admin-user-id',
-  }
+  })
 }
 
 function createApproval(overrides = {}) {

@@ -1,8 +1,8 @@
 import { PageHeader, StatusBadge } from '@/shared/ui'
 
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
-import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClientPageMode } from '../clientPageAccess'
 
 function HeaderAction({ dashboard }) {
   if (!dashboard) {
@@ -14,7 +14,7 @@ function HeaderAction({ dashboard }) {
 
 export function ClientDashboardPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
+  const mode = getClientPageMode(runtime.viewer)
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:client-dashboard-header:${clientId ?? ''}:${routeParams.dashboardId ?? ''}:${mode}`,
     load: () => runtime.dataClient.read((repositories) => getClientDashboardPage({

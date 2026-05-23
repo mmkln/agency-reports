@@ -10,9 +10,9 @@ import {
 } from '../../entities/client-file-link'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { CLIENT_UPDATE_TYPES, VISIBILITY } from '../../entities/update'
+import { createWorkspaceAccessViewer } from '../test/accessViewerTestHelpers'
 import { getClientProjectsPage } from './clientProjectsService'
 
 const IDS = Object.freeze({
@@ -40,6 +40,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         id: IDS.CLIENT_A,
@@ -182,11 +185,9 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({
+    workspaceId: clientId,
+  })
 }
 
 describe('getClientProjectsPage', () => {

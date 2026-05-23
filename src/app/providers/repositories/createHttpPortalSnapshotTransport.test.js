@@ -22,7 +22,7 @@ describe('createHttpPortalSnapshotTransport', () => {
   it('loads snapshot payloads from the configured API endpoint', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(createJsonResponse({
       snapshot: {
-        clients: [
+        workspaces: [
           {
             id: 'client-1',
           },
@@ -37,7 +37,7 @@ describe('createHttpPortalSnapshotTransport', () => {
 
     await expect(transport.loadSnapshot()).resolves.toEqual({
       snapshot: {
-        clients: [
+        workspaces: [
           {
             id: 'client-1',
           },
@@ -69,7 +69,7 @@ describe('createHttpPortalSnapshotTransport', () => {
     })
 
     await expect(transport.saveSnapshot({
-      clients: [],
+      workspaces: [],
     }, {
       version: 'version-1',
     })).resolves.toEqual({
@@ -78,7 +78,7 @@ describe('createHttpPortalSnapshotTransport', () => {
     expect(fetchImpl).toHaveBeenCalledWith('https://api.example.test/portal-snapshot', {
       body: JSON.stringify({
         snapshot: {
-          clients: [],
+          workspaces: [],
         },
         version: 'version-1',
       }),

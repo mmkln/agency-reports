@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { createLocalStoragePortalRepository } from '../../app/providers/repositories/createLocalStoragePortalRepository'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import { authenticateWithEmail, DEMO_AUTH_PASSWORD } from './authService'
 import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
@@ -55,9 +55,9 @@ function createMemoryStorage() {
 function createRepositories() {
   return createLocalStoragePortalRepository({
     seedData: {
-      client_invitations: [],
-      client_memberships: [],
-      clients: [{
+      workspace_invitations: [],
+      workspace_memberships: [],
+      workspaces: [{
         agency_id: IDS.AGENCY,
         created_at: '2026-05-09T10:00:00.000Z',
         id: IDS.CLIENT,
@@ -80,6 +80,14 @@ function createRepositories() {
   })
 }
 
+function createAdminViewer() {
+  return createAgencyAccessViewer({
+    agencyId: IDS.AGENCY,
+    managedWorkspaceIds: [IDS.CLIENT],
+    userId: 'admin-user',
+  })
+}
+
 describe('clientInviteService', () => {
   it('creates pending client invitations for agency admins', () => {
     const repositories = createRepositories()
@@ -92,17 +100,13 @@ describe('clientInviteService', () => {
       idGenerator: () => generatedIds.shift(),
       name: 'Owner Name',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(invitation).toMatchObject({
       client_id: IDS.CLIENT,
       email: 'owner@example.com',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: IDS.TOKEN.replace(/-/g, ''),
     })
@@ -132,27 +136,19 @@ describe('clientInviteService', () => {
       idGenerator: () => generatedIds.shift(),
       name: 'Viewer Name',
       repositories,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      role: WORKSPACE_ROLES.VIEWER,
+      viewer: createAdminViewer(),
     })
 
     expect(listClientInvitations({
       clientId: IDS.CLIENT,
       now: () => '2026-05-12T00:00:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })).toEqual([
       expect.objectContaining({
         email: 'viewer@example.com',
-        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+        role: WORKSPACE_ROLES.VIEWER,
         status: CLIENT_INVITATION_STATUSES.EXPIRED,
       }),
     ])
@@ -160,18 +156,16 @@ describe('clientInviteService', () => {
 
   it('lets client admins create and list teammate invitations for their own client', () => {
     const repositories = createRepositories()
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: 'client-admin-membership',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
     const generatedIds = [IDS.INVITATION, IDS.TOKEN]
     const viewer = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.CLIENT_ADMIN,
       userId: IDS.USER,
     }
 
@@ -187,7 +181,7 @@ describe('clientInviteService', () => {
     expect(invitation).toMatchObject({
       client_id: IDS.CLIENT,
       email: 'teammate@example.com',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
     })
     expect(listClientTeamInvitations({
@@ -204,21 +198,19 @@ describe('clientInviteService', () => {
 
   it('only lists active pending invitations for client team management', () => {
     const repositories = createRepositories()
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: 'client-admin-membership',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
     const viewer = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.CLIENT_ADMIN,
       userId: IDS.USER,
     }
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       accepted_at: null,
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
@@ -227,12 +219,12 @@ describe('clientInviteService', () => {
       id: 'pending-invite',
       invited_by: IDS.USER,
       name: 'Pending',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'pending-token',
       updated_at: '2026-05-09T10:00:00.000Z',
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       accepted_at: '2026-05-09T11:00:00.000Z',
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T09:00:00.000Z',
@@ -241,12 +233,12 @@ describe('clientInviteService', () => {
       id: 'accepted-invite',
       invited_by: IDS.USER,
       name: 'Accepted',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.ACCEPTED,
       token: 'accepted-token',
       updated_at: '2026-05-09T11:00:00.000Z',
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       accepted_at: null,
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T08:00:00.000Z',
@@ -255,12 +247,12 @@ describe('clientInviteService', () => {
       id: 'cancelled-invite',
       invited_by: IDS.USER,
       name: 'Cancelled',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.CANCELLED,
       token: 'cancelled-token',
       updated_at: '2026-05-09T11:00:00.000Z',
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       accepted_at: null,
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T07:00:00.000Z',
@@ -269,7 +261,7 @@ describe('clientInviteService', () => {
       id: 'expired-invite',
       invited_by: IDS.USER,
       name: 'Expired',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'expired-token',
       updated_at: '2026-05-09T07:00:00.000Z',
@@ -293,17 +285,15 @@ describe('clientInviteService', () => {
       name: 'Team Mate',
       repositories,
       viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_TEAM,
         userId: IDS.USER,
       },
     })).toThrow('Only client admins can manage this client team.')
 
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: 'client-admin-membership',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
@@ -314,10 +304,8 @@ describe('clientInviteService', () => {
       idGenerator: () => crypto.randomUUID(),
       name: 'Owner Role',
       repositories,
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_ADMIN,
         userId: IDS.USER,
       },
     })).toThrow('Client admins can invite teammates as viewers only.')
@@ -326,18 +314,16 @@ describe('clientInviteService', () => {
   it('client admin teammate invites create client team accounts on acceptance', () => {
     const repositories = createRepositories()
     const storage = createMemoryStorage()
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: 'client-admin-membership',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
     const invitationIds = [IDS.INVITATION, IDS.TOKEN]
     const viewer = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.CLIENT_ADMIN,
       userId: IDS.USER,
     }
 
@@ -364,16 +350,15 @@ describe('clientInviteService', () => {
 
     expect(result.profile).toMatchObject({
       email: 'teammate@example.com',
-      role: USER_ROLES.CLIENT_TEAM,
       user_id: 'new-team-user',
     })
-    expect(repositories.clientMemberships.list()).toEqual([
+    expect(repositories.workspaceMemberships.list()).toEqual([
       expect.objectContaining({
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+        role: WORKSPACE_ROLES.OWNER,
         user_id: IDS.USER,
       }),
       expect.objectContaining({
-        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+        role: WORKSPACE_ROLES.VIEWER,
         user_id: 'new-team-user',
       }),
     ])
@@ -381,21 +366,21 @@ describe('clientInviteService', () => {
 
   it('lets client admins cancel pending teammate invitations', () => {
     const repositories = createRepositories()
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: 'client-admin-membership',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'teammate@example.com',
       id: IDS.INVITATION,
       name: 'Team Mate',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -405,8 +390,6 @@ describe('clientInviteService', () => {
       invitationId: IDS.INVITATION,
       repositories,
       viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_ADMIN,
         userId: IDS.USER,
       },
     })).toMatchObject({
@@ -417,13 +400,13 @@ describe('clientInviteService', () => {
   it('cancels pending invitations', () => {
     const repositories = createRepositories()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -433,11 +416,7 @@ describe('clientInviteService', () => {
       activityIdGenerator: () => IDS.INVITATION_CANCELLED_EVENT,
       invitationId: IDS.INVITATION,
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(invitation.status).toBe(CLIENT_INVITATION_STATUSES.CANCELLED)
@@ -458,13 +437,13 @@ describe('clientInviteService', () => {
     const repositories = createRepositories()
     const storage = createMemoryStorage()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -484,15 +463,13 @@ describe('clientInviteService', () => {
     })
 
     expect(result.profile).toMatchObject({
-      client_id: IDS.CLIENT,
       email: 'owner@example.com',
-      role: USER_ROLES.CLIENT_USER,
       user_id: IDS.USER,
     })
-    expect(repositories.clientMemberships.list()).toEqual([
+    expect(repositories.workspaceMemberships.list()).toEqual([
       expect.objectContaining({
         client_id: IDS.CLIENT,
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+        role: WORKSPACE_ROLES.OWNER,
         user_id: IDS.USER,
       }),
     ])
@@ -510,7 +487,7 @@ describe('clientInviteService', () => {
       repositories,
       storage: createMemoryStorage(),
     }).userId).toBe(IDS.USER)
-    expect(repositories.clientInvitations.findById(IDS.INVITATION)).toMatchObject({
+    expect(repositories.workspaceInvitations.findById(IDS.INVITATION)).toMatchObject({
       status: CLIENT_INVITATION_STATUSES.ACCEPTED,
     })
     expect(repositories.activityEvents.list()).toEqual([
@@ -531,13 +508,13 @@ describe('clientInviteService', () => {
   it('requires a password pair for new invite-created accounts', () => {
     const repositories = createRepositories()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -564,15 +541,14 @@ describe('clientInviteService', () => {
       email: 'seeded@example.com',
       id: IDS.PROFILE,
       name: 'Seeded Client',
-      role: USER_ROLES.CLIENT_USER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
-    repositories.clientMemberships.upsert({
+    repositories.workspaceMemberships.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       id: IDS.MEMBERSHIP,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
@@ -588,13 +564,13 @@ describe('clientInviteService', () => {
   it('creates a separate one-time access token for no-token recovery without rotating the invite token', () => {
     const repositories = createRepositories()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -619,7 +595,7 @@ describe('clientInviteService', () => {
       status: 'pending',
       token: 'recoverytoken',
     })
-    expect(repositories.clientInvitations.findById(IDS.INVITATION).token).toBe('invite-token')
+    expect(repositories.workspaceInvitations.findById(IDS.INVITATION).token).toBe('invite-token')
     expect(getClientInvitationByToken({
       repositories,
       token: 'invite-token',
@@ -638,14 +614,14 @@ describe('clientInviteService', () => {
       sent: false,
     })
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'expired@example.com',
       expires_at: '2026-05-01T00:00:00.000Z',
       id: 'expired-recovery-invite',
       name: 'Expired',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'expired-recovery-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -666,13 +642,13 @@ describe('clientInviteService', () => {
   it('consumes a one-time access token after successful acceptance', () => {
     const repositories = createRepositories()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -722,17 +698,16 @@ describe('clientInviteService', () => {
       email: 'owner@example.com',
       id: IDS.PROFILE,
       name: 'Existing Owner',
-      role: USER_ROLES.CLIENT_USER,
       updated_at: '2026-05-09T10:00:00.000Z',
       user_id: IDS.USER,
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'owner@example.com',
       id: IDS.INVITATION,
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'invite-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -754,12 +729,11 @@ describe('clientInviteService', () => {
       storage: createMemoryStorage(),
       token: 'invite-token',
       viewer: {
-        role: USER_ROLES.CLIENT_USER,
         userId: IDS.USER,
       },
     })
 
-    expect(repositories.clientMemberships.list()).toEqual([
+    expect(repositories.workspaceMemberships.list()).toEqual([
       expect.objectContaining({
         client_id: IDS.CLIENT,
         user_id: IDS.USER,
@@ -770,36 +744,36 @@ describe('clientInviteService', () => {
   it('blocks accepting cancelled, accepted, and expired invitations', () => {
     const repositories = createRepositories()
 
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'cancelled@example.com',
       id: 'cancelled-invite',
       name: 'Cancelled',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.CANCELLED,
       token: 'cancelled-token',
       updated_at: '2026-05-09T10:00:00.000Z',
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'accepted@example.com',
       id: 'accepted-invite',
       name: 'Accepted',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.ACCEPTED,
       token: 'accepted-token',
       updated_at: '2026-05-09T10:00:00.000Z',
     })
-    repositories.clientInvitations.upsert({
+    repositories.workspaceInvitations.upsert({
       client_id: IDS.CLIENT,
       created_at: '2026-05-09T10:00:00.000Z',
       email: 'expired@example.com',
       expires_at: '2026-05-01T00:00:00.000Z',
       id: 'expired-invite',
       name: 'Expired',
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       status: CLIENT_INVITATION_STATUSES.PENDING,
       token: 'expired-token',
       updated_at: '2026-05-09T10:00:00.000Z',
@@ -829,7 +803,7 @@ describe('clientInviteService', () => {
     })).toThrow('Invitation has expired.')
 
     expect(getInvitationStatus(
-      repositories.clientInvitations.findById('expired-invite'),
+      repositories.workspaceInvitations.findById('expired-invite'),
     )).toBe(CLIENT_INVITATION_STATUSES.EXPIRED)
   })
 })

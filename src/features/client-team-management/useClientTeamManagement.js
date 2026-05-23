@@ -9,7 +9,7 @@ import {
   createClientTeamInvitation,
   listClientTeamInvitations,
 } from '../../domain/services/clientInviteService'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
 
@@ -18,7 +18,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const initialInviteForm = Object.freeze({
   email: '',
   name: '',
-  role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+  role: WORKSPACE_ROLES.VIEWER,
 })
 
 function createUuid() {

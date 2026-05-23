@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   canAgencyProcessNeededAction,
   canClientRespondToNeededAction,
@@ -48,39 +52,58 @@ describe('neededActionPolicy', () => {
   })
 
   it('allows only client users to answer pending requests', () => {
+    const workspaceViewer = createWorkspaceAccessViewer({
+      capabilities: [
+        WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+        WORKSPACE_CAPABILITIES.RESPOND_TO_ACTIONS,
+      ],
+      workspaceId: 'workspace-a',
+    })
+
     expect(canClientRespondToNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.PENDING },
-      viewer: { role: USER_ROLES.CLIENT_USER },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.PENDING },
+      viewer: workspaceViewer,
     })).toBe(true)
 
     expect(canClientRespondToNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.ANSWERED },
-      viewer: { role: USER_ROLES.CLIENT_USER },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.ANSWERED },
+      viewer: workspaceViewer,
     })).toBe(false)
 
     expect(canClientRespondToNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.PENDING },
-      viewer: { agencyId: 'agency-id', role: USER_ROLES.AGENCY_ADMIN },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.PENDING },
+      viewer: createAgencyAccessViewer({
+        agencyId: 'agency-id',
+        managedWorkspaceIds: ['workspace-a'],
+      }),
     })).toBe(false)
   })
 
   it('allows only agency admins with an agency to process allowed transitions', () => {
+    const agencyAdmin = createAgencyAccessViewer({
+      agencyId: 'agency-id',
+      managedWorkspaceIds: ['workspace-a'],
+    })
+
     expect(canAgencyProcessNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.ANSWERED },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.ANSWERED },
       targetStatus: NEEDED_ACTION_STATUSES.RESOLVED,
-      viewer: { agencyId: 'agency-id', role: USER_ROLES.AGENCY_ADMIN },
+      viewer: agencyAdmin,
     })).toBe(true)
 
     expect(canAgencyProcessNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.ANSWERED },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.ANSWERED },
       targetStatus: NEEDED_ACTION_STATUSES.RESOLVED,
-      viewer: { role: USER_ROLES.AGENCY_ADMIN },
+      viewer: createAgencyAccessViewer({
+        agencyId: 'agency-id',
+        managedWorkspaceIds: [],
+      }),
     })).toBe(false)
 
     expect(canAgencyProcessNeededAction({
-      action: { status: NEEDED_ACTION_STATUSES.RESOLVED },
+      action: { client_id: 'workspace-a', status: NEEDED_ACTION_STATUSES.RESOLVED },
       targetStatus: NEEDED_ACTION_STATUSES.CANCELLED,
-      viewer: { agencyId: 'agency-id', role: USER_ROLES.AGENCY_ADMIN },
+      viewer: agencyAdmin,
     })).toBe(false)
   })
 })

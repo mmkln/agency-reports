@@ -14,13 +14,6 @@ import { useAuth } from '../../../app/providers/auth/useAuth'
 
 const DEFAULT_EMAIL = 'admin@growthlab.example'
 
-function getRoleLabel(role) {
-  return role
-    .split('_')
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
 function SignInButton({ onClick, profile }) {
   return (
     <button
@@ -29,7 +22,7 @@ function SignInButton({ onClick, profile }) {
       type="button"
     >
       <span className="block font-semibold text-text-primary">{profile.name}</span>
-      <span className="block text-label font-normal text-text-secondary">{getRoleLabel(profile.role)}</span>
+      <span className="block text-label font-normal text-text-secondary">{profile.roleLabel}</span>
     </button>
   )
 }

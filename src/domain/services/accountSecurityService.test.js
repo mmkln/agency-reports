@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../entities/profile'
 import { DEMO_AUTH_PASSWORD } from './authService'
 import { changeOwnPassword } from './accountSecurityService'
 import { verifyPasswordCredential } from './authCredentialService'
@@ -46,7 +45,6 @@ function createRepositories() {
         email: 'user@example.com',
         id: IDS.PROFILE,
         name: 'Portal User',
-        role: USER_ROLES.CLIENT_TEAM,
         user_id: IDS.USER,
       },
     ]),
@@ -55,7 +53,6 @@ function createRepositories() {
 
 function createViewer() {
   return {
-    role: USER_ROLES.CLIENT_TEAM,
     userId: IDS.USER,
   }
 }

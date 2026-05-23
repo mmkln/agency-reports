@@ -1,14 +1,15 @@
-import { CLIENT_MEMBERSHIP_ROLES, isActiveClientMembership } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { isActiveWorkspaceMembership, WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import { canManageAgencyWorkspaceAccess } from './agencyAccessPolicy'
+import { canManageWorkspaceMembers } from './workspaceAccessPolicy'
 
 function findClientMembership({ clientId, repositories, viewer }) {
-  if (!viewer?.userId || !repositories?.clientMemberships) {
+  if (!viewer?.userId || !repositories?.workspaceMemberships) {
     return null
   }
 
-  return repositories.clientMemberships
-    .listByClientId(clientId)
-    .filter(isActiveClientMembership)
+  return repositories.workspaceMemberships
+    .listByWorkspaceId(clientId)
+    .filter(isActiveWorkspaceMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
 }
 
@@ -17,27 +18,17 @@ export function canManageClientTeam({ clientId, repositories, viewer }) {
     return false
   }
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
     return false
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId && client.agency_id === viewer.agencyId)
-  }
-
-  if (viewer.role !== USER_ROLES.CLIENT_ADMIN) {
-    return false
-  }
-
-  if (!viewer.clientIds?.includes(clientId)) {
-    return false
-  }
-
   const membership = findClientMembership({ clientId, repositories, viewer })
 
-  return membership?.role === CLIENT_MEMBERSHIP_ROLES.OWNER
+    return canManageAgencyWorkspaceAccess(viewer, clientId)
+    || canManageWorkspaceMembers(viewer, clientId)
+    || membership?.role === WORKSPACE_ROLES.OWNER
 }
 
 export function assertCanManageClientTeam({ clientId, repositories, viewer }) {

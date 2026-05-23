@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   deleteAdminDashboardLink,
   listAdminDashboardLinks,
@@ -61,6 +64,9 @@ function createEntityRepository(records) {
 
 function createRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -112,20 +118,18 @@ function createRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     userId: IDS.USER_ADMIN,
-  }
+  })
 }
 
 function createClientViewer() {
-  return {
-    clientId: IDS.CLIENT_A,
-    clientIds: [IDS.CLIENT_A],
-    role: USER_ROLES.CLIENT_USER,
+  return createWorkspaceAccessViewer({
     userId: IDS.USER_CLIENT,
-  }
+    workspaceId: IDS.CLIENT_A,
+  })
 }
 
 describe('dashboardLinkService', () => {

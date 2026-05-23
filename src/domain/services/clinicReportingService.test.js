@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { CLIENT_TYPES } from '../../entities/client'
 import {
   CLINIC_REPORTING_CAPABILITIES,
-  LEGACY_USER_ROLES,
-  USER_ROLES,
 } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   CLINIC_REPORTING_LAYERS,
   CLINIC_REPORTING_PUBLISH_STATES,
@@ -28,6 +32,13 @@ const IDS = Object.freeze({
   WEEKLY: 'weekly-a',
 })
 
+const VIEWER_TYPES = Object.freeze({
+  AGENCY_ADMIN: 'agency-admin',
+  AGENCY_TEAM: 'agency-team',
+  CLIENT_OWNER: 'client-owner',
+  CLIENT_TEAM: 'client-team',
+})
+
 function createEntityRepository(records = []) {
   return {
     findById(id) {
@@ -39,6 +50,9 @@ function createEntityRepository(records = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       records.push(record)
       return record
@@ -47,35 +61,40 @@ function createEntityRepository(records = []) {
 }
 
 function createRepositories() {
+  const clients = createEntityRepository([
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.CLIENT,
+      name: 'Green Dental',
+      portal_slug: 'green-dental',
+      type: CLIENT_TYPES.CLINIC,
+    },
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.OTHER_CLIENT,
+      name: 'Unassigned Dental',
+      portal_slug: 'unassigned-dental',
+      type: CLIENT_TYPES.CLINIC,
+    },
+  ])
+  const workspaceMemberships = createEntityRepository([
+    {
+      id: 'membership-a',
+      role: WORKSPACE_ROLES.OWNER,
+      user_id: 'legacy-client',
+      workspace_id: IDS.CLIENT,
+    },
+    {
+      id: 'membership-team',
+      user_id: 'client-team',
+      workspace_id: IDS.CLIENT,
+    },
+  ])
+
   return {
-    clients: createEntityRepository([
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.CLIENT,
-        name: 'Green Dental',
-        portal_slug: 'green-dental',
-        type: CLIENT_TYPES.CLINIC,
-      },
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.OTHER_CLIENT,
-        name: 'Unassigned Dental',
-        portal_slug: 'unassigned-dental',
-        type: CLIENT_TYPES.CLINIC,
-      },
-    ]),
-    clientMemberships: createEntityRepository([
-      {
-        client_id: IDS.CLIENT,
-        id: 'membership-a',
-        user_id: 'legacy-client',
-      },
-      {
-        client_id: IDS.CLIENT,
-        id: 'membership-team',
-        user_id: 'client-team',
-      },
-    ]),
+    clients,
+    workspaceMemberships,
+    workspaces: clients,
     clinicDailyOperations: createEntityRepository([
       {
         client_id: IDS.CLIENT,
@@ -144,26 +163,41 @@ function createRepositories() {
       {
         agency_id: IDS.AGENCY,
         id: 'legacy-profile',
-        role: LEGACY_USER_ROLES.CLIENT_USER,
         user_id: 'legacy-client',
       },
     ]),
   }
 }
 
-function createViewer(role, extra = {}) {
-  return {
-    agencyId: role === USER_ROLES.AGENCY_ADMIN || role === USER_ROLES.AGENCY_TEAM ? IDS.AGENCY : '',
-    clientId: IDS.CLIENT,
-    clientIds: [IDS.CLIENT],
-    role,
-    userId: `${role}-user`,
-    ...extra,
+function createViewer(viewerType, extra = {}) {
+  if (viewerType === VIEWER_TYPES.AGENCY_ADMIN || viewerType === VIEWER_TYPES.AGENCY_TEAM) {
+    return createAgencyAccessViewer({
+      agencyId: IDS.AGENCY,
+      capabilities: [
+        CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
+        CLINIC_REPORTING_CAPABILITIES.WEEKLY_OPERATOR_VIEW,
+        CLINIC_REPORTING_CAPABILITIES.OPERATIONAL_ROWS_VIEW,
+        ...(extra.capabilities ?? []),
+      ],
+      managedWorkspaceIds: [IDS.CLIENT],
+      role: viewerType === VIEWER_TYPES.AGENCY_ADMIN ? AGENCY_ROLES.ADMIN : AGENCY_ROLES.TEAM,
+      userId: `${viewerType}-user`,
+    })
   }
+
+  return createWorkspaceAccessViewer({
+    capabilities: [
+      CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
+      ...(extra.capabilities ?? []),
+    ],
+    role: viewerType === VIEWER_TYPES.CLIENT_TEAM ? WORKSPACE_ROLES.FRONT_DESK : WORKSPACE_ROLES.CLINIC_OWNER,
+    userId: `${viewerType}-user`,
+    workspaceId: IDS.CLIENT,
+  })
 }
 
 describe('clinic reporting foundations', () => {
-  it('normalizes legacy client_user profiles to client_admin viewers', () => {
+  it('builds workspace access from membership instead of profile role fallback', () => {
     const repositories = createRepositories()
     const viewer = buildViewerFromProfile({
       profile: repositories.profiles.findById('legacy-profile'),
@@ -171,15 +205,18 @@ describe('clinic reporting foundations', () => {
     })
 
     expect(viewer).toMatchObject({
-      clientId: IDS.CLIENT,
-      role: USER_ROLES.CLIENT_ADMIN,
+      activeWorkspaceId: IDS.CLIENT,
+      workspaceMemberships: [expect.objectContaining({
+        role: WORKSPACE_ROLES.CLINIC_OWNER,
+        workspaceId: IDS.CLIENT,
+      })],
     })
     expect(viewer.capabilities).toContain(CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
   })
 
   it('allows client admins to read executive reporting but not monthly finance by default', () => {
     const repositories = createRepositories()
-    const viewer = createViewer(USER_ROLES.CLIENT_ADMIN)
+    const viewer = createViewer(VIEWER_TYPES.CLIENT_OWNER)
 
     expect(getClinicExecutivePerformancePage({
       clientId: IDS.CLIENT,
@@ -198,7 +235,7 @@ describe('clinic reporting foundations', () => {
 
   it('allows monthly strategy only when the viewer has finance capability', () => {
     const repositories = createRepositories()
-    const viewer = createViewer(USER_ROLES.CLIENT_ADMIN, {
+    const viewer = createViewer(VIEWER_TYPES.CLIENT_OWNER, {
       capabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
     })
 
@@ -217,12 +254,12 @@ describe('clinic reporting foundations', () => {
     const agencyTeamPage = getClinicDailyOperationsPage({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: createViewer(USER_ROLES.AGENCY_TEAM),
+      viewer: createViewer(VIEWER_TYPES.AGENCY_TEAM),
     })
     const clientTeamPage = getClinicDailyOperationsPage({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: createViewer(USER_ROLES.CLIENT_TEAM, {
+      viewer: createViewer(VIEWER_TYPES.CLIENT_TEAM, {
         capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
       }),
     })
@@ -240,7 +277,7 @@ describe('clinic reporting foundations', () => {
     expect(getClinicWeeklyOperatorPage({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: createViewer(USER_ROLES.AGENCY_TEAM),
+      viewer: createViewer(VIEWER_TYPES.AGENCY_TEAM),
     })).toMatchObject({
       period: expect.objectContaining({ id: IDS.WEEKLY }),
       status: 'ready',
@@ -253,7 +290,7 @@ describe('clinic reporting foundations', () => {
     expect(getClinicWeeklyOperatorPage({
       clientId: IDS.OTHER_CLIENT,
       repositories,
-      viewer: createViewer(USER_ROLES.AGENCY_TEAM),
+      viewer: createViewer(VIEWER_TYPES.AGENCY_TEAM),
     })).toMatchObject({
       reason: 'access_denied',
       status: 'error',

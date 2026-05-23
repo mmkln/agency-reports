@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_CAPABILITIES, AGENCY_ROLES } from '../../entities/agency-membership'
 import {
   createAdminClient,
   deleteAdminClient,
@@ -62,12 +62,25 @@ function createClientsRepository(initialClients = []) {
   }
 }
 
-function createRepositories(initialClients, overrides = {}) {
+function createWorkspaceMembershipRepository(initialMemberships = []) {
+  const repository = createClientsRepository(initialMemberships)
+
   return {
-    clients: createClientsRepository(initialClients),
+    ...repository,
+    listByWorkspaceId(workspaceId) {
+      return repository.list().filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
+  }
+}
+
+function createRepositories(initialClients, overrides = {}) {
+  const clients = createClientsRepository(initialClients)
+
+  return {
     activityEvents: createClientsRepository([]),
-    clientInvitations: createClientsRepository([]),
-    clientMemberships: createClientsRepository([]),
+    agencyWorkspaceRelationships: createClientsRepository([]),
+    clients,
+    workspaceInvitations: createClientsRepository([]),
     clinicLocations: createClientsRepository([]),
     clinicProfiles: createClientsRepository([]),
     clinicServiceLines: createClientsRepository([]),
@@ -78,14 +91,34 @@ function createRepositories(initialClients, overrides = {}) {
     serviceLinePerformance: createClientsRepository([]),
     tasks: createClientsRepository([]),
     updates: createClientsRepository([]),
+    workspaceMemberships: createWorkspaceMembershipRepository([]),
+    workspaces: clients,
     ...overrides,
   }
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY_A) {
   return {
+    activeAgencyId: agencyId,
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
+    agencyMemberships: [{
+      agencyId,
+      capabilities: [
+        AGENCY_CAPABILITIES.CREATE_WORKSPACE,
+        AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS,
+      ],
+      role: AGENCY_ROLES.ADMIN,
+    }],
+    managedWorkspaceRelationships: [
+      {
+        agencyId,
+        workspaceId: IDS.CLIENT_A,
+      },
+      {
+        agencyId,
+        workspaceId: IDS.NEW_CLIENT,
+      },
+    ],
     userId: 'admin-user-id',
   }
 }
@@ -158,8 +191,15 @@ describe('adminClientService', () => {
       email: 'owner@example.com',
       status: 'pending',
     })
-    expect(repositories.clients.list()).toHaveLength(1)
-    expect(repositories.clientInvitations.list()).toHaveLength(1)
+    expect(repositories.workspaces.list()).toHaveLength(1)
+    expect(repositories.agencyWorkspaceRelationships.list()).toEqual([
+      expect.objectContaining({
+        agency_id: IDS.AGENCY_A,
+        status: 'active',
+        workspace_id: IDS.NEW_CLIENT,
+      }),
+    ])
+    expect(repositories.workspaceInvitations.list()).toHaveLength(1)
     expect(repositories.activityEvents.list()).toEqual([
       expect.objectContaining({
         client_id: IDS.NEW_CLIENT,
@@ -263,7 +303,7 @@ describe('adminClientService', () => {
         name: 'Agency B Client',
       },
     ], {
-      clientInvitations: createClientsRepository([
+      workspaceInvitations: createClientsRepository([
         {
           client_id: IDS.CLIENT_A,
           created_at: '2026-05-10T10:00:00.000Z',
@@ -333,7 +373,7 @@ describe('adminClientService', () => {
       status: CLIENT_STATUSES.ON_TRACK,
       updated_at: '2026-05-10T10:00:00.000Z',
     })
-    expect(repositories.clients.findById(IDS.CLIENT_A).name).toBe('Existing Client Updated')
+    expect(repositories.workspaces.findById(IDS.CLIENT_A).name).toBe('Existing Client Updated')
   })
 
   it('rejects updates that reuse another client portal slug', () => {
@@ -424,8 +464,10 @@ describe('adminClientService', () => {
       },
       repositories: createRepositories([]),
       viewer: {
-        clientId: IDS.CLIENT_A,
-        role: USER_ROLES.CLIENT_USER,
+        activeWorkspaceId: IDS.CLIENT_A,
+        workspaceMemberships: [{
+          workspaceId: IDS.CLIENT_A,
+        }],
       },
     })).toThrow('Only admins can manage accounts.')
   })
@@ -488,7 +530,7 @@ describe('adminClientService', () => {
       viewer: createAdminViewer(),
     })).toBe(true)
 
-    expect(repositories.clients.findById(IDS.CLIENT_A)).toBeNull()
+    expect(repositories.workspaces.findById(IDS.CLIENT_A)).toBeNull()
     expect(repositories.clinicProfiles.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicLocations.listByClientId(IDS.CLIENT_A)).toEqual([])
     expect(repositories.clinicServiceLines.listByClientId(IDS.CLIENT_A)).toEqual([])

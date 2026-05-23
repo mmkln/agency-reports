@@ -7,7 +7,7 @@ import {
 } from './createLocalStoragePortalRepository'
 
 const seedData = Object.freeze({
-  clients: [
+  workspaces: [
     {
       id: '11111111-1111-4111-8111-111111111111',
       name: 'Seed Client',
@@ -16,8 +16,8 @@ const seedData = Object.freeze({
   booking_pipeline_snapshots: [],
   call_booking_metrics: [],
   client_file_links: [],
-  client_invitations: [],
-  client_memberships: [],
+  workspace_invitations: [],
+  workspace_memberships: [],
   client_requests: [],
   client_work_items: [],
   clinic_locations: [],
@@ -71,7 +71,7 @@ describe('createLocalStoragePortalRepository', () => {
   it('normalizes incomplete snapshots without leaking missing tables to callers', () => {
     const storage = createStorage({
       [PORTAL_STORAGE_KEY]: JSON.stringify({
-        clients: [
+        workspaces: [
           {
             id: '22222222-2222-4222-8222-222222222222',
             name: 'Existing Client',
@@ -93,7 +93,7 @@ describe('createLocalStoragePortalRepository', () => {
     const storage = createStorage({
       [PORTAL_STORAGE_KEY]: JSON.stringify({
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
-        clients: [
+        workspaces: [
           {
             id: '11111111-1111-4111-8111-111111111111',
             name: 'Edited Seed Client',
@@ -105,9 +105,9 @@ describe('createLocalStoragePortalRepository', () => {
         ],
         booking_pipeline_snapshots: [],
         call_booking_metrics: [],
-        client_invitations: [],
+        workspace_invitations: [],
         client_file_links: [],
-        client_memberships: [],
+        workspace_memberships: [],
         client_requests: [],
         client_work_items: [],
         clinic_locations: [],
@@ -132,8 +132,8 @@ describe('createLocalStoragePortalRepository', () => {
     const repository = createLocalStoragePortalRepository({
       seedData: {
         ...seedData,
-        clients: [
-          ...seedData.clients,
+        workspaces: [
+          ...seedData.workspaces,
           {
             id: '33333333-3333-4333-8333-333333333333',
             name: 'New Seed Client',
@@ -155,12 +155,12 @@ describe('createLocalStoragePortalRepository', () => {
     const storage = createStorage({
       [PORTAL_STORAGE_KEY]: JSON.stringify({
         __schemaVersion: PORTAL_STORAGE_SCHEMA_VERSION,
-        clients: [],
+        workspaces: [],
         booking_pipeline_snapshots: [],
         call_booking_metrics: [],
-        client_invitations: [],
+        workspace_invitations: [],
         client_file_links: [],
-        client_memberships: [],
+        workspace_memberships: [],
         client_requests: [],
         client_work_items: [],
         clinic_locations: [],
@@ -521,7 +521,7 @@ describe('createLocalStoragePortalRepository', () => {
     })
 
     expect(repository.clients.list()).toHaveLength(2)
-    expect(repository.reset().clients.map((client) => client.name)).toEqual(['Seed Client'])
+    expect(repository.reset().workspaces.map((client) => client.name)).toEqual(['Seed Client'])
   })
 
   it('omits demo reset unless explicitly enabled', () => {

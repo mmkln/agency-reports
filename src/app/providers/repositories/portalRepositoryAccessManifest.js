@@ -13,7 +13,7 @@ import {
 
 export const PORTAL_ACCESS_RULES = Object.freeze({
   AGENCY_SCOPE_REQUIRED: 'agency_scope_required',
-  CLIENT_MEMBERSHIP_REQUIRED: 'client_membership_required',
+  WORKSPACE_MEMBERSHIP_REQUIRED: 'workspace_membership_required',
   CLIENT_SAFE_VISIBILITY_REQUIRED: 'client_safe_visibility_required',
   OWN_PROFILE_ONLY: 'own_profile_only',
   PUBLISHED_STATE_REQUIRED: 'published_state_required',
@@ -33,7 +33,7 @@ const CLIENT_READABLE_TABLES = new Set([
   'client_file_links',
   'client_requests',
   'client_work_items',
-  'clients',
+  'workspaces',
   'compliance_reviews',
   'dashboard_links',
   'location_performance',
@@ -96,7 +96,7 @@ function getAccessMode(tableSchema) {
   }
 
   if (
-    tableSchema.tableName === 'client_invitations'
+    tableSchema.tableName === 'workspace_invitations'
     || tableSchema.tableName === 'invitation_access_tokens'
   ) {
     return PORTAL_ACCESS_MODES.TOKEN_GATED
@@ -114,7 +114,7 @@ function createAccessRules(tableSchema, accessMode) {
     tableSchema.clientScope !== PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL
     && accessMode !== PORTAL_ACCESS_MODES.TOKEN_GATED
   ) {
-    rules.push(PORTAL_ACCESS_RULES.CLIENT_MEMBERSHIP_REQUIRED)
+    rules.push(PORTAL_ACCESS_RULES.WORKSPACE_MEMBERSHIP_REQUIRED)
   }
 
   if (accessMode === PORTAL_ACCESS_MODES.SELF_OR_AGENCY) {

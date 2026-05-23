@@ -5,20 +5,22 @@ import {
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
 import { normalizeNeededAction } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
+import { canAccessClient } from '../policies/accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../policies/routeAccessPolicy'
 import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../policies/taskPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const VALID_TASK_STATUSES = new Set(Object.values(TASK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
 const OPEN_NEEDED_ACTION_STATUSES = new Set(['answered', 'approved', 'changes_requested', 'pending'])
 
 function assertTaskWorkspaceViewer(viewer) {
-  if (
-    ![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role)
-    || !viewer.agencyId
-  ) {
+  if (!hasAgencyMembership(viewer)) {
     throw new Error('Only team users can manage tasks.')
   }
 }
@@ -50,15 +52,11 @@ function normalizeOptionalDate(value = '', fieldName) {
 function getWorkspaceClients({ repositories, viewer }) {
   assertTaskWorkspaceViewer(viewer)
 
-  const agencyClients = repositories.clients
+  const agencyClients = repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => canAccessClient(viewer, client.id))
+  const assignedClientIds = new Set(listManagedWorkspaceIds(viewer))
 
-  if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
-    return agencyClients
-  }
-
-  const assignedClientIds = new Set(viewer.clientIds ?? [])
   return agencyClients.filter((client) => assignedClientIds.has(client.id))
 }
 
@@ -284,8 +282,8 @@ export function listTaskWorkspace({
     .filter((task) => matchesWorkState(task, filters.workState))
 
   return {
-    canCreateClientWorkItems: viewer.role === USER_ROLES.AGENCY_ADMIN,
-    canUseMineFilter: viewer.role === USER_ROLES.AGENCY_TEAM,
+    canCreateClientWorkItems: hasAgencyAdminMembership(viewer),
+    canUseMineFilter: hasAgencyMembership(viewer) && !hasAgencyAdminMembership(viewer),
     clients,
     filters: {
       clientId: filters.clientId ?? 'all',
@@ -375,7 +373,7 @@ export function createTask({
   }
 
   const timestamp = now()
-  const assigneeName = viewer.role === USER_ROLES.AGENCY_TEAM
+  const assigneeName = !hasAgencyAdminMembership(viewer)
     ? viewer.name
     : normalizeText(input.assigneeName)
 
@@ -437,7 +435,7 @@ export function updateWorkspaceTask({
   }
 
   if (
-    viewer.role === USER_ROLES.AGENCY_TEAM
+    !hasAgencyAdminMembership(viewer)
     && nextStatus !== task.status
     && !canTransitionTaskStatus(task.status, nextStatus)
   ) {

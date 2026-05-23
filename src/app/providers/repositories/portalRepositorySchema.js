@@ -10,12 +10,27 @@ export const PORTAL_REPOSITORY_CLIENT_SCOPE = Object.freeze({
 })
 
 export const PORTAL_REPOSITORY_SCHEMA_OVERRIDES = Object.freeze({
+  agencies: {
+    clientScope: PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL,
+    indexes: ['status'],
+    requiredColumns: ['id', 'name', 'status'],
+  },
+  agency_memberships: {
+    clientScope: PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL,
+    indexes: ['agency_id', 'status', 'user_id'],
+    requiredColumns: ['id', 'agency_id', 'role', 'status', 'user_id'],
+  },
+  agency_workspace_relationships: {
+    clientScope: PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL,
+    indexes: ['agency_id', 'status', 'workspace_id'],
+    requiredColumns: ['id', 'agency_id', 'status', 'workspace_id'],
+  },
   auth_credentials: {
     clientScope: PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL,
     indexes: ['user_id'],
     requiredColumns: ['id', 'user_id'],
   },
-  clients: {
+  workspaces: {
     clientScope: PORTAL_REPOSITORY_CLIENT_SCOPE.GLOBAL,
     indexes: ['agency_id', 'portal_slug'],
     requiredColumns: ['id', 'agency_id'],

@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { CLIENT_TYPES } from '../../entities/client'
 import {
   CLINIC_REPORTING_CAPABILITIES,
-  USER_ROLES,
 } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import { ACCESS_AUDIENCES } from '../../domain/policies/accessAudience'
 import { iconNames } from '../../shared/icons'
 import { routeMetadata } from './routeDefinitions'
 import {
@@ -21,17 +23,17 @@ const routes = [
     label: 'Public',
   },
   {
-    allowedRoles: [USER_ROLES.AGENCY_ADMIN],
+    accessAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
     id: 'admin',
     label: 'Admin',
   },
   {
-    allowedRoles: [USER_ROLES.AGENCY_TEAM],
+    accessAudiences: [ACCESS_AUDIENCES.AGENCY_MEMBER],
     id: 'team',
     label: 'Team',
   },
   {
-    allowedRoles: [USER_ROLES.CLIENT_ADMIN],
+    accessAudiences: [ACCESS_AUDIENCES.WORKSPACE_ADMIN],
     id: 'client',
     label: 'Client',
   },
@@ -39,7 +41,7 @@ const routes = [
 
 function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
   return {
-    clients: {
+    workspaces: {
       findById(id) {
         return ['client-a', 'client-b'].includes(id)
           ? {
@@ -52,12 +54,49 @@ function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
   }
 }
 
-function createClientViewer() {
+function createAgencyViewer({
+  capabilities = Object.values(CLINIC_REPORTING_CAPABILITIES),
+  role = AGENCY_ROLES.ADMIN,
+} = {}) {
   return {
-    capabilities: [CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW],
-    clientId: 'client-a',
-    clientIds: ['client-a'],
-    role: USER_ROLES.CLIENT_ADMIN,
+    activeAgencyId: 'agency-a',
+    agencyMemberships: [{
+      agencyId: 'agency-a',
+      capabilities,
+      role,
+      userId: 'user-agency',
+    }],
+    capabilities,
+    managedWorkspaceRelationships: [{
+      agencyId: 'agency-a',
+      status: 'active',
+      workspaceId: 'client-a',
+    }],
+    userId: 'user-agency',
+    workspaceMemberships: [],
+  }
+}
+
+function createClientViewer({
+  capabilities = [
+    CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
+    CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+  ],
+  role = WORKSPACE_ROLES.CLINIC_OWNER,
+  workspaceId = 'client-a',
+} = {}) {
+  return {
+    activeWorkspaceId: workspaceId,
+    agencyMemberships: [],
+    capabilities,
+    managedWorkspaceRelationships: [],
+    userId: 'user-workspace',
+    workspaceMemberships: [{
+      capabilities,
+      role,
+      userId: 'user-workspace',
+      workspaceId,
+    }],
   }
 }
 
@@ -72,18 +111,19 @@ function visibleNavIdsFor({ clientType = CLIENT_TYPES.GENERIC, defaultClientId =
     .map((route) => route.id)
 }
 
-describe('route role access', () => {
-  it('allows public routes without role metadata', () => {
+describe('route audience access', () => {
+  it('allows public routes without access audience metadata', () => {
     expect(canAccessRoute(null, routes[0])).toBe(true)
   })
 
-  it('allows only matching roles for protected routes', () => {
-    expect(canAccessRoute({ role: USER_ROLES.AGENCY_ADMIN }, routes[1])).toBe(true)
-    expect(canAccessRoute({ role: USER_ROLES.CLIENT_ADMIN }, routes[1])).toBe(false)
+  it('allows only matching audiences for protected routes', () => {
+    expect(canAccessRoute(createAgencyViewer(), routes[1])).toBe(true)
+    expect(canAccessRoute(createClientViewer(), routes[1])).toBe(false)
+    expect(canAccessRoute({ role: ACCESS_AUDIENCES.AGENCY_ADMIN }, routes[1])).toBe(false)
   })
 
-  it('filters route lists to role-accessible routes', () => {
-    expect(filterRoutesForViewer(routes, { role: USER_ROLES.AGENCY_TEAM }).map((route) => route.id)).toEqual([
+  it('filters route lists to audience-accessible routes', () => {
+    expect(filterRoutesForViewer(routes, createAgencyViewer({ role: AGENCY_ROLES.TEAM })).map((route) => route.id)).toEqual([
       'public',
       'team',
     ])
@@ -92,10 +132,10 @@ describe('route role access', () => {
   it('shows the clinic operator route in agency team navigation', () => {
     const teamNavIds = visibleNavIdsFor({
       clientType: CLIENT_TYPES.CLINIC,
-      viewer: {
+      viewer: createAgencyViewer({
         capabilities: [CLINIC_REPORTING_CAPABILITIES.WEEKLY_OPERATOR_VIEW],
-        role: USER_ROLES.AGENCY_TEAM,
-      },
+        role: AGENCY_ROLES.TEAM,
+      }),
     })
 
     expect(teamNavIds).toContain('team-tasks')
@@ -135,12 +175,12 @@ describe('route role access', () => {
     expect(accountSettingsRoute).toBeTruthy()
     expect(accountSettingsRoute.showInNav).toBe(false)
     ;[
-      USER_ROLES.AGENCY_ADMIN,
-      USER_ROLES.AGENCY_TEAM,
-      USER_ROLES.CLIENT_ADMIN,
-      USER_ROLES.CLIENT_TEAM,
-    ].forEach((role) => {
-      expect(canAccessRoute({ role }, accountSettingsRoute)).toBe(true)
+      createAgencyViewer(),
+      createAgencyViewer({ role: AGENCY_ROLES.TEAM }),
+      createClientViewer(),
+      createClientViewer({ role: WORKSPACE_ROLES.FRONT_DESK }),
+    ].forEach((viewer) => {
+      expect(canAccessRoute(viewer, accountSettingsRoute)).toBe(true)
     })
 
     expect(visibleNavIdsFor({
@@ -151,10 +191,10 @@ describe('route role access', () => {
   it('keeps default client team navigation limited to client-owned essentials', () => {
     const clientTeamNavIds = visibleNavIdsFor({
       viewer: {
-        capabilities: [],
-        clientId: 'client-a',
-        clientIds: ['client-a'],
-        role: USER_ROLES.CLIENT_TEAM,
+        ...createClientViewer({
+          capabilities: [],
+          role: WORKSPACE_ROLES.VIEWER,
+        }),
       },
     })
 
@@ -207,6 +247,7 @@ describe('route role access', () => {
         ...createClientViewer(),
         capabilities: [
           CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
+          CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
           CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW,
         ],
       },
@@ -220,12 +261,10 @@ describe('route role access', () => {
   it('shows daily operations as the front-desk clinic staff navigation entry', () => {
     const frontDeskNavIds = visibleNavIdsFor({
       clientType: CLIENT_TYPES.CLINIC,
-      viewer: {
+      viewer: createClientViewer({
         capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
-        clientId: 'client-a',
-        clientIds: ['client-a'],
-        role: USER_ROLES.CLIENT_TEAM,
-      },
+        role: WORKSPACE_ROLES.FRONT_DESK,
+      }),
     })
 
     expect(frontDeskNavIds).toEqual([
@@ -237,10 +276,9 @@ describe('route role access', () => {
   it('keeps general agency navigation limited to agency-wide destinations', () => {
     const adminNavIds = visibleNavIdsFor({
       clientType: CLIENT_TYPES.CLINIC,
-      viewer: {
+      viewer: createAgencyViewer({
         capabilities: Object.values(CLINIC_REPORTING_CAPABILITIES),
-        role: USER_ROLES.AGENCY_ADMIN,
-      },
+      }),
     })
 
     expect(adminNavIds).toEqual([
@@ -258,7 +296,7 @@ describe('route role access', () => {
     expect(adminNavIds).not.toContain('client-monthly-strategy')
   })
 
-  it('keeps legacy client analytics routes hidden from navigation but role-protected', () => {
+  it('keeps legacy client analytics routes hidden from navigation but membership-protected', () => {
     const legacyAnalyticsRoutes = routeMetadata.filter((route) => [
       'client-dashboard',
       'client-performance',
@@ -268,8 +306,8 @@ describe('route role access', () => {
     expect(legacyAnalyticsRoutes).toHaveLength(3)
     legacyAnalyticsRoutes.forEach((route) => {
       expect(route.showInNav).toBe(false)
-      expect(canAccessRoute({ role: USER_ROLES.CLIENT_ADMIN }, route)).toBe(true)
-      expect(canAccessRoute({ role: USER_ROLES.AGENCY_ADMIN }, route)).toBe(false)
+      expect(canAccessRoute(createClientViewer(), route)).toBe(true)
+      expect(canAccessRoute(createAgencyViewer(), route)).toBe(false)
     })
   })
 
@@ -282,19 +320,17 @@ describe('route role access', () => {
     expect(dailyOpsRoute.showInNav).not.toBe(false)
     expect(monthlyStrategyRoute.showInNav).not.toBe(false)
 
-    expect(canAccessRoute({ role: USER_ROLES.CLIENT_TEAM }, dailyOpsRoute)).toBe(false)
-    expect(canAccessRoute({
+    expect(canAccessRoute(createClientViewer({ role: WORKSPACE_ROLES.FRONT_DESK, capabilities: [] }), dailyOpsRoute)).toBe(false)
+    expect(canAccessRoute(createClientViewer({
       capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
-      role: USER_ROLES.CLIENT_TEAM,
-    }, dailyOpsRoute)).toBe(true)
-    expect(canAccessRoute({
+      role: WORKSPACE_ROLES.FRONT_DESK,
+    }), dailyOpsRoute)).toBe(true)
+    expect(canAccessRoute(createClientViewer({
       capabilities: [CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW],
-      role: USER_ROLES.CLIENT_ADMIN,
-    }, monthlyStrategyRoute)).toBe(false)
-    expect(canAccessRoute({
+    }), monthlyStrategyRoute)).toBe(false)
+    expect(canAccessRoute(createClientViewer({
       capabilities: [CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW],
-      role: USER_ROLES.CLIENT_ADMIN,
-    }, monthlyStrategyRoute)).toBe(true)
+    }), monthlyStrategyRoute)).toBe(true)
   })
 
   it('blocks direct URL access when the client type does not match the route', () => {
@@ -361,8 +397,8 @@ describe('route role access', () => {
     expect(adminWorkspaceRoutes).toHaveLength(adminWorkspaceRouteIds.length)
     adminWorkspaceRoutes.forEach((route) => {
       expect(route.showInNav).toBe(false)
-      expect(canAccessRoute({ role: USER_ROLES.AGENCY_ADMIN }, route)).toBe(true)
-      expect(canAccessRoute({ role: USER_ROLES.CLIENT_ADMIN }, route)).toBe(false)
+      expect(canAccessRoute(createAgencyViewer(), route)).toBe(true)
+      expect(canAccessRoute(createClientViewer(), route)).toBe(false)
     })
   })
 
@@ -390,8 +426,8 @@ describe('route role access', () => {
     expect(adminPreviewRoutes).toHaveLength(adminPreviewRouteIds.length)
     adminPreviewRoutes.forEach((route) => {
       expect(route.showInNav).toBe(false)
-      expect(canAccessRoute({ role: USER_ROLES.AGENCY_ADMIN }, route)).toBe(true)
-      expect(canAccessRoute({ role: USER_ROLES.CLIENT_ADMIN }, route)).toBe(false)
+      expect(canAccessRoute(createAgencyViewer(), route)).toBe(true)
+      expect(canAccessRoute(createClientViewer(), route)).toBe(false)
     })
   })
 

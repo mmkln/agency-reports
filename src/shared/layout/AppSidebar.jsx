@@ -24,7 +24,7 @@ import { BrandLogo } from '../ui'
 import { Icon } from '../icons'
 import { AccountMenu } from './AccountMenu'
 import {
-  roleMeta,
+  defaultSidebarViewerMeta,
 } from './appSidebarStyles'
 import { SidebarNavItem } from './SidebarNavItem'
 import { SidebarSearch } from './SidebarSearch'
@@ -172,13 +172,11 @@ export function AppSidebar({
   onSignOut,
   runtime,
   routes,
+  viewerMeta,
   workspaceSwitcher,
 }) {
   const viewer = runtime.viewer
-  const activeRole = roleMeta[viewer.role] ?? {
-    label: viewer.role,
-    searchPlaceholder: 'Search...',
-  }
+  const activeRole = viewerMeta ?? defaultSidebarViewerMeta
   const workspaceSettingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
   const accountSettingsRoute = routes.find((route) => route.id === 'account-settings') ?? null
   const settingsRoute = workspaceSettingsRoute ?? accountSettingsRoute

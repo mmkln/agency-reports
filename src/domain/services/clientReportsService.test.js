@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { getClientReportsPage } from './clientReportsService'
 
 const IDS = Object.freeze({
@@ -126,24 +129,23 @@ function createRepositories(overrides = {}) {
   }
 
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository(data.clients),
     reports: createEntityRepository(data.reports),
   }
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
+  })
 }
 
 describe('getClientReportsPage', () => {

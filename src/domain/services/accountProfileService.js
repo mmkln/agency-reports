@@ -1,13 +1,7 @@
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLE_META } from '../../entities/agency-membership'
+import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const USER_ROLE_LABELS = Object.freeze({
-  [USER_ROLES.AGENCY_ADMIN]: 'Agency admin',
-  [USER_ROLES.AGENCY_TEAM]: 'Agency team',
-  [USER_ROLES.CLIENT_ADMIN]: 'Client admin',
-  [USER_ROLES.CLIENT_TEAM]: 'Client team',
-})
 
 function normalizeText(value = '') {
   return String(value ?? '').trim()
@@ -23,14 +17,59 @@ function requireAuthenticatedViewer(viewer) {
   }
 }
 
-export function mapAccountProfile({ profile, viewer }) {
-  const role = profile?.role ?? viewer?.role
+function findActiveAgencyMembership(viewer) {
+  const memberships = viewer?.agencyMemberships ?? []
+
+  return memberships.find((membership) => membership.agencyId === viewer?.activeAgencyId)
+    ?? memberships[0]
+    ?? null
+}
+
+function findActiveWorkspaceMembership(viewer) {
+  const memberships = viewer?.workspaceMemberships ?? []
+
+  return memberships.find((membership) => membership.workspaceId === viewer?.activeWorkspaceId)
+    ?? memberships[0]
+    ?? null
+}
+
+function getPrimaryAccessMembership(viewer) {
+  const agencyMembership = findActiveAgencyMembership(viewer)
+
+  if (agencyMembership) {
+    return {
+      role: agencyMembership.role,
+      roleLabel: AGENCY_ROLE_META[agencyMembership.role]?.label ?? agencyMembership.role,
+      type: 'agency',
+    }
+  }
+
+  const workspaceMembership = findActiveWorkspaceMembership(viewer)
+
+  if (workspaceMembership) {
+    return {
+      role: workspaceMembership.role,
+      roleLabel: WORKSPACE_ROLE_META[workspaceMembership.role]?.label ?? workspaceMembership.role,
+      type: 'workspace',
+    }
+  }
 
   return {
+    role: null,
+    roleLabel: 'No active membership',
+    type: null,
+  }
+}
+
+export function mapAccountProfile({ profile, viewer }) {
+  const accessMembership = getPrimaryAccessMembership(viewer)
+
+  return {
+    accessType: accessMembership.type,
     email: profile?.email ?? viewer?.email ?? '',
     name: profile?.name ?? viewer?.name ?? '',
-    role,
-    roleLabel: USER_ROLE_LABELS[role] ?? role,
+    role: accessMembership.role,
+    roleLabel: accessMembership.roleLabel,
     userId: viewer?.userId ?? profile?.user_id ?? null,
   }
 }

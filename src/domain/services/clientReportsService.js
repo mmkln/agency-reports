@@ -1,8 +1,8 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isReportVisibleToClient } from '../policies/visibilityPolicy'
 
 function sortByPeriodDesc(a, b) {
@@ -97,7 +97,7 @@ function mapReport(report, { client }) {
 }
 
 export function getClientReportsPage({ clientId, reportId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessClient(viewer, clientId)) {
     return {
@@ -106,7 +106,7 @@ export function getClientReportsPage({ clientId, reportId, repositories, viewer 
     }
   }
 
-  const canPreviewAllClientReports = viewer?.role === USER_ROLES.AGENCY_ADMIN
+  const canPreviewAllClientReports = hasAgencyAdminMembership(viewer)
   const reports = repositories.reports
     .listByClientId(clientId)
     .filter((report) => canPreviewAllClientReports || isReportVisibleToClient(report))

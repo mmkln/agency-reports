@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
 import { CLIENT_REQUEST_STATUSES, CLIENT_REQUEST_TYPES } from '../../entities/client-request'
-import { USER_ROLES } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { getClientSettingsPage } from './clientSettingsService'
 
 const IDS = Object.freeze({
@@ -40,52 +39,54 @@ function createEntityRepository(records = []) {
 }
 
 function createRepositories() {
+  const workspaceMemberships = createEntityRepository([
+    {
+      client_id: IDS.CLIENT_A,
+      id: IDS.MEMBERSHIP_A,
+      role: WORKSPACE_ROLES.OWNER,
+      user_id: IDS.USER_A,
+      workspace_id: IDS.CLIENT_A,
+    },
+    {
+      client_id: IDS.CLIENT_A,
+      id: IDS.MEMBERSHIP_B,
+      role: WORKSPACE_ROLES.VIEWER,
+      user_id: IDS.USER_B,
+      workspace_id: IDS.CLIENT_A,
+    },
+  ])
+  const clients = createEntityRepository([
+    {
+      agency_id: 'agency-a',
+      id: IDS.CLIENT_A,
+      name: 'Client A',
+      portal_slug: 'client-a',
+      primary_contact_email: 'owner@example.com',
+      primary_contact_name: 'Owner User',
+    },
+    {
+      agency_id: 'agency-a',
+      id: IDS.CLIENT_B,
+      name: 'Client B',
+      portal_slug: 'client-b',
+    },
+  ])
+
   return {
-    clientMemberships: createEntityRepository([
-      {
-        client_id: IDS.CLIENT_A,
-        id: IDS.MEMBERSHIP_A,
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
-        user_id: IDS.USER_A,
-      },
-      {
-        client_id: IDS.CLIENT_A,
-        id: IDS.MEMBERSHIP_B,
-        role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
-        user_id: IDS.USER_B,
-      },
-    ]),
     clientRequests: createEntityRepository([]),
-    clients: createEntityRepository([
-      {
-        agency_id: 'agency-a',
-        id: IDS.CLIENT_A,
-        name: 'Client A',
-        portal_slug: 'client-a',
-        primary_contact_email: 'owner@example.com',
-        primary_contact_name: 'Owner User',
-      },
-      {
-        agency_id: 'agency-a',
-        id: IDS.CLIENT_B,
-        name: 'Client B',
-        portal_slug: 'client-b',
-      },
-    ]),
+    clients,
     profiles: {
       records: [
           {
             email: 'owner@example.com',
             id: 'profile-a',
             name: 'Owner User',
-            role: USER_ROLES.CLIENT_ADMIN,
             user_id: IDS.USER_A,
           },
           {
             email: 'viewer@example.com',
             id: 'profile-b',
             name: 'Viewer User',
-            role: USER_ROLES.CLIENT_TEAM,
             user_id: IDS.USER_B,
           },
         ],
@@ -107,17 +108,28 @@ function createRepositories() {
         return record
       },
     },
+    workspaceMemberships: {
+      ...workspaceMemberships,
+      listByWorkspaceId: (workspaceId) => workspaceMemberships.listByClientId(workspaceId),
+    },
+    workspaces: clients,
   }
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
   return {
-    clientId,
-    clientIds: [clientId],
+    activeWorkspaceId: clientId,
     email: 'owner@example.com',
     name: 'Owner User',
-    role: USER_ROLES.CLIENT_USER,
     userId: IDS.USER_A,
+    workspaceMemberships: [{
+      capabilities: [
+        WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+        WORKSPACE_CAPABILITIES.MANAGE_MEMBERS,
+        WORKSPACE_CAPABILITIES.REQUEST_DELETION,
+      ],
+      workspaceId: clientId,
+    }],
   }
 }
 
@@ -132,7 +144,7 @@ describe('getClientSettingsPage', () => {
     expect(page.status).toBe('ready')
     expect(page.profile).toBeUndefined()
     expect(page.currentMembership).toMatchObject({
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       roleLabel: 'Owner',
     })
     expect(page.client).toMatchObject({
@@ -146,7 +158,7 @@ describe('getClientSettingsPage', () => {
     expect(page.sections.notifications).toBeUndefined()
     expect(page.sections.security).toBeUndefined()
     expect(page.sections.team).toMatchObject({
-      allowedInviteRoles: [CLIENT_MEMBERSHIP_ROLES.VIEWER],
+      allowedInviteRoles: [WORKSPACE_ROLES.VIEWER],
       canManage: true,
     })
   })
@@ -156,12 +168,14 @@ describe('getClientSettingsPage', () => {
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
       viewer: {
-        clientId: IDS.CLIENT_A,
-        clientIds: [IDS.CLIENT_A],
+        activeWorkspaceId: IDS.CLIENT_A,
         email: 'viewer@example.com',
         name: 'Viewer User',
-        role: USER_ROLES.CLIENT_TEAM,
         userId: IDS.USER_B,
+        workspaceMemberships: [{
+          capabilities: [WORKSPACE_CAPABILITIES.VIEW_PORTAL],
+          workspaceId: IDS.CLIENT_A,
+        }],
       },
     })
 

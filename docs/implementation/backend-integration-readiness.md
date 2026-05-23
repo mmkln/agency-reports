@@ -157,7 +157,7 @@ bad JSON or missing snapshot field -> controlled malformed payload error
 - session claims: session_id, user_id, expires_at
 - viewer payload fields expected by read models
 - role-specific server checks for agency admin, agency team, and client users
-- client users derive access from client_memberships only
+- client users derive access from workspace_memberships only
 - route clientId remains a requested resource, never proof of access
 ```
 

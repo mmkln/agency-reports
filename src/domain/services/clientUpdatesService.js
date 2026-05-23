@@ -4,9 +4,10 @@ import {
   normalizeClientUpdate,
   VISIBILITY,
 } from '../../entities/update'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isUpdateVisibleToClient } from '../policies/visibilityPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -70,7 +71,7 @@ function normalizeDateTime(value = '', fieldName = 'Published date') {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage portal updates.')
   }
 }
@@ -78,9 +79,9 @@ function assertAgencyAdmin(viewer) {
 function getAdminClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, clientId)) {
     throw new Error('Client was not found.')
   }
 
@@ -173,7 +174,7 @@ export function listClientVisibleUpdates({
   viewer,
 }) {
   const normalizedClientId = String(clientId || viewer?.clientId || '').trim()
-  const client = repositories.clients.findById(normalizedClientId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     return {
@@ -241,9 +242,9 @@ export function listAdminClientUpdatesWorkspace({
 }) {
   assertAgencyAdmin(viewer)
 
-  const clients = repositories.clients
+  const clients = repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => new Set(listManagedWorkspaceIds(viewer)).has(client.id))
     .sort((a, b) => a.name.localeCompare(b.name))
   const clientsById = new Map(clients.map((client) => [client.id, client]))
   const normalizedClientId = normalizeText(clientId)

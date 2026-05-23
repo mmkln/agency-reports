@@ -445,7 +445,7 @@ created_at
 updated_at
 ```
 
-### 11.3 client_memberships
+### 11.3 workspace_memberships
 
 ```text
 id

@@ -14,9 +14,12 @@ import {
   PERFORMANCE_DATA_CONFIDENCE,
   PERFORMANCE_DATA_MODES,
 } from '../../entities/performance-dashboard'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   getClientPerformanceDashboardPage,
   getClientPerformanceOverviewPreview,
@@ -65,6 +68,9 @@ function createEntityRepository(records) {
 
 function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: 'agency-a',
@@ -287,12 +293,10 @@ function createRepositories(clientType = CLIENT_TYPES.GENERIC) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
+  return createWorkspaceAccessViewer({
+    workspaceId: clientId,
     userId: IDS.USER_CLIENT,
-  }
+  })
 }
 
 describe('clientPerformanceDashboardService', () => {
@@ -401,11 +405,11 @@ describe('clientPerformanceDashboardService', () => {
       mode: 'admin_preview',
       periodId: IDS.PERIOD_DRAFT,
       repositories: createRepositories(),
-      viewer: {
+      viewer: createAgencyAccessViewer({
         agencyId: 'agency-a',
-        role: USER_ROLES.AGENCY_ADMIN,
+        managedWorkspaceIds: [IDS.CLIENT_A],
         userId: 'admin',
-      },
+      }),
     })
 
     expect(page.performanceDashboard).toMatchObject({

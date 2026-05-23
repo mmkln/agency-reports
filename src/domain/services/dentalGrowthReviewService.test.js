@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_TYPES } from '../../entities/client'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
 import {
   DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
   DENTAL_GROWTH_REVIEW_PUBLISH_STATES,
   DENTAL_GROWTH_REVIEW_VIEW_PRESETS,
   DENTAL_GROWTH_REVIEW_ZONES,
 } from '../../entities/dental-growth-review'
+import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import {
-  CLINIC_REPORTING_CAPABILITIES,
-  USER_ROLES,
-} from '../../entities/profile'
-import { buildViewerFromProfile } from './authService'
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { getDentalGrowthReviewDashboardPage } from './dentalGrowthReviewService'
 
 const IDS = Object.freeze({
@@ -77,6 +79,9 @@ function createPeriod(
 
 function createRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -113,17 +118,25 @@ function createRepositories() {
   }
 }
 
-function viewer(profile) {
-  return buildViewerFromProfile({
-    profile,
-    repositories: {
-      clientMemberships: {
-        list: () => [
-          { client_id: IDS.CLIENT, user_id: 'client-user' },
-          { client_id: IDS.CLIENT, user_id: 'agency-team' },
-        ],
-      },
-    },
+function createClientViewer({
+  capabilities = [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+  role = WORKSPACE_ROLES.CLINIC_OWNER,
+} = {}) {
+  return createWorkspaceAccessViewer({
+    capabilities,
+    role,
+    userId: 'client-user',
+    workspaceId: IDS.CLIENT,
+  })
+}
+
+function createAgencyViewer({ role = AGENCY_ROLES.ADMIN } = {}) {
+  return createAgencyAccessViewer({
+    agencyId: IDS.AGENCY,
+    capabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+    managedWorkspaceIds: [IDS.CLIENT],
+    role,
+    userId: role === AGENCY_ROLES.TEAM ? 'agency-team' : 'admin-user',
   })
 }
 
@@ -132,12 +145,7 @@ describe('dentalGrowthReviewService', () => {
     const page = getDentalGrowthReviewDashboardPage({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        id: 'profile-client',
-        role: USER_ROLES.CLIENT_ADMIN,
-        user_id: 'client-user',
-      }),
+      viewer: createClientViewer(),
     })
 
     expect(page.status).toBe('ready')
@@ -158,13 +166,7 @@ describe('dentalGrowthReviewService', () => {
     const page = getDentalGrowthReviewDashboardPage({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        client_ids: [IDS.CLIENT],
-        id: 'profile-team',
-        role: USER_ROLES.AGENCY_TEAM,
-        user_id: 'agency-team',
-      }),
+      viewer: createAgencyViewer({ role: AGENCY_ROLES.TEAM }),
     })
 
     expect(page.status).toBe('ready')
@@ -176,11 +178,9 @@ describe('dentalGrowthReviewService', () => {
     const page = getDentalGrowthReviewDashboardPage({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        id: 'profile-frontdesk',
-        role: USER_ROLES.CLIENT_TEAM,
-        user_id: 'client-user',
+      viewer: createClientViewer({
+        capabilities: [],
+        role: WORKSPACE_ROLES.FRONT_DESK,
       }),
     })
 
@@ -194,12 +194,9 @@ describe('dentalGrowthReviewService', () => {
     const page = getDentalGrowthReviewDashboardPage({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
+      viewer: createClientViewer({
         capabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
-        id: 'profile-capable-team',
-        role: USER_ROLES.CLIENT_TEAM,
-        user_id: 'client-user',
+        role: WORKSPACE_ROLES.FRONT_DESK,
       }),
     })
 
@@ -212,12 +209,7 @@ describe('dentalGrowthReviewService', () => {
       periodId: IDS.PERIOD_DRAFT,
       repositories: createRepositories(),
       source: 'draft',
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        id: 'profile-admin',
-        role: USER_ROLES.AGENCY_ADMIN,
-        user_id: 'admin-user',
-      }),
+      viewer: createAgencyViewer(),
     })
 
     expect(page).toMatchObject({
@@ -245,12 +237,7 @@ describe('dentalGrowthReviewService', () => {
       periodId: IDS.PERIOD_DRAFT,
       repositories: createRepositories(),
       source: 'draft',
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        id: 'profile-client',
-        role: USER_ROLES.CLIENT_ADMIN,
-        user_id: 'client-user',
-      }),
+      viewer: createClientViewer(),
     })
 
     expect(page).toMatchObject({
@@ -264,12 +251,7 @@ describe('dentalGrowthReviewService', () => {
       clientId: IDS.CLIENT,
       periodId: IDS.PERIOD_DRAFT,
       repositories: createRepositories(),
-      viewer: viewer({
-        agency_id: IDS.AGENCY,
-        id: 'profile-client',
-        role: USER_ROLES.CLIENT_ADMIN,
-        user_id: 'client-user',
-      }),
+      viewer: createClientViewer(),
     })
 
     expect(page).toMatchObject({

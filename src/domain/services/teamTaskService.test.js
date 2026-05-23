@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_WORK_ITEM_PUBLISH_STATES, CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import { listTeamTasks, updateAssignedTask } from './teamTaskService'
 
 const IDS = Object.freeze({
@@ -58,6 +59,9 @@ function createRepositories() {
         name: 'Client B',
       },
     ]),
+    get workspaces() {
+      return this.clients
+    },
     clientWorkItems: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -116,12 +120,12 @@ function createRepositories() {
 }
 
 function createViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    clientIds: [IDS.CLIENT_A],
+    managedWorkspaceIds: [IDS.CLIENT_A],
     name: 'Mia Carter',
-    role: USER_ROLES.AGENCY_TEAM,
-  }
+    role: AGENCY_ROLES.TEAM,
+  })
 }
 
 describe('teamTaskService', () => {

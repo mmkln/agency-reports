@@ -7,10 +7,10 @@ import {
   ListRow,
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
-import { CLIENT_MEMBERSHIP_ROLE_META } from '../model'
+import { WORKSPACE_ROLE_META } from '../model'
 
-function ClientMemberRoleBadge({ role, roleLabel }) {
-  const meta = CLIENT_MEMBERSHIP_ROLE_META[role]
+function WorkspaceMemberRoleBadge({ role, roleLabel }) {
+  const meta = WORKSPACE_ROLE_META[role]
 
   return (
     <Badge tone={meta?.tone ?? 'neutral'}>
@@ -19,7 +19,7 @@ function ClientMemberRoleBadge({ role, roleLabel }) {
   )
 }
 
-export function ClientMemberList({
+export function WorkspaceMemberList({
   canEdit = false,
   canRemove = false,
   emptyDescription = 'No members are currently attached to this workspace.',
@@ -50,7 +50,7 @@ export function ClientMemberList({
           title={member.name}
           trailing={(
             <div className="flex items-center gap-control">
-              <ClientMemberRoleBadge role={member.role} roleLabel={member.roleLabel} />
+              <WorkspaceMemberRoleBadge role={member.role} roleLabel={member.roleLabel} />
               {canEdit ? (
                 <Button
                   aria-label={`Edit ${member.name}`}

@@ -9,12 +9,12 @@ import {
 import { getRouteAccessClientContext } from '../../domain/services/routeAccessContextService'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 
-export function ProtectedRoute({ children, allowedRoles, requiredCapabilities, route }) {
+export function ProtectedRoute({ children, route }) {
   const { runtime, viewer } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const routeParams = Object.fromEntries(searchParams.entries())
-  const routeForAccess = route ?? { allowedRoles, requiredCapabilities }
+  const routeForAccess = route
   const routeClientId = getRouteClientId({
     defaultClientId: runtime.defaultClientId,
     routeParams,
@@ -31,6 +31,7 @@ export function ProtectedRoute({ children, allowedRoles, requiredCapabilities, r
       return runtime.dataClient.read((repositories) => getRouteAccessClientContext({
         clientId: routeClientId,
         repositories,
+        viewer,
       }))
     },
   })

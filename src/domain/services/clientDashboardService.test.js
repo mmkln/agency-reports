@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_PROVIDERS } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { getClientDashboardPage } from './clientDashboardService'
 
 const IDS = Object.freeze({
@@ -100,6 +103,9 @@ function createRepositories(overrides = {}) {
   }
 
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository(data.clients),
     dashboardLinks: createEntityRepository(data.dashboardLinks),
     reports: createEntityRepository(data.reports),
@@ -107,18 +113,14 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer(agencyId = IDS.AGENCY) {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+    managedWorkspaceIds: agencyId === IDS.AGENCY ? [IDS.CLIENT_A, IDS.CLIENT_B] : [],
+  })
 }
 
 describe('getClientDashboardPage', () => {

@@ -13,8 +13,13 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
 import { TASK_STATUSES } from '../../entities/task'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
   answerNeededAction,
@@ -80,6 +85,9 @@ function createEntityRepository(initialRecords = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       const index = records.findIndex((item) => item.id === record.id)
 
@@ -95,38 +103,44 @@ function createEntityRepository(initialRecords = []) {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT],
     userId: 'admin-user',
-  }
+  })
 }
 
 function createClientViewer() {
-  return {
-    clientId: IDS.CLIENT,
-    clientIds: [IDS.CLIENT],
-    role: USER_ROLES.CLIENT_USER,
+  return createWorkspaceAccessViewer({
+    capabilities: [
+      WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+      WORKSPACE_CAPABILITIES.RESPOND_TO_ACTIONS,
+    ],
+    role: WORKSPACE_ROLES.MARKETING_CONTACT,
     userId: IDS.USER,
-  }
+    workspaceId: IDS.CLIENT,
+  })
 }
 
 function createWorkflowRepositories(overrides = {}) {
-  return {
-    clients: createEntityRepository([
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.CLIENT,
-        name: 'Client A',
-        type: CLIENT_TYPES.CLINIC,
-      },
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.OTHER_CLIENT,
-        name: 'Client B',
-        type: CLIENT_TYPES.GENERIC,
-      },
-    ]),
+  const clients = createEntityRepository([
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.CLIENT,
+      name: 'Client A',
+      type: CLIENT_TYPES.CLINIC,
+    },
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.OTHER_CLIENT,
+      name: 'Client B',
+      type: CLIENT_TYPES.GENERIC,
+    },
+  ])
+
+  const repositories = {
+    clients,
+    workspaces: clients,
     complianceReviews: createEntityRepository([
       {
         blocked_items: 1,
@@ -216,6 +230,12 @@ function createWorkflowRepositories(overrides = {}) {
     ]),
     ...overrides,
   }
+
+  if (overrides.clients && !overrides.workspaces) {
+    repositories.workspaces = overrides.clients
+  }
+
+  return repositories
 }
 
 describe('neededFromClientService', () => {
@@ -233,6 +253,9 @@ describe('neededFromClientService', () => {
           name: 'Other Client',
         },
       ]),
+      get workspaces() {
+        return this.clients
+      },
       neededFromClient: createEntityRepository([
         {
           client_id: IDS.CLIENT,
@@ -258,10 +281,7 @@ describe('neededFromClientService', () => {
         status: NEEDED_ACTION_STATUSES.PENDING,
       },
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(result.actions.map((action) => action.title)).toEqual(['Approve creatives'])
@@ -282,6 +302,9 @@ describe('neededFromClientService', () => {
           name: 'Client A',
         },
       ]),
+      get workspaces() {
+        return this.clients
+      },
       neededFromClient: createEntityRepository([]),
     }
 
@@ -307,11 +330,7 @@ describe('neededFromClientService', () => {
       },
       now: () => '2026-05-09T10:00:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(createdAction).toMatchObject({
@@ -337,7 +356,7 @@ describe('neededFromClientService', () => {
     expect(createdAction.response_history).toEqual([
       expect.objectContaining({
         metadata: expect.objectContaining({
-          actor_role: USER_ROLES.AGENCY_ADMIN,
+          actor_role: AGENCY_ROLES.ADMIN,
           title: 'Approve creatives',
         }),
         type: 'admin_created',
@@ -347,6 +366,9 @@ describe('neededFromClientService', () => {
 
   it('lists only client-visible own requests for client users', () => {
     const repositories = {
+      get workspaces() {
+        return this.clients
+      },
       clients: createEntityRepository([
         {
           id: IDS.CLIENT,
@@ -375,11 +397,7 @@ describe('neededFromClientService', () => {
     const result = listClientNeededActions({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: {
-        clientId: IDS.CLIENT,
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_USER,
-      },
+      viewer: createClientViewer(),
     })
 
     expect(result.actions.map((action) => action.title)).toEqual(['Approve creatives'])
@@ -399,6 +417,9 @@ describe('neededFromClientService', () => {
           name: 'Client A',
         },
       ]),
+      get workspaces() {
+        return this.clients
+      },
       neededFromClient: createEntityRepository([]),
     }
 
@@ -409,10 +430,7 @@ describe('neededFromClientService', () => {
         title: 'Approve creatives',
       },
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-      },
+      viewer: createAdminViewer(),
     })).toThrow('Needed action id must be a string uuid.')
   })
 
@@ -448,11 +466,7 @@ describe('neededFromClientService', () => {
       },
       now: () => '2026-05-10T10:00:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(updatedAction).toMatchObject({
@@ -944,12 +958,7 @@ describe('neededFromClientService', () => {
       message: 'Approved.',
       now: () => '2026-05-09T10:00:00.000Z',
       repositories,
-      viewer: {
-        clientId: IDS.CLIENT,
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_USER,
-        userId: IDS.USER,
-      },
+      viewer: createClientViewer(),
     })
 
     expect(updatedAction).toMatchObject({
@@ -1116,10 +1125,8 @@ describe('neededFromClientService', () => {
     expect(() => answerNeededAction({
       actionId: IDS.ACTION,
       repositories,
-      viewer: {
-        role: USER_ROLES.AGENCY_ADMIN,
-      },
-    })).toThrow('Needed action was not found.')
+      viewer: createAdminViewer(),
+    })).toThrow('Only client users can respond to needed actions.')
 
     const closedRepositories = {
       neededFromClient: createRepository({
@@ -1133,11 +1140,7 @@ describe('neededFromClientService', () => {
       actionId: IDS.ACTION,
       message: 'Done.',
       repositories: closedRepositories,
-      viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_USER,
-        userId: IDS.USER,
-      },
+      viewer: createClientViewer(),
     })).toThrow('Only pending actions can be answered.')
   })
 
@@ -1161,11 +1164,7 @@ describe('neededFromClientService', () => {
       note: 'Processed.',
       now: () => '2026-05-09T11:00:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(updatedAction).toMatchObject({
@@ -1200,11 +1199,7 @@ describe('neededFromClientService', () => {
       note: 'No longer needed.',
       now: () => '2026-05-09T11:30:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(updatedAction).toMatchObject({
@@ -1237,11 +1232,7 @@ describe('neededFromClientService', () => {
       note: 'Needed again.',
       now: () => '2026-05-10T11:30:00.000Z',
       repositories,
-      viewer: {
-        agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-        userId: 'admin-user',
-      },
+      viewer: createAdminViewer(),
     })
 
     expect(updatedAction).toMatchObject({

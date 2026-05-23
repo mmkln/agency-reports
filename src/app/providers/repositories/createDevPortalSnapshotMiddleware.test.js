@@ -74,7 +74,7 @@ describe('createDevPortalSnapshotStore', () => {
     })
     const firstLoad = store.loadSnapshot()
     const nextVersion = store.saveSnapshot({
-      clients: [
+      workspaces: [
         {
           id: 'client-1',
         },
@@ -85,7 +85,7 @@ describe('createDevPortalSnapshotStore', () => {
 
     expect(nextVersion.version).not.toBe(firstLoad.version)
     expect(() => store.saveSnapshot({
-      clients: [],
+      workspaces: [],
     }, {
       version: firstLoad.version,
     })).toThrow('Snapshot version conflict. Reload before saving again.')
@@ -103,7 +103,7 @@ describe('createDevPortalSnapshotMiddleware', () => {
     expect(loadResult.response.statusCode).toBe(200)
     expect(loadedPayload).toMatchObject({
       snapshot: {
-        clients: [],
+        workspaces: [],
       },
       version: 'dev-snapshot-0',
     })
@@ -111,7 +111,7 @@ describe('createDevPortalSnapshotMiddleware', () => {
     const saveResult = await callMiddleware(middleware, createRequest({
       body: {
         snapshot: {
-          clients: [
+          workspaces: [
             {
               id: 'client-1',
             },

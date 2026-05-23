@@ -6,7 +6,6 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
-import { isClientPortalRole, USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import {
@@ -17,13 +16,14 @@ import {
   NoDashboardState,
 } from '../../../widgets/dashboard-embed'
 import { Skeleton } from '@/shared/ui'
+import { canRecordClientPortalActivity, getClientPageMode } from '../clientPageAccess'
 
 function createUuid() {
   return crypto.randomUUID()
 }
 
 function recordClientDashboardOpened({ clientId, dashboardId, runtime }) {
-  if (!isClientPortalRole(runtime.viewer.role) || !dashboardId) {
+  if (!canRecordClientPortalActivity(runtime.viewer) || !dashboardId) {
     return
   }
 
@@ -42,7 +42,7 @@ function recordClientDashboardOpened({ clientId, dashboardId, runtime }) {
 export function ClientDashboardPage({ routeParams = {}, runtime }) {
   const recordedDashboardOpenRef = useRef('')
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
+  const mode = getClientPageMode(runtime.viewer)
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:client-dashboard:${clientId ?? ''}:${routeParams.dashboardId ?? ''}:${mode}`,
     load: () => runtime.dataClient.read((repositories) => getClientDashboardPage({

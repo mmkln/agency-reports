@@ -17,7 +17,7 @@ import {
   normalizePatientAcquisitionSnapshot,
   normalizeServiceLinePerformance,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessClient } from '../policies/accessPolicy'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
@@ -31,6 +31,7 @@ import {
   getPatientAcquisitionPublishReadiness,
   getServiceLinePerformancePublishReadiness,
 } from '../policies/clinicPublishReadinessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const VALID_CHANNELS = new Set(Object.values(CLINIC_ACQUISITION_CHANNELS))
 const VALID_CAMPAIGN_STATUSES = new Set(Object.values(CLINIC_CAMPAIGN_STATUSES))
@@ -50,7 +51,7 @@ const OPEN_NEEDED_ACTION_STATUSES = new Set([
 ])
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage clinic metrics.')
   }
 }
@@ -58,9 +59,9 @@ function assertAgencyAdmin(viewer) {
 function getEditableClinicClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Clinic metrics are not available for this admin.')
   }
 

@@ -8,7 +8,7 @@ describe('createSnapshotPortalDataClient', () => {
     let saveCount = 0
     const dataClient = createSnapshotPortalDataClient({
       loadSnapshot: async () => ({
-        clients: [
+        workspaces: [
           {
             agency_id: 'agency-1',
             id: 'client-1',
@@ -48,7 +48,7 @@ describe('createSnapshotPortalDataClient', () => {
       return repositories.clients.list().length
     })).resolves.toBe(1)
     expect(savedSnapshot).toMatchObject({
-      clients: [
+      workspaces: [
         expect.objectContaining({
           id: 'client-1',
         }),
@@ -61,7 +61,7 @@ describe('createSnapshotPortalDataClient', () => {
     const dataClient = createSnapshotPortalDataClient({
       loadSnapshot: async () => ({
         snapshot: {
-          clients: [],
+          workspaces: [],
         },
         version: 'snapshot-version-1',
       }),
@@ -87,7 +87,7 @@ describe('createSnapshotPortalDataClient', () => {
         version: 'snapshot-version-1',
       },
       snapshot: {
-        clients: [
+        workspaces: [
           expect.objectContaining({
             id: 'client-1',
           }),

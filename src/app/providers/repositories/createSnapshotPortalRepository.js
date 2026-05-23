@@ -6,6 +6,12 @@ import {
 
 export const PORTAL_STORAGE_SCHEMA_VERSION = 1
 
+const LEGACY_TABLE_ALIASES = Object.freeze({
+  workspaces: 'clients',
+  workspace_invitations: 'client_invitations',
+  workspace_memberships: 'client_memberships',
+})
+
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
@@ -24,6 +30,10 @@ export function createPortalSeedSnapshot(seedData) {
     if (!Array.isArray(seedSnapshot[tableName])) {
       seedSnapshot[tableName] = []
     }
+  }
+
+  for (const legacyTableName of Object.values(LEGACY_TABLE_ALIASES)) {
+    delete seedSnapshot[legacyTableName]
   }
 
   return seedSnapshot
@@ -105,11 +115,18 @@ export function normalizePortalSnapshot(snapshot, seedData) {
 
   for (const tableName of PORTAL_TABLE_NAMES) {
     const seedTableRecords = Array.isArray(seedSnapshot[tableName]) ? seedSnapshot[tableName] : []
+    const legacyTableName = LEGACY_TABLE_ALIASES[tableName]
     const tableRecords = Array.isArray(snapshot[tableName])
       ? snapshot[tableName]
+      : Array.isArray(snapshot[legacyTableName])
+        ? snapshot[legacyTableName]
       : seedTableRecords
 
     normalizedSnapshot[tableName] = mergeSeedRecords(tableRecords, seedTableRecords, tableName)
+  }
+
+  for (const legacyTableName of Object.values(LEGACY_TABLE_ALIASES)) {
+    delete normalizedSnapshot[legacyTableName]
   }
 
   return normalizedSnapshot
@@ -124,7 +141,18 @@ function createEntityRepository(tableName, readSnapshot, writeSnapshot) {
       return readSnapshot()[tableName]
     },
     listByClientId(clientId) {
-      return readSnapshot()[tableName].filter((record) => record.client_id === clientId)
+      return this.listByWorkspaceId(clientId)
+    },
+    listByWorkspaceId(workspaceId) {
+      if (tableName === 'workspaces') {
+        const workspace = this.findById(workspaceId)
+
+        return workspace ? [workspace] : []
+      }
+
+      return readSnapshot()[tableName].filter((record) => (
+        record.workspace_id === workspaceId || record.client_id === workspaceId
+      ))
     },
     upsert(record) {
       const snapshot = readSnapshot()
@@ -156,6 +184,68 @@ function createEntityRepository(tableName, readSnapshot, writeSnapshot) {
   }
 }
 
+function withWorkspaceMembershipAliases(record) {
+  if (!record) {
+    return null
+  }
+
+  const workspaceRole = record.workspace_role
+    ?? (record.role === 'owner' ? 'workspace_owner' : null)
+    ?? (record.role === 'viewer' ? 'workspace_viewer' : null)
+    ?? record.role
+
+  const normalizedRecord = {
+    ...record,
+    client_id: record.client_id ?? record.workspace_id,
+    workspace_id: record.workspace_id ?? record.client_id,
+  }
+
+  if (workspaceRole) {
+    normalizedRecord.role = workspaceRole
+    normalizedRecord.workspace_role = workspaceRole
+  }
+
+  return normalizedRecord
+}
+
+function createWorkspaceRepositoryAdapter(workspacesRepository) {
+  return {
+    deleteById: (id) => workspacesRepository.deleteById(id),
+    findById: (id) => workspacesRepository.findById(id),
+    list: () => workspacesRepository.list(),
+    listByClientId: (clientId) => workspacesRepository.listByClientId(clientId),
+    listByWorkspaceId: (workspaceId) => workspacesRepository.listByWorkspaceId(workspaceId),
+    upsert: (record) => workspacesRepository.upsert(record),
+  }
+}
+
+function createWorkspaceMembershipRepositoryAdapter(workspaceMembershipsRepository) {
+  return {
+    deleteById: (id) => workspaceMembershipsRepository.deleteById(id),
+    findById(id) {
+      return withWorkspaceMembershipAliases(workspaceMembershipsRepository.findById(id))
+    },
+    list() {
+      return workspaceMembershipsRepository.list().map(withWorkspaceMembershipAliases)
+    },
+    listByClientId(clientId) {
+      return this.listByWorkspaceId(clientId)
+    },
+    listByWorkspaceId(workspaceId) {
+      return workspaceMembershipsRepository
+        .listByClientId(workspaceId)
+        .map(withWorkspaceMembershipAliases)
+    },
+    upsert(record) {
+      return withWorkspaceMembershipAliases(workspaceMembershipsRepository.upsert({
+        ...record,
+        client_id: record.client_id ?? record.workspace_id,
+        ...(record.role ? { workspace_role: record.role } : {}),
+      }))
+    },
+  }
+}
+
 export function createPortalRepositoryCollections({ readSnapshot, writeSnapshot }) {
   const repositories = Object.fromEntries(
     PORTAL_REPOSITORY_COLLECTIONS.map((collection) => [
@@ -172,6 +262,9 @@ export function createPortalRepositoryCollections({ readSnapshot, writeSnapshot 
         return readSnapshot().profiles.find((profile) => profile.user_id === userId) ?? null
       },
     },
+    clients: createWorkspaceRepositoryAdapter(repositories.workspaces),
+    workspaceMemberships: createWorkspaceMembershipRepositoryAdapter(repositories.workspaceMemberships),
+    workspaces: createWorkspaceRepositoryAdapter(repositories.workspaces),
   }
 }
 

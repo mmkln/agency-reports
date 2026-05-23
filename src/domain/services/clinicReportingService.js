@@ -8,10 +8,10 @@ import {
   CLINIC_REPORTING_PUBLISH_STATES,
   CLINIC_REPORTING_PUBLISH_STATE_META,
   isClientFacingClinicReportingLayer,
-  isClientRole,
   normalizeClinicReportingPeriod,
 } from '../../entities/clinic-reporting'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyMembership } from '../policies/routeAccessPolicy'
 
 const LAYER_REPOSITORY_KEYS = Object.freeze({
   [CLINIC_REPORTING_LAYERS.DAILY_OPERATIONS]: 'clinicDailyOperations',
@@ -37,13 +37,9 @@ function isVisiblePublishedRecord(record) {
 }
 
 function getClinicClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || client.type !== CLIENT_TYPES.CLINIC || !canAccessClient(viewer, clientId)) {
-    return null
-  }
-
-  if (viewer?.agencyId && client.agency_id !== viewer.agencyId) {
     return null
   }
 
@@ -93,7 +89,7 @@ function getClinicReportingPage({
   }
 
   const repository = getRepositoryForLayer(repositories, layer)
-  const canReadDrafts = source === 'draft' && !isClientRole(viewer?.role)
+  const canReadDrafts = source === 'draft' && hasAgencyMembership(viewer)
   const records = (repository?.listByClientId(clientId) ?? [])
     .map((record) => normalizeClinicReportingPeriod(record, layer))
     .filter((record) => record.layer === layer)

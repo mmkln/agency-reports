@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { PROFILE_STATUSES, USER_ROLES } from '../../entities/profile'
+import { AGENCY_MEMBERSHIP_STATUSES, AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import { PROFILE_STATUSES } from '../../entities/profile'
 import { deactivateOwnProfile } from './accountLifecycleService'
 
 const IDS = Object.freeze({
@@ -9,6 +10,8 @@ const IDS = Object.freeze({
   CLIENT: '22222222-2222-4222-8222-222222222222',
   MEMBERSHIP_OWNER: '33333333-3333-4333-8333-333333333333',
   MEMBERSHIP_OTHER_OWNER: '44444444-4444-4444-8444-444444444444',
+  AGENCY_MEMBERSHIP_ADMIN: '12121212-1212-4212-9212-121212121212',
+  AGENCY_MEMBERSHIP_OTHER_ADMIN: '13131313-1313-4313-9313-131313131313',
   PROFILE_ADMIN: '55555555-5555-4555-8555-555555555555',
   PROFILE_OTHER_ADMIN: '66666666-6666-4666-8666-666666666666',
   PROFILE_OWNER: '77777777-7777-4777-8777-777777777777',
@@ -34,6 +37,9 @@ function createRepository(records = []) {
     listByClientId(clientId) {
       return this.records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return this.records.filter((record) => record.workspace_id === workspaceId)
+    },
     upsert(record) {
       const index = this.records.findIndex((item) => item.id === record.id)
 
@@ -52,19 +58,36 @@ function createRepository(records = []) {
 }
 
 function createRepositories({ includeOtherAdmin = true, includeOtherOwner = true } = {}) {
+  const workspaceMemberships = createRepository([
+    {
+      id: IDS.MEMBERSHIP_OWNER,
+      role: WORKSPACE_ROLES.OWNER,
+      user_id: IDS.USER_OWNER,
+      workspace_id: IDS.CLIENT,
+    },
+    ...(includeOtherOwner ? [{
+      id: IDS.MEMBERSHIP_OTHER_OWNER,
+      role: WORKSPACE_ROLES.OWNER,
+      user_id: IDS.USER_OTHER_OWNER,
+      workspace_id: IDS.CLIENT,
+    }] : []),
+  ])
+
   return {
-    clientMemberships: createRepository([
+    agencyMemberships: createRepository([
       {
-        client_id: IDS.CLIENT,
-        id: IDS.MEMBERSHIP_OWNER,
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
-        user_id: IDS.USER_OWNER,
+        agency_id: IDS.AGENCY,
+        id: IDS.AGENCY_MEMBERSHIP_ADMIN,
+        role: AGENCY_ROLES.ADMIN,
+        status: AGENCY_MEMBERSHIP_STATUSES.ACTIVE,
+        user_id: IDS.USER_ADMIN,
       },
-      ...(includeOtherOwner ? [{
-        client_id: IDS.CLIENT,
-        id: IDS.MEMBERSHIP_OTHER_OWNER,
-        role: CLIENT_MEMBERSHIP_ROLES.OWNER,
-        user_id: IDS.USER_OTHER_OWNER,
+      ...(includeOtherAdmin ? [{
+        agency_id: IDS.AGENCY,
+        id: IDS.AGENCY_MEMBERSHIP_OTHER_ADMIN,
+        role: AGENCY_ROLES.ADMIN,
+        status: AGENCY_MEMBERSHIP_STATUSES.ACTIVE,
+        user_id: IDS.USER_OTHER_ADMIN,
       }] : []),
     ]),
     profiles: createRepository([
@@ -73,7 +96,6 @@ function createRepositories({ includeOtherAdmin = true, includeOtherOwner = true
         email: 'admin@example.com',
         id: IDS.PROFILE_ADMIN,
         name: 'Agency Admin',
-        role: USER_ROLES.AGENCY_ADMIN,
         user_id: IDS.USER_ADMIN,
       },
       ...(includeOtherAdmin ? [{
@@ -81,7 +103,6 @@ function createRepositories({ includeOtherAdmin = true, includeOtherOwner = true
         email: 'other-admin@example.com',
         id: IDS.PROFILE_OTHER_ADMIN,
         name: 'Other Admin',
-        role: USER_ROLES.AGENCY_ADMIN,
         user_id: IDS.USER_OTHER_ADMIN,
       }] : []),
       {
@@ -89,7 +110,6 @@ function createRepositories({ includeOtherAdmin = true, includeOtherOwner = true
         email: 'owner@example.com',
         id: IDS.PROFILE_OWNER,
         name: 'Client Owner',
-        role: USER_ROLES.CLIENT_ADMIN,
         user_id: IDS.USER_OWNER,
       },
       ...(includeOtherOwner ? [{
@@ -97,16 +117,15 @@ function createRepositories({ includeOtherAdmin = true, includeOtherOwner = true
         email: 'other-owner@example.com',
         id: IDS.PROFILE_OTHER_OWNER,
         name: 'Other Owner',
-        role: USER_ROLES.CLIENT_ADMIN,
         user_id: IDS.USER_OTHER_OWNER,
       }] : []),
     ]),
+    workspaceMemberships,
   }
 }
 
-function createViewer({ role, userId }) {
+function createViewer({ userId }) {
   return {
-    role,
     userId,
   }
 }
@@ -119,7 +138,6 @@ describe('accountLifecycleService', () => {
       now: () => '2026-05-20T12:00:00.000Z',
       repositories,
       viewer: createViewer({
-        role: USER_ROLES.CLIENT_ADMIN,
         userId: IDS.USER_OWNER,
       }),
     })
@@ -130,13 +148,16 @@ describe('accountLifecycleService', () => {
       status: PROFILE_STATUSES.INACTIVE,
       updated_at: '2026-05-20T12:00:00.000Z',
     })
+    expect(repositories.workspaceMemberships.findById(IDS.MEMBERSHIP_OWNER)).toMatchObject({
+      role: WORKSPACE_ROLES.OWNER,
+      user_id: IDS.USER_OWNER,
+    })
   })
 
   it('blocks deactivation for the last client workspace owner', () => {
     expect(() => deactivateOwnProfile({
       repositories: createRepositories({ includeOtherOwner: false }),
       viewer: createViewer({
-        role: USER_ROLES.CLIENT_ADMIN,
         userId: IDS.USER_OWNER,
       }),
     })).toThrow('Transfer workspace ownership before deactivating this account.')
@@ -146,7 +167,23 @@ describe('accountLifecycleService', () => {
     expect(() => deactivateOwnProfile({
       repositories: createRepositories({ includeOtherAdmin: false }),
       viewer: createViewer({
-        role: USER_ROLES.AGENCY_ADMIN,
+        userId: IDS.USER_ADMIN,
+      }),
+    })).toThrow('Another agency admin is required before deactivating this account.')
+  })
+
+  it('uses agency memberships rather than profile role to guard last agency admin', () => {
+    const repositories = createRepositories({ includeOtherAdmin: false })
+    const adminProfile = repositories.profiles.findByUserId(IDS.USER_ADMIN)
+
+    repositories.profiles.upsert({
+      ...adminProfile,
+      role: 'legacy-profile-role-is-ignored',
+    })
+
+    expect(() => deactivateOwnProfile({
+      repositories,
+      viewer: createViewer({
         userId: IDS.USER_ADMIN,
       }),
     })).toThrow('Another agency admin is required before deactivating this account.')

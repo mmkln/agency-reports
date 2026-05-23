@@ -4,8 +4,13 @@ import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { TASK_STATUSES } from '../../entities/task'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { ACTIVITY_EVENT_TYPES } from './activityTrackingService'
 import {
   archiveClientWorkItem,
@@ -43,6 +48,9 @@ function createEntityRepository(initialRecords = []) {
     listByClientId(clientId) {
       return records.filter((record) => record.client_id === clientId)
     },
+    listByWorkspaceId(workspaceId) {
+      return records.filter((record) => record.workspace_id === workspaceId || record.client_id === workspaceId)
+    },
     upsert(record) {
       const index = records.findIndex((item) => item.id === record.id)
 
@@ -58,20 +66,22 @@ function createEntityRepository(initialRecords = []) {
 }
 
 function createRepositories(overrides = {}) {
+  const clients = createEntityRepository([
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.CLIENT,
+      name: 'Client A',
+      portal_slug: 'client-a',
+    },
+    {
+      agency_id: 'other-agency',
+      id: IDS.OTHER_CLIENT,
+      name: 'Client B',
+    },
+  ])
+
   return {
-    clients: createEntityRepository([
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.CLIENT,
-        name: 'Client A',
-        portal_slug: 'client-a',
-      },
-      {
-        agency_id: 'other-agency',
-        id: IDS.OTHER_CLIENT,
-        name: 'Client B',
-      },
-    ]),
+    clients,
     activityEvents: createEntityRepository([]),
     clientWorkItems: createEntityRepository([
       {
@@ -112,32 +122,33 @@ function createRepositories(overrides = {}) {
         title: 'Review creatives',
       },
     ]),
+    workspaces: clients,
     ...overrides,
   }
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT],
     userId: IDS.USER,
-  }
+  })
 }
 
 function createClientViewer(clientIds = [IDS.CLIENT]) {
-  return {
-    clientIds,
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({
+    role: WORKSPACE_ROLES.VIEWER,
+    workspaceId: clientIds[0],
+  })
 }
 
 function createTeamViewer(clientIds = [IDS.CLIENT]) {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    clientIds,
-    role: USER_ROLES.AGENCY_TEAM,
+    managedWorkspaceIds: clientIds,
+    role: AGENCY_ROLES.TEAM,
     userId: IDS.USER,
-  }
+  })
 }
 
 describe('clientWorkItemService', () => {
@@ -145,10 +156,7 @@ describe('clientWorkItemService', () => {
     const result = listPublishedClientWorkItems({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.CLIENT_USER,
-      },
+      viewer: createClientViewer([IDS.CLIENT]),
     })
 
     expect(result.status).toBe('ready')
@@ -164,10 +172,7 @@ describe('clientWorkItemService', () => {
     const result = listPublishedClientWorkItems({
       clientId: IDS.CLIENT,
       repositories: createRepositories(),
-      viewer: {
-        clientIds: [IDS.OTHER_CLIENT],
-        role: USER_ROLES.CLIENT_USER,
-      },
+      viewer: createClientViewer([IDS.OTHER_CLIENT]),
     })
 
     expect(result).toMatchObject({
@@ -459,11 +464,7 @@ describe('clientWorkItemService', () => {
         },
       ]),
     })
-    const teamViewer = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.AGENCY_TEAM,
-      userId: IDS.USER,
-    }
+    const teamViewer = createTeamViewer()
 
     const updatedWorkItem = markClientWorkItemReadyForReview({
       now: () => '2026-05-17T10:00:00.000Z',

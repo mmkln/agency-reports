@@ -4,7 +4,7 @@ import {
   getTaskImportPath,
   normalizeTeamTaskFilters,
 } from './teamTaskFilterState'
-import { USER_ROLES } from '../../../entities/profile'
+import { hasAgencyAdminMembership } from '../../../domain/policies/routeAccessPolicy'
 import {
   AdminClientWorkspaceHeader,
   useAdminRouteClient,
@@ -14,13 +14,13 @@ import { Icon } from '../../../shared/icons'
 import { Link } from 'react-router-dom'
 
 function getTaskWorkspacePath(viewer) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
+  return hasAgencyAdminMembership(viewer) ? '/admin/tasks' : '/team/tasks'
 }
 
 export function TeamTasksPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const filters = normalizeTeamTaskFilters(routeParams)
   const basePath = activeRoute?.path ?? getTaskWorkspacePath(runtime.viewer)
-  const routeClientId = filters.clientId && filters.clientId !== 'all' && runtime.viewer?.role === USER_ROLES.AGENCY_ADMIN
+  const routeClientId = filters.clientId && filters.clientId !== 'all' && hasAgencyAdminMembership(runtime.viewer)
     ? filters.clientId
     : null
   const clientResource = useAdminRouteClient({

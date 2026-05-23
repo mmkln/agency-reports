@@ -16,7 +16,10 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
   CLINIC_SERVICE_LINE_STATUSES,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   getClientClinicFoundationPage,
   getClientClinicServiceLinesPage,
@@ -72,6 +75,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -349,24 +355,21 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
+  })
 }
 
 function createOtherAgencyAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+    managedWorkspaceIds: [],
+  })
 }
 
 function createFilteringRepositories() {

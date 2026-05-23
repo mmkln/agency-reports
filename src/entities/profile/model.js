@@ -1,24 +1,7 @@
-export const USER_ROLES = Object.freeze({
-  AGENCY_ADMIN: 'agency_admin',
-  AGENCY_TEAM: 'agency_team',
-  CLIENT_ADMIN: 'client_admin',
-  CLIENT_TEAM: 'client_team',
-  CLIENT_USER: 'client_admin',
-})
-
 export const PROFILE_STATUSES = Object.freeze({
   ACTIVE: 'active',
   INACTIVE: 'inactive',
 })
-
-export const LEGACY_USER_ROLES = Object.freeze({
-  CLIENT_USER: 'client_user',
-})
-
-export const CLIENT_PORTAL_ROLES = Object.freeze([
-  USER_ROLES.CLIENT_ADMIN,
-  USER_ROLES.CLIENT_TEAM,
-])
 
 export const CLINIC_REPORTING_CAPABILITIES = Object.freeze({
   DAILY_OPS_MANAGE: 'clinic_layer_daily_ops_manage',
@@ -33,50 +16,14 @@ export const CLINIC_REPORTING_CAPABILITIES = Object.freeze({
   WEEKLY_OPERATOR_VIEW: 'clinic_layer_weekly_operator_view',
 })
 
-const ROLE_DEFAULT_CAPABILITIES = Object.freeze({
-  [USER_ROLES.AGENCY_ADMIN]: Object.values(CLINIC_REPORTING_CAPABILITIES),
-  [USER_ROLES.AGENCY_TEAM]: [
-    CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
-    CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
-    CLINIC_REPORTING_CAPABILITIES.WEEKLY_OPERATOR_VIEW,
-    CLINIC_REPORTING_CAPABILITIES.OPERATIONAL_ROWS_VIEW,
-  ],
-  [USER_ROLES.CLIENT_ADMIN]: [
-    CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
-    CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
-  ],
-  [USER_ROLES.CLIENT_TEAM]: [],
-})
-
-export function normalizeUserRole(role) {
-  if (role === LEGACY_USER_ROLES.CLIENT_USER) {
-    return USER_ROLES.CLIENT_ADMIN
-  }
-
-  return Object.values(USER_ROLES).includes(role) ? role : role
-}
-
-export function isClientPortalRole(role) {
-  return CLIENT_PORTAL_ROLES.includes(normalizeUserRole(role))
-}
-
 export function isActiveProfile(profile) {
   return profile?.status !== PROFILE_STATUSES.INACTIVE
 }
 
-export function getDefaultCapabilitiesForRole(role) {
-  return ROLE_DEFAULT_CAPABILITIES[normalizeUserRole(role)] ?? []
-}
-
 export function getViewerCapabilities(viewerOrProfile) {
-  const explicitCapabilities = Array.isArray(viewerOrProfile?.capabilities)
+  return [...new Set(Array.isArray(viewerOrProfile?.capabilities)
     ? viewerOrProfile.capabilities
-    : []
-
-  return [...new Set([
-    ...getDefaultCapabilitiesForRole(viewerOrProfile?.role),
-    ...explicitCapabilities,
-  ])]
+    : [])]
 }
 
 export function hasCapability(viewer, capability) {

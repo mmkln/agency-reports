@@ -3,7 +3,7 @@ import {
   Input,
 } from '@/shared/ui'
 
-import { ClientMembershipRoleSelect } from '../../../entities/client-membership'
+import { WorkspaceMembershipRoleSelect } from '../../../entities/workspace-membership'
 import { FieldError } from '../../admin-client-workspace'
 
 export function AccessMemberForm({
@@ -48,7 +48,7 @@ export function AccessMemberForm({
       <div className="grid gap-control sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
         <label className="grid gap-1.5">
           <span className="text-label text-text-secondary">Role</span>
-          <ClientMembershipRoleSelect
+          <WorkspaceMembershipRoleSelect
             className="bg-block"
             onValueChange={(role) => onUpdateForm('role', role)}
             value={form.role}

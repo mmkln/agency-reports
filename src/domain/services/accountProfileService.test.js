@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { getOwnProfileSettings, updateOwnProfileSettings } from './accountProfileService'
 
 const IDS = Object.freeze({
@@ -40,56 +41,76 @@ function createRepositories() {
         email: 'admin@growthlab.example',
         id: 'profile-admin',
         name: 'GrowthLab Admin',
-        role: USER_ROLES.AGENCY_ADMIN,
         user_id: IDS.AGENCY_ADMIN,
       },
       {
         email: 'mia@growthlab.example',
         id: 'profile-team',
         name: 'Mia Carter',
-        role: USER_ROLES.AGENCY_TEAM,
         user_id: IDS.AGENCY_TEAM,
       },
       {
         email: 'client@greendental.example',
         id: 'profile-client-admin',
         name: 'Green Dental Client',
-        role: USER_ROLES.CLIENT_ADMIN,
         user_id: IDS.CLIENT_ADMIN,
       },
       {
         email: 'ops@greendental.example',
         id: 'profile-client-team',
         name: 'Green Dental Ops',
-        role: USER_ROLES.CLIENT_TEAM,
         user_id: IDS.CLIENT_TEAM,
       },
     ]),
   }
 }
 
-function createViewer({ role, userId }) {
-  return {
+function createViewer({ accessType, role, userId }) {
+  const viewer = {
+    agencyMemberships: [],
     email: '',
     name: '',
-    role,
     userId,
+    workspaceMemberships: [],
+  }
+
+  if (accessType === 'agency') {
+    return {
+      ...viewer,
+      activeAgencyId: 'agency-a',
+      agencyMemberships: [{
+        agencyId: 'agency-a',
+        role,
+        userId,
+      }],
+    }
+  }
+
+  return {
+    ...viewer,
+    activeWorkspaceId: 'workspace-a',
+    workspaceMemberships: [{
+      role,
+      userId,
+      workspaceId: 'workspace-a',
+    }],
   }
 }
 
 describe('account profile settings', () => {
   it.each([
-    ['agency admin', USER_ROLES.AGENCY_ADMIN, IDS.AGENCY_ADMIN, 'Agency admin'],
-    ['agency team', USER_ROLES.AGENCY_TEAM, IDS.AGENCY_TEAM, 'Agency team'],
-    ['client admin', USER_ROLES.CLIENT_ADMIN, IDS.CLIENT_ADMIN, 'Client admin'],
-    ['client team', USER_ROLES.CLIENT_TEAM, IDS.CLIENT_TEAM, 'Client team'],
-  ])('loads %s own profile settings', (_label, role, userId, roleLabel) => {
+    ['agency admin', 'agency', AGENCY_ROLES.ADMIN, IDS.AGENCY_ADMIN, 'Agency Admin'],
+    ['agency team', 'agency', AGENCY_ROLES.TEAM, IDS.AGENCY_TEAM, 'Agency Team'],
+    ['clinic owner', 'workspace', WORKSPACE_ROLES.CLINIC_OWNER, IDS.CLIENT_ADMIN, 'Clinic Owner'],
+    ['front desk', 'workspace', WORKSPACE_ROLES.FRONT_DESK, IDS.CLIENT_TEAM, 'Front Desk'],
+  ])('loads %s own profile settings', (_label, accessType, role, userId, roleLabel) => {
     const profile = getOwnProfileSettings({
       repositories: createRepositories(),
-      viewer: createViewer({ role, userId }),
+      viewer: createViewer({ accessType, role, userId }),
     })
 
     expect(profile).toMatchObject({
+      accessType,
       role,
       roleLabel,
       userId,
@@ -97,11 +118,11 @@ describe('account profile settings', () => {
   })
 
   it.each([
-    ['agency admin', USER_ROLES.AGENCY_ADMIN, IDS.AGENCY_ADMIN],
-    ['agency team', USER_ROLES.AGENCY_TEAM, IDS.AGENCY_TEAM],
-    ['client admin', USER_ROLES.CLIENT_ADMIN, IDS.CLIENT_ADMIN],
-    ['client team', USER_ROLES.CLIENT_TEAM, IDS.CLIENT_TEAM],
-  ])('lets %s update only their own profile', (_label, role, userId) => {
+    ['agency admin', 'agency', AGENCY_ROLES.ADMIN, IDS.AGENCY_ADMIN],
+    ['agency team', 'agency', AGENCY_ROLES.TEAM, IDS.AGENCY_TEAM],
+    ['clinic owner', 'workspace', WORKSPACE_ROLES.CLINIC_OWNER, IDS.CLIENT_ADMIN],
+    ['front desk', 'workspace', WORKSPACE_ROLES.FRONT_DESK, IDS.CLIENT_TEAM],
+  ])('lets %s update only their own profile', (_label, accessType, role, userId) => {
     const repositories = createRepositories()
     const updatedProfile = updateOwnProfileSettings({
       input: {
@@ -110,7 +131,7 @@ describe('account profile settings', () => {
       },
       now: () => '2026-05-20T10:00:00.000Z',
       repositories,
-      viewer: createViewer({ role, userId }),
+      viewer: createViewer({ accessType, role, userId }),
     })
 
     expect(updatedProfile).toMatchObject({
@@ -140,7 +161,8 @@ describe('account profile settings', () => {
     expect(() => getOwnProfileSettings({
       repositories: createRepositories(),
       viewer: createViewer({
-        role: USER_ROLES.CLIENT_TEAM,
+        accessType: 'workspace',
+        role: WORKSPACE_ROLES.FRONT_DESK,
         userId: 'missing-user',
       }),
     })).toThrow('Profile was not found.')
@@ -154,7 +176,8 @@ describe('account profile settings', () => {
       },
       repositories: createRepositories(),
       viewer: createViewer({
-        role: USER_ROLES.AGENCY_ADMIN,
+        accessType: 'agency',
+        role: AGENCY_ROLES.ADMIN,
         userId: IDS.AGENCY_ADMIN,
       }),
     })).toThrow('Name must be at least 2 characters.')
@@ -166,7 +189,8 @@ describe('account profile settings', () => {
       },
       repositories: createRepositories(),
       viewer: createViewer({
-        role: USER_ROLES.AGENCY_ADMIN,
+        accessType: 'agency',
+        role: AGENCY_ROLES.ADMIN,
         userId: IDS.AGENCY_ADMIN,
       }),
     })).toThrow('Email must be a valid email address.')
@@ -178,7 +202,8 @@ describe('account profile settings', () => {
       },
       repositories: createRepositories(),
       viewer: createViewer({
-        role: USER_ROLES.AGENCY_ADMIN,
+        accessType: 'agency',
+        role: AGENCY_ROLES.ADMIN,
         userId: IDS.AGENCY_ADMIN,
       }),
     })).toThrow('Email is already used by another account.')

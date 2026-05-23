@@ -1,5 +1,5 @@
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyMembership } from '../policies/routeAccessPolicy'
 
 export const ACTIVITY_EVENT_TYPES = Object.freeze({
   CLIENT_REQUEST_ANSWERED: 'client_request_answered',
@@ -74,13 +74,9 @@ export function isActivityEventVisibleToClient(eventOrType) {
 }
 
 function assertCanRecordActivity({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessClient(viewer, clientId)) {
-    throw new Error('Client activity is not available.')
-  }
-
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN && client.agency_id !== viewer.agencyId) {
     throw new Error('Client activity is not available.')
   }
 
@@ -90,7 +86,7 @@ function assertCanRecordActivity({ clientId, repositories, viewer }) {
 function assertCanReadActivity({ clientId, repositories, viewer }) {
   const client = assertCanRecordActivity({ clientId, repositories, viewer })
 
-  if (![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role)) {
+  if (!hasAgencyMembership(viewer)) {
     throw new Error('Only team users can read workspace activity.')
   }
 

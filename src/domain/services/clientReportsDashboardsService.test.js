@@ -7,9 +7,12 @@ import {
   PERFORMANCE_DATA_CONFIDENCE,
   PERFORMANCE_DATA_MODES,
 } from '../../entities/performance-dashboard'
-import { USER_ROLES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   getClientReportsDashboardsFallbackTitle,
   getClientReportsDashboardsPage,
@@ -41,6 +44,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: 'agency-a',
@@ -141,18 +147,14 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer(agencyId = 'agency-a') {
-  return {
+  return createAgencyAccessViewer({
     agencyId,
-    role: USER_ROLES.AGENCY_ADMIN,
-  }
+    managedWorkspaceIds: agencyId === 'agency-a' ? [IDS.CLIENT_A, IDS.CLIENT_B] : [],
+  })
 }
 
 describe('getClientReportsDashboardsPage', () => {

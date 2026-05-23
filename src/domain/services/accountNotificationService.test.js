@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { PROFILE_STATUSES, USER_ROLES } from '../../entities/profile'
+import { PROFILE_STATUSES } from '../../entities/profile'
 import {
   getOwnNotificationPreferences,
   updateOwnNotificationPreferences,
@@ -44,7 +44,6 @@ function createRepositories(profileOverrides = {}) {
         email: 'user@example.com',
         id: IDS.PROFILE,
         name: 'Portal User',
-        role: USER_ROLES.CLIENT_TEAM,
         user_id: IDS.USER,
         ...profileOverrides,
       },
@@ -54,7 +53,6 @@ function createRepositories(profileOverrides = {}) {
 
 function createViewer() {
   return {
-    role: USER_ROLES.CLIENT_TEAM,
     userId: IDS.USER,
   }
 }

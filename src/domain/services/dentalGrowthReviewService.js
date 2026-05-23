@@ -9,8 +9,8 @@ import {
   normalizeDentalGrowthReviewSourceBatch,
   validateDentalGrowthReviewPeriod,
 } from '../../entities/dental-growth-review'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 function sortByPeriodDesc(left, right) {
   return new Date(right.period_end || 0).getTime() - new Date(left.period_end || 0).getTime()
@@ -18,7 +18,7 @@ function sortByPeriodDesc(left, right) {
 }
 
 function canPreviewDraft(viewer) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN && Boolean(viewer.agencyId)
+  return hasAgencyAdminMembership(viewer)
 }
 
 function isVisiblePeriod(period, source) {
@@ -33,13 +33,9 @@ function isVisiblePeriod(period, source) {
 }
 
 function getClinicClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || client.type !== CLIENT_TYPES.CLINIC || !canAccessClient(viewer, clientId)) {
-    return null
-  }
-
-  if (viewer?.agencyId && client.agency_id !== viewer.agencyId) {
     return null
   }
 

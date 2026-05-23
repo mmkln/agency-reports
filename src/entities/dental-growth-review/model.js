@@ -1,7 +1,6 @@
 import {
   CLINIC_REPORTING_CAPABILITIES,
   hasCapability,
-  USER_ROLES,
 } from '../profile'
 
 export const DENTAL_GROWTH_REVIEW_PERIOD_TYPES = Object.freeze({
@@ -480,7 +479,7 @@ export function validateDentalGrowthReviewPeriod(record) {
 }
 
 export function getDentalGrowthReviewPresetForViewer(viewer) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN || viewer?.role === USER_ROLES.AGENCY_TEAM
+  return viewer?.agencyMemberships?.length
     ? DENTAL_GROWTH_REVIEW_VIEW_PRESETS.OPERATOR
     : DENTAL_GROWTH_REVIEW_VIEW_PRESETS.EXECUTIVE
 }

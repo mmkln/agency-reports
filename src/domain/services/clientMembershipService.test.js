@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
-import { CLIENT_MEMBERSHIP_ROLES, CLIENT_MEMBERSHIP_STATUSES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
+import {
+  WORKSPACE_CAPABILITIES,
+  WORKSPACE_MEMBERSHIP_STATUSES,
+  WORKSPACE_ROLES,
+} from '../../entities/workspace-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { createLocalStoragePortalRepository } from '../../app/providers/repositories/createLocalStoragePortalRepository'
 import {
   addClientMember,
@@ -42,9 +50,9 @@ function createMemoryStorage() {
 function createRepositories() {
   return createLocalStoragePortalRepository({
     seedData: {
-      client_invitations: [],
-      client_memberships: [],
-      clients: [{
+      workspace_invitations: [],
+      workspace_memberships: [],
+      workspaces: [{
         agency_id: IDS.AGENCY,
         created_at: '2026-05-12T10:00:00.000Z',
         id: IDS.CLIENT,
@@ -68,28 +76,33 @@ function createRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    capabilities: [AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS],
+    managedWorkspaceIds: [IDS.CLIENT],
     userId: 'admin-user',
-  }
+  })
 }
 
-function createClientViewer({ role = USER_ROLES.CLIENT_TEAM, userId = IDS.USER } = {}) {
-  return {
-    clientId: IDS.CLIENT,
-    clientIds: [IDS.CLIENT],
+function createClientViewer({
+  capabilities = [WORKSPACE_CAPABILITIES.VIEW_PORTAL],
+  role = WORKSPACE_ROLES.VIEWER,
+  userId = IDS.USER,
+} = {}) {
+  return createWorkspaceAccessViewer({
+    capabilities,
     role,
     userId,
-  }
+    workspaceId: IDS.CLIENT,
+  })
 }
 
 function addMembership(repositories, {
   id = IDS.MEMBERSHIP,
-  role = CLIENT_MEMBERSHIP_ROLES.VIEWER,
+  role = WORKSPACE_ROLES.VIEWER,
   userId = IDS.USER,
 } = {}) {
-  repositories.clientMemberships.upsert({
+  repositories.workspaceMemberships.upsert({
     client_id: IDS.CLIENT,
     id,
     role,
@@ -108,7 +121,7 @@ describe('clientMembershipService', () => {
       idGenerator: () => generatedIds.shift(),
       name: 'Owner Name',
       repositories,
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       viewer: createAdminViewer(),
     })
 
@@ -116,7 +129,7 @@ describe('clientMembershipService', () => {
       clientId: IDS.CLIENT,
       email: 'owner@example.com',
       name: 'Owner Name',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       userId: IDS.USER,
     })
     expect(listClientMembers({
@@ -126,17 +139,17 @@ describe('clientMembershipService', () => {
     })).toHaveLength(1)
     addMembership(repositories, {
       id: 'membership-backup-owner',
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       userId: 'backup-owner-user',
     })
 
     expect(updateClientMembershipRole({
       membershipId: IDS.MEMBERSHIP,
       repositories,
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
       viewer: createAdminViewer(),
     })).toMatchObject({
-      role: CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: WORKSPACE_ROLES.VIEWER,
     })
 
     expect(removeClientMembership({
@@ -159,7 +172,6 @@ describe('clientMembershipService', () => {
       email: 'owner@example.com',
       id: IDS.PROFILE,
       name: 'Owner Name',
-      role: USER_ROLES.CLIENT_USER,
       user_id: IDS.USER,
     })
 
@@ -168,8 +180,9 @@ describe('clientMembershipService', () => {
       repositories,
     })
 
-    expect(viewer.clientId).toBeNull()
-    expect(viewer.clientIds).toEqual([])
+    expect(viewer.activeWorkspaceId).toBeNull()
+    expect(viewer.clientId).toBeUndefined()
+    expect(viewer.clientIds).toBeUndefined()
   })
 
   it('rejects duplicate memberships for the same client', () => {
@@ -210,41 +223,41 @@ describe('clientMembershipService', () => {
       repositories,
       viewer: createAdminViewer(),
     })).toHaveLength(0)
-    expect(repositories.clientMemberships.findById(IDS.MEMBERSHIP)).toMatchObject({
+    expect(repositories.workspaceMemberships.findById(IDS.MEMBERSHIP)).toMatchObject({
       removed_at: '2026-05-20T12:00:00.000Z',
       removed_by: IDS.USER,
-      status: CLIENT_MEMBERSHIP_STATUSES.REMOVED,
+      status: WORKSPACE_MEMBERSHIP_STATUSES.REMOVED,
     })
   })
 
   it('blocks the last owner from leaving a workspace', () => {
     const repositories = createRepositories()
     addMembership(repositories, {
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
     })
 
     expect(() => leaveClientWorkspace({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: createClientViewer({ role: USER_ROLES.CLIENT_ADMIN }),
+      viewer: createClientViewer({ role: WORKSPACE_ROLES.CLINIC_OWNER }),
     })).toThrow('Transfer ownership before leaving this workspace.')
   })
 
   it('lets an owner leave when another owner remains', () => {
     const repositories = createRepositories()
     addMembership(repositories, {
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
     })
     addMembership(repositories, {
       id: IDS.MEMBERSHIP_OTHER_OWNER,
-      role: CLIENT_MEMBERSHIP_ROLES.OWNER,
+      role: WORKSPACE_ROLES.OWNER,
       userId: IDS.USER_OTHER_OWNER,
     })
 
     expect(leaveClientWorkspace({
       clientId: IDS.CLIENT,
       repositories,
-      viewer: createClientViewer({ role: USER_ROLES.CLIENT_ADMIN }),
+      viewer: createClientViewer({ role: WORKSPACE_ROLES.CLINIC_OWNER }),
     })).toBe(true)
     expect(listClientMembers({
       clientId: IDS.CLIENT,

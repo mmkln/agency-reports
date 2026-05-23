@@ -1,5 +1,5 @@
 import { CLIENT_TYPES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { getClientDashboardPage } from './clientDashboardService'
 import { getClientPerformanceDashboardPage } from './clientPerformanceDashboardService'
 import { getClientReportsPage } from './clientReportsService'
@@ -42,7 +42,7 @@ function getResultsPageCopy(template) {
 }
 
 export function getClientReportsDashboardsFallbackTitle({ clientId, repositories }) {
-  const client = clientId ? repositories.clients.findById(clientId) : null
+  const client = clientId ? repositories.workspaces.findById(clientId) : null
   const template = client?.type === CLIENT_TYPES.CLINIC ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC
 
   return getResultsPageCopy(template).pageTitle
@@ -136,7 +136,7 @@ export function getClientReportsDashboardsPage({
   repositories,
   viewer,
 }) {
-  const resolvedMode = mode ?? (viewer?.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client')
+  const resolvedMode = mode ?? (hasAgencyAdminMembership(viewer) ? 'admin_preview' : 'client')
   const performancePage = getClientPerformanceDashboardPage({
     clientId,
     mode: resolvedMode,

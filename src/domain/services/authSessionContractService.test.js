@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { USER_ROLES } from '../../entities/profile'
 import {
   createServerAuthSessionContract,
-  getServerAuthRoleContract,
+  getServerAuthAccessContextContract,
   SERVER_AUTH_SESSION_CHECKS,
   SERVER_AUTH_VIEWER_FIELDS,
 } from './authSessionContractService'
@@ -20,39 +19,33 @@ describe('authSessionContractService', () => {
     ])
   })
 
-  it('requires client memberships as the only client-user access source', () => {
-    expect(getServerAuthRoleContract(USER_ROLES.CLIENT_USER)).toEqual({
-      allowedClientSource: 'client_memberships_only',
+  it('requires workspace memberships as the only direct workspace-user access source', () => {
+    expect(getServerAuthAccessContextContract('workspace_member')).toEqual({
+      allowedWorkspaceSource: 'active_workspace_memberships',
       requiredChecks: [
         SERVER_AUTH_SESSION_CHECKS.ACTIVE_SESSION,
         SERVER_AUTH_SESSION_CHECKS.SESSION_NOT_EXPIRED,
         SERVER_AUTH_SESSION_CHECKS.PROFILE_EXISTS,
-        SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
+        SERVER_AUTH_SESSION_CHECKS.WORKSPACE_MEMBERSHIP,
       ],
     })
-    expect(getServerAuthRoleContract(USER_ROLES.CLIENT_TEAM)).toEqual({
-      allowedClientSource: 'client_memberships_only',
+    expect(getServerAuthAccessContextContract('multi_context_user')).toEqual({
+      allowedWorkspaceSource: 'active_memberships_and_relationships',
       requiredChecks: [
         SERVER_AUTH_SESSION_CHECKS.ACTIVE_SESSION,
         SERVER_AUTH_SESSION_CHECKS.SESSION_NOT_EXPIRED,
         SERVER_AUTH_SESSION_CHECKS.PROFILE_EXISTS,
-        SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
+        SERVER_AUTH_SESSION_CHECKS.AGENCY_MEMBERSHIP,
+        SERVER_AUTH_SESSION_CHECKS.WORKSPACE_MEMBERSHIP,
       ],
     })
   })
 
-  it('keeps agency and team role contracts explicit', () => {
-    expect(getServerAuthRoleContract(USER_ROLES.AGENCY_ADMIN)).toMatchObject({
-      allowedClientSource: 'agency_scope',
+  it('keeps agency membership contracts explicit', () => {
+    expect(getServerAuthAccessContextContract('agency_member')).toMatchObject({
+      allowedWorkspaceSource: 'active_agency_workspace_relationships',
       requiredChecks: expect.arrayContaining([
         SERVER_AUTH_SESSION_CHECKS.AGENCY_MEMBERSHIP,
-      ]),
-    })
-    expect(getServerAuthRoleContract(USER_ROLES.AGENCY_TEAM)).toMatchObject({
-      allowedClientSource: 'assigned_client_memberships',
-      requiredChecks: expect.arrayContaining([
-        SERVER_AUTH_SESSION_CHECKS.AGENCY_MEMBERSHIP,
-        SERVER_AUTH_SESSION_CHECKS.CLIENT_MEMBERSHIP,
       ]),
     })
   })
@@ -61,10 +54,10 @@ describe('authSessionContractService', () => {
     const contract = createServerAuthSessionContract()
 
     expect(contract.invariants).toEqual(expect.arrayContaining([
-      'Portal users derive access from active client_memberships, never profile.client_id fallback.',
+      'Portal users derive access from active workspace memberships, never profile.client_id fallback.',
       'Route clientId is a requested resource identifier, not proof of access.',
-      'Frontend buildViewerFromProfile semantics must match the server viewer payload.',
+      'Frontend buildViewerAccessContext semantics must match the server viewer payload.',
     ]))
-    expect(getServerAuthRoleContract('unknown-role')).toBeNull()
+    expect(getServerAuthAccessContextContract('unknown-context')).toBeNull()
   })
 })

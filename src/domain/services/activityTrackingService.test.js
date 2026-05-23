@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_STATUSES } from '../../entities/client'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   ACTIVITY_EVENT_TYPES,
   isActivityEventVisibleToClient,
@@ -52,49 +55,50 @@ function createEntityRepository(initialRecords = []) {
 }
 
 function createRepositories() {
+  const clients = createEntityRepository([
+    {
+      agency_id: IDS.AGENCY,
+      id: IDS.CLIENT_A,
+      name: 'Client A',
+      status: CLIENT_STATUSES.ON_TRACK,
+    },
+    {
+      agency_id: '99999999-9999-4999-8999-999999999999',
+      id: IDS.CLIENT_B,
+      name: 'Client B',
+      status: CLIENT_STATUSES.ON_TRACK,
+    },
+  ])
+
   return {
     activityEvents: createEntityRepository([]),
-    clients: createEntityRepository([
-      {
-        agency_id: IDS.AGENCY,
-        id: IDS.CLIENT_A,
-        name: 'Client A',
-        status: CLIENT_STATUSES.ON_TRACK,
-      },
-      {
-        agency_id: '99999999-9999-4999-8999-999999999999',
-        id: IDS.CLIENT_B,
-        name: 'Client B',
-        status: CLIENT_STATUSES.ON_TRACK,
-      },
-    ]),
+    clients,
     profiles: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
         email: 'admin@example.com',
         id: IDS.PROFILE_ADMIN,
         name: 'Admin User',
-        role: USER_ROLES.AGENCY_ADMIN,
         user_id: IDS.USER_ADMIN,
       },
     ]),
+    workspaces: clients,
   }
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT_A],
     userId: IDS.USER_ADMIN,
-  }
+  })
 }
 
 function createClientViewer() {
-  return {
-    clientIds: [IDS.CLIENT_A],
-    role: USER_ROLES.CLIENT_USER,
+  return createWorkspaceAccessViewer({
     userId: IDS.USER_CLIENT,
-  }
+    workspaceId: IDS.CLIENT_A,
+  })
 }
 
 describe('activityTrackingService', () => {

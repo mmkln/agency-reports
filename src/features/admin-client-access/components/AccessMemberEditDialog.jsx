@@ -7,7 +7,7 @@ import {
   DialogTitle,
   ReadOnlyField,
 } from '@/shared/ui'
-import { ClientMembershipRoleSelect } from '@/entities/client-membership'
+import { WorkspaceMembershipRoleSelect } from '@/entities/workspace-membership'
 import { FieldError } from '../../admin-client-workspace'
 
 export function AccessMemberEditDialog({
@@ -35,7 +35,7 @@ export function AccessMemberEditDialog({
             </div>
             <label className="grid gap-1.5">
               <span className="text-label text-text-secondary">Role</span>
-              <ClientMembershipRoleSelect
+              <WorkspaceMembershipRoleSelect
                 className="bg-block"
                 onValueChange={onRoleChange}
                 value={role}

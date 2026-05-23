@@ -31,7 +31,7 @@ describe('createPortalRepository', () => {
 
   it('uses provided seed data when creating the localStorage adapter', () => {
     const seedData = createSeedDataForRepositoryContract({
-      clients: [
+      workspaces: [
         {
           client_id: 'seed-client',
           id: 'seed-client',

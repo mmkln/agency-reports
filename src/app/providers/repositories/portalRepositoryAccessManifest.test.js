@@ -71,7 +71,7 @@ describe('portalRepositoryAccessManifest', () => {
       expect(accessRules.aggregateOnly, tableName).toBe(true)
       expect(accessRules.accessMode, tableName).toBe(PORTAL_ACCESS_MODES.CLIENT_READABLE)
       expect(accessRules.rules, tableName).toEqual(expect.arrayContaining([
-        PORTAL_ACCESS_RULES.CLIENT_MEMBERSHIP_REQUIRED,
+        PORTAL_ACCESS_RULES.WORKSPACE_MEMBERSHIP_REQUIRED,
         PORTAL_ACCESS_RULES.PUBLISHED_STATE_REQUIRED,
       ]))
       expect(accessRules.clientReadFilters, tableName).toEqual(expect.arrayContaining([
@@ -99,11 +99,11 @@ describe('portalRepositoryAccessManifest', () => {
       rules: expect.arrayContaining([PORTAL_ACCESS_RULES.OWN_PROFILE_ONLY]),
     })
 
-    expect(getPortalRepositoryAccessRules('client_invitations')).toMatchObject({
+    expect(getPortalRepositoryAccessRules('workspace_invitations')).toMatchObject({
       accessMode: PORTAL_ACCESS_MODES.TOKEN_GATED,
     })
-    expect(getPortalRepositoryAccessRules('client_invitations').rules).not.toContain(
-      PORTAL_ACCESS_RULES.CLIENT_MEMBERSHIP_REQUIRED,
+    expect(getPortalRepositoryAccessRules('workspace_invitations').rules).not.toContain(
+      PORTAL_ACCESS_RULES.WORKSPACE_MEMBERSHIP_REQUIRED,
     )
   })
 })

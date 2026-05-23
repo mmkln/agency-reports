@@ -6,7 +6,6 @@ import {
   mapTaskStatusToClientWorkStatus,
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
-import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
@@ -21,6 +20,11 @@ import {
   isClientWorkItemPublished,
 } from '../policies/clientWorkItemPolicy'
 import { canAccessClient } from '../policies/accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+  hasWorkspaceMembership,
+} from '../policies/routeAccessPolicy'
 
 const VALID_STATUSES = new Set(Object.values(CLIENT_WORK_ITEM_STATUSES))
 const VALID_PUBLISH_STATES = new Set(Object.values(CLIENT_WORK_ITEM_PUBLISH_STATES))
@@ -126,13 +130,13 @@ function getStatusMeta(status, registry) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage published work.')
   }
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Account was not found.')
   }
 
@@ -151,7 +155,7 @@ function getClientWorkItem({ repositories, workItemId }) {
 
 function getEditableClientWorkItem({ repositories, viewer, workItemId }) {
   const item = getClientWorkItem({ repositories, workItemId })
-  const client = repositories.clients.findById(item.client_id)
+  const client = repositories.workspaces.findById(item.client_id)
 
   if (!canManageClientWorkItem({ client, item, viewer })) {
     throw new Error('Client work item was not found.')
@@ -168,15 +172,7 @@ function canPrepareClientWorkItemFromTask({ client, task, viewer }) {
     return false
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  if (viewer?.role === USER_ROLES.AGENCY_TEAM) {
-    return canAccessClient(viewer, task.client_id)
-  }
-
-  return false
+  return hasAgencyMembership(viewer) && canAccessClient(viewer, task.client_id)
 }
 
 function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
@@ -349,7 +345,7 @@ export function getAdminClientWorkItemDetail({
   workItemId,
 }) {
   const item = getClientWorkItem({ repositories, workItemId })
-  const client = repositories.clients.findById(item.client_id)
+  const client = repositories.workspaces.findById(item.client_id)
 
   if (!canAgencyViewClientWorkItem({ item, viewer })) {
     throw new Error('Client work item was not found.')
@@ -372,8 +368,8 @@ export function listPublishedClientWorkItems({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     return {
@@ -390,7 +386,7 @@ export function listPublishedClientWorkItems({
         return false
       }
 
-      if (isClientPortalRole(viewer?.role)) {
+      if (hasWorkspaceMembership(viewer)) {
         return canClientViewClientWorkItem({ item, viewer })
       }
 
@@ -419,8 +415,8 @@ export function getPublishedClientWorkItemDetail({
   viewer,
   workItemId,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
   const item = repositories.clientWorkItems.findById(workItemId)
 
   if (!client || !item || item.client_id !== normalizedClientId || !isClientWorkItemPublished(item)) {
@@ -430,7 +426,7 @@ export function getPublishedClientWorkItemDetail({
     }
   }
 
-  const canView = isClientPortalRole(viewer?.role)
+  const canView = hasWorkspaceMembership(viewer)
     ? canClientViewClientWorkItem({ item, viewer })
     : canAgencyViewClientWorkItem({ item, viewer })
 
@@ -558,7 +554,7 @@ export function suggestClientWorkItemFromTask({
     throw new Error('Source task was not found.')
   }
 
-  const client = repositories.clients.findById(task.client_id)
+  const client = repositories.workspaces.findById(task.client_id)
 
   if (!canPrepareClientWorkItemFromTask({ client, task, viewer })) {
     throw new Error('Source task was not found.')
@@ -670,7 +666,7 @@ export function markClientWorkItemReadyForReview({
   const item = getClientWorkItem({ repositories, workItemId })
 
   if (!canManageClientWorkItem({
-    client: repositories.clients.findById(item.client_id),
+    client: repositories.workspaces.findById(item.client_id),
     item,
     viewer,
   }) && !canTeamPrepareClientWorkItem({ item, viewer })) {

@@ -10,7 +10,7 @@ import {
   PanelBody,
   PanelHeader,
 } from '@/shared/ui'
-import { ClientMemberList } from '@/entities/client-membership'
+import { WorkspaceMemberList } from '@/entities/workspace-membership'
 import { Icon } from '@/shared/icons'
 
 import { FieldError } from '../../admin-client-workspace'
@@ -52,7 +52,7 @@ export function AccessMembersPanel({ clientId, runtime }) {
             <FieldError>Members could not be loaded.</FieldError>
           </div>
         ) : (
-          <ClientMemberList
+          <WorkspaceMemberList
             canEdit
             canRemove
             emptyDescription="No members are currently attached to this workspace."

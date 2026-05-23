@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { buildViewerFromProfile } from '../../../domain/services/authService'
 import {
   CLINIC_REPORTING_CAPABILITIES,
-  USER_ROLES,
 } from '../../../entities/profile'
+import { AGENCY_ROLES } from '../../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../../entities/workspace-membership'
 import { createPortalRepositoryFromSnapshot } from '../repositories/createSnapshotPortalRepository'
 import { portalSeedData, SEED_IDS } from '../repositories/portalSeedData'
 import {
@@ -39,11 +40,11 @@ describe('demo role switch options', () => {
     ])
 
     expect(buildSeedViewer(SEED_IDS.USER_ADMIN_GROWTHLAB)).toMatchObject({
-      role: USER_ROLES.AGENCY_ADMIN,
+      agencyMemberships: [expect.objectContaining({ role: AGENCY_ROLES.ADMIN })],
       capabilities: expect.arrayContaining(Object.values(CLINIC_REPORTING_CAPABILITIES)),
     })
     expect(buildSeedViewer(SEED_IDS.USER_TEAM_MIA)).toMatchObject({
-      role: USER_ROLES.AGENCY_TEAM,
+      agencyMemberships: [expect.objectContaining({ role: AGENCY_ROLES.TEAM })],
       capabilities: expect.arrayContaining([
         CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
         CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
@@ -52,30 +53,28 @@ describe('demo role switch options', () => {
       ]),
     })
     expect(buildSeedViewer(SEED_IDS.USER_CLIENT_GREEN)).toMatchObject({
-      role: USER_ROLES.CLIENT_ADMIN,
-      capabilities: [
-        CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
-        CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
-      ],
-    })
-    expect(buildSeedViewer(SEED_IDS.USER_CLIENT_GREEN_FINANCE)).toMatchObject({
-      role: USER_ROLES.CLIENT_ADMIN,
+      workspaceMemberships: [expect.objectContaining({ role: WORKSPACE_ROLES.CLINIC_OWNER })],
       capabilities: expect.arrayContaining([
         CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
         CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
+      ]),
+    })
+    expect(buildSeedViewer(SEED_IDS.USER_CLIENT_GREEN_FINANCE)).toMatchObject({
+      workspaceMemberships: [expect.objectContaining({ role: WORKSPACE_ROLES.FINANCE_CONTACT })],
+      capabilities: expect.arrayContaining([
         CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW,
       ]),
     })
     expect(buildSeedViewer(SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN)).toMatchObject({
-      role: USER_ROLES.CLIENT_TEAM,
-      capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
+      workspaceMemberships: [expect.objectContaining({ role: WORKSPACE_ROLES.FRONT_DESK })],
+      capabilities: expect.arrayContaining([CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW]),
     })
   })
 
   it('resolves duplicate role names by viewer identity for active switcher state', () => {
-    expect(getDemoRoleOptionByViewer({ role: USER_ROLES.CLIENT_ADMIN, userId: SEED_IDS.USER_CLIENT_GREEN_FINANCE }).key)
+    expect(getDemoRoleOptionByViewer({ userId: SEED_IDS.USER_CLIENT_GREEN_FINANCE }).key)
       .toBe('finance')
-    expect(getDemoRoleOptionByViewer({ role: USER_ROLES.CLIENT_TEAM, userId: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN }).key)
+    expect(getDemoRoleOptionByViewer({ userId: SEED_IDS.USER_CLIENT_TEAM_OPS_GREEN }).key)
       .toBe('frontdesk')
   })
 })

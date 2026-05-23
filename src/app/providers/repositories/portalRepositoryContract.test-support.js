@@ -16,13 +16,19 @@ export function createSeedDataForRepositoryContract(overrides = {}) {
 }
 
 function createContractRecord({ clientId, repositoryKey, recordId }) {
-  return {
+  const record = {
     client_id: clientId,
     id: recordId,
     name: `${repositoryKey} contract record`,
     title: `${repositoryKey} contract record`,
     user_id: `${recordId}-user`,
   }
+
+  if (repositoryKey === 'workspaceMemberships') {
+    record.workspace_id = clientId
+  }
+
+  return record
 }
 
 function expectRepositoryShape(repository) {

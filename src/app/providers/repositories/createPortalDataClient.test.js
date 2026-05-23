@@ -32,7 +32,7 @@ describe('createPortalDataClient', () => {
       async json() {
         return {
           snapshot: {
-            clients: [
+            workspaces: [
               {
                 id: 'client-1',
               },

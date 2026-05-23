@@ -4,7 +4,10 @@ import {
   CLIENT_UPDATE_TYPES,
   VISIBILITY,
 } from '../../entities/update'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   createClientUpdate,
   getClientUpdatesPage,
@@ -51,6 +54,9 @@ function createEntityRepository(records = []) {
 
 function createRepositories(overrides = {}) {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clientFileLinks: createEntityRepository([
       {
         client_id: IDS.CLIENT_A,
@@ -125,19 +131,15 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({ workspaceId: clientId })
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: 'agency-1',
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-  }
+  })
 }
 
 describe('getClientUpdatesPage', () => {

@@ -1,8 +1,11 @@
 import { CLIENT_TYPES } from '../../entities/client'
 import {
-  hasEveryCapability,
-  USER_ROLES,
-} from '../../entities/profile'
+  canAccessRouteByContext,
+  canAccessWorkspaceRouteByContext,
+  getDefaultNavigationScopeByContext,
+  hasWorkspaceAdminMembership,
+  isRouteAvailableForNavigationAudience,
+} from '../../domain/policies/routeAccessPolicy'
 
 export const NAVIGATION_SCOPES = Object.freeze({
   AGENCY: 'agency',
@@ -11,14 +14,7 @@ export const NAVIGATION_SCOPES = Object.freeze({
 })
 
 export function canAccessRoute(viewer, route) {
-  if (!route?.allowedRoles?.length && !route?.requiredCapabilities?.length) {
-    return true
-  }
-
-  const roleMatches = !route.allowedRoles?.length || route.allowedRoles.includes(viewer?.role)
-  const capabilityMatches = !route.requiredCapabilities?.length || hasEveryCapability(viewer, route.requiredCapabilities)
-
-  return roleMatches && capabilityMatches
+  return canAccessRouteByContext(viewer, route)
 }
 
 export function filterRoutesForViewer(routes, viewer) {
@@ -30,7 +26,7 @@ function getRouteClientType({ clientId, clientType, repositories }) {
     return clientType
   }
 
-  const client = clientId ? repositories?.clients?.findById(clientId) : null
+  const client = clientId ? repositories?.workspaces?.findById(clientId) : null
 
   return client?.type || CLIENT_TYPES.GENERIC
 }
@@ -57,24 +53,7 @@ export function isClientScopedRoute(route) {
 }
 
 export function getRouteClientId({ defaultClientId = null, routeParams = {}, viewer }) {
-  return routeParams.clientId ?? defaultClientId ?? viewer?.clientId ?? viewer?.clientIds?.[0] ?? null
-}
-
-function canAccessRequestedClient({ clientId, route, viewer }) {
-  if (!isClientScopedRoute(route)) {
-    return true
-  }
-
-  if (![USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(viewer?.role)) {
-    return true
-  }
-
-  const viewerClientIds = new Set([
-    viewer?.clientId,
-    ...(viewer?.clientIds ?? []),
-  ].filter(Boolean))
-
-  return Boolean(clientId && viewerClientIds.has(clientId))
+  return routeParams.clientId ?? defaultClientId ?? viewer?.activeWorkspaceId ?? null
 }
 
 export function canAccessRouteWithContext(viewer, route, {
@@ -93,7 +72,7 @@ export function canAccessRouteWithContext(viewer, route, {
 
   const clientId = getRouteClientId({ defaultClientId, routeParams, viewer })
 
-  if (!canAccessRequestedClient({ clientId, route, viewer })) {
+  if (!canAccessWorkspaceRouteByContext({ route, viewer, workspaceId: clientId })) {
     return false
   }
 
@@ -107,23 +86,11 @@ export function canAccessRouteWithContext(viewer, route, {
 }
 
 function isRouteAvailableForNavigationRole(route, viewer) {
-  return !route.navAllowedRoles?.length || route.navAllowedRoles.includes(viewer?.role)
+  return isRouteAvailableForNavigationAudience(route, viewer)
 }
 
 export function getDefaultNavigationScopeForViewer(viewer) {
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return NAVIGATION_SCOPES.AGENCY
-  }
-
-  if (viewer?.role === USER_ROLES.AGENCY_TEAM) {
-    return NAVIGATION_SCOPES.TEAM_OPS
-  }
-
-  if ([USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(viewer?.role)) {
-    return NAVIGATION_SCOPES.CLIENT_PORTAL
-  }
-
-  return null
+  return getDefaultNavigationScopeByContext(viewer, NAVIGATION_SCOPES)
 }
 
 function getRouteNavigationScopes(route) {
@@ -163,7 +130,10 @@ const CLIENT_TEAM_CAPABILITY_UTILITY_ROUTE_IDS = Object.freeze(new Set([
 ]))
 
 function isRouteAvailableForClientTeamNavigation(route, viewer) {
-  if (viewer?.role !== USER_ROLES.CLIENT_TEAM) {
+  const workspaceMembership = (viewer?.workspaceMemberships ?? [])
+    .find((membership) => membership.workspaceId === viewer?.activeWorkspaceId)
+
+  if (!workspaceMembership || hasWorkspaceAdminMembership(viewer)) {
     return true
   }
 
@@ -200,11 +170,11 @@ export function filterRoutesForNavigation({
     .filter((route) => isRouteAvailableForNavigationRole(route, viewer))
     .filter((route) => isRouteAvailableForNavigationScope(route, resolvedNavigationScope))
 
-  if (![USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(viewer?.role)) {
+  if (resolvedNavigationScope !== NAVIGATION_SCOPES.CLIENT_PORTAL) {
     return sortRoutesForNavigation(roleRoutes)
   }
 
-  const clientId = routeParams.clientId ?? defaultClientId ?? viewer.clientId ?? viewer.clientIds?.[0] ?? null
+  const clientId = getRouteClientId({ defaultClientId, routeParams, viewer })
   const resolvedClientType = getRouteClientType({ clientId, clientType, repositories })
   const clientTypeRoutes = roleRoutes.filter((route) => isRouteAvailableForClientType(route, resolvedClientType))
 

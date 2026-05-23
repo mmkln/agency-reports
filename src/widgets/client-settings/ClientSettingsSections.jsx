@@ -12,7 +12,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { leaveClientWorkspace } from '../../domain/services/clientMembershipService'
 import { createBusinessDeletionRequest } from '../../domain/services/clientRequestsService'
 import { ClientTeamManagement } from '../../features/client-team-management'
@@ -120,8 +120,8 @@ function WorkspaceAccessSection({ onAuthChange, page, runtime }) {
   const [isDeleteRequestConfirmOpen, setIsDeleteRequestConfirmOpen] = useState(false)
   const [status, setStatus] = useState('idle')
   const [deleteRequestStatus, setDeleteRequestStatus] = useState('idle')
-  const ownerCount = page.members.filter((member) => member.role === CLIENT_MEMBERSHIP_ROLES.OWNER).length
-  const isLastOwner = page.currentMembership?.role === CLIENT_MEMBERSHIP_ROLES.OWNER && ownerCount <= 1
+  const ownerCount = page.members.filter((member) => member.role === WORKSPACE_ROLES.OWNER).length
+  const isLastOwner = page.currentMembership?.role === WORKSPACE_ROLES.OWNER && ownerCount <= 1
   const canLeave = Boolean(page.currentMembership && !isLastOwner && status !== 'leaving')
   const businessDeletionRequest = page.sections.access?.businessDeletionRequest ?? null
   const canRequestBusinessDeletion = Boolean(

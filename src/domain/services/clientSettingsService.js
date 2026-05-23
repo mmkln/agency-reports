@@ -1,4 +1,4 @@
-import { CLIENT_MEMBERSHIP_ROLES, isActiveClientMembership } from '../../entities/client-membership'
+import { isActiveWorkspaceMembership, WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import {
   CLIENT_REQUEST_STATUSES,
   CLIENT_REQUEST_TYPES,
@@ -6,19 +6,15 @@ import {
 } from '../../entities/client-request'
 import { canAccessClient } from '../policies/accessPolicy'
 import { canManageClientTeam } from '../policies/clientTeamPolicy'
-
-const MEMBERSHIP_ROLE_LABELS = Object.freeze({
-  [CLIENT_MEMBERSHIP_ROLES.OWNER]: 'Owner',
-  [CLIENT_MEMBERSHIP_ROLES.VIEWER]: 'Viewer',
-})
+import { canRequestWorkspaceDeletion } from '../policies/workspaceAccessPolicy'
 
 function normalizeText(value = '') {
   return String(value ?? '').trim()
 }
 
 function requireClientAccess({ clientId, repositories, viewer }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client || !canAccessClient(viewer, normalizedClientId)) {
     throw new Error('You do not have permission to view this workspace.')
@@ -36,7 +32,7 @@ function mapMembership({ membership, profile }) {
     id: membership.id,
     name: profile?.name ?? 'Unknown member',
     role: membership.role,
-    roleLabel: MEMBERSHIP_ROLE_LABELS[membership.role] ?? membership.role,
+    roleLabel: WORKSPACE_ROLE_META[membership.role]?.label ?? membership.role,
     userId: membership.user_id,
   }
 }
@@ -46,9 +42,9 @@ function getCurrentMembership({ clientId, repositories, viewer }) {
     return null
   }
 
-  return repositories.clientMemberships
-    .listByClientId(clientId)
-    .filter(isActiveClientMembership)
+  return repositories.workspaceMemberships
+    .listByWorkspaceId(clientId)
+    .filter(isActiveWorkspaceMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
 }
 
@@ -93,9 +89,9 @@ export function getClientSettingsPage({
     clientId: normalizedClientId,
     repositories,
   })
-  const members = repositories.clientMemberships
-    .listByClientId(normalizedClientId)
-    .filter(isActiveClientMembership)
+  const members = repositories.workspaceMemberships
+    .listByWorkspaceId(normalizedClientId)
+    .filter(isActiveWorkspaceMembership)
     .map((membership) => mapMembership({
       membership,
       profile: repositories.profiles.findByUserId(membership.user_id),
@@ -114,7 +110,7 @@ export function getClientSettingsPage({
       ? {
           id: currentMembership.id,
           role: currentMembership.role,
-          roleLabel: MEMBERSHIP_ROLE_LABELS[currentMembership.role] ?? currentMembership.role,
+          roleLabel: WORKSPACE_ROLE_META[currentMembership.role]?.label ?? currentMembership.role,
         }
       : null,
     members,
@@ -128,10 +124,10 @@ export function getClientSettingsPage({
               title: businessDeletionRequest.title,
             }
           : null,
-        canRequestBusinessDeletion: currentMembership?.role === CLIENT_MEMBERSHIP_ROLES.OWNER,
+        canRequestBusinessDeletion: canRequestWorkspaceDeletion(viewer, normalizedClientId),
       },
       team: {
-        allowedInviteRoles: [CLIENT_MEMBERSHIP_ROLES.VIEWER],
+        allowedInviteRoles: [WORKSPACE_ROLES.VIEWER],
         canManage: canManageClientTeam({
           clientId: normalizedClientId,
           repositories,

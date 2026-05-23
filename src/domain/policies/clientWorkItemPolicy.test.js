@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import {
   canAgencyViewClientWorkItem,
   canClientViewClientWorkItem,
@@ -28,10 +32,7 @@ function createItem(overrides = {}) {
 
 describe('clientWorkItemPolicy', () => {
   it('lets client users see only their own published work items', () => {
-    const viewer = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.CLIENT_USER,
-    }
+    const viewer = createWorkspaceAccessViewer({ workspaceId: IDS.CLIENT })
 
     expect(canClientViewClientWorkItem({
       item: createItem(),
@@ -52,18 +53,19 @@ describe('clientWorkItemPolicy', () => {
   it('lets agency admins and assigned team members view agency work items', () => {
     expect(canAgencyViewClientWorkItem({
       item: createItem(),
-      viewer: {
+      viewer: createAgencyAccessViewer({
         agencyId: IDS.AGENCY,
-        role: USER_ROLES.AGENCY_ADMIN,
-      },
+        managedWorkspaceIds: [IDS.CLIENT],
+      }),
     })).toBe(true)
 
     expect(canAgencyViewClientWorkItem({
       item: createItem(),
-      viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.AGENCY_TEAM,
-      },
+      viewer: createAgencyAccessViewer({
+        agencyId: IDS.AGENCY,
+        managedWorkspaceIds: [IDS.CLIENT],
+        role: AGENCY_ROLES.TEAM,
+      }),
     })).toBe(true)
   })
 
@@ -73,14 +75,15 @@ describe('clientWorkItemPolicy', () => {
       agency_id: IDS.AGENCY,
       id: IDS.CLIENT,
     }
-    const admin = {
+    const admin = createAgencyAccessViewer({
       agencyId: IDS.AGENCY,
-      role: USER_ROLES.AGENCY_ADMIN,
-    }
-    const team = {
-      clientIds: [IDS.CLIENT],
-      role: USER_ROLES.AGENCY_TEAM,
-    }
+      managedWorkspaceIds: [IDS.CLIENT],
+    })
+    const team = createAgencyAccessViewer({
+      agencyId: IDS.AGENCY,
+      managedWorkspaceIds: [IDS.CLIENT],
+      role: AGENCY_ROLES.TEAM,
+    })
 
     expect(canManageClientWorkItem({ client, item, viewer: admin })).toBe(true)
     expect(canPublishClientWorkItem({ client, item, viewer: admin })).toBe(true)

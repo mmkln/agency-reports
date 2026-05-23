@@ -1,7 +1,11 @@
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { isClientPortalRole, USER_ROLES } from '../../entities/profile'
+import {
+  getWorkspaceRoleDefaultCapabilities,
+  WORKSPACE_ROLES,
+} from '../../entities/workspace-membership'
+import { canAccessClient } from '../policies/accessPolicy'
 import { assertCanManageClientTeam } from '../policies/clientTeamPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
@@ -39,7 +43,7 @@ function normalizeEmail(value) {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     throw new Error('Only admins can manage workspace invitations.')
   }
 }
@@ -62,9 +66,9 @@ function isPastDate(value, now) {
 function assertClientBelongsToAgency({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessClient(viewer, client.id)) {
     throw new Error('Client was not found.')
   }
 
@@ -72,9 +76,9 @@ function assertClientBelongsToAgency({ clientId, repositories, viewer }) {
 }
 
 function normalizeRole(role) {
-  const normalizedRole = role || CLIENT_MEMBERSHIP_ROLES.OWNER
+  const normalizedRole = role || WORKSPACE_ROLES.OWNER
 
-  if (!Object.values(CLIENT_MEMBERSHIP_ROLES).includes(normalizedRole)) {
+  if (!Object.values(WORKSPACE_ROLES).includes(normalizedRole)) {
     throw new Error('Invitation role is invalid.')
   }
 
@@ -82,19 +86,32 @@ function normalizeRole(role) {
 }
 
 function normalizeClientTeamInviteRole(role) {
-  const normalizedRole = role || CLIENT_MEMBERSHIP_ROLES.VIEWER
+  const normalizedRole = role || WORKSPACE_ROLES.VIEWER
 
-  if (normalizedRole !== CLIENT_MEMBERSHIP_ROLES.VIEWER) {
+  if (normalizedRole !== WORKSPACE_ROLES.VIEWER) {
     throw new Error('Client admins can invite teammates as viewers only.')
   }
 
   return normalizedRole
 }
 
-function getProfileRoleForMembershipRole(role) {
-  return role === CLIENT_MEMBERSHIP_ROLES.OWNER
-    ? USER_ROLES.CLIENT_ADMIN
-    : USER_ROLES.CLIENT_TEAM
+function createInvitationAcceptedActivityViewer({ client, invitation, profile }) {
+  const workspaceRole = invitation.role || WORKSPACE_ROLES.VIEWER
+
+  return {
+    activeWorkspaceId: client.id,
+    agencyMemberships: [],
+    capabilities: getWorkspaceRoleDefaultCapabilities(workspaceRole),
+    managedWorkspaceRelationships: [],
+    name: profile.name,
+    userId: profile.user_id,
+    workspaceMemberships: [{
+      capabilities: getWorkspaceRoleDefaultCapabilities(workspaceRole),
+      role: workspaceRole,
+      userId: profile.user_id,
+      workspaceId: client.id,
+    }],
+  }
 }
 
 export function getInvitationStatus(invitation, now = () => new Date().toISOString()) {
@@ -186,7 +203,7 @@ export function createClientInvitation({
   name = '',
   now = () => new Date().toISOString(),
   repositories,
-  role = CLIENT_MEMBERSHIP_ROLES.OWNER,
+  role = WORKSPACE_ROLES.OWNER,
   viewer,
 }) {
   if (!idGenerator) {
@@ -212,7 +229,7 @@ export function createClientInvitation({
     updated_at: timestamp,
   }
 
-  repositories.clientInvitations.upsert(invitation)
+  repositories.workspaceInvitations.upsert(invitation)
   recordInvitationActivity({
     activityIdGenerator,
     eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
@@ -233,7 +250,7 @@ export function listClientInvitations({
 }) {
   assertClientBelongsToAgency({ clientId, repositories, viewer })
 
-  return repositories.clientInvitations
+  return repositories.workspaceInvitations
     .listByClientId(clientId)
     .map((invitation) => mapInvitation(invitation, now))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -247,7 +264,7 @@ export function listClientTeamInvitations({
 }) {
   assertCanManageClientTeam({ clientId, repositories, viewer })
 
-  return repositories.clientInvitations
+  return repositories.workspaceInvitations
     .listByClientId(clientId)
     .map((invitation) => mapInvitation(invitation, now))
     .filter((invitation) => invitation.status === CLIENT_INVITATION_STATUSES.PENDING)
@@ -263,7 +280,7 @@ export function createClientTeamInvitation({
   name = '',
   now = () => new Date().toISOString(),
   repositories,
-  role = CLIENT_MEMBERSHIP_ROLES.VIEWER,
+  role = WORKSPACE_ROLES.VIEWER,
   viewer,
 }) {
   if (!idGenerator) {
@@ -272,7 +289,7 @@ export function createClientTeamInvitation({
 
   assertCanManageClientTeam({ clientId, repositories, viewer })
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
   const normalizedEmail = normalizeEmail(email)
   const normalizedRole = normalizeClientTeamInviteRole(role)
   const timestamp = now()
@@ -291,7 +308,7 @@ export function createClientTeamInvitation({
     updated_at: timestamp,
   }
 
-  repositories.clientInvitations.upsert(invitation)
+  repositories.workspaceInvitations.upsert(invitation)
   recordInvitationActivity({
     activityIdGenerator,
     eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CREATED,
@@ -306,12 +323,12 @@ export function createClientTeamInvitation({
 
 export function getClientInvitationByToken({ now = () => new Date().toISOString(), repositories, token }) {
   const normalizedToken = requireText(token, 'Invitation token')
-  const invitation = repositories.clientInvitations
+  const invitation = repositories.workspaceInvitations
     .list()
     .find((item) => item.token === normalizedToken)
 
   if (invitation) {
-    const client = repositories.clients.findById(invitation.client_id)
+    const client = repositories.workspaces.findById(invitation.client_id)
 
     if (!client) {
       throw new Error('Invitation client was not found.')
@@ -355,13 +372,13 @@ export function getClientInvitationByToken({ now = () => new Date().toISOString(
     throw new Error('Invitation access link has expired.')
   }
 
-  const invitationByAccessToken = repositories.clientInvitations.findById(accessToken.invitation_id)
+  const invitationByAccessToken = repositories.workspaceInvitations.findById(accessToken.invitation_id)
 
   if (!invitationByAccessToken) {
     throw new Error('Invitation was not found.')
   }
 
-  const client = repositories.clients.findById(invitationByAccessToken.client_id)
+  const client = repositories.workspaces.findById(invitationByAccessToken.client_id)
 
   if (!client) {
     throw new Error('Invitation client was not found.')
@@ -401,7 +418,7 @@ export function requestClientInvitationAccessLink({
     }
   }
 
-  const invitation = repositories.clientInvitations
+  const invitation = repositories.workspaceInvitations
     .list()
     .find((item) => (
       item.email.toLowerCase() === normalizedEmail
@@ -446,7 +463,7 @@ export function cancelClientInvitation({
 }) {
   assertAgencyAdmin(viewer)
 
-  const invitation = repositories.clientInvitations.findById(invitationId)
+  const invitation = repositories.workspaceInvitations.findById(invitationId)
 
   if (!invitation) {
     throw new Error('Invitation was not found.')
@@ -470,7 +487,7 @@ export function cancelClientInvitation({
     updated_at: now(),
   }
 
-  repositories.clientInvitations.upsert(nextInvitation)
+  repositories.workspaceInvitations.upsert(nextInvitation)
   recordInvitationActivity({
     activityIdGenerator,
     eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CANCELLED,
@@ -490,7 +507,7 @@ export function cancelClientTeamInvitation({
   repositories,
   viewer,
 }) {
-  const invitation = repositories.clientInvitations.findById(invitationId)
+  const invitation = repositories.workspaceInvitations.findById(invitationId)
 
   if (!invitation) {
     throw new Error('Invitation was not found.')
@@ -514,7 +531,7 @@ export function cancelClientTeamInvitation({
     updated_at: now(),
   }
 
-  repositories.clientInvitations.upsert(nextInvitation)
+  repositories.workspaceInvitations.upsert(nextInvitation)
   recordInvitationActivity({
     activityIdGenerator,
     eventType: ACTIVITY_EVENT_TYPES.CLIENT_INVITATION_CANCELLED,
@@ -550,7 +567,7 @@ export function acceptClientInvitation({
     assertInvitationIsPending(invitation, now)
   } catch (caughtError) {
     if (getInvitationStatus(invitation, now) === CLIENT_INVITATION_STATUSES.EXPIRED) {
-      repositories.clientInvitations.upsert({
+      repositories.workspaceInvitations.upsert({
         ...invitation,
         status: CLIENT_INVITATION_STATUSES.EXPIRED,
         updated_at: now(),
@@ -573,21 +590,15 @@ export function acceptClientInvitation({
     .find((profile) => profile.email.toLowerCase() === normalizedEmail)
   const profile = existingProfile ?? {
     agency_id: client.agency_id,
-    client_id: client.id,
     created_at: timestamp,
     email: normalizedEmail,
     id: idGenerator(),
     name: normalizedName,
-    role: getProfileRoleForMembershipRole(invitation.role),
     updated_at: timestamp,
     user_id: idGenerator(),
   }
 
   if (existingProfile) {
-    if (!isClientPortalRole(existingProfile.role)) {
-      throw new Error('This email belongs to a non-client user.')
-    }
-
     if (!viewer?.userId) {
       throw new Error('Sign in to accept this invitation.')
     }
@@ -609,24 +620,22 @@ export function acceptClientInvitation({
   repositories.profiles.upsert({
     ...profile,
     agency_id: client.agency_id,
-    client_id: client.id,
     name: normalizedName,
-    role: existingProfile ? profile.role : getProfileRoleForMembershipRole(invitation.role),
     updated_at: timestamp,
   })
 
-  const existingMembership = repositories.clientMemberships
+  const existingMembership = repositories.workspaceMemberships
     .list()
-    .find((membership) => membership.client_id === client.id && membership.user_id === profile.user_id)
+    .find((membership) => membership.workspace_id === client.id && membership.user_id === profile.user_id)
 
   if (!existingMembership) {
-    repositories.clientMemberships.upsert({
-      client_id: client.id,
+    repositories.workspaceMemberships.upsert({
       created_at: timestamp,
       id: idGenerator(),
-      role: invitation.role || CLIENT_MEMBERSHIP_ROLES.VIEWER,
+      role: invitation.role || WORKSPACE_ROLES.VIEWER,
       updated_at: timestamp,
       user_id: profile.user_id,
+      workspace_id: client.id,
     })
   }
 
@@ -637,7 +646,7 @@ export function acceptClientInvitation({
     updated_at: timestamp,
   }
 
-  repositories.clientInvitations.upsert(acceptedInvitation)
+  repositories.workspaceInvitations.upsert(acceptedInvitation)
   if (accessToken) {
     repositories.invitationAccessTokens.upsert({
       ...accessToken,
@@ -652,12 +661,11 @@ export function acceptClientInvitation({
     invitation: acceptedInvitation,
     now,
     repositories,
-    viewer: {
-      clientId: client.id,
-      clientIds: [client.id],
-      role: getProfileRoleForMembershipRole(invitation.role),
-      userId: profile.user_id,
-    },
+    viewer: createInvitationAcceptedActivityViewer({
+      client,
+      invitation,
+      profile,
+    }),
   })
 
   setAuthSession(profile.user_id, storage)

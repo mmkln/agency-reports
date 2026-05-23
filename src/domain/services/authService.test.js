@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   CLINIC_REPORTING_CAPABILITIES,
   PROFILE_STATUSES,
-  USER_ROLES,
 } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
 import {
   AUTH_SESSION_STORAGE_KEY,
   authenticateWithEmail,
@@ -40,15 +40,14 @@ function createRepository() {
     email: 'client@example.com',
     id: 'profile-1',
     name: 'Client User',
-    role: USER_ROLES.CLIENT_USER,
     user_id: 'user-1',
   }
 
   return {
-    clientMemberships: {
+    workspaceMemberships: {
       list: () => [
         {
-          client_id: 'client-1',
+          workspace_id: 'client-1',
           user_id: 'user-1',
         },
       ],
@@ -69,16 +68,25 @@ describe('authService', () => {
     })
 
     expect(viewer).toMatchObject({
-      clientId: 'client-1',
-      clientIds: ['client-1'],
-      role: USER_ROLES.CLIENT_USER,
+      activeWorkspaceId: 'client-1',
+      workspaceMemberships: [
+        expect.objectContaining({
+          workspaceId: 'client-1',
+        }),
+      ],
     })
+    expect(viewer.clientId).toBeUndefined()
+    expect(viewer.clientIds).toBeUndefined()
+    expect(viewer.role).toBeUndefined()
   })
 
   it('does not grant client user access from profile client_id without membership', () => {
     const repositories = {
-      clientMemberships: {
+      workspaceMemberships: {
         list: () => [],
+      },
+      workspaces: {
+        findById: () => null,
       },
       profiles: {
         list: () => [{
@@ -87,7 +95,6 @@ describe('authService', () => {
           email: 'client@example.com',
           id: 'profile-1',
           name: 'Client User',
-          role: USER_ROLES.CLIENT_USER,
           user_id: 'user-1',
         }],
       },
@@ -97,8 +104,9 @@ describe('authService', () => {
       repositories,
     })
 
-    expect(viewer.clientId).toBeNull()
-    expect(viewer.clientIds).toEqual([])
+    expect(viewer.activeWorkspaceId).toBeNull()
+    expect(viewer.clientId).toBeUndefined()
+    expect(viewer.clientIds).toBeUndefined()
   })
 
   it('authenticates by profile email and persists a simulated session', () => {
@@ -195,9 +203,18 @@ describe('authService', () => {
 
   it('routes clinic ops client team users to Daily Ops instead of an inaccessible client overview', () => {
     expect(getHomeHrefForViewer({
-      capabilities: [CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW],
-      clientId: 'client-1',
-      role: USER_ROLES.CLIENT_TEAM,
+      activeWorkspaceId: 'client-1',
+      capabilities: [
+        WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+        CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
+      ],
+      workspaceMemberships: [{
+        capabilities: [
+          WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+          CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
+        ],
+        workspaceId: 'client-1',
+      }],
     })).toBe('/clinic/daily-ops?clientId=client-1')
   })
 })

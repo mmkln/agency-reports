@@ -21,10 +21,14 @@ import {
   PERFORMANCE_DATA_CONFIDENCE,
   PERFORMANCE_DATA_MODES,
 } from '../../entities/performance-dashboard'
-import { USER_ROLES } from '../../entities/profile'
+import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
 import { REPORT_STATUSES } from '../../entities/report'
 import { TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { getClientOverviewPage } from './clientOverviewService'
 
 const IDS = Object.freeze({
@@ -404,6 +408,9 @@ function createRepositories(overrides = {}) {
   }
 
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository(data.clients),
     clientWorkItems: createEntityRepository(data.clientWorkItems),
     callBookingMetrics: createEntityRepository(data.callBookingMetrics),
@@ -425,19 +432,23 @@ function createRepositories(overrides = {}) {
 }
 
 function createClientViewer(clientId = IDS.CLIENT_A) {
-  return {
-    clientId,
-    clientIds: [clientId],
-    role: USER_ROLES.CLIENT_USER,
-  }
+  return createWorkspaceAccessViewer({
+    capabilities: [
+      'workspace.view_portal',
+      CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+      CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
+      CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW,
+    ],
+    workspaceId: clientId,
+  })
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     userId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
-  }
+  })
 }
 
 describe('getClientOverview', () => {

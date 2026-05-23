@@ -13,7 +13,10 @@ import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  createAgencyAccessViewer,
+  createWorkspaceAccessViewer,
+} from '../test/accessViewerTestHelpers'
 import { REPORT_STATUSES } from '../../entities/report'
 import {
   deleteAdminReport,
@@ -77,6 +80,9 @@ function createEntityRepository(records) {
 
 function createRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -125,6 +131,9 @@ function createRepositories() {
 
 function createClinicRepositories() {
   return {
+    get workspaces() {
+      return this.clients
+    },
     clients: createEntityRepository([
       {
         agency_id: IDS.AGENCY,
@@ -258,20 +267,18 @@ function createClinicRepositories() {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT_A, IDS.CLIENT_B],
     userId: IDS.USER_ADMIN,
-  }
+  })
 }
 
 function createClientViewer() {
-  return {
-    clientId: IDS.CLIENT_A,
-    clientIds: [IDS.CLIENT_A],
-    role: USER_ROLES.CLIENT_USER,
+  return createWorkspaceAccessViewer({
     userId: IDS.USER_CLIENT,
-  }
+    workspaceId: IDS.CLIENT_A,
+  })
 }
 
 describe('adminReportService', () => {

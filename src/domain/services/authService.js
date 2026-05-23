@@ -1,13 +1,14 @@
 import {
   CLINIC_REPORTING_CAPABILITIES,
-  getViewerCapabilities,
-  hasCapability,
   isActiveProfile,
-  normalizeUserRole,
-  USER_ROLES,
 } from '../../entities/profile'
-import { isActiveClientMembership } from '../../entities/client-membership'
+import { AGENCY_ROLES, AGENCY_ROLE_META } from '../../entities/agency-membership'
+import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
 import { findPasswordCredential, verifyPasswordCredential } from './authCredentialService'
+import {
+  buildViewerAccessContext,
+  hasWorkspaceCapability,
+} from './viewerAccessContextService'
 
 export const AUTH_SESSION_STORAGE_KEY = 'agency-reports.auth-session'
 export const DEMO_AUTH_PASSWORD = 'password'
@@ -89,49 +90,8 @@ export function clearAuthSession(storage = getDefaultStorage()) {
   storage.removeItem(AUTH_SESSION_STORAGE_KEY)
 }
 
-function getClientIdsForProfile(profile, repositories) {
-  const role = normalizeUserRole(profile.role)
-  const membershipClientIds = repositories.clientMemberships
-    .list()
-    .filter(isActiveClientMembership)
-    .filter((membership) => membership.user_id === profile.user_id)
-    .map((membership) => membership.client_id)
-
-  if ([USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(role)) {
-    return [...new Set(membershipClientIds)]
-  }
-
-  return [...new Set([
-    ...(profile.client_id ? [profile.client_id] : []),
-    ...(profile.client_ids ?? []),
-    ...membershipClientIds,
-  ])]
-}
-
 export function buildViewerFromProfile({ profile, repositories }) {
-  if (!profile || !isActiveProfile(profile)) {
-    return null
-  }
-
-  const role = normalizeUserRole(profile.role)
-  const clientIds = getClientIdsForProfile(profile, repositories)
-
-  return {
-    agencyId: profile.agency_id,
-    capabilities: getViewerCapabilities({
-      capabilities: profile.capabilities,
-      role,
-    }),
-    clientId: [USER_ROLES.CLIENT_ADMIN, USER_ROLES.CLIENT_TEAM].includes(role)
-      ? clientIds[0] ?? null
-      : profile.client_id ?? null,
-    clientIds,
-    email: profile.email,
-    name: profile.name,
-    profileId: profile.id,
-    role,
-    userId: profile.user_id,
-  }
+  return buildViewerAccessContext({ profile, repositories })
 }
 
 export function getCurrentViewer({
@@ -164,7 +124,20 @@ export function listLoginProfiles({ repositories }) {
   return repositories.profiles
     .list()
     .filter(isActiveProfile)
-    .sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name))
+    .map((profile) => {
+      const viewer = buildViewerFromProfile({ profile, repositories })
+      const agencyMembership = viewer?.agencyMemberships?.[0]
+      const workspaceMembership = viewer?.workspaceMemberships?.[0]
+      const roleLabel = agencyMembership
+        ? AGENCY_ROLE_META[agencyMembership.role]?.label
+        : WORKSPACE_ROLE_META[workspaceMembership?.role]?.label
+
+      return {
+        ...profile,
+        roleLabel: roleLabel ?? 'No active membership',
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function authenticateWithEmail({
@@ -198,20 +171,21 @@ export function getHomeHrefForViewer(viewer) {
     return '/login'
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
+  const agencyRole = viewer.agencyMemberships?.[0]?.role ?? null
+
+  if ([AGENCY_ROLES.OWNER, AGENCY_ROLES.ADMIN, AGENCY_ROLES.MANAGER].includes(agencyRole)) {
     return '/admin/clients'
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_TEAM) {
+  if (agencyRole) {
     return '/team/tasks'
   }
 
   if (
-    viewer.role === USER_ROLES.CLIENT_TEAM
-    && hasCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW)
+    hasWorkspaceCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW, viewer.activeWorkspaceId)
   ) {
-    return `/clinic/daily-ops${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`
+    return `/clinic/daily-ops${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
   }
 
-  return `/client/overview${viewer.clientId ? `?clientId=${viewer.clientId}` : ''}`
+  return `/client/overview${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
 }

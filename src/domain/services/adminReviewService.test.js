@@ -5,8 +5,8 @@ import {
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../entities/client-work-item'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
+import { createAgencyAccessViewer } from '../test/accessViewerTestHelpers'
 import { getAdminReviewQueues } from './adminReviewService'
 
 const IDS = Object.freeze({
@@ -61,6 +61,9 @@ function createRepositories(overrides = {}) {
         portal_slug: 'client-a',
       },
     ]),
+    get workspaces() {
+      return this.clients
+    },
     clientWorkItems: createEntityRepository([
       {
         client_id: IDS.CLIENT,
@@ -180,11 +183,11 @@ function createRepositories(overrides = {}) {
 }
 
 function createAdminViewer() {
-  return {
+  return createAgencyAccessViewer({
     agencyId: IDS.AGENCY,
-    role: USER_ROLES.AGENCY_ADMIN,
+    managedWorkspaceIds: [IDS.CLIENT],
     userId: 'admin-user',
-  }
+  })
 }
 
 describe('adminReviewService', () => {
@@ -312,10 +315,7 @@ describe('adminReviewService', () => {
   it('rejects non-admin viewers', () => {
     expect(() => getAdminReviewQueues({
       repositories: createRepositories(),
-      viewer: {
-        clientIds: [IDS.CLIENT],
-        role: USER_ROLES.AGENCY_TEAM,
-      },
+      viewer: {},
     })).toThrow('Only admins can review published work.')
   })
 })

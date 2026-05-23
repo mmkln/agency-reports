@@ -1,17 +1,17 @@
 import {
-  CLIENT_MEMBERSHIP_ROLE_META,
-  CLIENT_MEMBERSHIP_ROLES,
-} from '../model'
-import {
   RadixSelect as Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui'
+import {
+  WORKSPACE_ROLE_META,
+  WORKSPACE_ROLES,
+} from '../model'
 
-export function ClientMembershipRoleSelect({
-  allowedRoles = Object.values(CLIENT_MEMBERSHIP_ROLES),
+export function WorkspaceMembershipRoleSelect({
+  allowedRoles = Object.values(WORKSPACE_ROLES),
   className,
   disabled = false,
   onValueChange,
@@ -25,7 +25,7 @@ export function ClientMembershipRoleSelect({
       <SelectContent>
         {allowedRoles.map((role) => (
           <SelectItem key={role} value={role}>
-            {CLIENT_MEMBERSHIP_ROLE_META[role]?.label ?? role}
+            {WORKSPACE_ROLE_META[role]?.label ?? role}
           </SelectItem>
         ))}
       </SelectContent>

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/shared/ui'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
+import { WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '../../../entities/workspace-membership'
 import { Icon } from '../../../shared/icons'
 
 export function AccessMemberCard({
@@ -36,8 +36,8 @@ export function AccessMemberCard({
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
-              {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                <SelectItem key={role} value={role}>{role}</SelectItem>
+              {Object.values(WORKSPACE_ROLES).map((role) => (
+                <SelectItem key={role} value={role}>{WORKSPACE_ROLE_META[role]?.label ?? role}</SelectItem>
               ))}
             </SelectContent>
           </Select>

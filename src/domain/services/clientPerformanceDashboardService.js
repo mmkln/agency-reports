@@ -15,7 +15,6 @@ import {
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { USER_ROLES } from '../../entities/profile'
 import { canAccessClient } from '../policies/accessPolicy'
 import {
   isDashboardVisibleToClient,
@@ -193,11 +192,7 @@ function createWorkSummary({ repositories, clientId }) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  return canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessClient(viewer, clientId)
 }
 
 function isDashboardPeriodVisibleForMode(period, mode) {
@@ -227,7 +222,7 @@ export function getClientPerformanceDashboardPage({
   viewer,
   now = () => new Date(),
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessDashboardClient({ client, clientId, viewer })) {
     return {
