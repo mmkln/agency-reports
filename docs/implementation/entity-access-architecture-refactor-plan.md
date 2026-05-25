@@ -415,7 +415,7 @@ Verification:
 Do this service by service, not by bulk rename.
 
 ```text
-[ ] Introduce workspace service aliases for current client services.
+[x] Introduce workspace service aliases for current client services.
 [ ] Rename service parameters internally from `clientId` to `workspaceId` where safe.
 [ ] Keep route/query params as `clientId` until URLs are deliberately changed.
 [x] Keep repository storage methods such as `listByClientId` until storage migration.
@@ -431,9 +431,9 @@ Do this service by service, not by bulk rename.
 Suggested migration order:
 
 ```text
-[ ] clientSettingsService -> workspaceSettingsService or compatibility wrapper.
+[x] clientSettingsService -> workspaceSettingsService or compatibility wrapper.
 [x] clientMembershipService consumes workspace membership repositories and workspace role/status constants internally.
-[ ] adminClientService -> agencyWorkspaceService.
+[x] adminClientService -> agencyWorkspaceService.
 [x] routeAccessContextService consumes workspace repositories internally.
 [ ] taskWorkspaceService/teamTaskService -> agency work services with workspace relationship checks.
 [x] client-facing read services consume workspace repositories for workspace identity after access policies are stable.
@@ -518,7 +518,7 @@ schema hardening.
 [x] Rename or alias `clients` storage.
 [x] Alias `workspace_memberships` storage behind the `workspaceMemberships` repository key.
 [x] Alias `workspace_invitations` storage behind the `workspaceInvitations` repository key.
-[ ] Decide whether workflow tables keep `client_id` as compatibility or migrate to `workspace_id`.
+[x] Decide whether workflow tables keep `client_id` as compatibility or migrate to `workspace_id`.
 [x] Add migration tests for legacy `clients` localStorage snapshots.
 [x] Add migration tests for legacy `client_memberships` / `client_invitations` localStorage snapshots.
 [x] Normalize snapshot output so legacy access table keys are removed after migration.
@@ -531,6 +531,16 @@ Recommended timing:
 ```text
 Do not do this before Phases 1-8 unless the code is already stable.
 Storage renaming is high-churn and lower product value than fixing access semantics.
+```
+
+Decision:
+
+```text
+Workflow tables keep persisted `client_id` for now as compatibility schema.
+Service and repository boundaries should use `workspaceId` / `listByWorkspaceId`
+for new code. A physical workflow-column migration to `workspace_id` should wait
+for a backend schema migration plan because it touches reports, dashboards,
+tasks, updates, clinic metrics, requests, and audit history at once.
 ```
 
 ### Phase 10 - Final verification
@@ -546,11 +556,11 @@ Run after each major phase:
 Run after route/sidebar/access changes:
 
 ```text
-[ ] Add or update e2e coverage for role/membership transitions.
-[ ] Verify client portal access revocation.
-[ ] Verify account settings reachability for all signed-in user types.
-[ ] Verify workspace settings reachability only for allowed workspace members.
-[ ] Verify agency admin can manage only agency-related workspaces.
+[x] Add or update e2e coverage for role/membership transitions.
+[x] Verify client portal access revocation.
+[x] Verify account settings reachability for all signed-in user types.
+[x] Verify workspace settings reachability only for allowed workspace members.
+[x] Verify agency admin can manage only agency-related workspaces.
 ```
 
 ## Files Expected To Change

@@ -154,8 +154,8 @@ function ClinicAcquisitionBlock({ clinicOverview }) {
   )
 }
 
-function ClinicReportingBlock({ clinicOverview }) {
-  if (!clinicOverview.dentalGrowthReviewHref && !clinicOverview.executivePerformanceHref && !clinicOverview.monthlyStrategyHref) {
+function GrowthReviewBlock({ clinicOverview }) {
+  if (!clinicOverview.dentalGrowthReviewHref) {
     return null
   }
 
@@ -174,21 +174,9 @@ function ClinicReportingBlock({ clinicOverview }) {
       title="Dental Growth Review"
     >
       <div className="grid gap-control">
-        {clinicOverview.dentalGrowthReviewHref ? (
-          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.dentalGrowthReviewHref}>
-            Dental growth operating review
-          </Link>
-        ) : null}
-        {clinicOverview.executivePerformanceHref ? (
-          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.executivePerformanceHref}>
-            Executive performance
-          </Link>
-        ) : null}
-        {clinicOverview.monthlyStrategyHref ? (
-          <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.monthlyStrategyHref}>
-            Monthly finance strategy
-          </Link>
-        ) : null}
+        <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.dentalGrowthReviewHref}>
+          Dental growth operating review
+        </Link>
       </div>
     </SectionCard>
   )
@@ -230,7 +218,7 @@ export function ClientClinicOverviewView({ overview }) {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_350px]">
         <div className="grid gap-6">
           <ClinicAcquisitionBlock clinicOverview={overview.clinicOverview} />
-          <ClinicReportingBlock clinicOverview={overview.clinicOverview} />
+          <GrowthReviewBlock clinicOverview={overview.clinicOverview} />
           <ClinicRiskBlocks clinicOverview={overview.clinicOverview} />
           <NeededFromClientBlock
             actions={overview.neededActions}

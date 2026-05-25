@@ -10,7 +10,7 @@ import {
   PanelBody,
   PanelHeader,
 } from '@/shared/ui'
-import { WorkspaceMemberList } from '@/entities/workspace-membership'
+import { WorkspaceMemberList } from '@/entities/workspace-membership/ui'
 import { Icon } from '@/shared/icons'
 
 import { FieldError } from '../../admin-client-workspace'

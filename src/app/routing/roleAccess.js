@@ -1,4 +1,5 @@
 import { CLIENT_TYPES } from '../../entities/client'
+import { ACCESS_AUDIENCES } from '../../domain/policies/accessAudience'
 import {
   canAccessRouteByContext,
   canAccessWorkspaceRouteByContext,
@@ -6,6 +7,17 @@ import {
   hasWorkspaceAdminMembership,
   isRouteAvailableForNavigationAudience,
 } from '../../domain/policies/routeAccessPolicy'
+
+const AGENCY_ROUTE_AUDIENCES = Object.freeze(new Set([
+  ACCESS_AUDIENCES.AGENCY_ADMIN,
+  ACCESS_AUDIENCES.AGENCY_MEMBER,
+]))
+
+const WORKSPACE_ROUTE_AUDIENCES = Object.freeze(new Set([
+  ACCESS_AUDIENCES.WORKSPACE_ADMIN,
+  ACCESS_AUDIENCES.WORKSPACE_MEMBER,
+  ACCESS_AUDIENCES.WORKSPACE_USER,
+]))
 
 export const NAVIGATION_SCOPES = Object.freeze({
   AGENCY: 'agency',
@@ -48,6 +60,7 @@ export function isClientScopedRoute(route) {
     route?.clientTypes?.length
     || route?.excludeClientTypes?.length
     || route?.path?.startsWith('/client/')
+    || route?.path?.startsWith('/admin/client-')
     || route?.id === 'dental-growth-review',
   )
 }
@@ -60,6 +73,7 @@ export function canAccessRouteWithContext(viewer, route, {
   clientType = null,
   defaultClientId = null,
   repositories,
+  routeAccessContext = null,
   routeParams = {},
 } = {}) {
   if (!canAccessRoute(viewer, route)) {
@@ -71,8 +85,13 @@ export function canAccessRouteWithContext(viewer, route, {
   }
 
   const clientId = getRouteClientId({ defaultClientId, routeParams, viewer })
+  const contextAccess = canAccessWorkspaceRouteFromLoadedContext(route, routeAccessContext)
 
-  if (!canAccessWorkspaceRouteByContext({ route, viewer, workspaceId: clientId })) {
+  if (contextAccess !== null && !contextAccess) {
+    return false
+  }
+
+  if (contextAccess === null && !canAccessWorkspaceRouteByContext({ route, viewer, workspaceId: clientId })) {
     return false
   }
 
@@ -114,12 +133,7 @@ function isRouteAvailableForNavigationScope(route, navigationScope) {
 }
 
 const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
-  'client-overview',
-  'client-action-needed',
-  'client-reports-dashboards',
-  'client-requests',
-  'client-files-links',
-  'client-updates',
+  'dental-growth-review',
   'client-settings',
   'account-settings',
 ]))
@@ -128,6 +142,23 @@ const CLIENT_TEAM_CAPABILITY_UTILITY_ROUTE_IDS = Object.freeze(new Set([
   'client-settings',
   'account-settings',
 ]))
+
+function routeHasAudience(route, audiences) {
+  return route?.accessAudiences?.some((audience) => audiences.has(audience))
+}
+
+function canAccessWorkspaceRouteFromLoadedContext(route, routeAccessContext) {
+  if (!routeAccessContext) {
+    return null
+  }
+
+  const canUseAgencyAccess = routeHasAudience(route, AGENCY_ROUTE_AUDIENCES)
+    && routeAccessContext.canManageWorkspace
+  const canUseWorkspaceAccess = routeHasAudience(route, WORKSPACE_ROUTE_AUDIENCES)
+    && routeAccessContext.canViewWorkspacePortal
+
+  return canUseAgencyAccess || canUseWorkspaceAccess
+}
 
 function isRouteAvailableForClientTeamNavigation(route, viewer) {
   const workspaceMembership = (viewer?.workspaceMemberships ?? [])

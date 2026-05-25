@@ -16,7 +16,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  useSidebar,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -29,63 +29,118 @@ import {
 import { SidebarNavItem } from './SidebarNavItem'
 import { SidebarSearch } from './SidebarSearch'
 
-function createSidebarNavItems(routes) {
-  const groups = new Map()
-  const items = []
-
-  routes.forEach((route, index) => {
-    if (!route.navGroup) {
-      items.push({
-        id: route.id,
-        order: route.navOrder ?? index,
-        route,
-        type: 'route',
-      })
-      return
-    }
-
-    let group = groups.get(route.navGroup.id)
-
-    if (!group) {
-      group = {
-        children: [],
-        iconName: route.navGroup.iconName,
-        id: route.navGroup.id,
-        label: route.navGroup.label,
-        order: route.navGroup.order ?? route.navOrder ?? index,
-        type: 'group',
-      }
-      groups.set(route.navGroup.id, group)
-      items.push(group)
-    }
-
-    group.children.push(route)
-  })
-
-  return items
-    .filter((item) => item.type !== 'group' || item.children.length > 0)
-    .sort((a, b) => a.order - b.order)
+const routeSidebarSectionMeta = {
+  analytics: {
+    label: 'Analytics',
+    order: 20,
+  },
+  performance: {
+    label: 'Performance',
+    order: 20,
+  },
+  systems: {
+    label: 'Systems',
+    order: 30,
+  },
+  workspace: {
+    label: 'Workspace',
+    order: 10,
+  },
 }
 
-function SidebarToggleItem() {
-  const { state, toggleSidebar } = useSidebar()
-  const label = state === 'collapsed' ? 'Expand sidebar' : 'Collapse sidebar'
+const agencyWorkspaceRouteIds = new Set([
+  'admin-clients',
+  'admin-tasks',
+  'team-tasks',
+])
 
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        aria-label={label}
-        onClick={toggleSidebar}
-        title={label}
-        tooltip={label}
-        type="button"
-        variant="quiet"
-      >
-        <Icon className="text-current" name="menu" size={18} />
-        <span>{label}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
+const agencyAnalyticsRouteIds = new Set([
+  'admin-dashboard-links',
+  'admin-performance-dashboards',
+  'admin-reports',
+  'team-clinic-operator',
+  'clinic-daily-ops',
+])
+
+const clientWorkspaceRouteIds = new Set([
+  'client-overview',
+  'client-action-needed',
+  'client-projects',
+])
+
+const clientPerformanceRouteIds = new Set([
+  'client-executive-performance',
+  'client-monthly-strategy',
+  'dental-growth-review',
+  'client-reports-dashboards',
+  'client-patient-acquisition',
+  'client-calls-bookings',
+  'client-service-lines',
+  'client-reputation',
+  'clinic-daily-ops',
+])
+
+function getRouteSidebarSectionId(route) {
+  if (clientWorkspaceRouteIds.has(route.id)) {
+    return 'workspace'
+  }
+
+  if (clientPerformanceRouteIds.has(route.id)) {
+    return 'performance'
+  }
+
+  if (route.path?.startsWith('/client/')) {
+    return 'systems'
+  }
+
+  if (agencyWorkspaceRouteIds.has(route.id)) {
+    return 'workspace'
+  }
+
+  if (agencyAnalyticsRouteIds.has(route.id)) {
+    return 'analytics'
+  }
+
+  return 'systems'
+}
+
+function createRouteItem(route, index) {
+  return {
+    iconName: route.iconName,
+    id: route.id,
+    label: route.navLabel ?? route.label,
+    order: route.navGroup?.order ?? route.navOrder ?? index,
+    path: route.path,
+    route,
+    type: 'route',
+  }
+}
+
+function createSidebarNavItems(routes) {
+  const sections = new Map()
+
+  routes.forEach((route, index) => {
+    const sectionId = getRouteSidebarSectionId(route)
+    const sectionMeta = routeSidebarSectionMeta[sectionId] ?? routeSidebarSectionMeta.systems
+    const section = sections.get(sectionId) ?? {
+      children: [],
+      id: sectionId,
+      label: sectionMeta.label,
+      order: sectionMeta.order,
+      type: 'section',
+    }
+
+    section.children.push(createRouteItem(route, index))
+    sections.set(sectionId, section)
+  })
+
+  return [...sections.values()]
+    .map((section) => ({
+      ...section,
+      children: section.children.sort((a, b) => a.order - b.order),
+    }))
+    .filter((section) => section.children.length > 0)
+    .sort((a, b) => a.order - b.order)
 }
 
 function SidebarSettingsItem({ isActive, route }) {
@@ -163,6 +218,28 @@ function SidebarNavGroup({ activeNavigationId, group, isExpanded, onExpandedChan
   )
 }
 
+function SidebarNavSection({ activeNavigationId, section }) {
+  return (
+    <>
+      <SidebarMenuItem
+        className="mt-control first:mt-0 group-data-[collapsible=icon]:hidden"
+        key={`${section.id}-heading`}
+      >
+        <div className="px-control pb-tag pt-item text-label font-semibold uppercase text-text-muted">
+          {section.label}
+        </div>
+      </SidebarMenuItem>
+      {section.children.map((route) => (
+        <SidebarNavItem
+          isActive={route.id === activeNavigationId}
+          key={route.id}
+          route={route}
+        />
+      ))}
+    </>
+  )
+}
+
 export function AppSidebar({
   activeRoute,
   activeNavigationId,
@@ -178,8 +255,6 @@ export function AppSidebar({
   const viewer = runtime.viewer
   const activeRole = viewerMeta ?? defaultSidebarViewerMeta
   const workspaceSettingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
-  const accountSettingsRoute = routes.find((route) => route.id === 'account-settings') ?? null
-  const settingsRoute = workspaceSettingsRoute ?? accountSettingsRoute
   const primaryRoutes = useMemo(
     () => routes.filter((route) => (
       route.showInNav !== false
@@ -209,31 +284,21 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Reports Workspace">
-              <BrandLogo
-                className="[&>span:last-child]:whitespace-nowrap"
-                href="/"
-                size="sm"
-                variant="static"
-              />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarToggleItem />
-        </SidebarMenu>
+      <SidebarHeader className="flex min-w-0 flex-row items-center gap-item">
+        <BrandLogo
+          className="min-w-0 flex-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span:first-child]:w-8"
+          href="/"
+          size="sm"
+          variant="static"
+        />
+        <SidebarTrigger
+          aria-label="Toggle sidebar"
+          className="shrink-0 text-text-muted group-data-[collapsible=icon]:hidden"
+          title="Toggle sidebar"
+        />
       </SidebarHeader>
 
       <SidebarContent>
-        {workspaceSwitcher ? (
-          <SidebarGroup>
-            <SidebarMenu>
-              {workspaceSwitcher}
-            </SidebarMenu>
-          </SidebarGroup>
-        ) : null}
-
         <SidebarGroup>
           <SidebarMenu>
             <SidebarSearch placeholder={activeRole.searchPlaceholder} />
@@ -243,6 +308,16 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarMenu aria-label="Primary navigation">
             {navItems.map((item) => {
+              if (item.type === 'section') {
+                return (
+                  <SidebarNavSection
+                    activeNavigationId={resolvedActiveNavigationId}
+                    key={item.id}
+                    section={item}
+                  />
+                )
+              }
+
               if (item.type === 'group') {
                 return (
                   <SidebarNavGroup
@@ -271,9 +346,10 @@ export function AppSidebar({
 
       <SidebarFooter>
         <SidebarMenu>
+          {workspaceSwitcher}
           <SidebarSettingsItem
-            isActive={activeRoute.id === settingsRoute?.id}
-            route={settingsRoute}
+            isActive={activeRoute.id === workspaceSettingsRoute?.id}
+            route={workspaceSettingsRoute}
           />
           <AccountMenu
             activeRole={activeRole}

@@ -3,14 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { PageShell } from '@/shared/ui'
 
 import {
-  CompactFreshnessFooter,
-  DataTrustAlert,
-  DecisionCards,
   DentalGrowthReviewState,
   FunnelView,
   GrowthReviewCoreHeader,
   HeroMetrics,
-  NarrativeColumns,
 } from './DentalGrowthReviewBlocks'
 
 export function DentalGrowthReviewDashboard({ page }) {
@@ -18,7 +14,7 @@ export function DentalGrowthReviewDashboard({ page }) {
 
   if (page.status === 'error' || !page.period) {
     return (
-      <PageShell className="py-section" width="full">
+      <PageShell className="py-section" width="wide">
         <DentalGrowthReviewState page={page} />
       </PageShell>
     )
@@ -45,25 +41,34 @@ export function DentalGrowthReviewDashboard({ page }) {
     navigate(`/client/growth-review?${search.toString()}`)
   }
 
+  function handleCustomRangeApply(periodOption) {
+    if (!periodOption?.id) {
+      return
+    }
+
+    const search = new URLSearchParams()
+    search.set('clientId', page.client.id)
+    search.set('periodId', periodOption.id)
+
+    if (periodOption.periodType) {
+      search.set('periodType', periodOption.periodType)
+    }
+
+    navigate(`/client/growth-review?${search.toString()}`)
+  }
+
   return (
-    <PageShell className="pb-section pt-card" width="full">
+    <PageShell className="pb-section pt-card" width="wide">
       <GrowthReviewCoreHeader
+        onCustomRangeApply={handleCustomRangeApply}
         onPeriodChange={handlePeriodChange}
         page={page}
         selectedPeriodOptionKey={page.selectedReviewPeriodOptionKey}
       />
 
-      <DataTrustAlert sources={period.data_sources} />
-
       <HeroMetrics metrics={content.hero_metrics} />
 
-      <NarrativeColumns items={content.narrative_items} />
-
       <FunnelView funnel={content.funnel} highlights={content.funnel_highlights} />
-
-      <DecisionCards decisions={content.decisions} />
-
-      <CompactFreshnessFooter sources={period.data_sources} />
     </PageShell>
   )
 }

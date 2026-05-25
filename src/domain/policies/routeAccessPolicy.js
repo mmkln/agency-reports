@@ -68,6 +68,10 @@ function hasEveryCapability(viewer, requiredCapabilities) {
 }
 
 function canSatisfyAccessAudience(viewer, audience) {
+  if (audience === ACCESS_AUDIENCES.ACCOUNT_USER) {
+    return Boolean(viewer?.userId)
+  }
+
   if (audience === ACCESS_AUDIENCES.AGENCY_ADMIN) {
     return hasAgencyAdminMembership(viewer)
   }

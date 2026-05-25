@@ -3,7 +3,7 @@ import {
   Input,
 } from '@/shared/ui'
 
-import { WorkspaceMembershipRoleSelect } from '../../../entities/workspace-membership'
+import { WorkspaceMembershipRoleSelect } from '../../../entities/workspace-membership/ui'
 import { FieldError } from '../../admin-client-workspace'
 
 export function AccessMemberForm({

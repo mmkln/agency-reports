@@ -237,12 +237,6 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
     dentalGrowthReviewHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
       ? `/client/growth-review?clientId=${clientId}`
       : null,
-    executivePerformanceHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW)
-      ? `/client/executive-performance?clientId=${clientId}`
-      : null,
-    monthlyStrategyHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW)
-      ? `/client/monthly-strategy?clientId=${clientId}`
-      : null,
     serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
   }
 }

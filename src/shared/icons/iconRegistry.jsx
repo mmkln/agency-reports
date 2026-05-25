@@ -750,6 +750,30 @@ export const iconRegistry = {
       </>
     ),
   },
+  arrowDownRight: {
+    defaultSize: 16,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="M7 17h10V7"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <path
+          d="M7 7 17 17"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </>
+    ),
+  },
   arrowRight: {
     defaultSize: 18,
     viewBox: '0 0 24 24',

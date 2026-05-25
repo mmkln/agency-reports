@@ -1,6 +1,5 @@
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { getPageShellWidthClass, PageHeader } from '@/shared/ui'
-import { AppSidebar } from './AppSidebar'
+import { AppTopHeader } from './AppTopHeader'
 
 export function AppShell({
   activeRoute,
@@ -8,7 +7,6 @@ export function AppShell({
   children,
   hasUnsavedChanges = false,
   sidebarNavigationItems,
-  sidebarWorkspaceSwitcher,
   onAuthChange,
   onSignOut,
   routeParams = {},
@@ -24,8 +22,8 @@ export function AppShell({
   const contentWidth = activeRoute.contentWidth ?? 'full'
 
   return (
-    <SidebarProvider className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
-      <AppSidebar
+    <div className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
+      <AppTopHeader
         activeNavigationId={activeSidebarNavigationId}
         activeRoute={activeRoute}
         hasUnsavedChanges={hasUnsavedChanges}
@@ -35,10 +33,8 @@ export function AppShell({
         runtime={runtime}
         routes={routes}
         viewerMeta={sidebarViewerMeta}
-        workspaceSwitcher={sidebarWorkspaceSwitcher}
       />
-      <SidebarInset className="min-h-screen overflow-x-hidden">
-        <SidebarTrigger className="fixed left-control top-control z-40 md:hidden" />
+      <main className="min-h-[calc(100vh-var(--spacing-control-xl))] overflow-x-hidden">
         {!showRouteHeader || activeRoute.hidePageHeader ? null : (
           RouteHeader ? (
             <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />
@@ -59,7 +55,7 @@ export function AppShell({
             {children}
           </div>
         )}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   )
 }

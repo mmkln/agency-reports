@@ -20,7 +20,7 @@ function createPeriod(overrides = {}) {
         { id: 'revenue', title: 'Projected 90-Day Revenue Range' },
         { id: 'investment', title: 'Total Marketing Investment' },
         { id: 'cost', title: 'Cost Per New/Reactivated Patient' },
-        { id: 'leak', title: 'Biggest Funnel Leak' },
+        { id: 'ltv-cac', title: 'LTV:CAC Ratio' },
       ],
     },
     id: 'period-1',
@@ -46,9 +46,10 @@ describe('dental growth review model', () => {
     expect(period.content.hero_metrics).toHaveLength(6)
   })
 
-  it('rejects LTV:CAC as a weekly hero metric', () => {
+  it('accepts LTV:CAC as the strategic sixth hero metric', () => {
     const period = createPeriod({
       content: {
+        decisions: createPeriod().content.decisions,
         hero_metrics: [
           { id: 'bookings', title: 'Bookings This Period' },
           { id: 'attended', title: 'Attended Appointments' },
@@ -60,7 +61,34 @@ describe('dental growth review model', () => {
       },
     })
 
-    expect(() => validateDentalGrowthReviewPeriod(period)).toThrow(/LTV:CAC/)
+    expect(validateDentalGrowthReviewPeriod(period).content.hero_metrics[5]).toMatchObject({
+      id: 'ltv-cac',
+      title: 'LTV:CAC Ratio',
+    })
+  })
+
+  it('normalizes the legacy biggest leak hero metric to LTV:CAC', () => {
+    const period = createPeriod({
+      content: {
+        decisions: createPeriod().content.decisions,
+        hero_metrics: [
+          { id: 'bookings', title: 'Bookings This Period' },
+          { id: 'attended', title: 'Attended Appointments' },
+          { id: 'revenue', title: 'Projected 90-Day Revenue Range' },
+          { id: 'investment', title: 'Total Marketing Investment' },
+          { id: 'cost', title: 'Cost Per New/Reactivated Patient' },
+          { id: 'biggest-funnel-leak', title: 'Biggest Funnel Leak', value: 'Confirmed -> Attended' },
+        ],
+      },
+    })
+
+    expect(validateDentalGrowthReviewPeriod(period).content.hero_metrics[5]).toMatchObject({
+      formula: 'average lifetime value / blended CAC',
+      id: 'ltv-cac',
+      source: 'Dentrix historicals + Cost Per Attended / New Patient',
+      target: '3:1 minimum, 5:1+ premium',
+      title: 'LTV:CAC Ratio',
+    })
   })
 
   it('rejects patient-level fields', () => {

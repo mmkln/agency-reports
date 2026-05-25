@@ -437,8 +437,6 @@ Keep:
 
 - [ ] Do not build API connectors in this pass.
 - [ ] Do not build webhook endpoints in this pass.
-- [ ] Do not delete source batch/import architecture.
-- [ ] Do not delete calculated diagnostic data from repositories until the reduced UI is stable.
 - [ ] Do not add manual metric override.
 - [ ] Do not expose patient-level drilldowns.
 - [ ] Do not turn this into a generic AgencyAnalytics/Databox style dashboard.

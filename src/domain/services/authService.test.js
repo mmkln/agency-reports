@@ -4,7 +4,7 @@ import {
   CLINIC_REPORTING_CAPABILITIES,
   PROFILE_STATUSES,
 } from '../../entities/profile'
-import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import {
   AUTH_SESSION_STORAGE_KEY,
   authenticateWithEmail,
@@ -201,20 +201,37 @@ describe('authService', () => {
     expect(storage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull()
   })
 
-  it('routes clinic ops client team users to Daily Ops instead of an inaccessible client overview', () => {
+  it('routes clinic users with Dental Growth Review access to the Growth Review', () => {
     expect(getHomeHrefForViewer({
       activeWorkspaceId: 'client-1',
       capabilities: [
         WORKSPACE_CAPABILITIES.VIEW_PORTAL,
-        CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
+        CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
       ],
       workspaceMemberships: [{
         capabilities: [
           WORKSPACE_CAPABILITIES.VIEW_PORTAL,
-          CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW,
+          CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
         ],
+        role: WORKSPACE_ROLES.CLINIC_OWNER,
         workspaceId: 'client-1',
       }],
-    })).toBe('/clinic/daily-ops?clientId=client-1')
+    })).toBe('/client/growth-review?clientId=client-1')
+  })
+
+  it('routes clinic users without Dental Growth Review access to workspace settings', () => {
+    expect(getHomeHrefForViewer({
+      activeWorkspaceId: 'client-1',
+      capabilities: [
+        WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+      ],
+      workspaceMemberships: [{
+        capabilities: [
+          WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+        ],
+        role: WORKSPACE_ROLES.CLINIC_OWNER,
+        workspaceId: 'client-1',
+      }],
+    })).toBe('/client/settings?clientId=client-1')
   })
 })

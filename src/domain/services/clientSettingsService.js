@@ -12,17 +12,17 @@ function normalizeText(value = '') {
   return String(value ?? '').trim()
 }
 
-function requireClientAccess({ clientId, repositories, viewer }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
-  const client = repositories.workspaces.findById(normalizedClientId)
+function requireWorkspaceAccess({ workspaceId, repositories, viewer }) {
+  const normalizedWorkspaceId = normalizeText(workspaceId || viewer?.activeWorkspaceId)
+  const workspace = repositories.workspaces.findById(normalizedWorkspaceId)
 
-  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
+  if (!workspace || !canAccessWorkspaceResource(viewer, normalizedWorkspaceId)) {
     throw new Error('You do not have permission to view this workspace.')
   }
 
   return {
-    client,
-    clientId: normalizedClientId,
+    workspace,
+    workspaceId: normalizedWorkspaceId,
   }
 }
 
@@ -37,20 +37,20 @@ function mapMembership({ membership, profile }) {
   }
 }
 
-function getCurrentMembership({ clientId, repositories, viewer }) {
+function getCurrentMembership({ repositories, viewer, workspaceId }) {
   if (!viewer?.userId) {
     return null
   }
 
   return repositories.workspaceMemberships
-    .listByWorkspaceId(clientId)
+    .listByWorkspaceId(workspaceId)
     .filter(isActiveWorkspaceMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
 }
 
-function findOpenBusinessDeletionRequest({ clientId, repositories }) {
+function findOpenBusinessDeletionRequest({ repositories, workspaceId }) {
   return repositories.clientRequests
-    ?.listByWorkspaceId(clientId)
+    ?.listByWorkspaceId(workspaceId)
     .map(normalizeClientRequest)
     .find((request) => (
       request.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION
@@ -71,7 +71,7 @@ export function getClientSettingsPage({
   let accessContext
 
   try {
-    accessContext = requireClientAccess({ clientId, repositories, viewer })
+    accessContext = requireWorkspaceAccess({ workspaceId: clientId, repositories, viewer })
   } catch {
     return {
       reason: 'access_denied',
@@ -79,18 +79,18 @@ export function getClientSettingsPage({
     }
   }
 
-  const { client, clientId: normalizedClientId } = accessContext
+  const { workspace, workspaceId } = accessContext
   const currentMembership = getCurrentMembership({
-    clientId: normalizedClientId,
     repositories,
     viewer,
+    workspaceId,
   })
   const businessDeletionRequest = findOpenBusinessDeletionRequest({
-    clientId: normalizedClientId,
     repositories,
+    workspaceId,
   })
   const members = repositories.workspaceMemberships
-    .listByWorkspaceId(normalizedClientId)
+    .listByWorkspaceId(workspaceId)
     .filter(isActiveWorkspaceMembership)
     .map((membership) => mapMembership({
       membership,
@@ -100,11 +100,11 @@ export function getClientSettingsPage({
 
   return {
     client: {
-      id: client.id,
-      name: client.name,
-      portalSlug: client.portal_slug,
-      primaryContactEmail: client.primary_contact_email,
-      primaryContactName: client.primary_contact_name,
+      id: workspace.id,
+      name: workspace.name,
+      portalSlug: workspace.portal_slug,
+      primaryContactEmail: workspace.primary_contact_email,
+      primaryContactName: workspace.primary_contact_name,
     },
     currentMembership: currentMembership
       ? {
@@ -124,12 +124,12 @@ export function getClientSettingsPage({
               title: businessDeletionRequest.title,
             }
           : null,
-        canRequestBusinessDeletion: canRequestWorkspaceDeletion(viewer, normalizedClientId),
+        canRequestBusinessDeletion: canRequestWorkspaceDeletion(viewer, workspaceId),
       },
       team: {
         allowedInviteRoles: [WORKSPACE_ROLES.VIEWER],
         canManage: canManageClientTeam({
-          clientId: normalizedClientId,
+          clientId: workspaceId,
           repositories,
           viewer,
         }),

@@ -90,7 +90,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
     idGenerator: createUuid,
     onCreated: (client) => {
       void clientsResource.reload()
-      toast.success('Account created', `${client.name} is ready in the admin workspace.`)
+      toast.success('Client created', `${client.name} is ready in the admin workspace.`)
       navigate('/admin/clients', { replace: true })
     },
     viewer: runtime.viewer,
@@ -104,7 +104,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
       {clientsResource.status === 'loading' ? (
         <ClientsTableSkeleton />
       ) : clientsResource.status === 'error' ? (
-        <ErrorBlock title="Accounts could not be loaded">
+        <ErrorBlock title="Clients could not be loaded">
           {clientsResource.error}
         </ErrorBlock>
       ) : clients.length > 0 ? (
@@ -120,10 +120,10 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
             }))
               .then(() => {
                 refreshClients()
-                toast.success('Account deleted', `${deletedClient?.name ?? 'Account'} was removed from local demo data.`)
+                toast.success('Client deleted', `${deletedClient?.name ?? 'Client'} was removed from local demo data.`)
               })
               .catch((error) => {
-                toast.error('Account could not be deleted', error.message)
+                toast.error('Client could not be deleted', error.message)
               })
           }}
           onEditClient={setClientPendingEdit}
@@ -151,7 +151,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
           onClose={() => setClientPendingEdit(null)}
           onUpdated={(client) => {
             void clientsResource.reload()
-            toast.success('Account updated', `${client.name} workspace details were saved.`)
+            toast.success('Client updated', `${client.name} workspace details were saved.`)
             setClientPendingEdit(null)
           }}
           viewer={runtime.viewer}

@@ -152,7 +152,7 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
       })).then((result) => {
       onAuthChange?.()
       toast.success('Invitation accepted', `You now have access to ${result.client.name}.`)
-      navigate(`/client/overview?clientId=${result.client.id}`, { replace: true })
+      navigate(`/client/growth-review?clientId=${result.client.id}`, { replace: true })
     }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Invite was not accepted', caughtError.message)

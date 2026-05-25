@@ -7,4 +7,3 @@ export {
   WORKSPACE_ROLE_META,
   WORKSPACE_ROLES,
 } from './model'
-export { WorkspaceMemberList, WorkspaceMembershipRoleSelect } from './ui'

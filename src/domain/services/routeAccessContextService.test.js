@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
+import { AGENCY_WORKSPACE_RELATIONSHIP_STATUSES } from '../../entities/agency-workspace-relationship'
 import { CLIENT_TYPES } from '../../entities/client'
-import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_MEMBERSHIP_STATUSES } from '../../entities/workspace-membership'
 import { getRouteAccessClientContext } from './routeAccessContextService'
 
-function createRepositories(clients = []) {
+function createCollection(records = []) {
+  return {
+    list() {
+      return records
+    },
+  }
+}
+
+function createRepositories({
+  clients = [],
+  relationships = [],
+  workspaceMemberships = [],
+} = {}) {
   const workspaces = {
     findById(id) {
       return clients.find((client) => client.id === id) ?? null
@@ -18,7 +31,9 @@ function createRepositories(clients = []) {
         return clients.find((client) => client.id === id) ?? null
       },
     },
+    agencyWorkspaceRelationships: createCollection(relationships),
     workspaces,
+    workspaceMemberships: createCollection(workspaceMemberships),
   }
 }
 
@@ -43,12 +58,14 @@ describe('routeAccessContextService', () => {
   it('returns the requested client type when available', () => {
     expect(getRouteAccessClientContext({
       clientId: 'client-a',
-      repositories: createRepositories([
-        {
-          id: 'client-a',
-          type: CLIENT_TYPES.CLINIC,
-        },
-      ]),
+      repositories: createRepositories({
+        clients: [
+          {
+            id: 'client-a',
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+      }),
     })).toMatchObject({
       clientId: 'client-a',
       clientType: CLIENT_TYPES.CLINIC,
@@ -72,13 +89,30 @@ describe('routeAccessContextService', () => {
   it('returns workspace access flags for the requested route context', () => {
     expect(getRouteAccessClientContext({
       clientId: 'client-a',
-      repositories: createRepositories([
-        {
-          id: 'client-a',
-          type: CLIENT_TYPES.CLINIC,
-        },
-      ]),
+      repositories: createRepositories({
+        clients: [
+          {
+            id: 'client-a',
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+        relationships: [{
+          agency_id: 'agency-a',
+          status: AGENCY_WORKSPACE_RELATIONSHIP_STATUSES.ACTIVE,
+          workspace_id: 'client-a',
+        }],
+        workspaceMemberships: [{
+          capabilities: [
+            WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+            WORKSPACE_CAPABILITIES.MANAGE_MEMBERS,
+          ],
+          status: WORKSPACE_MEMBERSHIP_STATUSES.ACTIVE,
+          user_id: 'user-a',
+          workspace_id: 'client-a',
+        }],
+      }),
       viewer: {
+        userId: 'user-a',
         agencyMemberships: [{
           agencyId: 'agency-a',
           capabilities: [AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS],
@@ -103,6 +137,44 @@ describe('routeAccessContextService', () => {
       canViewWorkspacePortal: true,
       workspaceId: 'client-a',
       workspaceType: CLIENT_TYPES.CLINIC,
+    })
+  })
+
+  it('removes route access flags when live memberships and relationships are gone', () => {
+    expect(getRouteAccessClientContext({
+      clientId: 'client-a',
+      repositories: createRepositories({
+        clients: [
+          {
+            id: 'client-a',
+            type: CLIENT_TYPES.CLINIC,
+          },
+        ],
+      }),
+      viewer: {
+        userId: 'user-a',
+        agencyMemberships: [{
+          agencyId: 'agency-a',
+          capabilities: [AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS],
+        }],
+        managedWorkspaceRelationships: [{
+          agencyId: 'agency-a',
+          workspaceId: 'client-a',
+        }],
+        workspaceMemberships: [{
+          capabilities: [
+            WORKSPACE_CAPABILITIES.VIEW_PORTAL,
+            WORKSPACE_CAPABILITIES.MANAGE_MEMBERS,
+          ],
+          workspaceId: 'client-a',
+        }],
+      },
+    })).toMatchObject({
+      canManageWorkspace: false,
+      canManageWorkspaceAccess: false,
+      canManageWorkspaceMembers: false,
+      canManageWorkspaceSettings: false,
+      canViewWorkspacePortal: false,
     })
   })
 })

@@ -38,7 +38,7 @@ export function CreateClientModal({
   onUpdateField,
   slugIssue,
 }) {
-  const clientNameIssue = getShortTextIssue(form.name, 'Account name')
+  const clientNameIssue = getShortTextIssue(form.name, 'Client name')
   const contactNameIssue = getShortTextIssue(form.primaryContactName, 'Contact name')
   const contactEmailIssue = getEmailIssue(form.primaryContactEmail)
   const isEditMode = mode === 'edit'
@@ -54,20 +54,20 @@ export function CreateClientModal({
           <OverlayHeader className="pr-control-xl">
             <DialogHeader>
               <DialogTitle className="text-heading text-text-primary">
-                {isEditMode ? 'Edit Account' : 'Create Account'}
+                {isEditMode ? 'Edit Client' : 'Create Client'}
               </DialogTitle>
               <DialogDescription>
                 {isEditMode
-                  ? 'Update the account workspace, portal slug, contact, and project status.'
-                  : 'Create an account workspace and first portal invite.'}
+                  ? 'Update the client workspace, portal slug, contact, and project status.'
+                  : 'Create a client workspace and first portal invite.'}
               </DialogDescription>
             </DialogHeader>
           </OverlayHeader>
 
           <OverlayBody className="min-h-0 overflow-y-auto">
             <div className="grid gap-card lg:grid-cols-2 lg:items-start">
-              <ModalSection iconName="grid" title="Account Workspace">
-                <FormField error={clientNameIssue} label="Account name" required>
+              <ModalSection iconName="grid" title="Client Workspace">
+                <FormField error={clientNameIssue} label="Client name" required>
                   <Input
                     aria-invalid={Boolean(clientNameIssue)}
                     minLength={2}
@@ -132,20 +132,17 @@ export function CreateClientModal({
               <div className="mt-5 rounded-control border border-control-border bg-surface-subtle px-3 py-3 text-ui text-text-secondary">
                 <p className="font-semibold text-text-primary">{lastCreatedClient.client.name} was created.</p>
                 <p className="mt-1">
-                  Configure the workspace overview in the editor. The local invite is ready for{' '}
+                  Configure clinic setup and access. The local invite is ready for{' '}
                   {lastCreatedClient.invitation.email}; email delivery is still simulated.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button asChild size="sm" variant="outline">
-                    <Link to={`/admin/client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</Link>
-                  </Button>
                   {lastCreatedClient.client.type === CLIENT_TYPES.CLINIC ? (
                     <Button asChild size="sm" variant="outline">
-                      <Link to={`/admin/clinic-setup?clientId=${lastCreatedClient.client.id}`}>Clinic setup</Link>
+                      <Link to={`/admin/clinic-setup?clientId=${lastCreatedClient.client.id}`}>Setup</Link>
                     </Button>
                   ) : null}
                   <Button asChild size="sm" variant="outline">
-                    <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Manage access</Link>
+                    <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Access</Link>
                   </Button>
                 </div>
               </div>
@@ -157,7 +154,7 @@ export function CreateClientModal({
               Cancel
             </Button>
             <Button size="lg" type="submit">
-              {isEditMode ? 'Save Changes' : 'Create Account'}
+              {isEditMode ? 'Save Changes' : 'Create Client'}
             </Button>
           </OverlayFooter>
         </form>

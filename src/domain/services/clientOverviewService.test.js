@@ -436,8 +436,6 @@ function createClientViewer(clientId = IDS.CLIENT_A) {
     capabilities: [
       'workspace.view_portal',
       CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
-      CLINIC_REPORTING_CAPABILITIES.EXECUTIVE_VIEW,
-      CLINIC_REPORTING_CAPABILITIES.MONTHLY_FINANCE_VIEW,
     ],
     workspaceId: clientId,
   })

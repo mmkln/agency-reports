@@ -20,9 +20,11 @@ import {
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../entities/client-invitation'
 import {
   WORKSPACE_ROLES,
+} from '../../entities/workspace-membership'
+import {
   WorkspaceMemberList,
   WorkspaceMembershipRoleSelect,
-} from '../../entities/workspace-membership'
+} from '../../entities/workspace-membership/ui'
 import { Icon } from '../../shared/icons'
 import { useClientTeamManagement } from './useClientTeamManagement'
 

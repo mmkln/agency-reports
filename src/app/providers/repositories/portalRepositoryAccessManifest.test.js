@@ -5,7 +5,6 @@ import { CLINIC_RECORD_PUBLISH_STATES } from '../../../entities/clinic'
 import { VISIBILITY } from '../../../entities/update'
 import {
   PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES,
-  PORTAL_CLINIC_PUBLISH_STATE_TABLES,
   PORTAL_REPOSITORY_COLLECTIONS,
   PORTAL_TABLE_NAMES,
 } from './portalRepositoryContract'
@@ -80,16 +79,6 @@ describe('portalRepositoryAccessManifest', () => {
           values: [CLINIC_RECORD_PUBLISH_STATES.PUBLISHED],
         },
       ]))
-    }
-  })
-
-  it('keeps internal clinic reporting layers out of direct client repository reads', () => {
-    for (const tableName of ['clinic_daily_operations', 'clinic_weekly_operator_periods']) {
-      const accessRules = getPortalRepositoryAccessRules(tableName)
-
-      expect(PORTAL_CLINIC_PUBLISH_STATE_TABLES, tableName).toContain(tableName)
-      expect(accessRules.aggregateOnly, tableName).toBe(true)
-      expect(accessRules.accessMode, tableName).toBe(PORTAL_ACCESS_MODES.AGENCY_ONLY)
     }
   })
 

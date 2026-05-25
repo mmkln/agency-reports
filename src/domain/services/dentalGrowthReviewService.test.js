@@ -20,7 +20,6 @@ const IDS = Object.freeze({
   AGENCY: 'agency-a',
   CLIENT: 'client-a',
   OTHER_CLIENT: 'client-b',
-  SOURCE_BATCH: 'source-batch-a',
   PERIOD_DRAFT: 'period-draft',
   PERIOD: 'period-current',
   PREVIOUS: 'period-previous',
@@ -45,7 +44,6 @@ function createPeriod(
   return {
     client_id: IDS.CLIENT,
     calculated_at: '2026-05-20T08:00:00.000Z',
-    calculation_source_batch_id: id === IDS.PERIOD_DRAFT ? IDS.SOURCE_BATCH : '',
     calculation_version: id === IDS.PERIOD_DRAFT ? 'dental-growth-review-calculation-v1' : '',
     content: {
       decisions: [
@@ -57,7 +55,7 @@ function createPeriod(
         { id: 'revenue', title: 'Projected 90-Day Revenue Range' },
         { id: 'investment', title: 'Total Marketing Investment' },
         { id: 'cost', title: 'Cost Per New/Reactivated Patient' },
-        { id: 'leak', title: 'Biggest Funnel Leak' },
+        { id: 'ltv-cac', title: 'LTV:CAC Ratio' },
       ],
     },
     id,
@@ -102,18 +100,6 @@ function createRepositories() {
       createPeriod(IDS.PERIOD),
       createPeriod(IDS.PREVIOUS, '2026-05-10'),
       createPeriod(IDS.PERIOD_DRAFT, '2026-05-24', DENTAL_GROWTH_REVIEW_PUBLISH_STATES.DRAFT),
-    ]),
-    dentalGrowthReviewSourceBatches: createEntityRepository([
-      {
-        client_id: IDS.CLIENT,
-        id: IDS.SOURCE_BATCH,
-        imported_at: '2026-05-20T07:55:00.000Z',
-        payload: {},
-        period_end: '2026-05-24',
-        period_start: '2026-05-18',
-        source_type: 'json_import',
-        validation_state: 'valid',
-      },
     ]),
   }
 }
@@ -216,10 +202,6 @@ describe('dentalGrowthReviewService', () => {
       calculationMeta: {
         calculatedAt: '2026-05-20T08:00:00.000Z',
         calculationVersion: 'dental-growth-review-calculation-v1',
-        importedAt: '2026-05-20T07:55:00.000Z',
-        sourceBatchId: IDS.SOURCE_BATCH,
-        sourceType: 'json_import',
-        validationState: 'valid',
       },
       period: {
         id: IDS.PERIOD_DRAFT,

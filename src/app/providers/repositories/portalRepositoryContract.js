@@ -14,15 +14,10 @@ export const PORTAL_REPOSITORY_COLLECTIONS = Object.freeze([
   { key: 'callBookingMetrics', tableName: 'call_booking_metrics' },
   { key: 'clinicLocations', tableName: 'clinic_locations' },
   { key: 'clinicProfiles', tableName: 'clinic_profiles' },
-  { key: 'clinicDailyOperations', tableName: 'clinic_daily_operations' },
-  { key: 'clinicExecutivePerformancePeriods', tableName: 'clinic_executive_performance_periods' },
-  { key: 'clinicMonthlyStrategyPeriods', tableName: 'clinic_monthly_strategy_periods' },
-  { key: 'clinicWeeklyOperatorPeriods', tableName: 'clinic_weekly_operator_periods' },
   { key: 'clinicServiceLines', tableName: 'clinic_service_lines' },
   { key: 'complianceReviews', tableName: 'compliance_reviews' },
   { key: 'dashboardLinks', tableName: 'dashboard_links' },
   { key: 'dentalGrowthReviewPeriods', tableName: 'dental_growth_review_periods' },
-  { key: 'dentalGrowthReviewSourceBatches', tableName: 'dental_growth_review_source_batches' },
   { key: 'invitationAccessTokens', tableName: 'invitation_access_tokens' },
   { key: 'locationPerformance', tableName: 'location_performance' },
   { key: 'neededFromClient', tableName: 'needed_from_client' },
@@ -62,10 +57,6 @@ export const PORTAL_REPOSITORY_EXTENSION_METHODS = Object.freeze({
 export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'booking_pipeline_snapshots',
   'call_booking_metrics',
-  'clinic_daily_operations',
-  'clinic_executive_performance_periods',
-  'clinic_monthly_strategy_periods',
-  'clinic_weekly_operator_periods',
   'dental_growth_review_periods',
   'compliance_reviews',
   'location_performance',
@@ -75,9 +66,4 @@ export const PORTAL_CLINIC_PUBLISH_STATE_TABLES = Object.freeze([
   'service_line_performance',
 ])
 
-export const PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES = Object.freeze(
-  PORTAL_CLINIC_PUBLISH_STATE_TABLES.filter((tableName) => ![
-    'clinic_daily_operations',
-    'clinic_weekly_operator_periods',
-  ].includes(tableName)),
-)
+export const PORTAL_CLIENT_READABLE_CLINIC_PUBLISH_STATE_TABLES = PORTAL_CLINIC_PUBLISH_STATE_TABLES

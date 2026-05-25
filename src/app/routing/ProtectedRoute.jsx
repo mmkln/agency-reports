@@ -43,6 +43,7 @@ export function ProtectedRoute({ children, route }) {
   const canAccess = canAccessRouteWithContext(viewer, routeForAccess, {
     clientType: routeAccessContextResource.data?.clientType,
     defaultClientId: runtime.defaultClientId,
+    routeAccessContext: routeAccessContextResource.data,
     routeParams,
   })
 

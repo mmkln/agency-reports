@@ -2,149 +2,30 @@ import { CLIENT_TYPES } from '../../../entities/client'
 
 export const clientWorkspaceSections = [
   {
-    defaultPageId: 'overview',
-    iconName: 'layoutDashboard',
-    id: 'home',
-    label: 'Home',
-    pages: [
-      {
-        id: 'overview',
-        label: 'Overview',
-        previewRoute: '/admin/client-preview',
-        route: '/admin/client-overview',
-      },
-    ],
-  },
-  {
-    defaultPageId: 'projects',
-    iconName: 'checkCircle2',
-    id: 'work',
-    label: 'Work',
-    pages: [
-      {
-        id: 'projects',
-        label: 'Projects',
-        previewRoute: '/admin/client-projects-preview',
-        route: '/admin/client-work-review',
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        previewRoute: '/admin/client-action-needed-preview',
-        route: '/admin/client-requests',
-      },
-      {
-        id: 'requests',
-        label: 'Requests',
-        previewRoute: '/admin/client-requests-preview',
-        route: '/admin/client-submitted-requests',
-      },
-    ],
-  },
-  {
-    defaultPageId: 'reports-dashboards',
-    iconName: 'barChart',
-    id: 'performance',
-    label: 'Performance',
-    pages: [
-      {
-        id: 'reports-dashboards',
-        label: 'Reports & Dashboards',
-        labelByClientType: {
-          [CLIENT_TYPES.CLINIC]: 'Clinic Results',
-        },
-        previewRoute: '/admin/client-reports-dashboards-preview',
-        route: '/admin/client-reports-dashboards',
-      },
-      {
-        clientTypes: [CLIENT_TYPES.CLINIC],
-        id: 'clinic-metrics',
-        label: 'Metrics',
-        previewRoute: '/admin/client-patient-acquisition-preview',
-        route: '/admin/clinic-metrics',
-      },
-      {
-        clientTypes: [CLIENT_TYPES.CLINIC],
-        id: 'clinic-reporting',
-        label: 'Reporting',
-        previewRoute: '/client/growth-review',
-        route: '/admin/clinic-reporting',
-      },
-      {
-        clientTypes: [CLIENT_TYPES.CLINIC],
-        id: 'clinic-reputation',
-        label: 'Reputation',
-        previewRoute: '/admin/client-reputation-preview',
-        route: '/admin/clinic-reputation',
-      },
-      {
-        clientTypes: [CLIENT_TYPES.CLINIC],
-        id: 'clinic-compliance',
-        label: 'Compliance',
-        previewRoute: '/admin/client-compliance-approvals-preview',
-        route: '/admin/clinic-compliance',
-      },
-    ],
-  },
-  {
-    defaultPageId: 'updates',
-    iconName: 'fileText',
-    id: 'portal',
-    label: 'Portal',
-    pages: [
-      {
-        id: 'updates',
-        label: 'Updates',
-        previewRoute: '/admin/client-updates-preview',
-        route: '/admin/client-updates',
-      },
-      {
-        id: 'files-links',
-        label: 'Files & Links',
-        previewRoute: '/admin/client-files-links-preview',
-        route: '/admin/client-files-links',
-      },
-    ],
-  },
-  {
-    defaultPageId: 'access',
-    iconName: 'users',
-    id: 'access',
-    label: 'Access',
-    pages: [
-      {
-        id: 'access',
-        label: 'Access',
-        previewRoute: '/admin/client-settings-preview',
-        route: '/admin/client-access',
-      },
-    ],
-  },
-  {
-    defaultPageId: 'activity',
-    iconName: 'clock',
-    id: 'activity',
-    label: 'Activity',
-    pages: [
-      {
-        id: 'activity',
-        label: 'Activity',
-        previewRoute: '/admin/client-updates-preview',
-        route: '/admin/client-activity',
-      },
-    ],
-  },
-  {
     clientTypes: [CLIENT_TYPES.CLINIC],
     defaultPageId: 'clinic-setup',
-    iconName: 'stethoscope',
-    id: 'setup',
-    label: 'Setup',
+    iconName: 'settings',
+    id: 'client-workspace',
+    label: 'Client workspace',
     pages: [
       {
         id: 'clinic-setup',
-        label: 'Clinic Setup',
+        iconName: 'settings',
+        label: 'Setup',
         route: '/admin/clinic-setup',
+      },
+      {
+        id: 'clinic-data-sources',
+        iconName: 'database',
+        label: 'Data Sources',
+        previewRoute: '/client/growth-review',
+        route: '/admin/clinic-data-sources',
+      },
+      {
+        id: 'access',
+        iconName: 'users',
+        label: 'Access',
+        route: '/admin/client-access',
       },
     ],
   },
@@ -193,7 +74,7 @@ export function getClientWorkspacePreviewRoute(sections, currentPage) {
     .flatMap((section) => section.pages)
     .find((page) => page.id === currentPage)
 
-  return currentPageConfig?.previewRoute ?? '/admin/client-preview'
+  return currentPageConfig?.previewRoute ?? '/client/growth-review'
 }
 
 export function getClientWorkspacePageIdByRoutePath(path) {
@@ -205,31 +86,18 @@ export function getClientWorkspacePageIdByRoutePath(path) {
 }
 
 export function getClientWorkspaceSidebarItems(client, clientId) {
-  return getVisibleClientWorkspaceSections(client).map((section) => {
-    if (section.pages.length === 1) {
-      const page = section.pages[0]
+  const sections = getVisibleClientWorkspaceSections(client)
 
-      return {
-        iconName: section.iconName,
-        id: page.id,
-        label: getClientWorkspacePageLabel(page, client),
-        path: getClientWorkspacePageHref(page, clientId),
-        type: 'route',
-      }
-    }
-
-    return {
-      children: section.pages.map((page) => ({
-        iconName: section.iconName,
-        id: page.id,
-        label: getClientWorkspacePageLabel(page, client),
-        path: getClientWorkspacePageHref(page, clientId),
-        type: 'route',
-      })),
-      iconName: section.iconName,
-      id: section.id,
-      label: section.label,
-      type: 'group',
-    }
-  })
+  return sections.map((section) => ({
+    children: section.pages.map((page) => ({
+      iconName: page.iconName ?? section.iconName,
+      id: page.id,
+      label: getClientWorkspacePageLabel(page, client),
+      path: getClientWorkspacePageHref(page, clientId),
+      type: 'route',
+    })),
+    id: section.id,
+    label: section.label,
+    type: 'section',
+  }))
 }

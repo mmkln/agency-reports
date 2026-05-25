@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
-import { canManageClientTeam } from './clientTeamPolicy'
+import { canManageClientTeam, canManageWorkspaceTeam } from './clientTeamPolicy'
 
 const IDS = Object.freeze({
   AGENCY: '11111111-1111-4111-8111-111111111111',
@@ -63,6 +63,14 @@ describe('clientTeamPolicy', () => {
       clientId: IDS.CLIENT_A,
       repositories: createRepositories(),
       viewer: createAgencyAccessViewer(),
+    })).toBe(true)
+  })
+
+  it('exposes a workspace-named management policy', () => {
+    expect(canManageWorkspaceTeam({
+      repositories: createRepositories(),
+      viewer: createAgencyAccessViewer(),
+      workspaceId: IDS.CLIENT_A,
     })).toBe(true)
   })
 

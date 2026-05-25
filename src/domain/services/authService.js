@@ -178,14 +178,22 @@ export function getHomeHrefForViewer(viewer) {
   }
 
   if (agencyRole) {
-    return '/team/tasks'
+    return '/account/settings'
   }
+
+  const activeWorkspaceMembership = (viewer.workspaceMemberships ?? [])
+    .find((membership) => membership.workspaceId === viewer.activeWorkspaceId)
 
   if (
-    hasWorkspaceCapability(viewer, CLINIC_REPORTING_CAPABILITIES.DAILY_OPS_VIEW, viewer.activeWorkspaceId)
+    activeWorkspaceMembership
+    && hasWorkspaceCapability(
+      viewer,
+      CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+      viewer.activeWorkspaceId,
+    )
   ) {
-    return `/clinic/daily-ops${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
+    return `/client/growth-review${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
   }
 
-  return `/client/overview${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
+  return `/client/settings${viewer.activeWorkspaceId ? `?clientId=${viewer.activeWorkspaceId}` : ''}`
 }

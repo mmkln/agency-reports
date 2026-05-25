@@ -295,7 +295,7 @@ function SidebarMenuItem({
 }
 
 const sidebarMenuButtonVariants = cva(
-  'group/menu-button relative grid h-target w-full min-w-0 grid-cols-[var(--spacing-layout)_minmax(0,1fr)] items-center overflow-hidden rounded-control !bg-transparent text-left text-ui text-text-secondary no-underline outline-none transition-colors duration-motion-fast ease-motion-standard hover:!bg-transparent hover:text-text-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35 active:!bg-transparent data-[active=true]:!bg-transparent data-[active=true]:text-text-primary disabled:pointer-events-none disabled:opacity-50 [&>*:first-child]:mx-auto [&>*:first-child]:shrink-0 [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4 [&>span:last-child]:min-w-0 [&>span:last-child]:truncate [&>span:last-child]:pr-control group-data-[collapsible=icon]:[&>span:last-child]:sr-only',
+  'group/menu-button relative grid h-target w-full min-w-0 grid-cols-[var(--spacing-layout)_minmax(0,1fr)] items-center overflow-hidden rounded-control text-left text-ui text-text-secondary no-underline outline-none transition-colors duration-motion-fast ease-motion-standard hover:bg-fill-secondary hover:text-text-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35 active:bg-fill data-[active=true]:bg-control-selected data-[active=true]:text-action disabled:pointer-events-none disabled:opacity-50 [&>*:first-child]:mx-auto [&>*:first-child]:shrink-0 [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4 [&>span:last-child]:min-w-0 [&>span:last-child]:truncate [&>span:last-child]:pr-control group-data-[collapsible=icon]:[&>span:last-child]:sr-only',
   {
     variants: {
       size: {
@@ -304,7 +304,7 @@ const sidebarMenuButtonVariants = cva(
       },
       variant: {
         default: '',
-        quiet: 'text-text-muted data-[active=true]:text-text-primary',
+        quiet: 'text-text-muted data-[active=true]:text-action',
       },
     },
     defaultVariants: {
@@ -399,7 +399,7 @@ function SidebarMenuSubButton({
   return (
     <Comp
       className={cn(
-        'flex h-target min-w-0 items-center rounded-control !bg-transparent px-control text-ui text-text-secondary no-underline outline-none transition-colors duration-motion-fast ease-motion-standard hover:!bg-transparent hover:text-text-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35 data-[active=true]:!bg-transparent data-[active=true]:text-text-primary [&>span:last-child]:truncate',
+        'flex h-target min-w-0 items-center rounded-control px-control text-ui text-text-secondary no-underline outline-none transition-colors duration-motion-fast ease-motion-standard hover:bg-fill-secondary hover:text-text-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35 data-[active=true]:bg-control-selected data-[active=true]:text-action [&>span:last-child]:truncate',
         className,
       )}
       data-active={isActive}

@@ -2,33 +2,43 @@ import { isActiveWorkspaceMembership, WORKSPACE_ROLES } from '../../entities/wor
 import { canManageAgencyWorkspaceAccess } from './agencyAccessPolicy'
 import { canManageWorkspaceMembers } from './workspaceAccessPolicy'
 
-function findClientMembership({ clientId, repositories, viewer }) {
+function findWorkspaceMembership({ repositories, viewer, workspaceId }) {
   if (!viewer?.userId || !repositories?.workspaceMemberships) {
     return null
   }
 
   return repositories.workspaceMemberships
-    .listByWorkspaceId(clientId)
+    .listByWorkspaceId(workspaceId)
     .filter(isActiveWorkspaceMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
 }
 
-export function canManageClientTeam({ clientId, repositories, viewer }) {
-  if (!viewer || !clientId) {
+export function canManageWorkspaceTeam({ repositories, viewer, workspaceId }) {
+  if (!viewer || !workspaceId) {
     return false
   }
 
-  const client = repositories.workspaces.findById(clientId)
+  const workspace = repositories.workspaces.findById(workspaceId)
 
-  if (!client) {
+  if (!workspace) {
     return false
   }
 
-  const membership = findClientMembership({ clientId, repositories, viewer })
+  const membership = findWorkspaceMembership({ repositories, viewer, workspaceId })
 
-    return canManageAgencyWorkspaceAccess(viewer, clientId)
-    || canManageWorkspaceMembers(viewer, clientId)
+  return canManageAgencyWorkspaceAccess(viewer, workspaceId)
+    || canManageWorkspaceMembers(viewer, workspaceId)
     || membership?.role === WORKSPACE_ROLES.OWNER
+}
+
+export function canManageClientTeam({ clientId, repositories, viewer }) {
+  return canManageWorkspaceTeam({ repositories, viewer, workspaceId: clientId })
+}
+
+export function assertCanManageWorkspaceTeam({ repositories, viewer, workspaceId }) {
+  if (!canManageWorkspaceTeam({ repositories, viewer, workspaceId })) {
+    throw new Error('Only workspace admins can manage this workspace team.')
+  }
 }
 
 export function assertCanManageClientTeam({ clientId, repositories, viewer }) {

@@ -65,7 +65,7 @@ export function ModalSection({ children, className, iconName, title }) {
   )
 }
 
-export function PortalSlugInput({ hint = 'Auto-generated from the account name. You can edit it before creating the account.', onChange, slugIssue, value }) {
+export function PortalSlugInput({ hint = 'Auto-generated from the client name. You can edit it before creating the client.', onChange, slugIssue, value }) {
   return (
     <FormField
       error={slugIssue}
@@ -137,10 +137,10 @@ export function StatusSelect({ onFieldChange, value }) {
 
 export function ClientTypeSelect({ onFieldChange, value }) {
   return (
-    <FormField hint="Clinic accounts unlock patient acquisition, calls, reputation, and compliance portal surfaces." label="Account type" required>
+    <FormField hint="Clinic clients unlock patient acquisition, calls, reputation, and compliance portal surfaces." label="Client type" required>
       <Select onValueChange={(nextValue) => onFieldChange('type', nextValue)} value={value || CLIENT_TYPES.GENERIC}>
         <SelectTrigger>
-          <SelectValue placeholder="Select account type" />
+          <SelectValue placeholder="Select client type" />
         </SelectTrigger>
         <SelectContent>
           {Object.values(CLIENT_TYPES).map((type) => {

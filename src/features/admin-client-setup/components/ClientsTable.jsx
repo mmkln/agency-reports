@@ -59,7 +59,7 @@ export function ClientsTable({
         <Table className="min-w-[980px]">
           <TableHeader>
             <TableRow>
-              <TableHead>Account</TableHead>
+              <TableHead>Client</TableHead>
               <TableHead>Project Status</TableHead>
               <TableHead>Primary Contact</TableHead>
               <TableHead>Created</TableHead>
@@ -95,7 +95,7 @@ export function ClientsTable({
                   <TableActionCell>
                     <div className="flex justify-end gap-1.5">
                       <Button asChild size="sm" variant="outline">
-                        <Link to={`/admin/client-overview?clientId=${client.id}`}>
+                        <Link to={`/admin/clinic-setup?clientId=${client.id}`}>
                           Open
                         </Link>
                       </Button>
@@ -108,12 +108,12 @@ export function ClientsTable({
                         <DropdownMenuContent align="end" className="min-w-56">
                           <DropdownMenuItem onClick={() => onEditClient(client)}>
                             <Icon name="wrench" size={15} />
-                            Edit account
+                            Edit client
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to={`/admin/client-preview?clientId=${client.id}`}>
+                            <Link to={`/client/growth-review?clientId=${client.id}`}>
                               <Icon name="arrowUpRight" size={15} />
-                              Preview portal
+                              Preview Growth Review
                             </Link>
                           </DropdownMenuItem>
                           {pendingInvite ? (
@@ -127,7 +127,7 @@ export function ClientsTable({
                           <DropdownMenuItem asChild>
                             <Link to={`/admin/client-access?clientId=${client.id}`}>
                               <Icon name="users" size={15} />
-                              Manage access
+                              Access
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -136,7 +136,7 @@ export function ClientsTable({
                             variant="destructive"
                           >
                             <Icon name="close" size={15} />
-                            Delete account
+                            Delete client
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -150,7 +150,7 @@ export function ClientsTable({
       </DataTableSurface>
 
       <ConfirmationDialog
-        confirmLabel="Delete account"
+        confirmLabel="Delete client"
         description={
           clientPendingDelete
             ? `This removes ${clientPendingDelete.name} and its local demo portal data. This action cannot be undone.`
@@ -163,7 +163,7 @@ export function ClientsTable({
           }
         }}
         open={Boolean(clientPendingDelete)}
-        title="Delete account?"
+        title="Delete client?"
         tone="destructive"
       />
     </>

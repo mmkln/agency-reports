@@ -157,11 +157,8 @@ CLIENT_ADMIN:
 CLIENT_TEAM:
   Limited client portal + client workspace settings read context + account settings.
 
-CLIENT_TEAM with DAILY_OPS_VIEW:
-  Daily Operations + account settings + minimal workspace context.
-
-CLIENT_TEAM with other reporting capabilities:
-  Assigned capability routes + account settings + minimal workspace context.
+CLIENT_TEAM with DENTAL_GROWTH_REVIEW_VIEW:
+  Growth Review + account settings + minimal workspace context.
 ```
 
 Acceptance:

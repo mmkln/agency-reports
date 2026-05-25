@@ -15,16 +15,13 @@ import { routeMetadata } from '../routing/routeDefinitions'
 import { listAgencyWorkspaceClients } from '../../domain/services/adminClientService'
 import { getRouteAccessClientContext } from '../../domain/services/routeAccessContextService'
 import {
-  canUseAgencyWorkspaceSwitcher,
   hasAgencyAdminMembership,
   hasAgencyMembership,
 } from '../../domain/policies/routeAccessPolicy'
 import { AGENCY_ROLE_META } from '../../entities/agency-membership'
 import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
 import {
-  ClientWorkspaceSwitcher,
   getClientWorkspacePageIdByRoutePath,
-  getClientWorkspaceSidebarItems,
 } from '../../features/admin-client-workspace'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import {
@@ -35,22 +32,15 @@ import {
 } from '../providers/session/demoRoleSwitch'
 
 const legacyHashRouteMap = Object.freeze({
-  '#action-needed': '/client/action-needed',
-  '#client-dashboard': '/client/reports-dashboards',
-  '#client-files-links': '/client/files-links',
-  '#client-overview': '/client/overview',
-  '#client-performance': '/client/reports-dashboards',
-  '#client-requests': '/client/requests',
-  '#projects': '/client/projects',
-  '#files-links': '/client/files-links',
-  '#updates': '/client/updates',
-  '#client-updates': '/client/updates',
-  '#requests': '/client/requests',
+  '#client-dashboard': '/client/growth-review',
+  '#client-overview': '/client/growth-review',
+  '#client-performance': '/client/growth-review',
+  '#growth-review': '/client/growth-review',
   '#settings': '/client/settings',
   '#client-settings': '/client/settings',
-  '#dashboard': '/client/reports-dashboards',
-  '#performance': '/client/reports-dashboards',
-  '#performance-dashboard': '/client/reports-dashboards',
+  '#dashboard': '/client/growth-review',
+  '#performance': '/client/growth-review',
+  '#performance-dashboard': '/client/growth-review',
 })
 
 function getSidebarViewerMeta(viewer) {
@@ -150,14 +140,6 @@ export function RootLayout() {
     navigate(option.homeHref, { replace: true })
   }
 
-  const handleClientWorkspaceSelect = (clientId) => {
-    navigate(`/admin/client-overview?clientId=${clientId}`)
-  }
-
-  const handleExitClientWorkspace = () => {
-    navigate('/admin/clients')
-  }
-
   if (!viewer) {
     return <Outlet />
   }
@@ -193,37 +175,21 @@ export function RootLayout() {
   const selectedWorkspaceClientId = routeParams.clientId ?? null
   const selectedWorkspaceClient = workspaceClients.find((client) => client.id === selectedWorkspaceClientId) ?? null
   const currentClientWorkspacePageId = getClientWorkspacePageIdByRoutePath(location.pathname)
-  const canUseClientWorkspaceSelector = canUseAgencyWorkspaceSwitcher(viewer)
   const isClientWorkspaceNavigationActive = Boolean(
-    canUseClientWorkspaceSelector
-    && selectedWorkspaceClient
+    selectedWorkspaceClient
     && currentClientWorkspacePageId,
   )
-  const sidebarNavigationItems = isClientWorkspaceNavigationActive
-    ? getClientWorkspaceSidebarItems(selectedWorkspaceClient, selectedWorkspaceClient.id)
-    : undefined
 
   return (
     <>
       <AppShell
         activeRoute={activeRoute}
-        activeSidebarNavigationId={isClientWorkspaceNavigationActive ? currentClientWorkspacePageId : undefined}
+        activeSidebarNavigationId={isClientWorkspaceNavigationActive ? 'admin-clients' : undefined}
         onAuthChange={onAuthChange}
         onSignOut={onSignOut}
         routeParams={routeParams}
         runtime={runtime}
-        sidebarNavigationItems={sidebarNavigationItems}
         sidebarViewerMeta={getSidebarViewerMeta(viewer)}
-        sidebarWorkspaceSwitcher={canUseClientWorkspaceSelector ? (
-          <ClientWorkspaceSwitcher
-            clients={workspaceClients}
-            isLoading={workspaceClientsResource.status === 'loading'}
-            onExitWorkspace={handleExitClientWorkspace}
-            onSelectClient={handleClientWorkspaceSelect}
-            selectedClientId={selectedWorkspaceClientId}
-            showExitWorkspace={isClientWorkspaceNavigationActive}
-          />
-        ) : null}
         routes={accessibleRoutes}
       >
         <Outlet />

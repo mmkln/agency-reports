@@ -30,7 +30,7 @@ function getClientInitials(client) {
 
 function getClientMeta(client) {
   if (!client) {
-    return 'Account workspace'
+    return 'Client workspace'
   }
 
   const statusLabel = CLIENT_STATUS_META[client.status]?.label
@@ -38,10 +38,10 @@ function getClientMeta(client) {
   const metaParts = [statusLabel, typeLabel].filter(Boolean)
 
   if (metaParts.length > 0) {
-    return metaParts.join(' • ')
+    return metaParts.join(' | ')
   }
 
-  return 'Account workspace'
+  return 'Client workspace'
 }
 
 function AccountAvatar({ client, size = 'default' }) {
@@ -69,7 +69,7 @@ export function ClientWorkspaceSwitcher({
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? null
-  const triggerLabel = selectedClient?.name ?? 'Select account'
+  const triggerLabel = selectedClient?.name ?? 'Select client'
   const normalizedQuery = query.trim().toLowerCase()
   const filteredClients = useMemo(() => {
     if (!normalizedQuery) {
@@ -112,12 +112,13 @@ export function ClientWorkspaceSwitcher({
       {showExitWorkspace ? (
         <SidebarMenuItem>
           <SidebarMenuButton
+            className="text-text-muted"
             onClick={onExitWorkspace}
             tooltip="Back to agency"
             type="button"
             variant="quiet"
           >
-            <Icon className="text-current" name="arrowRight" size={18} />
+            <Icon className="rotate-180 text-current" name="arrowRight" size={18} />
             <span>Back to agency</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -128,6 +129,7 @@ export function ClientWorkspaceSwitcher({
             <SidebarMenuButton
               aria-label={triggerLabel}
               aria-expanded={isOpen}
+              className="h-auto min-h-target rounded-block bg-block-subtle py-tag hover:bg-control-hover"
               tooltip={triggerLabel}
               type="button"
               variant="quiet"
@@ -142,19 +144,19 @@ export function ClientWorkspaceSwitcher({
           <PopoverContent align="start" className="w-80 p-tag" side="right" sideOffset={10}>
             <Command className="rounded-island bg-transparent">
               <CommandInput
-                aria-label="Search accounts"
+                aria-label="Search clients"
                 className="h-control-small py-0"
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search accounts..."
+                placeholder="Search clients..."
                 value={query}
               />
               <CommandList>
                 {isLoading ? (
-                  <CommandEmpty>Loading accounts...</CommandEmpty>
+                  <CommandEmpty>Loading clients...</CommandEmpty>
                 ) : filteredClients.length === 0 ? (
-                  <CommandEmpty>No accounts found.</CommandEmpty>
+                  <CommandEmpty>No clients found.</CommandEmpty>
                 ) : (
-                  <CommandGroup className="p-tag" heading="Account workspaces">
+                  <CommandGroup className="p-tag" heading="Client workspaces">
                     {filteredClients.map((client) => {
                       const isSelected = client.id === selectedClientId
 
