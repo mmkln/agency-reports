@@ -11,6 +11,7 @@ import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
+import { AUTH_ADAPTERS } from '../../../app/providers/auth/authAdapters'
 import { useAuth } from '../../../app/providers/auth/useAuth'
 
 const DEFAULT_EMAIL = 'admin@growthlab.example'
@@ -51,6 +52,7 @@ function AuthInput({ iconName, label, ...props }) {
 export function LoginPage({ onAuthChange }) {
   const auth = useAuth()
   const authClient = auth.authClient
+  const isDjangoSessionAuth = auth.authAdapter === AUTH_ADAPTERS.DJANGO_SESSION
   const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -66,7 +68,7 @@ export function LoginPage({ onAuthChange }) {
   const loginProfiles = loginProfilesResource.data ?? []
 
   function signIn(nextEmail, nextPassword) {
-    void authClient.signInWithEmail({
+    void (auth.onSignIn ?? authClient.signInWithEmail)({
         email: nextEmail,
         password: nextPassword,
       }).then((viewer) => {
@@ -138,12 +140,20 @@ export function LoginPage({ onAuthChange }) {
                 </div>
 
                 <div className="rounded-block bg-block p-component shadow-block">
-                  <p className="text-label text-text-muted">Demo users</p>
-                  <div className="mt-item grid gap-item sm:grid-cols-2">
-                    {loginProfiles.map((profile) => (
-                      <SignInButton key={profile.id} onClick={signIn} profile={profile} />
-                    ))}
-                  </div>
+                    <p className="text-label text-text-muted">
+                      {isDjangoSessionAuth ? 'Session access' : 'Demo users'}
+                    </p>
+                    {isDjangoSessionAuth ? (
+                      <p className="mt-item text-ui text-text-secondary">
+                        Sign in with your Django account to access assigned workspaces.
+                      </p>
+                    ) : (
+                      <div className="mt-item grid gap-item sm:grid-cols-2">
+                        {loginProfiles.map((profile) => (
+                          <SignInButton key={profile.id} onClick={signIn} profile={profile} />
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
             </section>
@@ -160,16 +170,16 @@ export function LoginPage({ onAuthChange }) {
 
                 <form className="mt-panel grid gap-component" onSubmit={handleSubmit}>
                   <AuthInput
-                    autoComplete="email"
+                    autoComplete={isDjangoSessionAuth ? 'username' : 'email'}
                     iconName="mail"
-                    label="Email address"
+                    label={isDjangoSessionAuth ? 'Username' : 'Email address'}
                     name="email"
                     onChange={(event) => {
                       setEmail(event.target.value)
                       setError('')
                     }}
                     required
-                    type="email"
+                    type={isDjangoSessionAuth ? 'text' : 'email'}
                     value={email}
                   />
 
@@ -188,7 +198,9 @@ export function LoginPage({ onAuthChange }) {
                       type="password"
                       value={password}
                     />
-                    <span className="text-label font-normal text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
+                    {!isDjangoSessionAuth ? (
+                      <span className="text-label font-normal text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
+                    ) : null}
                   </div>
 
                   <Button className="w-full" size="lg" type="submit">

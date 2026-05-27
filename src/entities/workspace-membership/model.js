@@ -31,6 +31,8 @@ export const WORKSPACE_CAPABILITIES = Object.freeze({
   VIEW_FILES: 'files.view',
   VIEW_REPORTS: 'reports.view',
   VIEW_DASHBOARDS: 'dashboards.view',
+  VIEW_INTEGRATIONS: 'integrations.view',
+  MANAGE_INTEGRATIONS: 'integrations.manage',
   VIEW_CLINIC_METRICS: 'clinic_metrics.view',
   RESPOND_TO_REPUTATION: 'reputation.respond',
   REVIEW_COMPLIANCE: 'compliance.review',

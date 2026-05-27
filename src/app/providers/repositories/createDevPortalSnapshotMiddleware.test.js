@@ -163,4 +163,56 @@ describe('createDevPortalSnapshotMiddleware', () => {
       name: 'HTTP Client',
     })
   })
+
+  it('accepts GHL events and serves calculated Growth Review snapshots', async () => {
+    const middleware = createDevPortalSnapshotMiddleware({
+      seedData: createSeedDataForRepositoryContract(),
+    })
+    const eventResult = await callMiddleware(middleware, createRequest({
+      body: {
+        appointment_id: 'appt-1',
+        client_id: 'client-1',
+        contact_id: 'contact-1',
+        event_id: 'appt-1-created',
+        event_type: 'appointment_created',
+        occurred_at: '2026-05-12T09:00:00.000Z',
+        period_end: '2026-05-17',
+        period_start: '2026-05-11',
+        source: 'facebook lead',
+      },
+      method: 'POST',
+      url: '/api/integrations/ghl/events',
+    }))
+    const eventPayload = JSON.parse(eventResult.response.body)
+
+    expect(eventResult.response.statusCode).toBe(202)
+    expect(eventPayload.normalized.booking).toMatchObject({
+      appointment_id: 'appt-1',
+      client_id: 'client-1',
+    })
+    expect(eventPayload.period.content.hero_metrics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'bookings',
+          value: '1',
+        }),
+      ]),
+    )
+
+    const readResult = await callMiddleware(middleware, createRequest({
+      method: 'GET',
+      url: '/api/client/growth-review?clientId=client-1&start=2026-05-11&end=2026-05-17',
+    }))
+    const readPayload = JSON.parse(readResult.response.body)
+
+    expect(readResult.response.statusCode).toBe(200)
+    expect(readPayload.period.content.funnel).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'booked',
+          stage_count: 1,
+        }),
+      ]),
+    )
+  })
 })

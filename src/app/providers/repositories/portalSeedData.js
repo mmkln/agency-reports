@@ -1615,8 +1615,12 @@ export const portalSeedData = Object.freeze({
       previous: true,
     }),
   ],
+  growth_review_snapshots: [],
   invitation_access_tokens: [],
   location_performance: [],
+  normalized_bookings: [],
+  normalized_contact_events: [],
+  normalized_leads: [],
   performance_dashboard_periods: [
     {
       account_manager: 'Sarah Johnson',
@@ -2147,6 +2151,7 @@ export const portalSeedData = Object.freeze({
       updated_at: '2026-05-08T09:00:00.000Z',
     },
   ],
+  raw_ghl_events: [],
   reports: [
     {
       client_decisions_needed: 'Approve the next creative batch and confirm final offer wording.',

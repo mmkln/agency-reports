@@ -10,7 +10,7 @@ import { getRouteAccessClientContext } from '../../domain/services/routeAccessCo
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 
 export function ProtectedRoute({ children, route }) {
-  const { runtime, viewer } = useAuth()
+  const { isAuthLoading, runtime, viewer } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const routeParams = Object.fromEntries(searchParams.entries())
@@ -24,7 +24,7 @@ export function ProtectedRoute({ children, route }) {
     dependencyKey: `${viewer?.userId ?? 'anonymous'}:protected-route-access:${routeForAccess?.id ?? routeForAccess?.path ?? ''}:${routeClientId ?? ''}`,
     initialData: null,
     load: () => {
-      if (!viewer || !isClientScopedRoute(routeForAccess)) {
+      if (!viewer || runtime.skipRepositoryRouteContext || !isClientScopedRoute(routeForAccess)) {
         return Promise.resolve(null)
       }
 
@@ -38,6 +38,7 @@ export function ProtectedRoute({ children, route }) {
   const isCheckingContext = Boolean(
     viewer
     && isClientScopedRoute(routeForAccess)
+    && !runtime.skipRepositoryRouteContext
     && routeAccessContextResource.status === 'loading',
   )
   const canAccess = canAccessRouteWithContext(viewer, routeForAccess, {
@@ -48,6 +49,10 @@ export function ProtectedRoute({ children, route }) {
   })
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return
+    }
+
     if (!viewer) {
       navigate('/login', { replace: true })
       return
@@ -56,7 +61,11 @@ export function ProtectedRoute({ children, route }) {
     if (!isCheckingContext && !canAccess) {
       navigate('/access-denied', { replace: true })
     }
-  }, [canAccess, isCheckingContext, navigate, viewer])
+  }, [canAccess, isAuthLoading, isCheckingContext, navigate, viewer])
+
+  if (isAuthLoading) {
+    return <div className="p-6 text-ui text-text-muted">Checking session...</div>
+  }
 
   if (!viewer) {
     return <div className="p-6 text-ui text-text-muted">Redirecting to sign in...</div>
