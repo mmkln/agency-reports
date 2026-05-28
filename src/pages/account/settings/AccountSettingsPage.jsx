@@ -15,15 +15,6 @@ import {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function splitName(name = '') {
-  const [firstName = '', ...rest] = String(name).trim().split(/\s+/).filter(Boolean)
-
-  return {
-    first_name: firstName,
-    last_name: rest.join(' '),
-  }
-}
-
 function createProfileForm(profile) {
   return {
     email: profile?.email ?? '',
@@ -40,7 +31,7 @@ function FieldError({ children }) {
   return <p className="text-label text-destructive">{children}</p>
 }
 
-export function AccountSettingsPage({ onAuthChange, onSignOut, runtime }) {
+export function AccountSettingsPage({ onAuthChange, onSignOut }) {
   const apiClient = useMemo(() => createBackendApiClient(), [])
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
@@ -53,7 +44,6 @@ export function AccountSettingsPage({ onAuthChange, onSignOut, runtime }) {
   useEffect(() => {
     let isActive = true
 
-    setStatus('loading')
     apiClient.get('/api/auth/profile/')
       .then((payload) => {
         if (!isActive) {

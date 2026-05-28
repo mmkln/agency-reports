@@ -1,5 +1,5 @@
-import { AdminClinicSetupWorkspace } from '../../../features/admin-clinic-setup'
+import { ClientSettingsPage } from '../../client/settings/ClientSettingsPage'
 
-export function AdminClinicSetupPage({ routeParams = {}, runtime }) {
-  return <AdminClinicSetupWorkspace routeParams={routeParams} runtime={runtime} />
+export function AdminClinicSetupPage(props) {
+  return <ClientSettingsPage {...props} />
 }

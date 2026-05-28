@@ -1,162 +1,199 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
+import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
-  deleteAdminClient,
-  listAdminClientPendingInvitations,
-  listAdminClients,
-} from '../../../domain/services/adminClientService'
-import {
-  ClientsTable,
-  ClientsTableSkeleton,
-  CreateClientModal,
-  EmptyClientsState,
-  useCreateClientForm,
-  useEditClientForm,
-} from '../../../features/admin-client-setup'
-import { useAsyncResource } from '../../../shared/data/useAsyncResource'
-import { useToast } from '../../../shared/notifications'
-import { ErrorBlock } from '@/shared/ui'
+  Button,
+  ErrorBlock,
+  Input,
+  Panel,
+  PanelBody,
+  PanelHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui'
 
-function createUuid() {
-  return crypto.randomUUID()
+function getPrimaryAgencyId(viewer) {
+  return viewer?.activeAgencyId ?? viewer?.agencyMemberships?.[0]?.agencyId ?? ''
 }
 
-function EditClientModalController({
-  client,
-  clients,
-  dataClient,
-  onClose,
-  onUpdated,
-  viewer,
-}) {
-  const editClientForm = useEditClientForm({
-    client,
-    dataClient,
-    existingClients: clients,
-    onUpdated,
-    viewer,
-  })
-
-  return (
-    <CreateClientModal
-      error={editClientForm.error}
-      form={editClientForm.form}
-      isOpen
-      mode="edit"
-      onClose={onClose}
-      onSubmit={editClientForm.handleSubmit}
-      onUpdateField={editClientForm.updateField}
-      slugIssue={editClientForm.slugIssue}
-    />
-  )
+function createClientForm() {
+  return {
+    name: '',
+    type: 'clinic',
+  }
 }
 
-export function AdminClientsPage({ routeParams = {}, runtime }) {
-  const isCreateModalOpen = routeParams.newClient === 'true'
-  const [clientPendingEdit, setClientPendingEdit] = useState(null)
+export function AdminClientsPage({ runtime }) {
+  const apiClient = useMemo(() => createBackendApiClient(), [])
   const navigate = useNavigate()
-  const toast = useToast()
-  const clientsResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:admin-clients`,
-    initialData: {
-      clients: [],
-      pendingInvitationsByClientId: {},
-    },
-    load: () => runtime.dataClient.read((repositories) => {
-      const clients = listAdminClients({
-        repositories,
-        viewer: runtime.viewer,
-      })
-      const pendingInvitationsByClientId = Object.fromEntries(
-        listAdminClientPendingInvitations({
-          repositories,
-          viewer: runtime.viewer,
-        }).map((invitation) => [invitation.client_id, invitation]),
-      )
+  const [workspaces, setWorkspaces] = useState([])
+  const [form, setForm] = useState(() => createClientForm())
+  const [error, setError] = useState('')
+  const [status, setStatus] = useState('loading')
+  const [createStatus, setCreateStatus] = useState('idle')
 
-      return {
-        clients,
-        pendingInvitationsByClientId,
+  function applyWorkspacesPayload(payload) {
+    setWorkspaces(payload.workspaces ?? [])
+    setStatus('ready')
+  }
+
+  function reloadWorkspaces() {
+    return apiClient.get('/api/workspaces/')
+      .then((payload) => {
+        applyWorkspacesPayload(payload)
+      })
+      .catch((caughtError) => {
+        setError(caughtError.message)
+        setStatus('error')
+      })
+  }
+
+  useEffect(() => {
+    let isActive = true
+
+    apiClient.get('/api/workspaces/')
+      .then((payload) => {
+        if (!isActive) {
+          return
+        }
+
+        applyWorkspacesPayload(payload)
+      })
+      .catch((caughtError) => {
+        if (!isActive) {
+          return
+        }
+
+        setError(caughtError.message)
+        setStatus('error')
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [apiClient])
+
+  function createWorkspace(event) {
+    event.preventDefault()
+
+    const agencyId = getPrimaryAgencyId(runtime.viewer)
+    const name = form.name.trim()
+
+    if (!agencyId || !name) {
+      setError('Agency and workspace name are required.')
+      return
+    }
+
+    setCreateStatus('creating')
+    setError('')
+    apiClient.post('/api/workspaces/', {
+      agency_id: agencyId,
+      name,
+      type: form.type,
+    }).then((payload) => {
+      const workspace = payload.workspace
+      setForm(createClientForm())
+      setCreateStatus('idle')
+      void reloadWorkspaces()
+      if (workspace?.id) {
+        navigate(`/admin/clinic-setup?clientId=${workspace.id}`)
       }
-    }),
-  })
-  const clients = clientsResource.data?.clients ?? []
-  const pendingInvitationsByClientId = clientsResource.data?.pendingInvitationsByClientId ?? {}
-  const createClientForm = useCreateClientForm({
-    activityIdGenerator: createUuid,
-    dataClient: runtime.dataClient,
-    existingClients: clients,
-    idGenerator: createUuid,
-    onCreated: (client) => {
-      void clientsResource.reload()
-      toast.success('Client created', `${client.name} is ready in the admin workspace.`)
-      navigate('/admin/clients', { replace: true })
-    },
-    viewer: runtime.viewer,
-  })
-  function refreshClients() {
-    void clientsResource.reload()
+    }).catch((caughtError) => {
+      setError(caughtError.message)
+      setCreateStatus('idle')
+    })
   }
 
   return (
-    <>
-      {clientsResource.status === 'loading' ? (
-        <ClientsTableSkeleton />
-      ) : clientsResource.status === 'error' ? (
-        <ErrorBlock title="Clients could not be loaded">
-          {clientsResource.error}
-        </ErrorBlock>
-      ) : clients.length > 0 ? (
-        <ClientsTable
-          clients={clients}
-          onDeleteClient={(clientId) => {
-            const deletedClient = clients.find((client) => client.id === clientId)
+    <div className="grid gap-card">
+      <Panel>
+        <PanelHeader
+          divided
+          subtitle="Backend workspaces managed through active agency relationships."
+          title="Create clinic workspace"
+        />
+        <PanelBody>
+          <form className="flex flex-col gap-control sm:flex-row" onSubmit={createWorkspace}>
+            <Input
+              aria-label="Workspace name"
+              className="min-w-0 flex-1"
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              placeholder="Green Dental"
+              required
+              value={form.name}
+            />
+            <Button disabled={createStatus === 'creating'} type="submit">
+              {createStatus === 'creating' ? 'Creating...' : 'Create workspace'}
+            </Button>
+          </form>
+        </PanelBody>
+      </Panel>
 
-            void runtime.dataClient.write((repositories) => deleteAdminClient({
-              clientId,
-              repositories,
-              viewer: runtime.viewer,
-            }))
-              .then(() => {
-                refreshClients()
-                toast.success('Client deleted', `${deletedClient?.name ?? 'Client'} was removed from local demo data.`)
-              })
-              .catch((error) => {
-                toast.error('Client could not be deleted', error.message)
-              })
-          }}
-          onEditClient={setClientPendingEdit}
-          pendingInvitationsByClientId={pendingInvitationsByClientId}
-        />
-      ) : (
-        <EmptyClientsState />
-      )}
-      <CreateClientModal
-        error={createClientForm.error}
-        form={createClientForm.form}
-        isOpen={isCreateModalOpen}
-        lastCreatedClient={createClientForm.lastCreatedClient}
-        onClose={() => navigate('/admin/clients', { replace: true })}
-        onSubmit={createClientForm.handleSubmit}
-        onUpdateField={createClientForm.updateField}
-        slugIssue={createClientForm.slugIssue}
-      />
-      {clientPendingEdit ? (
-        <EditClientModalController
-          client={clientPendingEdit}
-          clients={clients}
-          dataClient={runtime.dataClient}
-          key={clientPendingEdit.id}
-          onClose={() => setClientPendingEdit(null)}
-          onUpdated={(client) => {
-            void clientsResource.reload()
-            toast.success('Client updated', `${client.name} workspace details were saved.`)
-            setClientPendingEdit(null)
-          }}
-          viewer={runtime.viewer}
-        />
+      {error ? (
+        <ErrorBlock title="Clients request failed">
+          {error}
+        </ErrorBlock>
       ) : null}
-    </>
+
+      <Panel>
+        <PanelHeader divided title="Client workspaces" />
+        <PanelBody className="overflow-x-auto p-0">
+          {status === 'loading' ? (
+            <div className="min-h-[220px] animate-pulse" />
+          ) : status === 'error' ? (
+            <div className="p-card">
+              <ErrorBlock title="Client workspaces could not be loaded">
+                {error}
+              </ErrorBlock>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workspaces.map((workspace) => (
+                  <TableRow key={workspace.id}>
+                    <TableCell className="font-medium">{workspace.name}</TableCell>
+                    <TableCell>{workspace.type}</TableCell>
+                    <TableCell>{workspace.status}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-tag">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/admin/clinic-setup?clientId=${workspace.id}`}>Setup</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/admin/clinic-data-sources?clientId=${workspace.id}`}>Data</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="ghost">
+                          <Link to={`/client/growth-review?clientId=${workspace.id}`}>Review</Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {workspaces.length === 0 ? (
+                  <TableRow>
+                    <TableCell className="text-text-muted" colSpan={4}>
+                      No managed workspaces yet.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          )}
+        </PanelBody>
+      </Panel>
+    </div>
   )
 }
