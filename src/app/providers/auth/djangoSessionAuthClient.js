@@ -83,14 +83,11 @@ export function createDjangoSessionAuthClient({
     getCurrentViewer() {
       return fetchCurrentViewer()
     },
-    listLoginProfiles() {
-      return Promise.resolve([])
-    },
-    async signInWithEmail({ email, password }) {
+    async signInWithUsername({ username, password }) {
       await this.fetchCsrf()
       const response = await apiClient.post('/api/auth/login/', {
         password,
-        username: email,
+        username,
       })
 
       return mapDjangoUserToViewer(response.user)
@@ -98,9 +95,6 @@ export function createDjangoSessionAuthClient({
     async signOut() {
       await this.fetchCsrf()
       await apiClient.post('/api/auth/logout/', {})
-    },
-    startDemoSession() {
-      return Promise.resolve()
     },
   }
 }

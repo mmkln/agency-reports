@@ -1,27 +1,17 @@
-const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8000'
+import {
+  BackendApiError,
+  createBackendApiClient,
+  getBackendApiBaseUrl,
+} from '../../../shared/api/backendApiClient'
 
 export function getAuthApiBaseUrl() {
-  return (import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL).replace(/\/$/, '')
+  return getBackendApiBaseUrl()
 }
 
-function getCookie(name) {
-  if (typeof document === 'undefined') {
-    return ''
-  }
-
-  const prefix = `${name}=`
-  return document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(prefix))
-    ?.slice(prefix.length) ?? ''
-}
-
-export class AuthApiError extends Error {
-  constructor(message, { status } = {}) {
-    super(message)
+export class AuthApiError extends BackendApiError {
+  constructor(message, options = {}) {
+    super(message, options)
     this.name = 'AuthApiError'
-    this.status = status
   }
 }
 
@@ -29,49 +19,27 @@ export function createAuthApiClient({
   baseUrl = getAuthApiBaseUrl(),
   fetchImpl = globalThis.fetch,
 } = {}) {
-  async function request(path, {
-    body,
-    method = 'GET',
-    requiresCsrf = false,
-  } = {}) {
-    const headers = {
-      Accept: 'application/json',
-    }
+  const backendClient = createBackendApiClient({ baseUrl, fetchImpl })
 
-    if (body !== undefined) {
-      headers['Content-Type'] = 'application/json'
-    }
-
-    if (requiresCsrf) {
-      const csrfToken = getCookie('csrftoken')
-      if (csrfToken) {
-        headers['X-CSRFToken'] = csrfToken
+  async function request(...args) {
+    try {
+      return await backendClient.request(...args)
+    } catch (error) {
+      if (error instanceof BackendApiError) {
+        throw new AuthApiError(error.message, {
+          detail: error.detail,
+          payload: error.payload,
+          status: error.status,
+        })
       }
+
+      throw error
     }
-
-    const response = await fetchImpl(`${baseUrl}${path}`, {
-      body: body === undefined ? undefined : JSON.stringify(body),
-      credentials: 'include',
-      headers,
-      method,
-    })
-    const contentType = response.headers.get('content-type') ?? ''
-    const data = contentType.includes('application/json')
-      ? await response.json()
-      : null
-
-    if (!response.ok) {
-      throw new AuthApiError(data?.detail ?? 'Authentication request failed.', {
-        status: response.status,
-      })
-    }
-
-    return data
   }
 
   return {
     get(path) {
-      return request(path)
+      return request(path, { method: 'GET' })
     },
     post(path, body) {
       return request(path, {

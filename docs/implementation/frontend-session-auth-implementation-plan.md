@@ -2,7 +2,7 @@
 
 ## Goal
 
-Connect the React frontend to the Django session auth API without breaking the existing demo/local auth flow.
+Connect the React frontend to the Django session auth API.
 
 Backend contract already exists:
 
@@ -21,8 +21,8 @@ credentials: "include"
 
 ## Current Frontend State
 
-- `AuthProvider` currently builds a local auth client from repository seed data.
-- `LoginPage` uses email/password demo login and demo profile buttons.
+- `AuthProvider` builds a Django session auth client.
+- `LoginPage` uses username/password session login.
 - `ProtectedRoute` expects a synchronous `viewer`.
 - Route access policies expect the rich local viewer shape:
   - agency memberships
@@ -33,21 +33,12 @@ credentials: "include"
 
 ## Architecture Decision
 
-Add a separate Django session auth adapter instead of deleting local auth immediately.
+Use the Django session auth client as the only runtime auth adapter.
 
 ```text
 AuthProvider
-  -> local demo auth client OR django session auth client
+  -> django session auth client
 ```
-
-Runtime mode should be selected with an env var:
-
-```text
-VITE_AUTH_ADAPTER=local
-VITE_AUTH_ADAPTER=django-session
-```
-
-Default remains local until the Django-backed frontend path is verified.
 
 ## Backend Base URL
 
@@ -57,15 +48,17 @@ Add frontend env var:
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-For same-origin deployment later, this can become empty or relative.
+For local development, the default backend URL follows the current frontend
+hostname, so `localhost:5173` calls `localhost:8000` and `127.0.0.1:5173` calls
+`127.0.0.1:8000`. Use `VITE_API_BASE_URL` only when the backend runs somewhere
+else.
 
 ## Required New Frontend Pieces
 
 - [x] `src/app/providers/auth/djangoSessionAuthClient.js`
   - `getCurrentViewer()`
-  - `signInWithEmail({ email, password })`
+  - `signInWithUsername({ username, password })`
   - `signOut()`
-  - `listLoginProfiles()`
   - `fetchCsrf()`
 
 - [x] `src/app/providers/auth/authApiClient.js`
@@ -94,10 +87,9 @@ For same-origin deployment later, this can become empty or relative.
 
 - [x] Update `LoginPage`
   - keep existing visual design
-  - call `authClient.signInWithEmail`
-  - for Django mode, label field as username/email if needed
-  - hide demo profile buttons when auth adapter is `django-session`
-  - remove demo password hint in Django mode
+  - call `authClient.signInWithUsername`
+  - label the identity field as username
+  - remove demo profile buttons and password hint
 
 ## Viewer Mapping
 
@@ -171,12 +163,12 @@ If this is not enough for current route policy, add a small compatibility mapper
 ## Tests
 
 - [x] `authApiClient` sends `credentials: "include"`.
-- [x] `djangoSessionAuthClient.signInWithEmail` calls CSRF then login.
+- [x] `djangoSessionAuthClient.signInWithUsername` calls CSRF then login.
 - [x] `djangoSessionAuthClient.getCurrentViewer` maps `/me` to viewer shape.
 - [x] `djangoSessionAuthClient.getCurrentViewer` returns `null` on 401.
 - [x] `AuthProvider` shows loading state during bootstrap.
 - [x] `ProtectedRoute` does not redirect while auth is loading.
-- [x] `LoginPage` hides demo profiles in Django mode.
+- [x] `LoginPage` uses the session username/password form only.
 
 ## Not In This Pass
 

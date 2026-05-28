@@ -122,7 +122,7 @@ Do not solve top-of-page clutter by adding another compact row, card strip, bord
 - Use the sidebar for stable top-level destinations and high-frequency navigation.
 - Use top navigation only for a small flat set of destinations where labels remain readable and the page content still starts quickly.
 - Choose sidebar, top navigation, or split view from the product hierarchy before styling active states. Do not switch navigation patterns to solve a visual dissatisfaction with individual buttons.
-- Keep role changes and demo role switchers independent from shell decisions. Role can filter destinations and permissions without requiring a different navigation component.
+- Keep role and permission changes independent from shell decisions. Role can filter destinations and permissions without requiring a different navigation component.
 - Treat persistent sidebars and headers as anchored app shell, and reserve floating navigation treatment for temporary controls or explicitly requested floating chrome.
 - For selected sidebar items, use rounded neutral selection fills, label/icon contrast, and focus states before adding any color.
 - For collapsed/expanded sidebar items, keep the icon anchor stable and reveal labels independently. Do not animate icon alignment, padding, or justification.

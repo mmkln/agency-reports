@@ -23,7 +23,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   test: {
-    exclude: ['dist/**', 'e2e/**', 'node_modules/**'],
+    exclude: ['dist/**', 'node_modules/**'],
   },
   server: {
     historyApiFallback: true,

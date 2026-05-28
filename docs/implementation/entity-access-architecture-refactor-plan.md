@@ -485,7 +485,8 @@ Only do this after tests prove compatibility behavior.
 [x] Remove `viewer.role` dependency from route/navigation policies.
 [x] Remove `viewer.clientId/clientIds` dependency from route/navigation policies.
 [x] Remove global `USER_ROLES` from mature access code.
-[x] Remove display-only legacy role values from demo role switcher and login profiles.
+[x] Remove display-only legacy role values from login profiles.
+[x] Remove demo role switcher support from platform shell and auth layout.
 [x] Remove route-level `allowedRoles` / `navAllowedRoles` authority vocabulary.
 [x] Remove production imports of `CLIENT_MEMBERSHIP_ROLES` / `CLIENT_MEMBERSHIP_STATUSES` from domain services and active UI features.
 [x] Add workspace-native member list and role select entity UI primitives.

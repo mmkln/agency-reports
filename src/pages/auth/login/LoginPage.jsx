@@ -3,34 +3,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
-import {
-  DEMO_AUTH_PASSWORD,
-  getHomeHrefForViewer,
-} from '../../../domain/services/authService'
-import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getHomeHrefForViewer } from '../../../domain/services/authService'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
-import { AUTH_ADAPTERS } from '../../../app/providers/auth/authAdapters'
 import { useAuth } from '../../../app/providers/auth/useAuth'
 
-const DEFAULT_EMAIL = 'admin@growthlab.example'
-
-function SignInButton({ onClick, profile }) {
-  return (
-    <Button
-      className="h-auto justify-start rounded-control px-control py-tag text-left"
-      onClick={() => onClick(profile.email, DEMO_AUTH_PASSWORD)}
-      type="button"
-      variant="secondary"
-    >
-      <span className="grid min-w-0 gap-micro">
-        <span className="truncate font-semibold text-text-primary">{profile.name}</span>
-        <span className="truncate text-label font-normal text-text-secondary">{profile.roleLabel}</span>
-      </span>
-    </Button>
-  )
-}
+const DEFAULT_USERNAME = ''
 
 function AuthInput({ iconName, label, ...props }) {
   return (
@@ -52,26 +31,19 @@ function AuthInput({ iconName, label, ...props }) {
 export function LoginPage({ onAuthChange }) {
   const auth = useAuth()
   const authClient = auth.authClient
-  const isDjangoSessionAuth = auth.authAdapter === AUTH_ADAPTERS.DJANGO_SESSION
   const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const toast = useToast()
-  const [email, setEmail] = useState(DEFAULT_EMAIL)
-  const [password, setPassword] = useState(DEMO_AUTH_PASSWORD)
+  const [username, setUsername] = useState(DEFAULT_USERNAME)
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const loginProfilesResource = useAsyncResource({
-    dependencyKey: `login-profiles:${auth.authRevision ?? 0}`,
-    initialData: [],
-    load: () => authClient.listLoginProfiles(),
-  })
-  const loginProfiles = loginProfilesResource.data ?? []
 
-  function signIn(nextEmail, nextPassword) {
-    void (auth.onSignIn ?? authClient.signInWithEmail)({
-        email: nextEmail,
-        password: nextPassword,
-      }).then((viewer) => {
+  function signIn(nextUsername, nextPassword) {
+    void (auth.onSignIn ?? authClient.signInWithUsername)({
+      username: nextUsername,
+      password: nextPassword,
+    }).then((viewer) => {
       resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
       const nextHref = searchParams.get('next')
@@ -88,7 +60,7 @@ export function LoginPage({ onAuthChange }) {
 
   function handleSubmit(event) {
     event.preventDefault()
-    signIn(email, password)
+    signIn(username, password)
   }
 
   return (
@@ -112,21 +84,6 @@ export function LoginPage({ onAuthChange }) {
               </div>
 
               <div className="grid gap-component">
-                <div className="rounded-block bg-block p-card shadow-block">
-                  <div className="flex items-start justify-between gap-component">
-                    <div>
-                      <p className="text-ui text-text-secondary">Active workspaces</p>
-                      <p className="mt-item text-data text-text-primary">12</p>
-                    </div>
-                    <span className="inline-flex min-h-control-mini items-center rounded-full bg-success-muted px-control text-label text-success-foreground">
-                      Live
-                    </span>
-                  </div>
-                  <div className="mt-component h-item overflow-hidden rounded-full bg-control-selected">
-                    <span className="block h-full w-3/4 rounded-full bg-primary" />
-                  </div>
-                </div>
-
                 <div className="rounded-block bg-block p-component shadow-block">
                   <div className="flex items-center gap-component">
                     <span className="flex size-target shrink-0 items-center justify-center rounded-control bg-success-muted text-success-foreground">
@@ -140,20 +97,10 @@ export function LoginPage({ onAuthChange }) {
                 </div>
 
                 <div className="rounded-block bg-block p-component shadow-block">
-                    <p className="text-label text-text-muted">
-                      {isDjangoSessionAuth ? 'Session access' : 'Demo users'}
-                    </p>
-                    {isDjangoSessionAuth ? (
-                      <p className="mt-item text-ui text-text-secondary">
-                        Sign in with your Django account to access assigned workspaces.
-                      </p>
-                    ) : (
-                      <div className="mt-item grid gap-item sm:grid-cols-2">
-                        {loginProfiles.map((profile) => (
-                          <SignInButton key={profile.id} onClick={signIn} profile={profile} />
-                        ))}
-                      </div>
-                    )}
+                  <p className="text-label text-text-muted">Account access</p>
+                  <p className="mt-item text-ui text-text-secondary">
+                    Sign in with your account credentials to access assigned workspaces.
+                  </p>
                 </div>
               </div>
             </section>
@@ -164,23 +111,24 @@ export function LoginPage({ onAuthChange }) {
                   <p className="text-ui text-brand">Welcome back</p>
                   <h2 className="mt-item text-display text-text-primary">Sign in to your account</h2>
                   <p className="mt-item text-body text-text-secondary">
-                    Use your work email to continue to the portal workspace.
+                    Use your username to continue to the portal workspace.
                   </p>
                 </div>
 
                 <form className="mt-panel grid gap-component" onSubmit={handleSubmit}>
                   <AuthInput
-                    autoComplete={isDjangoSessionAuth ? 'username' : 'email'}
-                    iconName="mail"
-                    label={isDjangoSessionAuth ? 'Username' : 'Email address'}
-                    name="email"
+                    autoComplete="username"
+                    iconName="user"
+                    label="Username"
+                    name="username"
                     onChange={(event) => {
-                      setEmail(event.target.value)
+                      setUsername(event.target.value)
                       setError('')
                     }}
+                    placeholder="Username"
                     required
-                    type={isDjangoSessionAuth ? 'text' : 'email'}
-                    value={email}
+                    type="text"
+                    value={username}
                   />
 
                   <div className="grid gap-item">
@@ -188,19 +136,16 @@ export function LoginPage({ onAuthChange }) {
                       autoComplete="current-password"
                       iconName="lock"
                       label="Password"
-                      minLength={6}
                       name="password"
                       onChange={(event) => {
                         setPassword(event.target.value)
                         setError('')
                       }}
+                      placeholder="Password"
                       required
                       type="password"
                       value={password}
                     />
-                    {!isDjangoSessionAuth ? (
-                      <span className="text-label font-normal text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
-                    ) : null}
                   </div>
 
                   <Button className="w-full" size="lg" type="submit">

@@ -1,9 +1,7 @@
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { flushSync } from 'react-dom'
+import { useEffect } from 'react'
 import { useAuth } from '../providers/auth/useAuth'
 import { AppShell } from '../../shared/layout'
-import { DemoRoleSwitcher } from '../components/DemoRoleSwitcher'
 import {
   canAccessRouteWithContext,
   filterRoutesForNavigation,
@@ -24,12 +22,6 @@ import {
   getClientWorkspacePageIdByRoutePath,
 } from '../../features/admin-client-workspace'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
-import {
-  getDemoRoleOption,
-  getDemoRoleOptionByViewer,
-  readDemoRoleKey,
-  writeDemoRoleKey,
-} from '../providers/session/demoRoleSwitch'
 
 const legacyHashRouteMap = Object.freeze({
   '#client-dashboard': '/client/growth-review',
@@ -71,11 +63,10 @@ function getSidebarViewerMeta(viewer) {
 }
 
 export function RootLayout() {
-  const { onAuthChange, onLogin, onSignOut, runtime, viewer } = useAuth()
+  const { onAuthChange, onSignOut, runtime, viewer } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [demoRoleKey, setDemoRoleKey] = useState(() => readDemoRoleKey())
   const routeParams = Object.fromEntries(searchParams.entries())
   const activeRoute = routeMetadata.find((route) => route.path === location.pathname) ?? routeMetadata[0]
   const routeClientId = getRouteClientId({
@@ -130,16 +121,6 @@ export function RootLayout() {
     navigate(`${hashRoute}${queryString ? `?${queryString}` : ''}`, { replace: true })
   }, [location.hash, location.pathname, navigate, runtime.defaultClientId, searchParams])
 
-  const handleDemoRoleChange = (roleKey) => {
-    const option = getDemoRoleOption(roleKey)
-    writeDemoRoleKey(option.key)
-    setDemoRoleKey(option.key)
-    flushSync(() => {
-      onLogin(option.userId)
-    })
-    navigate(option.homeHref, { replace: true })
-  }
-
   if (!viewer) {
     return <Outlet />
   }
@@ -181,23 +162,17 @@ export function RootLayout() {
   )
 
   return (
-    <>
-      <AppShell
-        activeRoute={activeRoute}
-        activeSidebarNavigationId={isClientWorkspaceNavigationActive ? 'admin-clients' : undefined}
-        onAuthChange={onAuthChange}
-        onSignOut={onSignOut}
-        routeParams={routeParams}
-        runtime={runtime}
-        sidebarViewerMeta={getSidebarViewerMeta(viewer)}
-        routes={accessibleRoutes}
-      >
-        <Outlet />
-      </AppShell>
-      <DemoRoleSwitcher
-        activeRoleKey={viewer ? getDemoRoleOptionByViewer(viewer).key : demoRoleKey}
-        onRoleChange={handleDemoRoleChange}
-      />
-    </>
+    <AppShell
+      activeRoute={activeRoute}
+      activeSidebarNavigationId={isClientWorkspaceNavigationActive ? 'admin-clients' : undefined}
+      onAuthChange={onAuthChange}
+      onSignOut={onSignOut}
+      routeParams={routeParams}
+      runtime={runtime}
+      sidebarViewerMeta={getSidebarViewerMeta(viewer)}
+      routes={accessibleRoutes}
+    >
+      <Outlet />
+    </AppShell>
   )
 }

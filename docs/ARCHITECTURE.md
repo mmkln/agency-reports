@@ -15,7 +15,7 @@ account/workspace deletion behavior.
 src/
 ├── app/                          # Application-level setup
 │   ├── App.jsx                  # Root component with providers
-│   ├── components/              # App-level components (DemoRoleSwitcher)
+│   ├── components/              # App-level components
 │   ├── layout/                  # Layout wrappers (RootLayout, AuthLayout)
 │   ├── providers/               # Context providers
 │   │   ├── auth/                # Authentication context and hooks
@@ -122,14 +122,12 @@ const { viewer, runtime, onAuthChange, repositories } = useAuth()
 Main application layout with:
 - AppShell wrapper for authenticated users
 - Role-filtered navigation
-- Demo role switcher
 - Outlet for nested routes
 
 ### AuthLayout (`src/app/layout/AuthLayout.jsx`)
 
 Auth page layout (login, accept invite):
 - Simple wrapper without AppShell
-- Demo role switcher visible
 - Used for pages in 'auth' layout type
 
 ## Data Management
