@@ -77,6 +77,7 @@ export const routeDefinitions = [
     iconName: 'settings',
     navigationScope: AGENCY,
     navOrder: 20,
+    showInNav: false,
     element: <AccountSettingsPageRoute />,
   },
   {
