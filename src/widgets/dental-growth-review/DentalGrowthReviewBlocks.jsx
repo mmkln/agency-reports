@@ -3,6 +3,11 @@ import { useState } from 'react'
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   EmptyState,
   FreshnessMiniBar,
   Input,
@@ -95,21 +100,29 @@ const statusChevronClass = {
   yellow: 'text-warning',
 }
 
-function StatusChevron({ status = 'grey', tooltip }) {
+function StatusChevron({
+  label = 'View details',
+  onClick,
+  status = 'grey',
+  tooltip = 'View details',
+}) {
   const className = statusChevronClass[status] ?? statusChevronClass.grey
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          aria-label={tooltip ?? formatLabel(status)}
-          className="inline-flex h-control-small w-control-small cursor-help items-center justify-center rounded-full hover:bg-control-hover"
-          tabIndex={0}
+        <Button
+          aria-label={label}
+          className="rounded-full text-text-secondary hover:bg-control-hover hover:text-text-primary"
+          onClick={onClick}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
         >
           <Icon className={className} name="chevronDown" size={16} />
-        </span>
+        </Button>
       </TooltipTrigger>
-      <TooltipContent>{tooltip ?? formatLabel(status)}</TooltipContent>
+      <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
   )
 }
@@ -696,6 +709,133 @@ function MetricProgress({ metric }) {
   )
 }
 
+const statusBadgeTone = {
+  green: 'green',
+  grey: 'neutral',
+  red: 'rose',
+  yellow: 'amber',
+}
+
+function getStatusExplanation(status, target) {
+  if (status === 'green') {
+    return target
+      ? `On track against ${target}.`
+      : 'On track for the selected period.'
+  }
+
+  if (status === 'yellow') {
+    return target
+      ? `Needs attention against ${target}.`
+      : 'Needs attention for the selected period.'
+  }
+
+  if (status === 'red') {
+    return target
+      ? `Action required against ${target}.`
+      : 'Action required for the selected period.'
+  }
+
+  return 'Unavailable or not enough trusted data for this period.'
+}
+
+function getMetricDeltaText(metric) {
+  const parts = [metric.delta_absolute, metric.delta_percent]
+    .map((value) => String(value ?? '').trim())
+    .filter(Boolean)
+
+  return parts.length ? parts.join(' / ') : ''
+}
+
+function DetailRow({ label, value }) {
+  const displayValue = value === 0 ? '0' : String(value ?? '').trim()
+
+  return (
+    <div className="grid gap-tag py-item sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+      <dt className="text-label font-normal text-text-muted">{label}</dt>
+      <dd className="min-w-0 text-ui text-text-primary">{displayValue || 'Not provided'}</dd>
+    </div>
+  )
+}
+
+function DetailSection({ children, title }) {
+  return (
+    <section className="grid gap-item">
+      <h3 className="text-label font-semibold text-text-secondary">{title}</h3>
+      <dl className="rounded-block bg-block-subtle p-component">
+        {children}
+      </dl>
+    </section>
+  )
+}
+
+function MetricDrilldownModal({ metric, onClose }) {
+  const open = Boolean(metric)
+
+  return (
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose()
+        }
+      }}
+      open={open}
+    >
+      <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
+        {metric ? (
+          <>
+            <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
+              <DialogTitle>{getHeroMetricTitle(metric)}</DialogTitle>
+              <DialogDescription>
+                Metric calculation, comparison, source, and confidence.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid max-h-overlay-body gap-component overflow-y-auto px-panel pb-panel">
+              <section className="grid gap-item pt-component">
+                <div className="flex items-start justify-between gap-component">
+                  <div>
+                    <p className="text-data tabular-nums text-text-primary">{formatMetricValue(metric)}</p>
+                    {getMetricDeltaText(metric) ? (
+                      <p className={`mt-tag inline-flex items-center gap-tag text-label font-semibold ${getDeltaToneClass(metric)}`}>
+                        <Icon name={getDeltaIconName(metric)} size={13} />
+                        {getMetricDeltaText(metric)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <Badge tone={statusBadgeTone[metric.status] ?? 'neutral'}>
+                    {formatLabel(metric.status || 'grey')}
+                  </Badge>
+                </div>
+                <p className="text-ui text-text-secondary">
+                  {getStatusExplanation(metric.status, metric.target)}
+                </p>
+              </section>
+
+              <DetailSection title="Period comparison">
+                <DetailRow label="Current period" value={formatMetricValue(metric)} />
+                <DetailRow label="Prior period" value={metric.prior_period_value} />
+                <DetailRow label="Delta" value={getMetricDeltaText(metric)} />
+                <DetailRow label="Target" value={metric.target} />
+                <DetailRow label="Benchmark" value={metric.benchmark} />
+              </DetailSection>
+
+              <DetailSection title="Calculation">
+                <DetailRow label="Formula" value={metric.formula} />
+                <DetailRow label="Definition" value={metric.tooltip_definition} />
+                <DetailRow label="Confidence" value={formatLabel(metric.confidence)} />
+              </DetailSection>
+
+              <DetailSection title="Source data">
+                <DetailRow label="Source systems" value={metric.source} />
+                <DetailRow label="Last updated" value={formatDate(metric.last_updated_at)} />
+              </DetailSection>
+            </div>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function formatPriorLine(metric) {
   if (!metric.prior_period_value && !metric.delta_percent && !metric.delta_absolute) {
     return ''
@@ -737,15 +877,20 @@ function getDeltaIconName(metric) {
   return 'arrowUpRight'
 }
 
-export function MetricCard({ metric }) {
-  const statusTooltip = `${metric.target ? `Target ${metric.target}. ` : ''}${metric.confidence && metric.confidence !== 'high' ? `${formatLabel(metric.confidence)} confidence.` : 'On track.'}`.trim()
+export function MetricCard({ metric, onOpenDetails = () => {} }) {
+  const statusTooltip = 'View metric details'
   const priorLine = formatPriorLine(metric)
 
   return (
     <article className="grid min-h-52 gap-component rounded-block bg-block p-component">
       <div className="flex min-w-0 items-start justify-between gap-control">
         <p className="min-w-0 text-label font-normal text-text-muted">{getHeroMetricTitle(metric)}</p>
-        <StatusChevron status={metric.status} tooltip={statusTooltip} />
+        <StatusChevron
+          label={`View ${getHeroMetricTitle(metric)} details`}
+          onClick={() => onOpenDetails(metric)}
+          status={metric.status}
+          tooltip={statusTooltip}
+        />
       </div>
       <div>
         <div className="flex items-end gap-control">
@@ -771,10 +916,24 @@ export function MetricCard({ metric }) {
 }
 
 export function HeroMetrics({ metrics }) {
+  const [selectedMetric, setSelectedMetric] = useState(null)
+
   return (
-    <section className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
-      {metrics.slice(0, 6).map((metric) => <MetricCard key={metric.id} metric={metric} />)}
-    </section>
+    <>
+      <section className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
+        {metrics.slice(0, 6).map((metric) => (
+          <MetricCard
+            key={metric.id}
+            metric={metric}
+            onOpenDetails={setSelectedMetric}
+          />
+        ))}
+      </section>
+      <MetricDrilldownModal
+        metric={selectedMetric}
+        onClose={() => setSelectedMetric(null)}
+      />
+    </>
   )
 }
 
@@ -981,7 +1140,84 @@ function getFunnelAttentionTone(stage) {
   return conversionRate >= target * 0.85 ? 'warning' : 'critical'
 }
 
-function FunnelFlowChart({ stages }) {
+function getFunnelStageStatus(stage) {
+  const attentionTone = getFunnelAttentionTone(stage)
+
+  if (attentionTone === 'critical') {
+    return 'red'
+  }
+
+  if (attentionTone === 'warning') {
+    return 'yellow'
+  }
+
+  return stage.status ?? 'green'
+}
+
+function FunnelStageDrilldownModal({ onClose, stage }) {
+  const open = Boolean(stage)
+  const status = stage ? getFunnelStageStatus(stage) : 'grey'
+
+  return (
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose()
+        }
+      }}
+      open={open}
+    >
+      <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
+        {stage ? (
+          <>
+            <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
+              <DialogTitle>{getStageDisplayName(stage)}</DialogTitle>
+              <DialogDescription>
+                Funnel stage conversion, drop-off, target, and confidence.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid max-h-overlay-body gap-component overflow-y-auto px-panel pb-panel">
+              <section className="grid gap-item pt-component">
+                <div className="flex items-start justify-between gap-component">
+                  <div>
+                    <p className="text-data tabular-nums text-text-primary">{stage.stage_count}</p>
+                    <p className="mt-tag text-label font-normal text-text-muted">
+                      {stage.conversion_rate}% conversion
+                    </p>
+                  </div>
+                  <Badge tone={statusBadgeTone[status] ?? 'neutral'}>
+                    {formatLabel(status)}
+                  </Badge>
+                </div>
+                <p className="text-ui text-text-secondary">
+                  {getStatusExplanation(status, `${stage.target}% target`)}
+                </p>
+              </section>
+
+              <DetailSection title="Stage performance">
+                <DetailRow label="Stage count" value={stage.stage_count} />
+                <DetailRow label="Input count" value={stage.input_count} />
+                <DetailRow label="Output count" value={stage.output_count} />
+                <DetailRow label="Conversion" value={`${stage.conversion_rate}%`} />
+                <DetailRow label="Drop-off count" value={stage.drop_off_count} />
+                <DetailRow label="Drop-off rate" value={stage.drop_off_rate} />
+                <DetailRow label="Target" value={stage.target ? `${stage.target}%` : ''} />
+              </DetailSection>
+
+              <DetailSection title="Calculation">
+                <DetailRow label="Formula" value="output count / input count * 100" />
+                <DetailRow label="Confidence" value={formatLabel(stage.confidence)} />
+                <DetailRow label="Raw stage name" value={stage.stage_name ?? stage.name} />
+              </DetailSection>
+            </div>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function FunnelFlowChart({ onOpenStageDetails, stages }) {
   const { points } = getFunnelGeometry(stages)
   const segmentBoundaries = getFunnelSegmentBoundaries(points)
   const path = buildFunnelAreaPath(segmentBoundaries)
@@ -1012,8 +1248,10 @@ function FunnelFlowChart({ stages }) {
                     {getStageDisplayName(stage)}
                     {attentionTone ? (
                       <StatusChevron
+                        label={`View ${getStageDisplayName(stage)} details`}
+                        onClick={() => onOpenStageDetails(stage)}
                         status={status}
-                        tooltip={`Below target: ${stage.conversion_rate}% vs ${stage.target}% target.`}
+                        tooltip="View stage details"
                       />
                     ) : null}
                   </span>
@@ -1060,6 +1298,7 @@ function FunnelFlowChart({ stages }) {
 }
 
 export function FunnelView({ funnel }) {
+  const [selectedStage, setSelectedStage] = useState(null)
   const rows = funnel
     .filter((stage) => {
       const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
@@ -1081,27 +1320,35 @@ export function FunnelView({ funnel }) {
   ))
 
   return (
-    <section className="grid gap-component">
-      <div className="rounded-block bg-block p-component">
-        <div className="pb-component">
-          <div>
-            <h2 className="text-heading text-text-primary">Patient Funnel</h2>
+    <>
+      <section className="grid gap-component">
+        <div className="rounded-block bg-block p-component">
+          <div className="pb-component">
+            <div>
+              <h2 className="text-heading text-text-primary">Patient Funnel</h2>
+            </div>
           </div>
+          <FunnelFlowChart
+            onOpenStageDetails={setSelectedStage}
+            stages={rows}
+          />
+          {treatmentUnavailable ? (
+            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+              Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
+            </p>
+          ) : null}
+          {treatmentPartial ? (
+            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+              Treatment acceptance is shown with partial PMS data. Treat this stage as directional, not exact.
+            </p>
+          ) : null}
         </div>
-        <FunnelFlowChart stages={rows} />
-        {treatmentUnavailable ? (
-          <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
-            Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
-          </p>
-        ) : null}
-        {treatmentPartial ? (
-          <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
-            Treatment acceptance is shown with partial PMS data. Treat this stage as directional, not exact.
-          </p>
-        ) : null}
-      </div>
-
-    </section>
+      </section>
+      <FunnelStageDrilldownModal
+        onClose={() => setSelectedStage(null)}
+        stage={selectedStage}
+      />
+    </>
   )
 }
 
