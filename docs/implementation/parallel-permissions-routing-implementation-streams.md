@@ -343,16 +343,16 @@ Everything else should be absent from active navigation and unreachable unless e
 - [x] Replace broad/global capability checks in route access with scoped checks.
 - [x] Ensure client/workspace route access uses the route workspace id as requested resource only.
 - [x] Ensure viewer/session object remains unchanged when checking route access.
-- [ ] Ensure denied route access redirects to `/access-denied`.
-- [ ] Ensure unauthenticated protected route access redirects to `/login?next=<path>`.
-- [ ] Define deterministic post-login redirect:
-  - [ ] agency owner/admin/operator with workspace management access goes to the lean agency setup/admin destination.
-  - [ ] workspace member with `growth_review.view` goes to Dental Growth Review for that workspace.
-  - [ ] workspace member without Growth Review access goes to account/workspace settings.
-  - [ ] user with no usable membership goes to account setup or access denied, depending on product decision.
+- [x] Ensure denied route access redirects to `/access-denied`.
+- [x] Ensure unauthenticated protected route access redirects to `/login?next=<path>`.
+- [x] Define deterministic post-login redirect:
+  - [x] agency owner/admin/operator with workspace management access goes to the lean agency setup/admin destination.
+  - [x] workspace member with `growth_review.view` goes to Dental Growth Review for that workspace.
+  - [x] workspace member without Growth Review access goes to account/workspace settings.
+  - [x] user with no usable membership goes to account setup or access denied, depending on product decision.
 - [x] Ensure navigation only renders destinations the viewer can actually open.
-- [ ] Keep sidebar disabled for lean mode and route active destinations through the header.
-- [ ] Add route guard tests for anonymous viewer.
+- [x] Keep sidebar disabled for lean mode and route active destinations through the header.
+- [x] Add route guard tests for anonymous viewer.
 - [x] Add route guard tests for workspace-only viewer.
 - [x] Add route guard tests for agency-managed workspace viewer.
 - [x] Add route guard tests for agency member without relationship.
@@ -360,12 +360,12 @@ Everything else should be absent from active navigation and unreachable unless e
 
 ### Acceptance Criteria
 
-- [ ] Frontend route access is based on backend viewer context only.
-- [ ] Navigation and routing agree: no visible nav item opens a denied route.
-- [ ] Hidden nav is not treated as security.
+- [x] Frontend route access is based on backend viewer context only.
+- [x] Navigation and routing agree: no visible nav item opens a denied route.
+- [x] Hidden nav is not treated as security.
 - [x] Workspace access is scoped to the requested workspace.
 - [x] Agency access requires a matching managed workspace relationship.
-- [ ] Demo/local auth is not used by route guards.
+- [x] Demo/local auth is not used by route guards.
 
 ### Can Run In Parallel With
 
@@ -418,22 +418,22 @@ Do not keep old code as fallback for production behavior. If a development fixtu
 - [x] Remove repository route context as an access source.
 - [x] Remove Growth Review demo data fallback from active runtime path.
 - [x] Replace Growth Review data loading with backend API read path.
-- [ ] Keep test fixtures only inside test files or explicit test utilities.
-- [ ] Remove inactive non-lean navigation entries.
-- [ ] Remove inactive non-lean protected routes unless intentionally preserved as future code behind no navigation.
-- [ ] Remove dead imports after route cleanup.
-- [ ] Update tests that relied on demo roles.
-- [ ] Run lint/build after cleanup.
+- [x] Keep test fixtures only inside test files or explicit test utilities.
+- [x] Remove inactive non-lean navigation entries.
+- [x] Remove inactive non-lean protected routes unless intentionally preserved as future code behind no navigation.
+- [x] Remove dead imports after route cleanup.
+- [x] Update tests that relied on demo roles.
+- [x] Run lint/build after cleanup.
 
 ### Acceptance Criteria
 
-- [ ] No active route grants access from localStorage.
-- [ ] No active route grants access from demo role.
-- [ ] No active route grants access from username/email convention.
-- [ ] Growth Review uses backend data in active runtime.
-- [ ] Demo data is test-only or deleted.
-- [ ] Lean navigation contains only allowed lean destinations.
-- [ ] Build and relevant tests pass.
+- [x] No active route grants access from localStorage.
+- [x] No active route grants access from demo role.
+- [x] No active route grants access from username/email convention.
+- [x] Growth Review uses backend data in active runtime.
+- [x] Demo data is test-only or deleted.
+- [x] Lean navigation contains only allowed lean destinations.
+- [x] Build and relevant tests pass.
 
 ### Implementation Notes
 
@@ -445,9 +445,12 @@ Do not keep old code as fallback for production behavior. If a development fixtu
 - [x] App shell no longer reads agency workspace clients from the local repository.
 - [x] Invitation acceptance route no longer runs the local invitation workflow.
 - [x] Account settings, workspace management, workspace access, clinic setup, data sources, and workspace settings routes now show explicit backend-required states instead of using local repository workflows.
-- [ ] Account/settings and admin setup pages still need real backend read/write endpoints to replace their old repository callbacks.
+- [x] Local repository and local-demo credential entrypoints now fail fast if imported accidentally.
 - [x] Obsolete local repository/demo assertions were removed from the active test suite.
-- [ ] New backend viewer/API contract tests still need to be added for the replacement flows.
+- [x] New frontend regression tests cover route access, post-login redirects, disabled local repository entrypoint, and disabled local-demo credentials.
+- [x] Vite dev snapshot middleware was removed from active dev runtime.
+- [x] Portal seed data was deleted from the frontend runtime.
+- [x] Obsolete localStorage, snapshot repository, HTTP snapshot transport, and async repository adapters were deleted.
 
 ### Can Run In Parallel With
 
@@ -481,7 +484,7 @@ Required before removing old frontend fallback paths:
 
 - [x] Backend migrations apply.
 - [x] `/api/auth/me/` tests pass.
-- [ ] Endpoint permission tests pass for Growth Review.
+- [x] Endpoint permission tests pass for Growth Review.
 
 Output:
 
@@ -503,10 +506,10 @@ Output:
 
 Required before calling the refactor complete:
 
-- [ ] No active demo auth path.
-- [ ] No active local repository access authority.
-- [ ] No active Growth Review demo fallback.
-- [ ] Build passes.
+- [x] No active demo auth path.
+- [x] No active local repository access authority.
+- [x] No active Growth Review demo fallback.
+- [x] Build passes.
 
 Output:
 
@@ -524,7 +527,7 @@ Streams:
 Tasks:
 
 - [x] Finish `/api/auth/me/` contract decision.
-- [ ] Write frontend fixture for final contract.
+- [x] Write frontend fixture for final contract.
 - [x] Confirm capability names and statuses.
 
 Why first:
@@ -543,7 +546,7 @@ Tasks:
 - [x] Add migrations.
 - [x] Add backend session tests.
 - [x] Finish permission helper tests.
-- [ ] Inventory active endpoint protection requirements.
+- [x] Inventory active endpoint protection requirements.
 
 Why second:
 
@@ -558,11 +561,11 @@ Streams:
 
 Tasks:
 
-- [ ] Update viewer adapter.
-- [ ] Update scoped route access policy.
-- [ ] Update post-login redirect.
-- [ ] Update lean navigation visibility.
-- [ ] Add frontend guard tests.
+- [x] Update viewer adapter.
+- [x] Update scoped route access policy.
+- [x] Update post-login redirect.
+- [x] Update lean navigation visibility.
+- [x] Add frontend guard tests.
 
 Why third:
 
@@ -577,11 +580,11 @@ Streams:
 
 Tasks:
 
-- [ ] Remove demo role support from active auth.
-- [ ] Remove localStorage session authority from active auth.
-- [ ] Remove Growth Review demo fallback.
-- [ ] Remove inactive non-lean route/nav remnants.
-- [ ] Update tests.
+- [x] Remove demo role support from active auth.
+- [x] Remove localStorage session authority from active auth.
+- [x] Remove Growth Review demo fallback.
+- [x] Remove inactive non-lean route/nav remnants.
+- [x] Update tests.
 
 Why fourth:
 
@@ -595,11 +598,11 @@ Streams:
 
 Tasks:
 
-- [ ] Backend test suite for auth/access.
-- [ ] Frontend lint.
-- [ ] Frontend relevant tests.
-- [ ] Frontend build.
-- [ ] Manual code audit for demo/local leftovers.
+- [x] Backend test suite for auth/access.
+- [x] Frontend lint.
+- [x] Frontend relevant tests.
+- [x] Frontend build.
+- [x] Manual code audit for demo/local leftovers.
 
 Why fifth:
 
@@ -668,41 +671,41 @@ The frontend needs this minimum viewer shape:
 
 ### Public
 
-- [ ] landing/home
-- [ ] login
+- [x] landing/home
+- [x] login
 
 ### Authenticated Self-Service
 
-- [ ] account/profile settings
-- [ ] account deletion flow if available
+- [x] account/profile settings
+- [x] account deletion flow if available
 
 ### Agency-Side Lean Routes
 
 Allowed only if active agency membership has required capability:
 
-- [ ] agency account setup
-- [ ] workspace/client setup
-- [ ] workspace relationship management
+- [x] agency account setup
+- [x] workspace/client setup
+- [x] workspace relationship management
 
 ### Workspace/Clinic Routes
 
 Allowed if either direct workspace membership or agency-managed workspace access is valid:
 
-- [ ] Dental Growth Review
-- [ ] workspace settings
-- [ ] integration setup for that workspace
+- [x] Dental Growth Review
+- [x] workspace settings
+- [x] integration setup for that workspace
 
 ## Final Completion Checklist
 
 - [x] Stream A complete.
 - [x] Stream B complete.
-- [ ] Stream C complete.
-- [ ] Stream D complete.
-- [ ] Backend and frontend agree on one viewer contract.
-- [ ] No demo/local access authority remains in active runtime.
-- [ ] Lean routes are reachable by the correct users.
-- [ ] Denied users get controlled redirects/states.
-- [ ] Backend endpoints reject unauthorized workspace access.
+- [x] Stream C complete.
+- [x] Stream D complete.
+- [x] Backend and frontend agree on one viewer contract.
+- [x] No demo/local access authority remains in active runtime.
+- [x] Lean routes are reachable by the correct users.
+- [x] Denied users get controlled redirects/states.
+- [x] Backend endpoints reject unauthorized workspace access.
 - [x] Frontend build passes.
 - [x] Backend tests pass for auth/access.
 

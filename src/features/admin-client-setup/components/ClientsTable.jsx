@@ -153,7 +153,7 @@ export function ClientsTable({
         confirmLabel="Delete client"
         description={
           clientPendingDelete
-            ? `This removes ${clientPendingDelete.name} and its local demo portal data. This action cannot be undone.`
+            ? `This removes ${clientPendingDelete.name} and its portal data. This action cannot be undone.`
             : ''
         }
         onConfirm={confirmDeleteClient}

@@ -103,7 +103,7 @@ export function useClientTeamManagement({ canManage, clientId, onInvitationCreat
       refreshInvitations()
       onInvitationCreated(invitation)
       toast.success('Invitation created', `${invitation.email} can accept the portal invite.`)
-      toast.info('Demo secure invite link', buildInviteLink(invitation.token), {
+      toast.info('Secure invite link', buildInviteLink(invitation.token), {
         duration: 12000,
       })
     }).catch((caughtError) => {

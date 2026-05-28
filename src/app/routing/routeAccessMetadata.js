@@ -82,6 +82,7 @@ export const routeAccessMetadata = Object.freeze([
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
       workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+      workspaceTypes: [CLIENT_TYPES.CLINIC],
     },
   },
   {

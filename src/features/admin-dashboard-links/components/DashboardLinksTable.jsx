@@ -175,7 +175,7 @@ export function DashboardLinksTable({
         confirmLabel="Delete dashboard"
         description={
           dashboardLinkPendingDelete
-            ? `This removes "${dashboardLinkPendingDelete.name}" from local demo data. Portal users will no longer see this dashboard.`
+            ? `This removes "${dashboardLinkPendingDelete.name}". Portal users will no longer see this dashboard.`
             : ''
         }
         onConfirm={confirmDeleteDashboardLink}

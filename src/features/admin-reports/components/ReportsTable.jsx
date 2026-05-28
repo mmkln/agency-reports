@@ -223,7 +223,7 @@ export function ReportsTable({
         confirmLabel="Delete report"
         description={
           reportPendingDelete
-            ? `This removes "${reportPendingDelete.title}" from local demo data. Portal users will no longer see it.`
+            ? `This removes "${reportPendingDelete.title}". Portal users will no longer see it.`
             : ''
         }
         onConfirm={confirmDeleteReport}
