@@ -15,7 +15,7 @@ export function BrandLogo({
   const isStatic = variant === 'static'
   const shouldShowShadow = iconShadow ?? (!light && !isStatic)
   const logoSizeClass = size === 'sm' ? 'h-7 w-40' : 'h-9 w-52'
-  const imageToneClass = light ? 'invert' : ''
+  const imageToneClass = light ? 'invert' : 'dark:invert'
   const shadowClass = shouldShowShadow ? 'drop-shadow-[0_8px_14px_var(--premium-shadow)]' : ''
   const rootClass = isStatic ? 'flex items-center no-underline' : 'group flex cursor-pointer items-center no-underline'
   const motionClass = isStatic ? '' : 'transition-transform duration-motion-slow ease-motion-standard group-hover:scale-105'
