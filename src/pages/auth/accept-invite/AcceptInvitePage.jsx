@@ -1,20 +1,12 @@
-import { useSearchParams } from 'react-router-dom'
+import { BackendApiRequiredPage } from '../../system/backend-api-required/BackendApiRequiredPage'
 
-import { useAuth } from '../../../app/providers/auth/useAuth'
-import { AcceptClientInvitation } from '../../../features/accept-client-invitation'
-
-export function AcceptInvitePage({ onAuthChange, routeParams, runtime }) {
-  const auth = useAuth()
-  const resolvedRuntime = runtime ?? auth.runtime
-  const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
-  const [searchParams] = useSearchParams()
-  const resolvedRouteParams = routeParams ?? Object.fromEntries(searchParams.entries())
-
+export function AcceptInvitePage() {
   return (
-    <AcceptClientInvitation
-      onAuthChange={resolvedOnAuthChange}
-      runtime={resolvedRuntime}
-      token={resolvedRouteParams.token ?? ''}
+    <BackendApiRequiredPage
+      description="Invitation acceptance must be implemented against the backend account and workspace membership API. The old local invitation workflow has been disabled."
+      returnHref="/login"
+      returnLabel="Back to sign in"
+      title="Invitation API required"
     />
   )
 }

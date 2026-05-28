@@ -1,61 +1,98 @@
-import {
-  getWorkspaceMembershipCapabilities,
-  WORKSPACE_ROLES,
-} from '../../../entities/workspace-membership'
 import { createAuthApiClient, AuthApiError } from './authApiClient'
 
-const DJANGO_ROLE_TO_WORKSPACE_ROLE = Object.freeze({
-  owner: WORKSPACE_ROLES.CLINIC_OWNER,
-})
+function normalizeCapabilities(capabilities) {
+  return Array.isArray(capabilities) ? [...new Set(capabilities)] : []
+}
 
-function mapWorkspaceMembership(workspace, userId) {
-  const role = DJANGO_ROLE_TO_WORKSPACE_ROLE[workspace.role] ?? WORKSPACE_ROLES.VIEWER
-  const membership = {
-    capabilities: Array.isArray(workspace.capabilities) ? workspace.capabilities : [],
-    id: `${workspace.id}:${userId}`,
-    role,
-    status: 'active',
-    userId,
-    workspaceId: workspace.id,
-  }
+function mapAgencyMembership(membership, userId) {
+  const agencyId = String(membership.agency_id ?? '')
 
   return {
-    ...membership,
-    capabilities: membership.capabilities.length
-      ? [...new Set(membership.capabilities)]
-      : getWorkspaceMembershipCapabilities(membership),
+    agencyId,
+    agencyName: membership.agency_name ?? '',
+    capabilities: normalizeCapabilities(membership.capabilities),
+    id: String(membership.id ?? `${agencyId}:${userId}`),
+    role: membership.role ?? '',
+    status: membership.status ?? 'active',
+    userId,
   }
 }
 
-export function mapDjangoUserToViewer(user) {
-  if (!user) {
+function mapWorkspaceMembership(workspace, userId) {
+  const workspaceId = String(workspace.workspace_id ?? '')
+
+  return {
+    capabilities: normalizeCapabilities(workspace.capabilities),
+    id: String(workspace.id ?? `${workspaceId}:${userId}`),
+    role: workspace.role ?? '',
+    status: workspace.status ?? 'active',
+    userId,
+    workspaceId,
+    workspaceName: workspace.workspace_name ?? '',
+    workspaceSlug: workspace.workspace_slug ?? '',
+    workspaceType: workspace.workspace_type ?? 'generic',
+  }
+}
+
+function mapManagedWorkspaceRelationship(relationship) {
+  const agencyId = String(relationship.agency_id ?? '')
+  const workspaceId = String(relationship.workspace_id ?? '')
+
+  return {
+    agencyId,
+    id: String(relationship.id ?? `${agencyId}:${workspaceId}`),
+    status: relationship.status ?? 'active',
+    workspaceId,
+    workspaceName: relationship.workspace_name ?? '',
+    workspaceSlug: relationship.workspace_slug ?? '',
+    workspaceType: relationship.workspace_type ?? 'generic',
+  }
+}
+
+export function mapDjangoViewerContextToViewer(viewerContext) {
+  if (!viewerContext?.user?.id) {
     return null
   }
 
-  const workspaceMemberships = (user.workspaces ?? [])
-    .map((workspace) => mapWorkspaceMembership(workspace, String(user.id)))
-  const capabilities = [...new Set(workspaceMemberships.flatMap((membership) => membership.capabilities))]
-  const activeWorkspaceId = workspaceMemberships[0]?.workspaceId ?? null
-  const name = user.email || user.username || 'Signed in user'
+  const { user } = viewerContext
+  const userId = String(user.id)
+  const agencyMemberships = (viewerContext.agency_memberships ?? [])
+    .map((membership) => mapAgencyMembership(membership, userId))
+    .filter((membership) => membership.agencyId)
+  const workspaceMemberships = (viewerContext.workspace_memberships ?? [])
+    .map((workspace) => mapWorkspaceMembership(workspace, userId))
+    .filter((membership) => membership.workspaceId)
+  const managedWorkspaceRelationships = (viewerContext.managed_workspace_relationships ?? [])
+    .map(mapManagedWorkspaceRelationship)
+    .filter((relationship) => relationship.agencyId && relationship.workspaceId)
+  const capabilities = [...new Set([
+    ...agencyMemberships.flatMap((membership) => membership.capabilities),
+    ...workspaceMemberships.flatMap((membership) => membership.capabilities),
+  ])]
+  const activeAgencyId = agencyMemberships[0]?.agencyId ?? null
+  const activeWorkspaceId = workspaceMemberships[0]?.workspaceId
+    ?? managedWorkspaceRelationships[0]?.workspaceId
+    ?? null
+  const name = user.name || user.email || 'Signed in user'
 
   return {
-    activeAgencyId: null,
+    activeAgencyId,
     activeWorkspaceId,
-    agencyMemberships: [],
+    agencyMemberships,
     authSource: 'django-session',
     capabilities,
     email: user.email ?? '',
-    managedWorkspaceRelationships: [],
+    managedWorkspaceRelationships,
     name,
-    profileId: String(user.id),
+    profileId: userId,
     user: {
       email: user.email ?? '',
-      id: String(user.id),
+      id: userId,
       name,
-      profileId: String(user.id),
+      profileId: userId,
       status: 'active',
     },
-    userId: String(user.id),
+    userId,
     workspaceMemberships,
   }
 }
@@ -65,8 +102,8 @@ export function createDjangoSessionAuthClient({
 } = {}) {
   async function fetchCurrentViewer() {
     try {
-      const user = await apiClient.get('/api/auth/me/')
-      return mapDjangoUserToViewer(user)
+      const viewerContext = await apiClient.get('/api/auth/me/')
+      return mapDjangoViewerContextToViewer(viewerContext)
     } catch (error) {
       if (error instanceof AuthApiError && error.status === 401) {
         return null
@@ -90,7 +127,7 @@ export function createDjangoSessionAuthClient({
         username,
       })
 
-      return mapDjangoUserToViewer(response.user)
+      return mapDjangoViewerContextToViewer(response.viewer)
     },
     async signOut() {
       await this.fetchCsrf()

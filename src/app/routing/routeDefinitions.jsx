@@ -1,16 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react'
-import { CLIENT_TYPES } from '../../entities/client'
-import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
-import { ACCESS_AUDIENCES } from '../../domain/policies/accessAudience'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
-import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
-import { ClientSettingsPageHeader } from '../../pages/client/settings/ClientSettingsPageHeader'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
-import { NAVIGATION_SCOPES } from './roleAccess'
+import { NAVIGATION_SCOPES, ROUTE_ACCESS_SCOPES } from './roleAccess'
 import { ProtectedRoute } from './ProtectedRoute'
+import { routeAccessMetadataById } from './routeAccessMetadata'
 import {
   AccountSettingsPageRoute,
   AdminClientAccessPageRoute,
@@ -28,7 +24,6 @@ function lazyNamed(loader, exportName) {
 const LandingPage = lazyNamed(() => import('../../pages/legacy/landing/LandingPage'), 'LandingPage')
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
-const CLIENT_PORTAL_ACCESS_AUDIENCES = [ACCESS_AUDIENCES.WORKSPACE_ADMIN, ACCESS_AUDIENCES.WORKSPACE_MEMBER]
 const {
   AGENCY,
   CLIENT_PORTAL,
@@ -40,6 +35,7 @@ export const routeDefinitions = [
     id: 'landing',
     label: 'Landing',
     layout: 'public',
+    access: routeAccessMetadataById.landing.access,
     showInNav: false,
     element: <LandingPage />,
   },
@@ -48,6 +44,7 @@ export const routeDefinitions = [
     id: 'accept-invite',
     label: 'Accept Invite',
     layout: 'auth',
+    access: routeAccessMetadataById['accept-invite'].access,
     showInNav: false,
     element: <AcceptInvitePage />,
   },
@@ -56,6 +53,7 @@ export const routeDefinitions = [
     id: 'login',
     label: 'Login',
     layout: 'auth',
+    access: routeAccessMetadataById.login.access,
     showInNav: false,
     element: <LoginPage />,
   },
@@ -64,6 +62,7 @@ export const routeDefinitions = [
     id: 'access-denied',
     label: 'Access Denied',
     layout: 'auth',
+    access: routeAccessMetadataById['access-denied'].access,
     showInNav: false,
     element: <AccessDeniedPage />,
   },
@@ -72,12 +71,9 @@ export const routeDefinitions = [
     id: 'account-settings',
     label: 'Settings',
     pageTitle: 'Account Settings',
-    accessAudiences: [
-      ACCESS_AUDIENCES.ACCOUNT_USER,
-    ],
+    access: routeAccessMetadataById['account-settings'].access,
     contentWidth: 'content',
     iconName: 'settings',
-    navigationAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
     navigationScope: AGENCY,
     navOrder: 20,
     element: <AccountSettingsPageRoute />,
@@ -87,8 +83,7 @@ export const routeDefinitions = [
     id: 'admin-clients',
     label: 'Clients',
     pageTitle: 'Clients',
-    accessAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
-    header: AdminClientsPageHeader,
+    access: routeAccessMetadataById['admin-clients'].access,
     iconName: 'users',
     navigationScope: AGENCY,
     navOrder: 10,
@@ -99,7 +94,7 @@ export const routeDefinitions = [
     id: 'admin-client-access',
     label: 'Access',
     pageTitle: 'Client Access',
-    accessAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
+    access: routeAccessMetadataById['admin-client-access'].access,
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
@@ -111,8 +106,7 @@ export const routeDefinitions = [
     id: 'admin-clinic-setup',
     label: 'Setup',
     pageTitle: 'Setup',
-    accessAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
-    clientTypes: [CLIENT_TYPES.CLINIC],
+    access: routeAccessMetadataById['admin-clinic-setup'].access,
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
@@ -124,8 +118,7 @@ export const routeDefinitions = [
     id: 'admin-clinic-data-sources',
     label: 'Data Sources',
     pageTitle: 'Data Sources',
-    accessAudiences: [ACCESS_AUDIENCES.AGENCY_ADMIN],
-    clientTypes: [CLIENT_TYPES.CLINIC],
+    access: routeAccessMetadataById['admin-clinic-data-sources'].access,
     showInNav: false,
     fullBleedContent: true,
     hidePageHeader: true,
@@ -137,19 +130,12 @@ export const routeDefinitions = [
     id: 'dental-growth-review',
     label: 'Growth Review',
     pageTitle: 'Growth Review',
-    accessAudiences: [
-      ACCESS_AUDIENCES.AGENCY_ADMIN,
-      ACCESS_AUDIENCES.AGENCY_MEMBER,
-      ACCESS_AUDIENCES.WORKSPACE_ADMIN,
-      ACCESS_AUDIENCES.WORKSPACE_MEMBER,
-    ],
-    clientTypes: [CLIENT_TYPES.CLINIC],
+    access: routeAccessMetadataById['dental-growth-review'].access,
     contentWidth: 'content',
     iconName: 'trendingUp',
     navLabel: 'Growth Review',
     navigationScope: CLIENT_PORTAL,
     navOrder: 10,
-    requiredCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
     element: <DentalGrowthReviewPageRoute />,
   },
   {
@@ -157,9 +143,8 @@ export const routeDefinitions = [
     id: 'client-settings',
     label: 'Settings',
     pageTitle: 'Settings',
-    accessAudiences: CLIENT_PORTAL_ACCESS_AUDIENCES,
+    access: routeAccessMetadataById['client-settings'].access,
     contentWidth: 'content',
-    header: ClientSettingsPageHeader,
     iconName: 'settings',
     navigationScope: CLIENT_PORTAL,
     navOrder: 20,
@@ -183,7 +168,7 @@ function buildRouteElement(route) {
     ? <AuthLayout>{route.element}</AuthLayout>
     : <Suspense fallback={<LoadingFallback />}>{route.element}</Suspense>
 
-  if (!route.accessAudiences?.length && !route.requiredCapabilities?.length) {
+  if (!route.access?.scope || route.access.scope === ROUTE_ACCESS_SCOPES.PUBLIC) {
     return routeElement
   }
 

@@ -1,5 +1,4 @@
 import { isActiveProfile } from '../../entities/profile'
-import { DEMO_AUTH_PASSWORD } from './authService'
 import {
   createPasswordCredential,
   findPasswordCredential,
@@ -26,15 +25,15 @@ function getOwnProfile({ repositories, viewer }) {
 function verifyCurrentPassword({ currentPassword, repositories, userId }) {
   const existingCredential = findPasswordCredential({ repositories, userId })
 
-  if (existingCredential) {
-    return verifyPasswordCredential({
-      password: currentPassword,
-      repositories,
-      userId,
-    })
+  if (!existingCredential) {
+    throw new Error('Password changes are handled by the backend auth API for this account.')
   }
 
-  return String(currentPassword ?? '') === DEMO_AUTH_PASSWORD
+  return verifyPasswordCredential({
+    password: currentPassword,
+    repositories,
+    userId,
+  })
 }
 
 export function changeOwnPassword({

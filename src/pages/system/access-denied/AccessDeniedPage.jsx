@@ -1,7 +1,7 @@
 import { Button, CardContent, PrimitiveCard as Card } from '@/shared/ui'
 import { Link } from 'react-router-dom'
 
-import { getHomeHrefForViewer } from '../../../domain/services/authService'
+import { getHomeHrefForViewer } from '../../../domain/services/viewerHomeService'
 import { Icon } from '../../../shared/icons'
 import { BrandLogo } from '../../../shared/ui'
 import { useAuth } from '../../../app/providers/auth/useAuth'

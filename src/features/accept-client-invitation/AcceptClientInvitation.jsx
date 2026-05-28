@@ -120,7 +120,7 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
       setRecoveryMessage(result.message)
 
       if (result.sent && result.accessToken?.token) {
-        toast.info('Demo secure invite link', buildAcceptInviteLink(result.accessToken.token), {
+        toast.info('Secure invite link', buildAcceptInviteLink(result.accessToken.token), {
           duration: 12000,
         })
       } else {

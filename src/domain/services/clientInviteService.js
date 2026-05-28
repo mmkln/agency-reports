@@ -11,7 +11,6 @@ import {
   recordActivityEvent,
 } from './activityTrackingService'
 import { createPasswordCredential, validatePasswordPair } from './authCredentialService'
-import { setAuthSession } from './authService'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const INVITATION_ACCESS_TOKEN_TTL_MS = 1000 * 60 * 15
@@ -553,7 +552,6 @@ export function acceptClientInvitation({
   now = () => new Date().toISOString(),
   password,
   repositories,
-  storage = typeof window !== 'undefined' ? window.localStorage : null,
   token,
   viewer = null,
 }) {
@@ -667,8 +665,6 @@ export function acceptClientInvitation({
       profile,
     }),
   })
-
-  setAuthSession(profile.user_id, storage)
 
   return {
     client,

@@ -1,23 +1,6 @@
 import { CLIENT_TYPES } from '../../entities/client'
-import { ACCESS_AUDIENCES } from '../../domain/policies/accessAudience'
-import {
-  canAccessRouteByContext,
-  canAccessWorkspaceRouteByContext,
-  getDefaultNavigationScopeByContext,
-  hasWorkspaceAdminMembership,
-  isRouteAvailableForNavigationAudience,
-} from '../../domain/policies/routeAccessPolicy'
-
-const AGENCY_ROUTE_AUDIENCES = Object.freeze(new Set([
-  ACCESS_AUDIENCES.AGENCY_ADMIN,
-  ACCESS_AUDIENCES.AGENCY_MEMBER,
-]))
-
-const WORKSPACE_ROUTE_AUDIENCES = Object.freeze(new Set([
-  ACCESS_AUDIENCES.WORKSPACE_ADMIN,
-  ACCESS_AUDIENCES.WORKSPACE_MEMBER,
-  ACCESS_AUDIENCES.WORKSPACE_USER,
-]))
+import { AGENCY_ROLES } from '../../entities/agency-membership'
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 
 export const NAVIGATION_SCOPES = Object.freeze({
   AGENCY: 'agency',
@@ -25,91 +8,231 @@ export const NAVIGATION_SCOPES = Object.freeze({
   TEAM_OPS: 'teamOps',
 })
 
-export function canAccessRoute(viewer, route) {
-  return canAccessRouteByContext(viewer, route)
+export const ROUTE_ACCESS_SCOPES = Object.freeze({
+  ACCOUNT: 'account',
+  AGENCY: 'agency',
+  PUBLIC: 'public',
+  WORKSPACE: 'workspace',
+})
+
+const ACTIVE_STATUS = 'active'
+
+const AGENCY_ADMIN_ROLES = Object.freeze(new Set([
+  AGENCY_ROLES.OWNER,
+  AGENCY_ROLES.ADMIN,
+  AGENCY_ROLES.MANAGER,
+]))
+
+const WORKSPACE_ADMIN_ROLES = Object.freeze(new Set([
+  WORKSPACE_ROLES.OWNER,
+  WORKSPACE_ROLES.ADMIN,
+  WORKSPACE_ROLES.CLINIC_OWNER,
+  WORKSPACE_ROLES.PRACTICE_MANAGER,
+]))
+
+const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
+  'dental-growth-review',
+  'client-settings',
+  'account-settings',
+]))
+
+const CLIENT_TEAM_CAPABILITY_UTILITY_ROUTE_IDS = Object.freeze(new Set([
+  'client-settings',
+  'account-settings',
+]))
+
+function isActive(record) {
+  return !record?.status || record.status === ACTIVE_STATUS
 }
 
-export function filterRoutesForViewer(routes, viewer) {
-  return routes.filter((route) => canAccessRoute(viewer, route))
-}
-
-function getRouteClientType({ clientId, clientType, repositories }) {
-  if (clientType) {
-    return clientType
+function hasCapability(record, capability) {
+  if (!capability) {
+    return true
   }
 
-  const client = clientId ? repositories?.workspaces?.findById(clientId) : null
-
-  return client?.type || CLIENT_TYPES.GENERIC
+  return (record?.capabilities ?? []).includes(capability)
 }
 
-function isRouteAvailableForClientType(route, clientType) {
-  if (route.clientTypes?.length) {
-    return route.clientTypes.includes(clientType)
-  }
-
-  if (route.excludeClientTypes?.length) {
-    return !route.excludeClientTypes.includes(clientType)
-  }
-
-  return true
+function getRouteAccess(route) {
+  return route?.access ?? (route?.layout === 'auth' || route?.layout === 'public'
+    ? { scope: ROUTE_ACCESS_SCOPES.PUBLIC }
+    : null)
 }
 
-export function isClientScopedRoute(route) {
-  return Boolean(
-    route?.clientTypes?.length
-    || route?.excludeClientTypes?.length
-    || route?.path?.startsWith('/client/')
-    || route?.path?.startsWith('/admin/client-')
-    || route?.id === 'dental-growth-review',
-  )
+function getRouteWorkspaceTypes(route) {
+  return getRouteAccess(route)?.workspaceTypes ?? route?.workspaceTypes ?? route?.clientTypes ?? []
+}
+
+function hasWorkspaceType(route, workspaceType) {
+  const workspaceTypes = getRouteWorkspaceTypes(route)
+
+  if (!workspaceTypes.length) {
+    return true
+  }
+
+  return workspaceTypes.includes(workspaceType ?? CLIENT_TYPES.GENERIC)
+}
+
+function getActiveAgencyMemberships(viewer) {
+  return (viewer?.agencyMemberships ?? []).filter(isActive)
+}
+
+function getActiveWorkspaceMemberships(viewer) {
+  return (viewer?.workspaceMemberships ?? []).filter(isActive)
+}
+
+function getActiveManagedWorkspaceRelationships(viewer) {
+  return (viewer?.managedWorkspaceRelationships ?? []).filter(isActive)
+}
+
+function getAgencyMembershipForCapability(viewer, {
+  agencyId = null,
+  capability = null,
+} = {}) {
+  return getActiveAgencyMemberships(viewer).find((membership) => (
+    (!agencyId || membership.agencyId === agencyId)
+    && hasCapability(membership, capability)
+  )) ?? null
+}
+
+function getWorkspaceMembershipForCapability(viewer, {
+  capability = null,
+  route = null,
+  workspaceId = null,
+} = {}) {
+  return getActiveWorkspaceMemberships(viewer).find((membership) => (
+    (!workspaceId || membership.workspaceId === workspaceId)
+    && hasCapability(membership, capability)
+    && hasWorkspaceType(route, membership.workspaceType)
+  )) ?? null
+}
+
+function getManagedWorkspaceRelationshipForCapability(viewer, {
+  capability = null,
+  route = null,
+  workspaceId = null,
+} = {}) {
+  return getActiveManagedWorkspaceRelationships(viewer).find((relationship) => {
+    if (workspaceId && relationship.workspaceId !== workspaceId) {
+      return false
+    }
+
+    if (!hasWorkspaceType(route, relationship.workspaceType)) {
+      return false
+    }
+
+    return Boolean(getAgencyMembershipForCapability(viewer, {
+      agencyId: relationship.agencyId,
+      capability,
+    }))
+  }) ?? null
+}
+
+export function hasAgencyAdminMembership(viewer) {
+  return getActiveAgencyMemberships(viewer)
+    .some((membership) => AGENCY_ADMIN_ROLES.has(membership.role))
+}
+
+export function hasAgencyMembership(viewer) {
+  return Boolean(getActiveAgencyMemberships(viewer).length)
+}
+
+export function hasWorkspaceMembership(viewer) {
+  return Boolean(getActiveWorkspaceMemberships(viewer).length)
+}
+
+export function hasWorkspaceAdminMembership(viewer) {
+  return getActiveWorkspaceMemberships(viewer)
+    .some((membership) => WORKSPACE_ADMIN_ROLES.has(membership.role))
 }
 
 export function getRouteClientId({ defaultClientId = null, routeParams = {}, viewer }) {
   return routeParams.clientId ?? defaultClientId ?? viewer?.activeWorkspaceId ?? null
 }
 
-export function canAccessRouteWithContext(viewer, route, {
-  clientType = null,
-  defaultClientId = null,
-  repositories,
-  routeAccessContext = null,
-  routeParams = {},
-} = {}) {
-  if (!canAccessRoute(viewer, route)) {
-    return false
-  }
+export function isClientScopedRoute(route) {
+  const access = getRouteAccess(route)
 
-  if (!isClientScopedRoute(route)) {
-    return true
-  }
-
-  const clientId = getRouteClientId({ defaultClientId, routeParams, viewer })
-  const contextAccess = canAccessWorkspaceRouteFromLoadedContext(route, routeAccessContext)
-
-  if (contextAccess !== null && !contextAccess) {
-    return false
-  }
-
-  if (contextAccess === null && !canAccessWorkspaceRouteByContext({ route, viewer, workspaceId: clientId })) {
-    return false
-  }
-
-  if (!repositories && !clientType) {
-    return true
-  }
-
-  const resolvedClientType = getRouteClientType({ clientId, clientType, repositories })
-
-  return isRouteAvailableForClientType(route, resolvedClientType)
+  return Boolean(
+    access?.scope === ROUTE_ACCESS_SCOPES.WORKSPACE
+    || route?.path?.startsWith('/client/')
+    || route?.path?.startsWith('/admin/client-')
+    || route?.id === 'dental-growth-review'
+  )
 }
 
-function isRouteAvailableForNavigationRole(route, viewer) {
-  return isRouteAvailableForNavigationAudience(route, viewer)
+export function canAccessRouteWithContext(viewer, route, {
+  defaultClientId = null,
+  routeParams = {},
+} = {}) {
+  const access = getRouteAccess(route)
+
+  if (!access || access.scope === ROUTE_ACCESS_SCOPES.PUBLIC) {
+    return true
+  }
+
+  if (!viewer?.userId) {
+    return false
+  }
+
+  if (access.scope === ROUTE_ACCESS_SCOPES.ACCOUNT) {
+    return true
+  }
+
+  if (access.scope === ROUTE_ACCESS_SCOPES.AGENCY) {
+    return Boolean(getAgencyMembershipForCapability(viewer, {
+      agencyId: viewer.activeAgencyId,
+      capability: access.capability,
+    }))
+  }
+
+  if (access.scope !== ROUTE_ACCESS_SCOPES.WORKSPACE) {
+    return false
+  }
+
+  const workspaceId = getRouteClientId({ defaultClientId, routeParams, viewer })
+
+  if (!workspaceId) {
+    return false
+  }
+
+  if (access.workspaceCapability && getWorkspaceMembershipForCapability(viewer, {
+    capability: access.workspaceCapability,
+    route,
+    workspaceId,
+  })) {
+    return true
+  }
+
+  return Boolean(access.agencyCapability && getManagedWorkspaceRelationshipForCapability(viewer, {
+    capability: access.agencyCapability,
+    route,
+    workspaceId,
+  }))
+}
+
+export function canAccessRoute(viewer, route) {
+  return canAccessRouteWithContext(viewer, route)
+}
+
+export function filterRoutesForViewer(routes, viewer) {
+  return routes.filter((route) => canAccessRoute(viewer, route))
 }
 
 export function getDefaultNavigationScopeForViewer(viewer) {
-  return getDefaultNavigationScopeByContext(viewer, NAVIGATION_SCOPES)
+  if (hasAgencyAdminMembership(viewer)) {
+    return NAVIGATION_SCOPES.AGENCY
+  }
+
+  if (hasAgencyMembership(viewer)) {
+    return NAVIGATION_SCOPES.TEAM_OPS
+  }
+
+  if (hasWorkspaceMembership(viewer)) {
+    return NAVIGATION_SCOPES.CLIENT_PORTAL
+  }
+
+  return null
 }
 
 function getRouteNavigationScopes(route) {
@@ -132,44 +255,16 @@ function isRouteAvailableForNavigationScope(route, navigationScope) {
   return getRouteNavigationScopes(route).includes(navigationScope)
 }
 
-const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
-  'dental-growth-review',
-  'client-settings',
-  'account-settings',
-]))
-
-const CLIENT_TEAM_CAPABILITY_UTILITY_ROUTE_IDS = Object.freeze(new Set([
-  'client-settings',
-  'account-settings',
-]))
-
-function routeHasAudience(route, audiences) {
-  return route?.accessAudiences?.some((audience) => audiences.has(audience))
-}
-
-function canAccessWorkspaceRouteFromLoadedContext(route, routeAccessContext) {
-  if (!routeAccessContext) {
-    return null
-  }
-
-  const canUseAgencyAccess = routeHasAudience(route, AGENCY_ROUTE_AUDIENCES)
-    && routeAccessContext.canManageWorkspace
-  const canUseWorkspaceAccess = routeHasAudience(route, WORKSPACE_ROUTE_AUDIENCES)
-    && routeAccessContext.canViewWorkspacePortal
-
-  return canUseAgencyAccess || canUseWorkspaceAccess
-}
-
 function isRouteAvailableForClientTeamNavigation(route, viewer) {
-  const workspaceMembership = (viewer?.workspaceMemberships ?? [])
+  const workspaceMembership = getActiveWorkspaceMemberships(viewer)
     .find((membership) => membership.workspaceId === viewer?.activeWorkspaceId)
 
   if (!workspaceMembership || hasWorkspaceAdminMembership(viewer)) {
     return true
   }
 
-  if (viewer.capabilities?.length) {
-    return Boolean(route.requiredCapabilities?.length)
+  if ((workspaceMembership.capabilities ?? []).length) {
+    return Boolean(getRouteAccess(route)?.workspaceCapability)
       || CLIENT_TEAM_CAPABILITY_UTILITY_ROUTE_IDS.has(route.id)
   }
 
@@ -188,28 +283,22 @@ function sortRoutesForNavigation(routes) {
 }
 
 export function filterRoutesForNavigation({
-  clientType = null,
   defaultClientId = null,
   navigationScope = null,
-  repositories,
   routeParams = {},
   routes,
   viewer,
 }) {
   const resolvedNavigationScope = navigationScope ?? getDefaultNavigationScopeForViewer(viewer)
-  const roleRoutes = filterRoutesForViewer(routes, viewer)
-    .filter((route) => isRouteAvailableForNavigationRole(route, viewer))
+  const roleRoutes = routes
+    .filter((route) => canAccessRouteWithContext(viewer, route, { defaultClientId, routeParams }))
     .filter((route) => isRouteAvailableForNavigationScope(route, resolvedNavigationScope))
 
   if (resolvedNavigationScope !== NAVIGATION_SCOPES.CLIENT_PORTAL) {
     return sortRoutesForNavigation(roleRoutes)
   }
 
-  const clientId = getRouteClientId({ defaultClientId, routeParams, viewer })
-  const resolvedClientType = getRouteClientType({ clientId, clientType, repositories })
-  const clientTypeRoutes = roleRoutes.filter((route) => isRouteAvailableForClientType(route, resolvedClientType))
-
-  return sortRoutesForNavigation(clientTypeRoutes.filter((route) => (
+  return sortRoutesForNavigation(roleRoutes.filter((route) => (
     isRouteAvailableForClientTeamNavigation(route, viewer)
   )))
 }

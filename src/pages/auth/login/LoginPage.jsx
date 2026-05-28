@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
-import { getHomeHrefForViewer } from '../../../domain/services/authService'
+import { getPostLoginHref } from '../../../app/routing/postLoginRedirect'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
@@ -46,12 +46,11 @@ export function LoginPage({ onAuthChange }) {
     }).then((viewer) => {
       resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
-      const nextHref = searchParams.get('next')
-      const safeNextHref = nextHref?.startsWith('/') && !nextHref.startsWith('//')
-        ? nextHref
-        : null
 
-      navigate(safeNextHref ?? getHomeHrefForViewer(viewer), { replace: true })
+      navigate(getPostLoginHref({
+        nextHref: searchParams.get('next'),
+        viewer,
+      }), { replace: true })
     }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Sign in failed', caughtError.message)
@@ -67,7 +66,7 @@ export function LoginPage({ onAuthChange }) {
     <main className="grid min-h-screen place-items-center bg-background-grouped-tertiary px-app-gutter py-page text-text-primary">
       <div className="mx-auto w-full max-w-modal-xl">
         <Card className="w-full overflow-hidden border border-block-border bg-block p-0 py-0">
-          <CardContent className="grid gap-0 p-0 lg:grid-cols-2">
+          <CardContent className="grid gap-0 p-0 lg:min-h-[560px] lg:grid-cols-2">
             <section className="flex min-w-0 flex-col justify-between gap-panel border-separator bg-surface-raised p-card lg:border-r lg:p-panel">
               <div className="grid gap-spacious">
                 <BrandLogo href="/" size="sm" variant="static" />
@@ -94,13 +93,6 @@ export function LoginPage({ onAuthChange }) {
                       <p className="text-ui text-text-secondary">Role-based agency and client access</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="rounded-block bg-block p-component shadow-block">
-                  <p className="text-label text-text-muted">Account access</p>
-                  <p className="mt-item text-ui text-text-secondary">
-                    Sign in with your account credentials to access assigned workspaces.
-                  </p>
                 </div>
               </div>
             </section>

@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { portalRepository } from '../repositories/portalRepository'
-import {
-  createPortalDataClient,
-  PORTAL_DATA_CLIENT_ADAPTERS,
-} from '../repositories/createPortalDataClient'
 import { buildAuthRuntime } from './authRuntime'
 import { AuthContext } from './AuthContext'
 import { createDjangoSessionAuthClient } from './djangoSessionAuthClient'
 
-const portalDataClient = createPortalDataClient({
-  adapter: import.meta.env.VITE_PORTAL_DATA_CLIENT_ADAPTER ?? PORTAL_DATA_CLIENT_ADAPTERS.LOCAL_REPOSITORY,
-  repositories: portalRepository,
+const removedLocalDataClient = Object.freeze({
+  read() {
+    return Promise.reject(new Error('Local portal repository reads were removed. Add a backend API read path for this screen.'))
+  },
+  write() {
+    return Promise.reject(new Error('Local portal repository writes were removed. Add a backend API mutation path for this workflow.'))
+  },
 })
+
 const portalAuthClient = createDjangoSessionAuthClient()
 
 export function AuthProvider({ children }) {
@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
   }, [refreshAuth])
 
   const runtime = useMemo(() => buildAuthRuntime({
-    dataClient: portalDataClient,
+    dataClient: removedLocalDataClient,
     skipRepositoryRouteContext: true,
     viewer,
   }), [viewer])
@@ -77,8 +77,7 @@ export function AuthProvider({ children }) {
     onAuthChange: handleAuthChange,
     onSignIn: handleSignIn,
     onSignOut: handleSignOut,
-    dataClient: portalDataClient,
-    repositories: portalRepository,
+    dataClient: removedLocalDataClient,
   }
 
   return (

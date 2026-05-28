@@ -1,18 +1,8 @@
-import { getDentalGrowthReviewDashboardPage } from '../../domain/services/dentalGrowthReviewService'
 import { getGrowthReviewDashboardPageFromApi } from '../../domain/services/growthReviewApiReadService'
 import { createBackendApiClient } from '../../shared/api/backendApiClient'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 
-const DATA_SOURCES = Object.freeze({
-  DEMO: 'demo',
-  DJANGO: 'django',
-})
-
-function getGrowthReviewDataSource() {
-  return import.meta.env.VITE_GROWTH_REVIEW_DATA_SOURCE === DATA_SOURCES.DJANGO
-    ? DATA_SOURCES.DJANGO
-    : DATA_SOURCES.DEMO
-}
+const GROWTH_REVIEW_DATA_SOURCE = 'django'
 
 function resolveWorkspaceId({ routeParams = {}, runtime }) {
   return routeParams.clientId
@@ -32,7 +22,6 @@ function createErrorPage(error) {
 
 export function useGrowthReviewReadModel({
   apiClient = createBackendApiClient(),
-  dataSource = getGrowthReviewDataSource(),
   routeParams = {},
   runtime,
 }) {
@@ -41,7 +30,7 @@ export function useGrowthReviewReadModel({
   const dependencyKey = [
     runtime.viewer?.userId ?? '',
     'dental-growth-review',
-    dataSource,
+    GROWTH_REVIEW_DATA_SOURCE,
     workspaceId ?? '',
     routeParams.periodId ?? '',
     routeParams.periodType ?? '',
@@ -51,30 +40,17 @@ export function useGrowthReviewReadModel({
   ].join(':')
   const resource = useAsyncResource({
     dependencyKey,
-    load: () => {
-      if (dataSource === DATA_SOURCES.DJANGO) {
-        return getGrowthReviewDashboardPageFromApi({
-          apiClient,
-          routeParams,
-          viewer: runtime.viewer,
-          workspaceId,
-        })
-      }
-
-      return runtime.dataClient.read((repositories) => getDentalGrowthReviewDashboardPage({
-        clientId: workspaceId,
-        periodId: routeParams.periodId,
-        periodType: routeParams.periodType,
-        repositories,
-        source,
-        viewer: runtime.viewer,
-      }))
-    },
+    load: () => getGrowthReviewDashboardPageFromApi({
+      apiClient,
+      routeParams,
+      viewer: runtime.viewer,
+      workspaceId,
+    }),
   })
 
   return {
     ...resource,
-    dataSource,
+    dataSource: GROWTH_REVIEW_DATA_SOURCE,
     page: resource.status === 'error' ? createErrorPage(resource.error) : resource.data,
     workspaceId,
   }

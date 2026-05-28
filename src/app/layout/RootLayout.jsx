@@ -6,22 +6,12 @@ import {
   canAccessRouteWithContext,
   filterRoutesForNavigation,
   getDefaultNavigationScopeForViewer,
-  getRouteClientId,
-  isClientScopedRoute,
-} from '../routing/roleAccess'
-import { routeMetadata } from '../routing/routeDefinitions'
-import { listAgencyWorkspaceClients } from '../../domain/services/adminClientService'
-import { getRouteAccessClientContext } from '../../domain/services/routeAccessContextService'
-import {
   hasAgencyAdminMembership,
   hasAgencyMembership,
-} from '../../domain/policies/routeAccessPolicy'
+} from '../routing/roleAccess'
+import { routeMetadata } from '../routing/routeDefinitions'
 import { AGENCY_ROLE_META } from '../../entities/agency-membership'
 import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
-import {
-  getClientWorkspacePageIdByRoutePath,
-} from '../../features/admin-client-workspace'
-import { useAsyncResource } from '../../shared/data/useAsyncResource'
 
 const legacyHashRouteMap = Object.freeze({
   '#client-dashboard': '/client/growth-review',
@@ -69,40 +59,6 @@ export function RootLayout() {
   const [searchParams] = useSearchParams()
   const routeParams = Object.fromEntries(searchParams.entries())
   const activeRoute = routeMetadata.find((route) => route.path === location.pathname) ?? routeMetadata[0]
-  const routeClientId = getRouteClientId({
-    defaultClientId: runtime.defaultClientId,
-    routeParams,
-    viewer,
-  })
-  const workspaceClientsResource = useAsyncResource({
-    dependencyKey: `${viewer?.userId ?? 'anonymous'}:agency-workspace-clients`,
-    initialData: [],
-    load: () => {
-      if (!viewer) {
-        return Promise.resolve([])
-      }
-
-      return runtime.dataClient.read((repositories) => listAgencyWorkspaceClients({
-        repositories,
-        viewer,
-      }))
-    },
-  })
-  const routeAccessContextResource = useAsyncResource({
-    dependencyKey: `${viewer?.userId ?? 'anonymous'}:route-access-context:${activeRoute?.id ?? ''}:${routeClientId ?? ''}`,
-    initialData: null,
-    load: () => {
-      if (!viewer || !routeClientId) {
-        return Promise.resolve(null)
-      }
-
-      return runtime.dataClient.read((repositories) => getRouteAccessClientContext({
-        clientId: routeClientId,
-        repositories,
-        viewer,
-      }))
-    },
-  })
 
   useEffect(() => {
     const hashRoute = legacyHashRouteMap[location.hash]
@@ -129,13 +85,7 @@ export function RootLayout() {
     return <Outlet />
   }
 
-  if (isClientScopedRoute(activeRoute) && routeAccessContextResource.status === 'loading') {
-    return <Outlet />
-  }
-
-  const routeAccessContext = routeAccessContextResource.data
   const canAccessActiveRoute = canAccessRouteWithContext(viewer, activeRoute, {
-    clientType: routeAccessContext?.clientType,
     defaultClientId: runtime.defaultClientId,
     routeParams,
   })
@@ -145,26 +95,16 @@ export function RootLayout() {
   }
 
   const accessibleRoutes = filterRoutesForNavigation({
-    clientType: routeAccessContext?.clientType,
     defaultClientId: runtime.defaultClientId,
     navigationScope: getDefaultNavigationScopeForViewer(viewer),
+    viewer,
     routeParams,
     routes: routeMetadata,
-    viewer,
   })
-  const workspaceClients = workspaceClientsResource.data ?? []
-  const selectedWorkspaceClientId = routeParams.clientId ?? null
-  const selectedWorkspaceClient = workspaceClients.find((client) => client.id === selectedWorkspaceClientId) ?? null
-  const currentClientWorkspacePageId = getClientWorkspacePageIdByRoutePath(location.pathname)
-  const isClientWorkspaceNavigationActive = Boolean(
-    selectedWorkspaceClient
-    && currentClientWorkspacePageId,
-  )
 
   return (
     <AppShell
       activeRoute={activeRoute}
-      activeSidebarNavigationId={isClientWorkspaceNavigationActive ? 'admin-clients' : undefined}
       onAuthChange={onAuthChange}
       onSignOut={onSignOut}
       routeParams={routeParams}
