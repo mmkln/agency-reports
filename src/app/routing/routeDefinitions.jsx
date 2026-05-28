@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
+import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
@@ -84,6 +85,7 @@ export const routeDefinitions = [
     label: 'Clients',
     pageTitle: 'Clients',
     access: routeAccessMetadataById['admin-clients'].access,
+    header: AdminClientsPageHeader,
     iconName: 'users',
     navigationScope: AGENCY,
     navOrder: 10,

@@ -4,6 +4,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   ErrorBlock,
   Input,
   Panel,
@@ -28,12 +34,69 @@ function createClientForm() {
   }
 }
 
-export function AdminClientsPage({ runtime }) {
+function CreateWorkspaceDialog({
+  createStatus,
+  error,
+  form,
+  isOpen,
+  onClose,
+  onSubmit,
+  onUpdateName,
+}) {
+  return (
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose()
+        }
+      }}
+      open={isOpen}
+    >
+      <DialogContent className="max-w-modal-md">
+        <DialogHeader>
+          <DialogTitle>Create workspace</DialogTitle>
+          <DialogDescription>
+            Create the client workspace first. Setup and data sources are handled after creation.
+          </DialogDescription>
+        </DialogHeader>
+        <form className="grid gap-component" id="create-workspace-form" onSubmit={onSubmit}>
+          <label className="grid gap-item">
+            <span className="text-label text-text-secondary">Workspace name</span>
+            <Input
+              autoFocus
+              onChange={(event) => onUpdateName(event.target.value)}
+              placeholder="Green Dental"
+              required
+              value={form.name}
+            />
+          </label>
+          {error ? (
+            <ErrorBlock title="Workspace could not be created">
+              {error}
+            </ErrorBlock>
+          ) : null}
+        </form>
+        <DialogFooter>
+          <Button disabled={createStatus === 'creating'} onClick={onClose} type="button" variant="outline">
+            Cancel
+          </Button>
+          <Button disabled={createStatus === 'creating'} form="create-workspace-form" type="submit">
+            {createStatus === 'creating' ? 'Creating...' : 'Create workspace'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function AdminClientsPage({ routeParams = {}, runtime }) {
   const apiClient = useMemo(() => createBackendApiClient(), [])
   const navigate = useNavigate()
+  const isCreateDialogOpen = routeParams.createWorkspace === 'true'
   const [workspaces, setWorkspaces] = useState([])
   const [form, setForm] = useState(() => createClientForm())
   const [error, setError] = useState('')
+  const [createError, setCreateError] = useState('')
   const [status, setStatus] = useState('loading')
   const [createStatus, setCreateStatus] = useState('idle')
 
@@ -85,12 +148,12 @@ export function AdminClientsPage({ runtime }) {
     const name = form.name.trim()
 
     if (!agencyId || !name) {
-      setError('Agency and workspace name are required.')
+      setCreateError('Agency and workspace name are required.')
       return
     }
 
     setCreateStatus('creating')
-    setError('')
+    setCreateError('')
     apiClient.post('/api/workspaces/', {
       agency_id: agencyId,
       name,
@@ -104,35 +167,35 @@ export function AdminClientsPage({ runtime }) {
         navigate(`/admin/clinic-setup?clientId=${workspace.id}`)
       }
     }).catch((caughtError) => {
-      setError(caughtError.message)
+      setCreateError(caughtError.message)
       setCreateStatus('idle')
     })
   }
 
+  function closeCreateDialog() {
+    if (createStatus === 'creating') {
+      return
+    }
+
+    setForm(createClientForm())
+    setCreateError('')
+    navigate('/admin/clients', { replace: true })
+  }
+
   return (
     <div className="grid gap-card">
-      <Panel>
-        <PanelHeader
-          divided
-          subtitle="Backend workspaces managed through active agency relationships."
-          title="Create clinic workspace"
-        />
-        <PanelBody>
-          <form className="flex flex-col gap-control sm:flex-row" onSubmit={createWorkspace}>
-            <Input
-              aria-label="Workspace name"
-              className="min-w-0 flex-1"
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Green Dental"
-              required
-              value={form.name}
-            />
-            <Button disabled={createStatus === 'creating'} type="submit">
-              {createStatus === 'creating' ? 'Creating...' : 'Create workspace'}
-            </Button>
-          </form>
-        </PanelBody>
-      </Panel>
+      <CreateWorkspaceDialog
+        createStatus={createStatus}
+        error={createError}
+        form={form}
+        isOpen={isCreateDialogOpen}
+        onClose={closeCreateDialog}
+        onSubmit={createWorkspace}
+        onUpdateName={(name) => {
+          setCreateError('')
+          setForm((current) => ({ ...current, name }))
+        }}
+      />
 
       {error ? (
         <ErrorBlock title="Clients request failed">
