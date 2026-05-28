@@ -54,4 +54,18 @@ describe('getPostLoginHref', () => {
       viewer: createViewer(),
     })).toBe('/client/growth-review?clientId=workspace_1')
   })
+
+  it('falls back when next href targets the public landing route', () => {
+    expect(getPostLoginHref({
+      nextHref: '/',
+      viewer: createViewer(),
+    })).toBe('/client/growth-review?clientId=workspace_1')
+  })
+
+  it('falls back when next href targets the login route', () => {
+    expect(getPostLoginHref({
+      nextHref: '/login',
+      viewer: createViewer(),
+    })).toBe('/client/growth-review?clientId=workspace_1')
+  })
 })

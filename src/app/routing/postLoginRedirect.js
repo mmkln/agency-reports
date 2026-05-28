@@ -37,7 +37,7 @@ export function getPostLoginHref({ nextHref, viewer }) {
   const parsedUrl = new URL(safeNextHref, window.location.origin)
   const route = findRouteAccessMetadataByPath(parsedUrl.pathname)
 
-  if (!route || route.id === 'login') {
+  if (!route || route.redirectAuthenticated) {
     return fallbackHref
   }
 

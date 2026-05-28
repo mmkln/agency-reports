@@ -5,6 +5,7 @@ import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPa
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
+import { AuthenticatedRedirectRoute } from './AuthenticatedRedirectRoute'
 import { NAVIGATION_SCOPES, ROUTE_ACCESS_SCOPES } from './roleAccess'
 import { ProtectedRoute } from './ProtectedRoute'
 import { routeAccessMetadataById } from './routeAccessMetadata'
@@ -36,6 +37,7 @@ export const routeDefinitions = [
     id: 'landing',
     label: 'Landing',
     layout: 'public',
+    redirectAuthenticated: routeAccessMetadataById.landing.redirectAuthenticated,
     access: routeAccessMetadataById.landing.access,
     showInNav: false,
     element: <LandingPage />,
@@ -54,6 +56,7 @@ export const routeDefinitions = [
     id: 'login',
     label: 'Login',
     layout: 'auth',
+    redirectAuthenticated: routeAccessMetadataById.login.redirectAuthenticated,
     access: routeAccessMetadataById.login.access,
     showInNav: false,
     element: <LoginPage />,
@@ -173,7 +176,13 @@ function buildRouteElement(route) {
     : <Suspense fallback={<LoadingFallback />}>{route.element}</Suspense>
 
   if (!route.access?.scope || route.access.scope === ROUTE_ACCESS_SCOPES.PUBLIC) {
-    return routeElement
+    return route.redirectAuthenticated
+      ? (
+          <AuthenticatedRedirectRoute route={route}>
+            {routeElement}
+          </AuthenticatedRedirectRoute>
+        )
+      : routeElement
   }
 
   return (

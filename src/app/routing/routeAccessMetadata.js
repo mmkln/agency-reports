@@ -16,6 +16,7 @@ export const routeAccessMetadata = Object.freeze([
     id: 'landing',
     layout: 'public',
     path: '/',
+    redirectAuthenticated: true,
     access: { scope: PUBLIC },
   },
   {
@@ -28,6 +29,7 @@ export const routeAccessMetadata = Object.freeze([
     id: 'login',
     layout: 'auth',
     path: '/login',
+    redirectAuthenticated: true,
     access: { scope: PUBLIC },
   },
   {
