@@ -1,19 +1,22 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
 import { getAppBasename } from '../../shared/routing'
 import { RootLayout } from '../layout/RootLayout'
 import { createRouteChildren } from './routeDefinitions'
+import { TechnicalErrorPage } from '../../pages/system/technical-error/TechnicalErrorPage'
+import { NotFoundRoute } from '../../pages/system/technical-error/NotFoundRoute'
 
 export const router = createBrowserRouter(
   [
     {
       path: '/',
       element: <RootLayout />,
-      errorElement: <div className="p-6 text-destructive">Page not found</div>,
+      errorElement: <TechnicalErrorPage />,
       children: createRouteChildren(),
     },
     {
       path: '*',
-      element: <Navigate to="/" replace />,
+      element: <NotFoundRoute />,
+      errorElement: <TechnicalErrorPage />,
     },
   ],
   { basename: getAppBasename() || undefined },

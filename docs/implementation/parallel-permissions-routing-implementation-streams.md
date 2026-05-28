@@ -224,32 +224,46 @@ If a capability is not needed by an active route or endpoint, do not add it yet.
 
 ### Tasks
 
-- [ ] Identify every active backend endpoint used by lean frontend routes.
-- [ ] Mark each endpoint as public, authenticated, workspace-member, agency-managed-workspace, or owner/self.
-- [ ] Add or reuse permission helper for workspace access.
-- [ ] Add or reuse permission helper for agency-managed workspace access.
-- [ ] Ensure Growth Review read endpoint accepts workspace context safely.
-- [ ] Ensure Growth Review read endpoint allows workspace members with `growth_review.view`.
-- [ ] Ensure Growth Review read endpoint allows agency members only through active relationship plus `growth_review.view`.
-- [ ] Ensure integration/source connection endpoints are workspace-scoped.
-- [ ] Ensure integration/source connection endpoints require `integrations.manage`.
-- [ ] Ensure account/profile endpoints are user-owned and do not depend on demo role.
-- [ ] Ensure workspace settings endpoints require workspace membership or agency management capability.
-- [ ] Add tests for forbidden access to another workspace by URL manipulation.
-- [ ] Add tests for agency member without relationship being denied.
-- [ ] Add tests for inactive relationship being denied.
-- [ ] Add tests for workspace member without required capability being denied.
-- [ ] Add tests for successful agency-managed workspace access.
-- [ ] Add tests for successful direct workspace member access.
+- [x] Identify every active backend endpoint used by lean frontend routes.
+- [x] Mark each endpoint as public, authenticated, workspace-member, agency-managed-workspace, or owner/self.
+- [x] Add or reuse permission helper for workspace access.
+- [x] Add or reuse permission helper for agency-managed workspace access.
+- [x] Ensure Growth Review read endpoint accepts workspace context safely.
+- [x] Ensure Growth Review read endpoint allows workspace members with `growth_review.view`.
+- [x] Ensure Growth Review read endpoint allows agency members only through active relationship plus `growth_review.view`.
+- [x] Ensure integration/source connection endpoints are workspace-scoped.
+- [x] Ensure integration/source connection endpoints require `integrations.manage`.
+- [x] Ensure account/profile endpoints are user-owned and do not depend on demo role.
+- [x] Ensure workspace settings endpoints require workspace membership or agency management capability.
+- [x] Add tests for forbidden access to another workspace by URL manipulation.
+- [x] Add tests for agency member without relationship being denied.
+- [x] Add tests for inactive relationship being denied.
+- [x] Add tests for workspace member without required capability being denied.
+- [x] Add tests for successful agency-managed workspace access.
+- [x] Add tests for successful direct workspace member access.
 
 ### Acceptance Criteria
 
-- [ ] No protected endpoint relies on frontend-hidden buttons for security.
-- [ ] No protected endpoint derives access from email, username, demo role, or local-only fields.
-- [ ] Cross-workspace URL access is denied.
-- [ ] Agency access requires both membership and relationship.
-- [ ] Workspace/client access requires workspace membership.
-- [ ] Permission tests cover allow and deny paths.
+- [x] No protected endpoint relies on frontend-hidden buttons for security.
+- [x] No protected endpoint derives access from email, username, demo role, or local-only fields.
+- [x] Cross-workspace URL access is denied.
+- [x] Agency access requires both membership and relationship.
+- [x] Workspace/client access requires workspace membership.
+- [x] Permission tests cover allow and deny paths.
+
+### Implementation Notes
+
+- [x] Growth Review read endpoint is protected by workspace membership capability or agency relationship plus `growth_review.view`.
+- [x] GHL source-connection sync endpoints are protected by workspace membership capability or agency relationship plus `integrations.manage`.
+- [x] Archived workspaces no longer grant workspace resource access through active memberships.
+- [x] Inactive agency-workspace relationships do not grant Growth Review or integration sync access.
+- [x] Source connections from another workspace are hidden behind the workspace-scoped URL lookup.
+- [x] Inactive source connections cannot run sync.
+- [x] Account/profile endpoints are implemented as backend account settings APIs.
+- [x] Workspace settings endpoints are implemented as backend workspace settings APIs.
+- [x] Workspace collection create/list endpoints are implemented with agency `workspace.create` and managed relationship creation.
+- [x] Workspace membership list/create/update/remove endpoints are implemented with workspace `workspace.manage_members` or agency `workspace.manage_access`.
+- [x] Source connection list/create/detail/update/remove endpoints are implemented with workspace integration capabilities or agency `integrations.manage`.
 
 ### Can Run In Parallel With
 
@@ -681,7 +695,7 @@ Allowed if either direct workspace membership or agency-managed workspace access
 ## Final Completion Checklist
 
 - [x] Stream A complete.
-- [ ] Stream B complete.
+- [x] Stream B complete.
 - [ ] Stream C complete.
 - [ ] Stream D complete.
 - [ ] Backend and frontend agree on one viewer contract.

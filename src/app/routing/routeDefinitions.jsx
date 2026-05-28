@@ -148,6 +148,7 @@ export const routeDefinitions = [
     iconName: 'settings',
     navigationScope: CLIENT_PORTAL,
     navOrder: 20,
+    showInNav: false,
     element: <ClientSettingsPageRoute />,
   },
 ]

@@ -254,7 +254,9 @@ export function AppSidebar({
 }) {
   const viewer = runtime.viewer
   const activeRole = viewerMeta ?? defaultSidebarViewerMeta
-  const workspaceSettingsRoute = routes.find((route) => route.id === 'client-settings') ?? null
+  const workspaceSettingsRoute = routes.find((route) => (
+    route.id === 'client-settings' && route.showInNav !== false
+  )) ?? null
   const primaryRoutes = useMemo(
     () => routes.filter((route) => (
       route.showInNav !== false

@@ -24,8 +24,7 @@ export function getHomeHrefForViewer(viewer) {
 
   const growthReviewWorkspaceMembership = (viewer.workspaceMemberships ?? [])
     .find((membership) => (
-      membership.workspaceType === 'clinic'
-      && (membership.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
+      (membership.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
     ))
 
   if (growthReviewWorkspaceMembership) {
