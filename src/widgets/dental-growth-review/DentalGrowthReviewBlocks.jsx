@@ -406,6 +406,20 @@ function getMetricTrendPointDate(point) {
     ?? null
 }
 
+function getMetricTrendPointRange(point) {
+  const sourceText = String(point?.label ?? point?.period ?? '')
+  const sourceDates = [...sourceText.matchAll(/\d{4}-\d{2}-\d{2}/g)].map((match) => match[0])
+  const start = getMetricTrendPointDate(point) ?? sourceDates[0] ?? null
+  const end = point?.period_end
+    ?? point?.periodEnd
+    ?? point?.end_date
+    ?? point?.endDate
+    ?? sourceDates[1]
+    ?? start
+
+  return { end, start }
+}
+
 function formatTrendDate(value, options) {
   if (!value) {
     return ''
@@ -420,19 +434,45 @@ function formatTrendDate(value, options) {
   return date.toLocaleDateString('en-US', options)
 }
 
-function formatTrendAxisLabel(value) {
-  return formatTrendDate(value, {
-    day: 'numeric',
-    month: 'short',
-  })
-}
+function formatTrendDateRange(startValue, endValue, { includeYear = false } = {}) {
+  const start = new Date(startValue)
+  const end = new Date(endValue ?? startValue)
 
-function formatTrendTooltipLabel(value) {
-  return formatTrendDate(value, {
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return String(startValue)
+  }
+
+  const sameDay = start.toDateString() === end.toDateString()
+  const sameYear = start.getFullYear() === end.getFullYear()
+  const sameMonth = sameYear && start.getMonth() === end.getMonth()
+
+  if (sameDay) {
+    return formatTrendDate(startValue, {
+      day: 'numeric',
+      month: 'short',
+      year: includeYear ? 'numeric' : undefined,
+    })
+  }
+
+  if (sameMonth) {
+    const month = start.toLocaleDateString('en-US', { month: 'short' })
+    const suffix = includeYear ? `, ${end.getFullYear()}` : ''
+
+    return `${month} ${start.getDate()}-${end.getDate()}${suffix}`
+  }
+
+  const startLabel = start.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
-    year: 'numeric',
+    year: includeYear && !sameYear ? 'numeric' : undefined,
   })
+  const endLabel = end.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: includeYear ? 'numeric' : undefined,
+  })
+
+  return `${startLabel}-${endLabel}`
 }
 
 function getMetricTrendData(series) {
@@ -441,14 +481,15 @@ function getMetricTrendData(series) {
   }
 
   return series.points.map((point, index) => {
-    const date = getMetricTrendPointDate(point)
+    const range = getMetricTrendPointRange(point)
+    const date = range.start
     const fallbackLabel = point.label ?? point.period ?? `Point ${index + 1}`
 
     return {
       date,
       id: point.id ?? `${date ?? fallbackLabel}-${index}`,
-      label: date ? formatTrendAxisLabel(date) : String(fallbackLabel),
-      tooltipLabel: date ? formatTrendTooltipLabel(date) : String(fallbackLabel),
+      label: date ? formatTrendDateRange(range.start, range.end) : String(fallbackLabel),
+      tooltipLabel: date ? formatTrendDateRange(range.start, range.end, { includeYear: true }) : String(fallbackLabel),
       value: point.value,
     }
   })
