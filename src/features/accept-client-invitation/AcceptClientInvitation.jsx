@@ -13,6 +13,7 @@ import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../..
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { Icon } from '../../shared/icons'
 import { useToast } from '../../shared/notifications'
+import { getAbsoluteAppHref, getAppHref } from '../../shared/routing'
 import { BrandLogo } from '../../shared/ui'
 import { CreateInviteAccountForm, RecoveryInviteForm } from './AcceptInviteForms'
 
@@ -22,10 +23,10 @@ function createUuid() {
 
 function buildAcceptInviteLink(token) {
   if (typeof window === 'undefined') {
-    return `/accept-invite?token=${token}`
+    return getAppHref(`/accept-invite?token=${token}`)
   }
 
-  return `${window.location.origin}${import.meta.env.BASE_URL}accept-invite?token=${token}`
+  return getAbsoluteAppHref(`/accept-invite?token=${token}`)
 }
 
 function getInviteStateMessage(invitationContext, status) {

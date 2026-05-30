@@ -12,6 +12,7 @@ import {
 import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
+import { getAbsoluteAppHref, getAppHref } from '../../shared/routing'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -27,10 +28,10 @@ function createUuid() {
 
 function buildInviteLink(token) {
   if (typeof window === 'undefined') {
-    return `/accept-invite?token=${token}`
+    return getAppHref(`/accept-invite?token=${token}`)
   }
 
-  return `${window.location.origin}${import.meta.env.BASE_URL}accept-invite?token=${token}`
+  return getAbsoluteAppHref(`/accept-invite?token=${token}`)
 }
 
 export function useClientTeamManagement({ canManage, clientId, onInvitationCreated = () => {}, runtime }) {

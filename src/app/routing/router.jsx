@@ -1,11 +1,10 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { getAppBasename } from '../../shared/routing'
 import { RootLayout } from '../layout/RootLayout'
+import { createAppRouter } from './createAppRouter'
 import { createRouteChildren } from './routeDefinitions'
 import { TechnicalErrorPage } from '../../pages/system/technical-error/TechnicalErrorPage'
 import { NotFoundRoute } from '../../pages/system/technical-error/NotFoundRoute'
 
-export const router = createBrowserRouter(
+export const router = createAppRouter(
   [
     {
       path: '/',
@@ -19,6 +18,5 @@ export const router = createBrowserRouter(
       errorElement: <TechnicalErrorPage />,
     },
   ],
-  { basename: getAppBasename() || undefined },
 )
 

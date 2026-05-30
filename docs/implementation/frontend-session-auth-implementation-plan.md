@@ -50,8 +50,10 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 
 For local development, the default backend URL follows the current frontend
 hostname, so `localhost:5173` calls `localhost:8000` and `127.0.0.1:5173` calls
-`127.0.0.1:8000`. Use `VITE_API_BASE_URL` only when the backend runs somewhere
-else.
+`127.0.0.1:8000`.
+
+For deployed builds, `VITE_API_BASE_URL` is required. The frontend must not silently
+fall back to `127.0.0.1:8000` on GitHub Pages or any other remote host.
 
 ## Required New Frontend Pieces
 

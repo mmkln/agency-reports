@@ -1,2 +1,3 @@
 export { getAppBaseHref, getAppBasename } from './basePath'
-export { getAppHref } from './appHref'
+export { getAbsoluteAppHref, getAppHref } from './appHref'
+export { getRoutingMode, isHashRouting, ROUTING_MODES } from './routingMode'

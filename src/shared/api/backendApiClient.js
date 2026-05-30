@@ -1,22 +1,32 @@
-const FALLBACK_API_BASE_URL = 'http://127.0.0.1:8000'
+const LOCAL_API_BASE_URL = 'http://127.0.0.1:8000'
 const LOCAL_BACKEND_PORT = '8000'
+const MISSING_REMOTE_API_BASE_URL_MESSAGE = [
+  'VITE_API_BASE_URL is required for deployed builds.',
+  'Set it to the remote backend origin before building the frontend.',
+].join(' ')
 
 function getDefaultApiBaseUrl() {
   if (typeof window === 'undefined') {
-    return FALLBACK_API_BASE_URL
+    return LOCAL_API_BASE_URL
   }
 
   const { hostname, protocol } = window.location
 
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (isLocalHostname(hostname)) {
     return `${protocol}//${hostname}:${LOCAL_BACKEND_PORT}`
   }
 
-  return FALLBACK_API_BASE_URL
+  throw new Error(MISSING_REMOTE_API_BASE_URL_MESSAGE)
 }
 
 export function getBackendApiBaseUrl() {
-  return (import.meta.env.VITE_API_BASE_URL ?? getDefaultApiBaseUrl()).replace(/\/$/, '')
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+
+  return (configuredBaseUrl || getDefaultApiBaseUrl()).replace(/\/$/, '')
+}
+
+function isLocalHostname(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1'
 }
 
 export function getCookie(name) {
