@@ -94,6 +94,7 @@
   --color-text-quaternary: var(--text-quaternary);
   --color-text-placeholder: var(--text-placeholder);
   --color-text-inverted: var(--text-inverted);
+  --color-text-on-dark: var(--text-on-dark);
   --color-link: var(--link);
   --color-link-hover: var(--link-hover);
   --color-fill: var(--fill);
@@ -310,6 +311,7 @@
   --text-quaternary: #a0a4ad;
   --text-placeholder: #737780;
   --text-inverted: #ffffff;
+  --text-on-dark: #ffffff;
   --link: #0066cc;
   --link-hover: #005bb8;
   --fill: #e6e8ee;
@@ -420,6 +422,7 @@
   --text-quaternary: #636366;
   --text-placeholder: #636366;
   --text-inverted: #1d1d1f;
+  --text-on-dark: #ffffff;
   --link: #0a84ff;
   --link-hover: #2997ff;
   --fill: #2f2f33;

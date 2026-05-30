@@ -14,6 +14,7 @@
 - Read the frontend architecture guide before changing structure, ownership boundaries, or cross-layer responsibilities.
 - Read the design system before UI or styling work, and treat it as the baseline unless the user provides newer visual evidence.
 - Before designing or implementing client-facing analytics dashboards, read `docs/research/client-analytics-dashboard-ui-recommendations.md` and use only research-backed dashboard UI patterns unless the user explicitly changes the product direction.
+- Before changing Dental Growth Dashboard chart metrics, chart calculation logic, metric API payloads, or metric data semantics, read `docs/charts/Dental_Growth_Dashboard_Metrics_Spec.md`.
 - For design, UX, page structure, or similar experience work, first check the design documentation and ask how Apple would implement the interaction, hierarchy, spacing, and visual restraint.
 - Before changing shared UI primitives, app shell, overlays, motion, tokens, or Apple-inspired layout decisions, read `docs/design/README.md` and the relevant linked topic docs.
 - When source materials conflict, prioritize explicit user direction, then product rules, then architecture, then visual examples.

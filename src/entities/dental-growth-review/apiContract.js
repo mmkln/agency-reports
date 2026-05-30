@@ -208,6 +208,20 @@ function normalizeHeroMetricSeries(series = {}) {
   return normalized
 }
 
+function normalizeFunnelChart(funnel = {}) {
+  const source = isPlainObject(funnel) ? funnel : {}
+  const rawStages = normalizeArray(source.stages ?? source.funnel ?? source.items)
+
+  return {
+    available: source.available === true || rawStages.length > 0,
+    calculation_note: normalizeText(source.calculation_note),
+    confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
+    reason: normalizeText(source.reason),
+    source: normalizeText(source.source),
+    stages: rawStages.map(normalizeFunnelStage),
+  }
+}
+
 export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const metrics = isPlainObject(source.metrics) ? source.metrics : {}
@@ -220,6 +234,7 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
       booked_appointments_by_day: normalizeChartMetric(metrics.booked_appointments_by_day),
       show_rate_by_day: normalizeChartMetric(metrics.show_rate_by_day),
     },
+    funnel: normalizeFunnelChart(source.funnel),
     hero_metric_series: normalizeHeroMetricSeries(source.hero_metric_series),
     last_synced_at: normalizeText(source.last_synced_at),
     period: isPlainObject(source.period) ? source.period : {},

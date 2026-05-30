@@ -23,6 +23,9 @@ export function DentalGrowthReviewDashboard({ page }) {
   const period = page.period
   const content = period.content
   const heroMetricSeries = page.charts?.hero_metric_series ?? {}
+  const funnelStages = page.charts?.funnel?.stages?.length
+    ? page.charts.funnel.stages
+    : content.funnel
 
   function handlePeriodChange(optionKey) {
     const selected = page.reviewPeriodOptions.find((option) => option.key === optionKey)
@@ -69,7 +72,7 @@ export function DentalGrowthReviewDashboard({ page }) {
 
       <HeroMetrics heroMetricSeries={heroMetricSeries} metrics={content.hero_metrics} />
 
-      <FunnelView funnel={content.funnel} highlights={content.funnel_highlights} />
+      <FunnelView funnel={funnelStages} highlights={content.funnel_highlights} />
     </PageShell>
   )
 }
