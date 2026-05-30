@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
@@ -138,6 +139,7 @@ export const routeDefinitions = [
     pageTitle: 'Growth Review',
     access: routeAccessMetadataById['dental-growth-review'].access,
     contentWidth: 'content',
+    header: DentalGrowthReviewPageHeader,
     iconName: 'trendingUp',
     navLabel: 'Growth Review',
     navigationScope: CLIENT_PORTAL,

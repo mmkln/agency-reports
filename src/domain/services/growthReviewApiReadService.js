@@ -82,6 +82,37 @@ function formatPeriodRangeLabel(start, end) {
   return `${start} - ${end}`
 }
 
+function formatMonthDay(value) {
+  return new Date(`${value}T00:00:00.000Z`).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+}
+
+function formatMonthDayRange(start, end) {
+  const startDate = new Date(`${start}T00:00:00.000Z`)
+  const endDate = new Date(`${end}T00:00:00.000Z`)
+  const sameMonth = startDate.getUTCFullYear() === endDate.getUTCFullYear()
+    && startDate.getUTCMonth() === endDate.getUTCMonth()
+  const startLabel = startDate.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+  const endLabel = endDate.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: sameMonth ? undefined : 'short',
+    timeZone: 'UTC',
+  })
+
+  return `${startLabel}-${endLabel}`
+}
+
+function formatWeekEndingLabel(end) {
+  return `Week ending ${formatMonthDay(end)}`
+}
+
 function createPeriodOption({ key, periodType, range }) {
   return {
     id: key,
@@ -92,11 +123,15 @@ function createPeriodOption({ key, periodType, range }) {
   }
 }
 
-function createReviewPeriodOptions(now) {
+export function createGrowthReviewPeriodOptions(now) {
   const currentWeek = getDateRangeForPreset('current_week', now)
   const previousWeek = getDateRangeForPreset('previous_week', now)
   const currentBiweekly = getDateRangeForPreset('current_biweekly', now)
   const previousBiweekly = getDateRangeForPreset('previous_biweekly', now)
+  const currentWeekDateLabel = formatMonthDayRange(currentWeek.start, currentWeek.end)
+  const previousWeekDateLabel = formatMonthDayRange(previousWeek.start, previousWeek.end)
+  const currentBiweeklyDateLabel = formatMonthDayRange(currentBiweekly.start, currentBiweekly.end)
+  const previousBiweeklyDateLabel = formatMonthDayRange(previousBiweekly.start, previousBiweekly.end)
 
   return {
     periodOptions: [
@@ -128,13 +163,15 @@ function createReviewPeriodOptions(now) {
     reviewPeriodOptions: [
       {
         key: 'current_week',
-        label: 'Current week',
+        dateLabel: currentWeekDateLabel,
+        label: formatWeekEndingLabel(currentWeek.end),
         periodId: 'current_week',
         periodLabel: formatPeriodRangeLabel(currentWeek.start, currentWeek.end),
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.WEEKLY,
       },
       {
         key: 'previous_week',
+        dateLabel: previousWeekDateLabel,
         label: 'Previous week',
         periodId: 'previous_week',
         periodLabel: formatPeriodRangeLabel(previousWeek.start, previousWeek.end),
@@ -142,21 +179,24 @@ function createReviewPeriodOptions(now) {
       },
       {
         key: 'current_biweekly',
-        label: 'Current bi-weekly period',
+        dateLabel: currentBiweeklyDateLabel,
+        label: 'Bi-weekly review',
         periodId: 'current_biweekly',
         periodLabel: formatPeriodRangeLabel(currentBiweekly.start, currentBiweekly.end),
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
       },
       {
         key: 'previous_biweekly',
-        label: 'Previous bi-weekly period',
+        dateLabel: previousBiweeklyDateLabel,
+        label: 'Previous bi-weekly',
         periodId: 'previous_biweekly',
         periodLabel: formatPeriodRangeLabel(previousBiweekly.start, previousBiweekly.end),
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
       },
       {
         key: 'custom',
-        label: 'Custom date range',
+        dateLabel: '',
+        label: 'Custom range',
         periodId: null,
         periodLabel: 'Use start and end query parameters',
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.CUSTOM,
@@ -204,7 +244,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     workspace_id: payload?.workspace_id ?? workspaceId,
   })
   const charts = payload?.charts ? normalizeGrowthReviewChartsReadModel(payload.charts) : null
-  const periodOptions = createReviewPeriodOptions(now)
+  const periodOptions = createGrowthReviewPeriodOptions(now)
   const preset = getDentalGrowthReviewPresetForViewer(viewer)
 
   return {

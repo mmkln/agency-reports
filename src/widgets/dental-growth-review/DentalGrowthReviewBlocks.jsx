@@ -10,15 +10,11 @@ import {
   DialogTitle,
   EmptyState,
   FreshnessMiniBar,
-  Input,
   MetricTile,
   NativeSelect,
   Panel,
   PanelBody,
   PanelHeader,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
   ReportSection,
   SectionJumpNav,
   StickyDashboardToolbar,
@@ -30,6 +26,7 @@ import {
   ViewModeToggle,
 } from '@/shared/ui'
 
+import { MetricTrendChart } from '@/shared/charts'
 import { Icon } from '@/shared/icons'
 
 import { DENTAL_GROWTH_REVIEW_VIEW_PRESETS } from '../../entities/dental-growth-review'
@@ -124,211 +121,6 @@ function StatusChevron({
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
-  )
-}
-
-const reviewPeriodDisplayLabels = {
-  current_biweekly: 'Last 14 days',
-  current_week: 'Last 7 days',
-  custom: 'Custom range',
-  previous_biweekly: 'Previous 14 days',
-  previous_week: 'Previous 7 days',
-}
-
-function getReviewPeriodDisplayLabel(option) {
-  return reviewPeriodDisplayLabels[option.key] ?? option.label
-}
-
-function toDateInputValue(value) {
-  if (!value) {
-    return ''
-  }
-
-  return new Date(value).toISOString().slice(0, 10)
-}
-
-function formatPeriodRangeCompact(period) {
-  if (!period?.period_start || !period?.period_end) {
-    return ''
-  }
-
-  const start = new Date(period.period_start)
-  const end = new Date(period.period_end)
-  const sameYear = start.getFullYear() === end.getFullYear()
-  const sameMonth = sameYear && start.getMonth() === end.getMonth()
-
-  if (sameMonth) {
-    const month = start.toLocaleDateString('en-US', { month: 'short' })
-
-    return `${month} ${start.getDate()}-${end.getDate()}, ${end.getFullYear()}`
-  }
-
-  const startLabel = start.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    year: sameYear ? undefined : 'numeric',
-  })
-  const endLabel = end.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-
-  return `${startLabel} - ${endLabel}`
-}
-
-function findPeriodForRange(periodOptions = [], start, end) {
-  if (!start || !end) {
-    return null
-  }
-
-  return periodOptions.find((period) => (
-    toDateInputValue(period.periodStart) === start
-    && toDateInputValue(period.periodEnd) === end
-  )) ?? null
-}
-
-export function GrowthReviewCoreHeader({
-  onCustomRangeApply,
-  onPeriodChange,
-  page,
-  selectedPeriodOptionKey,
-}) {
-  const [open, setOpen] = useState(false)
-  const [customStart, setCustomStart] = useState(toDateInputValue(page.period?.period_start))
-  const [customEnd, setCustomEnd] = useState(toDateInputValue(page.period?.period_end))
-  const selectedOption = page.reviewPeriodOptions.find((option) => option.key === selectedPeriodOptionKey)
-  const selectedLabel = selectedOption ? getReviewPeriodDisplayLabel(selectedOption) : 'Custom range'
-  const selectedPeriodRange = formatPeriodRangeCompact(page.period)
-  const matchingCustomPeriod = findPeriodForRange(page.periodOptions, customStart, customEnd)
-
-  function handleOpenChange(nextOpen) {
-    if (nextOpen) {
-      setCustomStart(toDateInputValue(page.period?.period_start))
-      setCustomEnd(toDateInputValue(page.period?.period_end))
-    }
-
-    setOpen(nextOpen)
-  }
-
-  function handlePresetSelect(option) {
-    if (option.disabled || !option.periodId) {
-      return
-    }
-
-    onPeriodChange(option.key)
-    setOpen(false)
-  }
-
-  function handleCustomApply() {
-    if (!matchingCustomPeriod) {
-      return
-    }
-
-    onCustomRangeApply?.(matchingCustomPeriod)
-    setOpen(false)
-  }
-
-  return (
-    <header className="flex min-w-0 flex-wrap items-center justify-end gap-control">
-      {page.source === 'draft' ? <Badge tone="amber">Draft preview</Badge> : null}
-      <div className="flex w-full justify-end sm:w-auto">
-        <Popover onOpenChange={handleOpenChange} open={open}>
-          <PopoverTrigger asChild>
-            <Button
-              aria-label={`Change review date range. Current range ${selectedLabel}${selectedPeriodRange ? `, ${selectedPeriodRange}` : ''}`}
-              className="h-control-large w-full justify-between rounded-full px-component sm:w-auto sm:min-w-80"
-              size="lg"
-              type="button"
-              variant="secondary"
-            >
-              <span className="flex min-w-0 items-center gap-control">
-                <Icon className="text-text-muted" name="calendar" size={14} />
-                <span className="min-w-0 text-left">
-                  <span className="block truncate text-ui font-medium text-text-primary">{selectedLabel}</span>
-                  {selectedPeriodRange ? (
-                    <span className="block truncate text-label font-normal text-text-muted">{selectedPeriodRange}</span>
-                  ) : null}
-                </span>
-              </span>
-              <Icon className="text-text-muted" name="chevronDown" size={14} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-[360px] p-card">
-            <div className="grid gap-component">
-              <div>
-                <p className="text-ui font-semibold text-text-primary">Date Range</p>
-                <p className="mt-tag text-label font-normal text-text-muted">
-                  Choose the window this review should calculate from.
-                </p>
-              </div>
-
-              <div className="grid gap-tag">
-                {page.reviewPeriodOptions.map((option) => {
-                  const isSelected = option.key === selectedPeriodOptionKey
-
-                  return (
-                    <Button
-                      aria-pressed={isSelected}
-                      className={`w-full justify-between ${isSelected ? 'bg-control-selected text-text-primary' : ''}`}
-                      disabled={option.disabled || !option.periodId}
-                      key={option.key}
-                      onClick={() => handlePresetSelect(option)}
-                      size="sm"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <span>{getReviewPeriodDisplayLabel(option)}</span>
-                      {isSelected ? <Icon className="text-success" name="checkCircle2" size={14} /> : null}
-                    </Button>
-                  )
-                })}
-              </div>
-
-              <div className="grid gap-control border-t border-separator pt-component">
-                <p className="text-label font-medium text-text-secondary">Custom range</p>
-                <div className="grid gap-control sm:grid-cols-2">
-                  <label className="grid gap-tag text-label text-text-muted">
-                    From
-                    <Input
-                      className="h-control-small px-control text-label"
-                      max={customEnd || undefined}
-                      onChange={(event) => setCustomStart(event.target.value)}
-                      type="date"
-                      value={customStart}
-                    />
-                  </label>
-                  <label className="grid gap-tag text-label text-text-muted">
-                    To
-                    <Input
-                      className="h-control-small px-control text-label"
-                      min={customStart || undefined}
-                      onChange={(event) => setCustomEnd(event.target.value)}
-                      type="date"
-                      value={customEnd}
-                    />
-                  </label>
-                </div>
-                <Button
-                  disabled={!matchingCustomPeriod}
-                  onClick={handleCustomApply}
-                  size="sm"
-                  type="button"
-                  variant="secondary"
-                >
-                  Apply range
-                </Button>
-                {!matchingCustomPeriod ? (
-                  <p className="text-label font-normal text-text-muted">
-                    This prototype can open ranges that already have calculated review data.
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </header>
   )
 }
 
@@ -605,49 +397,80 @@ function getMetricAccent(metric) {
   return 'var(--premium-blue)'
 }
 
-function getSparklinePath(values) {
-  if (!values?.length) {
+function getMetricTrendPointDate(point) {
+  return point?.date
+    ?? point?.period_start
+    ?? point?.periodStart
+    ?? point?.bucket_date
+    ?? point?.bucketDate
+    ?? null
+}
+
+function formatTrendDate(value, options) {
+  if (!value) {
     return ''
   }
 
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = Math.max(max - min, 1)
-  const width = 104
-  const height = 46
+  const date = new Date(value)
 
-  return values.map((value, index) => {
-    const x = (index / Math.max(values.length - 1, 1)) * width
-    const y = height - (((value - min) / range) * (height - 6)) - 3
-
-    return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-  }).join(' ')
-}
-
-function getSparklineValues(series) {
-  if (!series?.available || !Array.isArray(series.points) || !series.points.length) {
-    return null
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
   }
 
-  const values = series.points
-    .map((point) => Number(point.value))
-    .filter(Number.isFinite)
+  return date.toLocaleDateString('en-US', options)
+}
 
-  return values.length ? values : null
+function formatTrendAxisLabel(value) {
+  return formatTrendDate(value, {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function formatTrendTooltipLabel(value) {
+  return formatTrendDate(value, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function getMetricTrendData(series) {
+  if (!series?.available || !Array.isArray(series.points) || !series.points.length) {
+    return []
+  }
+
+  return series.points.map((point, index) => {
+    const date = getMetricTrendPointDate(point)
+    const fallbackLabel = point.label ?? point.period ?? `Point ${index + 1}`
+
+    return {
+      date,
+      id: point.id ?? `${date ?? fallbackLabel}-${index}`,
+      label: date ? formatTrendAxisLabel(date) : String(fallbackLabel),
+      tooltipLabel: date ? formatTrendTooltipLabel(date) : String(fallbackLabel),
+      value: point.value,
+    }
+  })
 }
 
 function MetricSparkline({ metric, series }) {
-  const values = getSparklineValues(series)
-
-  if (!values) {
-    return <div className="h-12" />
-  }
+  const title = getHeroMetricTitle(metric)
 
   return (
-    <div className="flex h-12 justify-start">
-      <svg aria-hidden="true" className="h-12 w-36 max-w-[42%]" preserveAspectRatio="none" viewBox="0 0 104 46">
-        <path d={getSparklinePath(values)} fill="none" stroke={getMetricAccent(metric)} strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.25" />
-      </svg>
+    <div className="h-12 min-w-0">
+      <MetricTrendChart
+        ariaLabel={`${title} trend`}
+        color={getMetricAccent(metric)}
+        data={getMetricTrendData(series)}
+        formatValue={(value) => formatMetricValue({ ...metric, value })}
+        hideTooltipLabel={false}
+        id={`growth-review-${metric.id}-trend`}
+        label={title}
+        showActiveDot
+        showCursor
+        variant="compact"
+      />
     </div>
   )
 }
@@ -766,7 +589,39 @@ function DetailSection({ children, title }) {
   )
 }
 
-function MetricDrilldownModal({ metric, onClose }) {
+function MetricTrendDetail({ metric, series }) {
+  const data = getMetricTrendData(series)
+  const title = getHeroMetricTitle(metric)
+
+  if (!data.length) {
+    return null
+  }
+
+  return (
+    <section className="grid gap-item">
+      <h3 className="text-label font-semibold text-text-secondary">Daily trend</h3>
+      <div className="rounded-block bg-block-subtle p-component">
+        <MetricTrendChart
+          ariaLabel={`${title} daily trend detail`}
+          className="h-72"
+          color={getMetricAccent(metric)}
+          data={data}
+          formatTooltipLabel={(point) => point?.tooltipLabel ?? ''}
+          formatValue={(value) => formatMetricValue({ ...metric, value })}
+          id={`growth-review-${metric.id}-detail-trend`}
+          label={title}
+          showActiveDot
+          showCursor
+          showGrid
+          showXAxis
+          variant="standard"
+        />
+      </div>
+    </section>
+  )
+}
+
+function MetricDrilldownModal({ metric, onClose, series }) {
   const open = Boolean(metric)
 
   return (
@@ -807,6 +662,8 @@ function MetricDrilldownModal({ metric, onClose }) {
                   {getStatusExplanation(metric.status, metric.target)}
                 </p>
               </section>
+
+              <MetricTrendDetail metric={metric} series={series} />
 
               <DetailSection title="Period comparison">
                 <DetailRow label="Current period" value={formatMetricValue(metric)} />
@@ -931,6 +788,7 @@ export function HeroMetrics({ heroMetricSeries = {}, metrics }) {
       <MetricDrilldownModal
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}
+        series={selectedMetric ? heroMetricSeries[selectedMetric.id] : null}
       />
     </>
   )
