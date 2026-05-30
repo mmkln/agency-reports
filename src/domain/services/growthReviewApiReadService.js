@@ -2,6 +2,7 @@ import {
   DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
+  normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
 } from '../../entities/dental-growth-review'
 
@@ -193,21 +194,22 @@ export async function getGrowthReviewDashboardPageFromApi({
     periodId: routeParams.periodId,
     start: routeParams.start,
   })
-  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`, {
-    query: {
-      end: dateRange.end,
-      start: dateRange.start,
-    },
-  })
+  const query = {
+    end: dateRange.end,
+    start: dateRange.start,
+  }
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`, { query })
   const readModel = normalizeGrowthReviewReadModel({
     ...payload,
     workspace_id: payload?.workspace_id ?? workspaceId,
   })
+  const charts = payload?.charts ? normalizeGrowthReviewChartsReadModel(payload.charts) : null
   const periodOptions = createReviewPeriodOptions(now)
   const preset = getDentalGrowthReviewPresetForViewer(viewer)
 
   return {
     calculationMeta: null,
+    charts,
     client: {
       id: workspaceId,
       name: payload?.workspace?.name ?? payload?.client?.name ?? 'Workspace',

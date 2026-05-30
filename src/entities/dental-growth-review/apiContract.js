@@ -164,3 +164,64 @@ export function normalizeGrowthReviewReadModel(payload = {}) {
     unavailable_metrics: arrays.unavailableMetrics.map(normalizeUnavailableMetric),
   }
 }
+
+function normalizeChartMetric(metric = {}) {
+  const source = isPlainObject(metric) ? metric : {}
+
+  return {
+    calculation_note: normalizeText(source.calculation_note),
+    confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
+    date_field: normalizeText(source.date_field),
+    definition: normalizeText(source.definition),
+    formula: normalizeText(source.formula),
+    last_synced_at: normalizeText(source.last_synced_at),
+    metric: normalizeText(source.metric),
+    notes: normalizeArray(source.notes).map(normalizeText).filter(Boolean),
+    series: normalizeArray(source.series).filter(isPlainObject),
+    source: normalizeText(source.source),
+    total: isPlainObject(source.total) ? source.total : {},
+  }
+}
+
+function normalizeHeroMetricSeries(series = {}) {
+  const source = isPlainObject(series) ? series : {}
+  const normalized = {}
+
+  Object.entries(source).forEach(([metricId, value]) => {
+    const metricSeries = isPlainObject(value) ? value : {}
+
+    normalized[metricId] = {
+      available: metricSeries.available === true,
+      calculation_note: normalizeText(metricSeries.calculation_note),
+      chart_type: normalizeText(metricSeries.chart_type),
+      confidence: normalizeText(metricSeries.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
+      date_field: normalizeText(metricSeries.date_field),
+      metric: normalizeText(metricSeries.metric || metricId),
+      points: normalizeArray(metricSeries.points).filter(isPlainObject),
+      reason: normalizeText(metricSeries.reason),
+      source: normalizeText(metricSeries.source),
+      total: metricSeries.total ?? null,
+      unit: normalizeText(metricSeries.unit),
+    }
+  })
+
+  return normalized
+}
+
+export function normalizeGrowthReviewChartsReadModel(payload = {}) {
+  const source = isPlainObject(payload) ? payload : {}
+  const metrics = isPlainObject(source.metrics) ? source.metrics : {}
+
+  return {
+    calculated_at: normalizeText(source.calculated_at),
+    calculation_version: normalizeText(source.calculation_version),
+    metrics: {
+      attended_appointments_by_day: normalizeChartMetric(metrics.attended_appointments_by_day),
+      booked_appointments_by_day: normalizeChartMetric(metrics.booked_appointments_by_day),
+      show_rate_by_day: normalizeChartMetric(metrics.show_rate_by_day),
+    },
+    hero_metric_series: normalizeHeroMetricSeries(source.hero_metric_series),
+    last_synced_at: normalizeText(source.last_synced_at),
+    period: isPlainObject(source.period) ? source.period : {},
+  }
+}
