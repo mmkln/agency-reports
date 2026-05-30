@@ -1,4 +1,4 @@
-const REMOVED_LOCAL_PASSWORD_MESSAGE = 'Local demo password credentials were removed. Use Django account credentials.'
+const REMOVED_LOCAL_PASSWORD_MESSAGE = 'Local demo password credentials were removed. Use backend account credentials.'
 
 export function validatePasswordPair() {
   throw new Error(REMOVED_LOCAL_PASSWORD_MESSAGE)

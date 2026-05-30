@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { buildAuthRuntime } from './authRuntime'
 import { AuthContext } from './AuthContext'
-import { createDjangoSessionAuthClient } from './djangoSessionAuthClient'
+import { createAuthApiClient } from './authApiClient'
+import { createBackendAuthClient } from './backendAuthClient'
+import { createBrowserAuthTokenStorage } from './browserAuthTokenStorage'
+import { createTokenAuthenticatedApiClient } from './tokenAuthenticatedApiClient'
 
 const removedLocalDataClient = Object.freeze({
   read() {
@@ -12,7 +15,14 @@ const removedLocalDataClient = Object.freeze({
   },
 })
 
-const portalAuthClient = createDjangoSessionAuthClient()
+const authTokenStorage = createBrowserAuthTokenStorage()
+const backendApiClient = createTokenAuthenticatedApiClient({
+  tokenStorage: authTokenStorage,
+})
+const portalAuthClient = createBackendAuthClient({
+  apiClient: createAuthApiClient({ apiClient: backendApiClient }),
+  tokenStorage: authTokenStorage,
+})
 
 export function AuthProvider({ children }) {
   const [authRevision, setAuthRevision] = useState(0)
@@ -40,6 +50,7 @@ export function AuthProvider({ children }) {
   }, [refreshAuth])
 
   const runtime = useMemo(() => buildAuthRuntime({
+    apiClient: backendApiClient,
     dataClient: removedLocalDataClient,
     skipRepositoryRouteContext: true,
     viewer,

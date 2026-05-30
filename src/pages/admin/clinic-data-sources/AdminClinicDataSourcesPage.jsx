@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
   ErrorBlock,
@@ -25,7 +24,7 @@ function createConnectionForm() {
 }
 
 export function AdminClinicDataSourcesPage({ routeParams = {}, runtime }) {
-  const apiClient = useMemo(() => createBackendApiClient(), [])
+  const apiClient = runtime.apiClient
   const workspaceId = routeParams.clientId ?? runtime.defaultClientId
   const [connections, setConnections] = useState([])
   const [form, setForm] = useState(() => createConnectionForm())

@@ -1,3 +1,5 @@
+import { applyRequestInterceptors } from './httpInterceptors'
+
 const LOCAL_API_BASE_URL = 'http://127.0.0.1:8000'
 const LOCAL_BACKEND_PORT = '8000'
 const MISSING_REMOTE_API_BASE_URL_MESSAGE = [
@@ -27,19 +29,6 @@ export function getBackendApiBaseUrl() {
 
 function isLocalHostname(hostname) {
   return hostname === 'localhost' || hostname === '127.0.0.1'
-}
-
-export function getCookie(name) {
-  if (typeof document === 'undefined') {
-    return ''
-  }
-
-  const prefix = `${name}=`
-  return document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(prefix))
-    ?.slice(prefix.length) ?? ''
 }
 
 export class BackendApiError extends Error {
@@ -127,12 +116,13 @@ function getDefaultErrorMessage(status, payload) {
 export function createBackendApiClient({
   baseUrl = getBackendApiBaseUrl(),
   fetchImpl = globalThis.fetch,
+  requestInterceptors = [],
 } = {}) {
   async function request(path, {
     body,
     method = 'GET',
     query,
-    requiresCsrf = false,
+    skipAuth = false,
   } = {}) {
     const url = new URL(`${baseUrl}${normalizePath(path)}`)
     appendQuery(url, query)
@@ -145,18 +135,20 @@ export function createBackendApiClient({
       headers['Content-Type'] = 'application/json'
     }
 
-    if (requiresCsrf) {
-      const csrfToken = getCookie('csrftoken')
-      if (csrfToken) {
-        headers['X-CSRFToken'] = csrfToken
-      }
-    }
-
-    const response = await fetchImpl(url.toString(), {
-      body: body === undefined ? undefined : JSON.stringify(body),
-      credentials: 'include',
+    const requestContext = applyRequestInterceptors(requestInterceptors, {
+      body,
       headers,
       method,
+      options: { skipAuth },
+      path,
+      query,
+      url,
+    })
+
+    const response = await fetchImpl(requestContext.url.toString(), {
+      body: requestContext.body === undefined ? undefined : JSON.stringify(requestContext.body),
+      headers: requestContext.headers,
+      method: requestContext.method,
     })
     const payload = await readJsonResponse(response)
 
@@ -182,7 +174,6 @@ export function createBackendApiClient({
         ...options,
         body,
         method: 'POST',
-        requiresCsrf: options.requiresCsrf ?? true,
       })
     },
     request,

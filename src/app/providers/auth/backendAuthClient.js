@@ -1,4 +1,5 @@
 import { createAuthApiClient, AuthApiError } from './authApiClient'
+import { createBrowserAuthTokenStorage } from './browserAuthTokenStorage'
 
 function normalizeCapabilities(capabilities) {
   return Array.isArray(capabilities) ? [...new Set(capabilities)] : []
@@ -49,7 +50,7 @@ function mapManagedWorkspaceRelationship(relationship) {
   }
 }
 
-export function mapDjangoViewerContextToViewer(viewerContext) {
+export function mapBackendViewerContextToViewer(viewerContext) {
   if (!viewerContext?.user?.id) {
     return null
   }
@@ -79,7 +80,7 @@ export function mapDjangoViewerContextToViewer(viewerContext) {
     activeAgencyId,
     activeWorkspaceId,
     agencyMemberships,
-    authSource: 'django-session',
+    authSource: 'backend-token',
     capabilities,
     email: user.email ?? '',
     managedWorkspaceRelationships,
@@ -97,15 +98,21 @@ export function mapDjangoViewerContextToViewer(viewerContext) {
   }
 }
 
-export function createDjangoSessionAuthClient({
+export function createBackendAuthClient({
   apiClient = createAuthApiClient(),
+  tokenStorage = createBrowserAuthTokenStorage(),
 } = {}) {
   async function fetchCurrentViewer() {
+    if (!tokenStorage.read()?.access) {
+      return null
+    }
+
     try {
       const viewerContext = await apiClient.get('/api/auth/me/')
-      return mapDjangoViewerContextToViewer(viewerContext)
+      return mapBackendViewerContextToViewer(viewerContext)
     } catch (error) {
       if (error instanceof AuthApiError && error.status === 401) {
+        tokenStorage.clear()
         return null
       }
 
@@ -114,24 +121,28 @@ export function createDjangoSessionAuthClient({
   }
 
   return {
-    async fetchCsrf() {
-      return apiClient.get('/api/auth/csrf/')
-    },
     getCurrentViewer() {
       return fetchCurrentViewer()
     },
     async signInWithUsername({ username, password }) {
-      await this.fetchCsrf()
       const response = await apiClient.post('/api/auth/login/', {
         password,
         username,
-      })
+      }, { skipAuth: true })
 
-      return mapDjangoViewerContextToViewer(response.viewer)
+      tokenStorage.write(response.tokens)
+      return mapBackendViewerContextToViewer(response.viewer)
     },
     async signOut() {
-      await this.fetchCsrf()
-      await apiClient.post('/api/auth/logout/', {})
+      const refresh = tokenStorage.read()?.refresh
+
+      try {
+        if (refresh) {
+          await apiClient.post('/api/auth/logout/', { refresh }, { skipAuth: true })
+        }
+      } finally {
+        tokenStorage.clear()
+      }
     },
   }
 }

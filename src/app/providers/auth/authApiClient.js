@@ -16,10 +16,11 @@ export class AuthApiError extends BackendApiError {
 }
 
 export function createAuthApiClient({
+  apiClient = null,
   baseUrl = getAuthApiBaseUrl(),
   fetchImpl = globalThis.fetch,
 } = {}) {
-  const backendClient = createBackendApiClient({ baseUrl, fetchImpl })
+  const backendClient = apiClient ?? createBackendApiClient({ baseUrl, fetchImpl })
 
   async function request(...args) {
     try {
@@ -38,14 +39,14 @@ export function createAuthApiClient({
   }
 
   return {
-    get(path) {
-      return request(path, { method: 'GET' })
+    get(path, options = {}) {
+      return request(path, { ...options, method: 'GET' })
     },
-    post(path, body) {
+    post(path, body, options = {}) {
       return request(path, {
+        ...options,
         body,
         method: 'POST',
-        requiresCsrf: true,
       })
     },
   }

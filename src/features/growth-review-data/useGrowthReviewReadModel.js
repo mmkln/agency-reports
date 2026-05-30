@@ -1,8 +1,7 @@
 import { getGrowthReviewDashboardPageFromApi } from '../../domain/services/growthReviewApiReadService'
-import { createBackendApiClient } from '../../shared/api/backendApiClient'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 
-const GROWTH_REVIEW_DATA_SOURCE = 'django'
+const GROWTH_REVIEW_DATA_SOURCE = 'backend'
 
 function resolveWorkspaceId({ routeParams = {}, runtime }) {
   return routeParams.clientId
@@ -21,10 +20,11 @@ function createErrorPage(error) {
 }
 
 export function useGrowthReviewReadModel({
-  apiClient = createBackendApiClient(),
+  apiClient,
   routeParams = {},
   runtime,
 }) {
+  const resolvedApiClient = apiClient ?? runtime.apiClient
   const workspaceId = resolveWorkspaceId({ routeParams, runtime })
   const source = routeParams.preview === 'draft' ? 'draft' : 'published'
   const dependencyKey = [
@@ -41,7 +41,7 @@ export function useGrowthReviewReadModel({
   const resource = useAsyncResource({
     dependencyKey,
     load: () => getGrowthReviewDashboardPageFromApi({
-      apiClient,
+      apiClient: resolvedApiClient,
       routeParams,
       viewer: runtime.viewer,
       workspaceId,

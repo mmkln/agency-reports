@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
   ErrorBlock,
@@ -18,7 +17,7 @@ import {
 } from '@/shared/ui'
 
 export function AdminClientAccessPage({ routeParams = {}, runtime }) {
-  const apiClient = useMemo(() => createBackendApiClient(), [])
+  const apiClient = runtime.apiClient
   const workspaceId = routeParams.clientId ?? runtime.defaultClientId
   const [memberships, setMemberships] = useState([])
   const [email, setEmail] = useState('')

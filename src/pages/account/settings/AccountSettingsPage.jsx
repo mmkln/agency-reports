@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
   ConfirmationDialog,
@@ -31,8 +30,8 @@ function FieldError({ children }) {
   return <p className="text-label text-destructive">{children}</p>
 }
 
-export function AccountSettingsPage({ onAuthChange, onSignOut }) {
-  const apiClient = useMemo(() => createBackendApiClient(), [])
+export function AccountSettingsPage({ onAuthChange, onSignOut, runtime }) {
+  const apiClient = runtime.apiClient
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState(() => createProfileForm(null))
@@ -101,7 +100,6 @@ export function AccountSettingsPage({ onAuthChange, onSignOut }) {
         last_name: form.last_name.trim(),
       },
       method: 'PATCH',
-      requiresCsrf: true,
     }).then((payload) => {
       const nextProfile = payload.profile
       setProfile(nextProfile)

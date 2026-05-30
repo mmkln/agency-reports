@@ -1,5 +1,5 @@
 function removedLocalAuth() {
-  throw new Error('Local demo authentication was removed. Use the Django session auth API.')
+  throw new Error('Local demo authentication was removed. Use the backend auth API.')
 }
 
 export function authenticateWithEmail() {

@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
   Dialog,
@@ -90,7 +89,7 @@ function CreateWorkspaceDialog({
 }
 
 export function AdminClientsPage({ routeParams = {}, runtime }) {
-  const apiClient = useMemo(() => createBackendApiClient(), [])
+  const apiClient = runtime.apiClient
   const navigate = useNavigate()
   const isCreateDialogOpen = routeParams.createWorkspace === 'true'
   const [workspaces, setWorkspaces] = useState([])

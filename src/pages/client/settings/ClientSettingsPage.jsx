@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { createBackendApiClient } from '@/shared/api/backendApiClient'
 import {
   Button,
   ErrorBlock,
@@ -19,7 +18,7 @@ function createWorkspaceForm(workspace) {
 }
 
 export function ClientSettingsPage({ routeParams = {}, runtime }) {
-  const apiClient = useMemo(() => createBackendApiClient(), [])
+  const apiClient = runtime.apiClient
   const workspaceId = routeParams.clientId ?? runtime.defaultClientId
   const [workspace, setWorkspace] = useState(null)
   const [form, setForm] = useState(() => createWorkspaceForm(null))
@@ -83,7 +82,6 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
         slug: form.slug.trim(),
       },
       method: 'PATCH',
-      requiresCsrf: true,
     }).then((payload) => {
       setWorkspace(payload.workspace)
       setForm(createWorkspaceForm(payload.workspace))
