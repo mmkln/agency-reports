@@ -6,7 +6,8 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "go": "npm run build && gh-pages -d dist",
+    "build:github-pages": "vite build --mode github-pages",
+    "go": "npm run build:github-pages && gh-pages -d dist",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
