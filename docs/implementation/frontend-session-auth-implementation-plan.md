@@ -55,6 +55,11 @@ hostname, so `localhost:5173` calls `localhost:8000` and `127.0.0.1:5173` calls
 For deployed builds, `VITE_API_BASE_URL` is required. The frontend must not silently
 fall back to `127.0.0.1:8000` on GitHub Pages or any other remote host.
 
+The GitHub Pages build mode currently defaults `VITE_API_BASE_URL` to
+`https://mxllagency.pythonanywhere.com`, so `npm run go` can deploy against the
+remote backend without a manual shell env override. A manually provided
+`VITE_API_BASE_URL` still takes precedence.
+
 ## Required New Frontend Pieces
 
 - [x] `src/app/providers/auth/djangoSessionAuthClient.js`
