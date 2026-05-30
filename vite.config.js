@@ -6,10 +6,18 @@ import process from 'node:process'
 
 const GITHUB_PAGES_API_BASE_URL = 'https://mxllagency.pythonanywhere.com'
 
+function getApiBaseUrlForMode(mode) {
+  if (mode === 'github-pages' || mode === 'remote') {
+    return GITHUB_PAGES_API_BASE_URL
+  }
+
+  return undefined
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const apiBaseUrl = process.env.VITE_API_BASE_URL
-    ?? (mode === 'github-pages' ? GITHUB_PAGES_API_BASE_URL : undefined)
+    ?? getApiBaseUrlForMode(mode)
   const routingMode = process.env.VITE_ROUTING_MODE ?? (mode === 'github-pages' ? 'hash' : undefined)
   const envDefines = {
     ...(apiBaseUrl ? { 'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl) } : {}),
