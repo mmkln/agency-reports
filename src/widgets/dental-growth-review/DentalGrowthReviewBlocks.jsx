@@ -589,20 +589,6 @@ function isLowerBetterMetric(metric) {
   return ['cost', 'investment'].includes(getMetricKind(metric)) || String(metric.target ?? '').includes('<')
 }
 
-function getTrendValues(metric) {
-  const current = parseComparableNumber(metric.value)
-  const prior = parseComparableNumber(metric.prior_period_value)
-
-  if (current == null || prior == null) {
-    return null
-  }
-
-  const middleA = prior + ((current - prior) * 0.28)
-  const middleB = prior + ((current - prior) * 0.54)
-
-  return [prior, middleA, prior + ((current - prior) * 0.18), middleB, current]
-}
-
 function getMetricAccent(metric) {
   if (metric.status === 'red') {
     return 'var(--destructive)'
@@ -638,8 +624,20 @@ function getSparklinePath(values) {
   }).join(' ')
 }
 
-function MetricSparkline({ metric }) {
-  const values = getTrendValues(metric)
+function getSparklineValues(series) {
+  if (!series?.available || !Array.isArray(series.points) || !series.points.length) {
+    return null
+  }
+
+  const values = series.points
+    .map((point) => Number(point.value))
+    .filter(Number.isFinite)
+
+  return values.length ? values : null
+}
+
+function MetricSparkline({ metric, series }) {
+  const values = getSparklineValues(series)
 
   if (!values) {
     return <div className="h-12" />
@@ -877,7 +875,7 @@ function getDeltaIconName(metric) {
   return 'arrowUpRight'
 }
 
-export function MetricCard({ metric, onOpenDetails = () => {} }) {
+export function MetricCard({ metric, onOpenDetails = () => {}, series }) {
   const statusTooltip = 'View metric details'
   const priorLine = formatPriorLine(metric)
 
@@ -909,13 +907,13 @@ export function MetricCard({ metric, onOpenDetails = () => {} }) {
           <p className="mt-item text-label font-normal text-text-muted">{priorLine}</p>
         ) : null}
       </div>
-      <MetricSparkline metric={metric} />
+      <MetricSparkline metric={metric} series={series} />
       <MetricProgress metric={metric} />
     </article>
   )
 }
 
-export function HeroMetrics({ metrics }) {
+export function HeroMetrics({ heroMetricSeries = {}, metrics }) {
   const [selectedMetric, setSelectedMetric] = useState(null)
 
   return (
@@ -926,6 +924,7 @@ export function HeroMetrics({ metrics }) {
             key={metric.id}
             metric={metric}
             onOpenDetails={setSelectedMetric}
+            series={heroMetricSeries[metric.id]}
           />
         ))}
       </section>
