@@ -36,6 +36,7 @@ import {
   formatMetricValue,
   statusClass,
 } from './format'
+import { createGrowthReviewMetricDetailViewModel } from './metricDetailPresenter'
 
 export function DentalGrowthReviewState({ page }) {
   if (page.status === 'error') {
@@ -600,6 +601,10 @@ function getStatusExplanation(status, target) {
   return 'Unavailable or not enough trusted data for this period.'
 }
 
+function getStatusSummary(metric) {
+  return getStatusExplanation(metric.status)
+}
+
 function getMetricDeltaText(metric) {
   const parts = [metric.delta_absolute, metric.delta_percent]
     .map((value) => String(value ?? '').trim())
@@ -662,8 +667,27 @@ function MetricTrendDetail({ metric, series }) {
   )
 }
 
+function MetricDetailSections({ sections }) {
+  return sections.map((section) => (
+    <DetailSection key={section.id} title={section.title}>
+      {section.rows.map((row) => (
+        <DetailRow key={row.label} label={row.label} value={row.value} />
+      ))}
+    </DetailSection>
+  ))
+}
+
 function MetricDrilldownModal({ metric, onClose, series }) {
   const open = Boolean(metric)
+  const detail = metric
+    ? createGrowthReviewMetricDetailViewModel({
+      formatMetricValue,
+      getDeltaText: getMetricDeltaText,
+      getStatusSummary,
+      getTitle: getHeroMetricTitle,
+      metric,
+    })
+    : null
 
   return (
     <Dialog
@@ -675,55 +699,37 @@ function MetricDrilldownModal({ metric, onClose, series }) {
       open={open}
     >
       <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
-        {metric ? (
+        {detail ? (
           <>
             <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
-              <DialogTitle>{getHeroMetricTitle(metric)}</DialogTitle>
+              <DialogTitle>{detail.title}</DialogTitle>
               <DialogDescription>
-                Metric calculation, comparison, source, and confidence.
+                Trend and period comparison.
               </DialogDescription>
             </DialogHeader>
             <div className="grid max-h-overlay-body gap-component overflow-y-auto px-panel pb-panel">
               <section className="grid gap-item pt-component">
                 <div className="flex items-start justify-between gap-component">
                   <div>
-                    <p className="text-data tabular-nums text-text-primary">{formatMetricValue(metric)}</p>
-                    {getMetricDeltaText(metric) ? (
+                    <p className="text-data tabular-nums text-text-primary">{detail.value}</p>
+                    {detail.deltaText ? (
                       <p className={`mt-tag inline-flex items-center gap-tag text-label font-semibold ${getDeltaToneClass(metric)}`}>
                         <Icon name={getDeltaIconName(metric)} size={13} />
-                        {getMetricDeltaText(metric)}
+                        {detail.deltaText}
                       </p>
                     ) : null}
                   </div>
-                  <Badge tone={statusBadgeTone[metric.status] ?? 'neutral'}>
-                    {formatLabel(metric.status || 'grey')}
+                  <Badge tone={statusBadgeTone[detail.status] ?? 'neutral'}>
+                    {formatLabel(detail.status || 'grey')}
                   </Badge>
                 </div>
                 <p className="text-ui text-text-secondary">
-                  {getStatusExplanation(metric.status, metric.target)}
+                  {detail.statusSummary}
                 </p>
               </section>
 
               <MetricTrendDetail metric={metric} series={series} />
-
-              <DetailSection title="Period comparison">
-                <DetailRow label="Current period" value={formatMetricValue(metric)} />
-                <DetailRow label="Prior period" value={metric.prior_period_value} />
-                <DetailRow label="Delta" value={getMetricDeltaText(metric)} />
-                <DetailRow label="Target" value={metric.target} />
-                <DetailRow label="Benchmark" value={metric.benchmark} />
-              </DetailSection>
-
-              <DetailSection title="Calculation">
-                <DetailRow label="Formula" value={metric.formula} />
-                <DetailRow label="Definition" value={metric.tooltip_definition} />
-                <DetailRow label="Confidence" value={formatLabel(metric.confidence)} />
-              </DetailSection>
-
-              <DetailSection title="Source data">
-                <DetailRow label="Source systems" value={metric.source} />
-                <DetailRow label="Last updated" value={formatDate(metric.last_updated_at)} />
-              </DetailSection>
+              <MetricDetailSections sections={detail.sections} />
             </div>
           </>
         ) : null}
