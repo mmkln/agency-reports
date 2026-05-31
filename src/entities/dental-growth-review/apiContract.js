@@ -81,6 +81,7 @@ function normalizeFunnelStage(stage = {}) {
 
   return {
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
+    calculation_mode: normalizeText(source.calculation_mode),
     conversion_rate: hasConversion && Number.isFinite(conversionRate) ? conversionRate : null,
     count: Number.isFinite(outputCount) ? outputCount : 0,
     drop_off_count: Number.isFinite(dropOffCount) ? dropOffCount : 0,

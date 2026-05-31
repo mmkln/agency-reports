@@ -1121,6 +1121,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                 {isPipelineSnapshot ? (
                   <>
                     <DetailRow label="Pipeline" value={stage.pipeline_name} />
+                    <DetailRow label="Calculation mode" value={formatLabel(stage.calculation_mode)} />
                     <DetailRow label="Position" value={stage.position} />
                     <DetailRow label="Booked stage" value={stage.is_booked_stage ? 'Yes' : 'No'} />
                   </>
