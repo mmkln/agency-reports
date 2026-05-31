@@ -913,7 +913,8 @@ export function NarrativeColumns({ items }) {
 }
 
 function getStageDisplayName(stage) {
-  const normalized = String(stage.stage_name ?? '').toLowerCase()
+  const sourceName = String(stage.stage_name ?? stage.name ?? '')
+  const normalized = sourceName.toLowerCase()
   const stageNameMap = [
     ['lead -> contacted', 'Contacted'],
     ['lead → contacted', 'Contacted'],
@@ -928,7 +929,15 @@ function getStageDisplayName(stage) {
   ]
   const mappedName = stageNameMap.find(([key]) => normalized.includes(key))?.[1]
 
-  return mappedName ?? String(stage.stage_name ?? '').replace(/\s*->\s*/g, ' → ')
+  return mappedName ?? sourceName.replace(/\s*->\s*/g, ' → ')
+}
+
+function isPipelineStageSnapshot(stage) {
+  return stage?.funnel_type === 'pipeline_stage_snapshot'
+}
+
+function hasFunnelConversion(stage) {
+  return stage.conversion_rate !== null && stage.conversion_rate !== ''
 }
 
 function getFunnelGeometry(stages) {
@@ -1061,6 +1070,7 @@ function getFunnelStageStatus(stage) {
 function FunnelStageDrilldownModal({ onClose, stage }) {
   const open = Boolean(stage)
   const status = stage ? getFunnelStageStatus(stage) : 'grey'
+  const isPipelineSnapshot = isPipelineStageSnapshot(stage)
 
   return (
     <Dialog
@@ -1077,7 +1087,9 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
             <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
               <DialogTitle>{getStageDisplayName(stage)}</DialogTitle>
               <DialogDescription>
-                Funnel stage conversion, drop-off, target, and confidence.
+                {isPipelineSnapshot
+                  ? 'Current opportunity count in the configured GHL pipeline stage.'
+                  : 'Funnel stage conversion, drop-off, target, and confidence.'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid max-h-overlay-body gap-component overflow-y-auto px-panel pb-panel">
@@ -1086,30 +1098,52 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                   <div>
                     <p className="text-data tabular-nums text-text-primary">{stage.stage_count}</p>
                     <p className="mt-tag text-label font-normal text-text-muted">
-                      {stage.conversion_rate}% conversion
+                      {isPipelineSnapshot ? 'Current opportunities' : `${stage.conversion_rate}% conversion`}
                     </p>
                   </div>
-                  <Badge tone={statusBadgeTone[status] ?? 'neutral'}>
-                    {formatLabel(status)}
-                  </Badge>
+                  {isPipelineSnapshot && stage.is_booked_stage ? (
+                    <Badge tone="blue">Booked stage</Badge>
+                  ) : (
+                    <Badge tone={statusBadgeTone[status] ?? 'neutral'}>
+                      {formatLabel(status)}
+                    </Badge>
+                  )}
                 </div>
-                <p className="text-ui text-text-secondary">
-                  {getStatusExplanation(status, `${stage.target}% target`)}
-                </p>
+                {!isPipelineSnapshot ? (
+                  <p className="text-ui text-text-secondary">
+                    {getStatusExplanation(status, `${stage.target}% target`)}
+                  </p>
+                ) : null}
               </section>
 
-              <DetailSection title="Stage performance">
+              <DetailSection title={isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
                 <DetailRow label="Stage count" value={stage.stage_count} />
-                <DetailRow label="Input count" value={stage.input_count} />
-                <DetailRow label="Output count" value={stage.output_count} />
-                <DetailRow label="Conversion" value={`${stage.conversion_rate}%`} />
-                <DetailRow label="Drop-off count" value={stage.drop_off_count} />
-                <DetailRow label="Drop-off rate" value={stage.drop_off_rate} />
-                <DetailRow label="Target" value={stage.target ? `${stage.target}%` : ''} />
+                {isPipelineSnapshot ? (
+                  <>
+                    <DetailRow label="Pipeline" value={stage.pipeline_name} />
+                    <DetailRow label="Position" value={stage.position} />
+                    <DetailRow label="Booked stage" value={stage.is_booked_stage ? 'Yes' : 'No'} />
+                  </>
+                ) : (
+                  <>
+                    <DetailRow label="Input count" value={stage.input_count} />
+                    <DetailRow label="Output count" value={stage.output_count} />
+                    <DetailRow label="Conversion" value={`${stage.conversion_rate}%`} />
+                    <DetailRow label="Drop-off count" value={stage.drop_off_count} />
+                    <DetailRow label="Drop-off rate" value={stage.drop_off_rate} />
+                    <DetailRow label="Target" value={stage.target ? `${stage.target}%` : ''} />
+                  </>
+                )}
               </DetailSection>
 
               <DetailSection title="Calculation">
-                <DetailRow label="Formula" value="output count / input count * 100" />
+                <DetailRow
+                  label="Formula"
+                  value={stage.formula || (isPipelineSnapshot
+                    ? 'count current opportunities in this configured GHL pipeline stage'
+                    : 'output count / input count * 100')}
+                />
+                <DetailRow label="Source" value={stage.source} />
                 <DetailRow label="Confidence" value={formatLabel(stage.confidence)} />
                 <DetailRow label="Raw stage name" value={stage.stage_name ?? stage.name} />
               </DetailSection>
@@ -1121,10 +1155,11 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
   )
 }
 
-function FunnelFlowChart({ onOpenStageDetails, stages }) {
+function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
   const { points } = getFunnelGeometry(stages)
   const segmentBoundaries = getFunnelSegmentBoundaries(points)
   const path = buildFunnelAreaPath(segmentBoundaries)
+  const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
 
   if (!stages.length) {
     return null
@@ -1150,7 +1185,15 @@ function FunnelFlowChart({ onOpenStageDetails, stages }) {
                 <p className="mt-tag text-label font-semibold text-text-secondary">
                   <span className="inline-flex items-center justify-center gap-tag">
                     {getStageDisplayName(stage)}
-                    {attentionTone ? (
+                    {isPipelineSnapshot && stage.is_booked_stage ? (
+                      <StatusChevron
+                        label={`View ${getStageDisplayName(stage)} details`}
+                        onClick={() => onOpenStageDetails(stage)}
+                        status="green"
+                        tooltip="Configured booked stage"
+                      />
+                    ) : null}
+                    {!isPipelineSnapshot && attentionTone ? (
                       <StatusChevron
                         label={`View ${getStageDisplayName(stage)} details`}
                         onClick={() => onOpenStageDetails(stage)}
@@ -1160,9 +1203,11 @@ function FunnelFlowChart({ onOpenStageDetails, stages }) {
                     ) : null}
                   </span>
                 </p>
-                <p className="mt-tag text-label font-normal text-text-muted">
-                  {stage.conversion_rate}% conversion
-                </p>
+                {!isPipelineSnapshot && hasFunnelConversion(stage) ? (
+                  <p className="mt-tag text-label font-normal text-text-muted">
+                    {stage.conversion_rate}% conversion
+                  </p>
+                ) : null}
               </div>
             )
           })}
@@ -1201,24 +1246,27 @@ function FunnelFlowChart({ onOpenStageDetails, stages }) {
   )
 }
 
-export function FunnelView({ funnel }) {
+export function FunnelView({ funnel, funnelChart = null }) {
   const [selectedStage, setSelectedStage] = useState(null)
+  const funnelType = funnelChart?.type ?? ''
+  const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
   const rows = funnel
     .filter((stage) => {
       const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
       const isVelocityStage = stage.unit === 'days' || String(stage.stage_name ?? '').toLowerCase().includes('funnel velocity')
 
-      return !isVelocityStage && (!isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence))
+      return !isVelocityStage && (isPipelineSnapshot || !isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence))
     })
     .map((stage) => ({
       ...stage,
       id: stage.id ?? stage.stage_name,
+      funnel_type: funnelType,
     }))
-  const treatmentUnavailable = funnel.some((stage) => (
+  const treatmentUnavailable = !isPipelineSnapshot && funnel.some((stage) => (
     String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
     && ['low', 'unavailable'].includes(stage.confidence)
   ))
-  const treatmentPartial = funnel.some((stage) => (
+  const treatmentPartial = !isPipelineSnapshot && funnel.some((stage) => (
     String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
     && stage.confidence === 'medium'
   ))
@@ -1229,13 +1277,27 @@ export function FunnelView({ funnel }) {
         <div className="rounded-block bg-block p-component">
           <div className="pb-component">
             <div>
-              <h2 className="text-heading text-text-primary">Patient Funnel</h2>
+              <h2 className="text-heading text-text-primary">
+                {isPipelineSnapshot ? 'Pipeline Funnel' : 'Patient Funnel'}
+              </h2>
             </div>
           </div>
-          <FunnelFlowChart
-            onOpenStageDetails={setSelectedStage}
-            stages={rows}
-          />
+          {rows.length ? (
+            <FunnelFlowChart
+              funnelType={funnelType}
+              onOpenStageDetails={setSelectedStage}
+              stages={rows}
+            />
+          ) : (
+            <p className="rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+              {funnelChart?.reason || 'Pipeline funnel is not configured yet.'}
+            </p>
+          )}
+          {isPipelineSnapshot && funnelChart?.calculation_note ? (
+            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+              {funnelChart.calculation_note}
+            </p>
+          ) : null}
           {treatmentUnavailable ? (
             <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
               Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.

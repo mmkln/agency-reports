@@ -13,7 +13,7 @@ export function EmptyPerformanceDashboardsState({
       <EmptyState
         action={(
           <Button asChild>
-            <Link to="/admin/clients?newClient=true">
+            <Link to="/admin/clients?createClient=true">
               <Icon name="plus" size={15} />
               Create first account
             </Link>

@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
+import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
 import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
@@ -16,6 +17,7 @@ import {
   AdminClientsPageRoute,
   AdminClinicDataSourcesPageRoute,
   AdminClinicSetupPageRoute,
+  AdminWorkspacesPageRoute,
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
 } from './RoutePages'
@@ -95,6 +97,18 @@ export const routeDefinitions = [
     navigationScope: AGENCY,
     navOrder: 10,
     element: <AdminClientsPageRoute />,
+  },
+  {
+    path: '/admin/workspaces',
+    id: 'admin-workspaces',
+    label: 'Workspaces',
+    pageTitle: 'Workspaces',
+    access: routeAccessMetadataById['admin-workspaces'].access,
+    header: AdminWorkspacesPageHeader,
+    iconName: 'grid',
+    navigationScope: AGENCY,
+    navOrder: 11,
+    element: <AdminWorkspacesPageRoute />,
   },
   {
     path: '/admin/client-access',

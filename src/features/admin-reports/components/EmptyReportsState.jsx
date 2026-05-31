@@ -16,7 +16,7 @@ export function EmptyReportsState({ hasClients = true }) {
         </Button>
       ) : (
         <Button asChild>
-          <Link to="/admin/clients?newClient=true">
+          <Link to="/admin/clients?createClient=true">
             <Icon name="plus" size={16} />
             Create client first
           </Link>

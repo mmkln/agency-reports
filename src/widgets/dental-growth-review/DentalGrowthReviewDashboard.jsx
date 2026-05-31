@@ -11,6 +11,7 @@ export function DentalGrowthReviewDashboard({ page }) {
 
   const content = page.period.content
   const heroMetricSeries = page.charts?.hero_metric_series ?? {}
+  const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages?.length
     ? page.charts.funnel.stages
     : content.funnel
@@ -19,7 +20,7 @@ export function DentalGrowthReviewDashboard({ page }) {
     <>
       <HeroMetrics heroMetricSeries={heroMetricSeries} metrics={content.hero_metrics} />
 
-      <FunnelView funnel={funnelStages} highlights={content.funnel_highlights} />
+      <FunnelView funnel={funnelStages} funnelChart={funnelChart} highlights={content.funnel_highlights} />
     </>
   )
 }

@@ -8,7 +8,7 @@ import {
 import { Icon } from '../../../shared/icons'
 
 export function EmptyDashboardLinksState({ hasClients = true }) {
-  const actionHref = hasClients ? '/admin/dashboard-links?newDashboard=true' : '/admin/clients?newClient=true'
+  const actionHref = hasClients ? '/admin/dashboard-links?newDashboard=true' : '/admin/clients?createClient=true'
   const actionLabel = hasClients ? 'Add first dashboard' : 'Create first account'
 
   return (

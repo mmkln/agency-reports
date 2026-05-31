@@ -48,6 +48,79 @@ function formatPeriodRangeCompact({ end, start }) {
   return `${startLabel} - ${endLabel}`
 }
 
+function ReviewPeriodOption({
+  dateLabel,
+  disabled,
+  label,
+  onSelect,
+  selected,
+}) {
+  return (
+    <Button
+      aria-pressed={selected}
+      className={[
+        'grid h-control-large w-full grid-cols-[18px_minmax(0,1fr)_auto] justify-normal gap-control rounded-control px-control text-left',
+        selected ? 'text-text-primary' : 'text-text-secondary',
+      ].join(' ')}
+      disabled={disabled}
+      onClick={onSelect}
+      size="sm"
+      type="button"
+      variant="ghost"
+    >
+      <span className="flex justify-center">
+        {selected ? <Icon className="text-success" name="checkCircle2" size={14} /> : null}
+      </span>
+      <span className="min-w-0 truncate text-label font-medium">{label}</span>
+      <span className="shrink-0 text-label font-normal text-text-muted">{dateLabel}</span>
+    </Button>
+  )
+}
+
+function CustomRangeEditor({
+  customEnd,
+  customRangeIsValid,
+  customStart,
+  onApply,
+  onEndChange,
+  onStartChange,
+}) {
+  return (
+    <div className="grid gap-control border-t border-separator/70 pt-control">
+      <p className="px-control text-label font-medium text-text-muted">Custom range</p>
+      <div className="grid gap-control sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] sm:items-center">
+        <Input
+          aria-label="Custom review period start date"
+          className="h-control-small rounded-control bg-fill-secondary px-control text-label"
+          max={customEnd || undefined}
+          onChange={(event) => onStartChange(event.target.value)}
+          type="date"
+          value={customStart}
+        />
+        <span className="hidden text-label text-text-quaternary sm:block">-</span>
+        <Input
+          aria-label="Custom review period end date"
+          className="h-control-small rounded-control bg-fill-secondary px-control text-label"
+          min={customStart || undefined}
+          onChange={(event) => onEndChange(event.target.value)}
+          type="date"
+          value={customEnd}
+        />
+        <Button
+          className="justify-self-end"
+          disabled={!customRangeIsValid}
+          onClick={onApply}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Apply
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function GrowthReviewDateRangePicker({
   end,
   onCustomApply,
@@ -117,66 +190,31 @@ export function GrowthReviewDateRangePicker({
           <Icon className="text-text-muted" name="chevronDown" size={13} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[380px] p-card">
-        <div className="grid gap-component">
-          <p className="text-ui font-semibold text-text-primary">Review Period</p>
+      <PopoverContent align="end" className="w-[360px] p-control">
+        <div className="grid gap-control">
+          <p className="px-control pt-tag text-label font-medium text-text-muted">Review period</p>
 
-          <div className="grid gap-tag">
-            {presets.filter((option) => option.key !== 'custom').map((option) => {
-              const isSelected = option.key === selectedKey
-
-              return (
-                <Button
-                  aria-pressed={isSelected}
-                  className="w-full justify-between"
-                  disabled={option.disabled || !option.periodId}
-                  key={option.key}
-                  onClick={() => handlePresetSelect(option)}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  <span className="min-w-0 truncate text-text-primary">{option.label}</span>
-                  <span className="flex shrink-0 items-center gap-tag text-text-muted">
-                    {option.dateLabel}
-                    {isSelected ? <Icon className="text-success" name="checkCircle2" size={14} /> : null}
-                  </span>
-                </Button>
-              )
-            })}
+          <div className="grid gap-micro">
+            {presets.filter((option) => option.key !== 'custom').map((option) => (
+              <ReviewPeriodOption
+                dateLabel={option.dateLabel}
+                disabled={option.disabled || !option.periodId}
+                key={option.key}
+                label={option.label}
+                onSelect={() => handlePresetSelect(option)}
+                selected={option.key === selectedKey}
+              />
+            ))}
           </div>
 
-          <div className="grid gap-control border-t border-separator pt-component">
-            <p className="text-label font-medium text-text-secondary">Custom range</p>
-            <div className="grid gap-control sm:grid-cols-[1fr_auto_1fr] sm:items-end">
-              <Input
-                aria-label="Custom review period start date"
-                className="h-control-small px-control text-label"
-                max={customEnd || undefined}
-                onChange={(event) => setCustomStart(event.target.value)}
-                type="date"
-                value={customStart}
-              />
-              <span className="hidden pb-control text-text-muted sm:block">-</span>
-              <Input
-                aria-label="Custom review period end date"
-                className="h-control-small px-control text-label"
-                min={customStart || undefined}
-                onChange={(event) => setCustomEnd(event.target.value)}
-                type="date"
-                value={customEnd}
-              />
-            </div>
-            <Button
-              disabled={!customRangeIsValid}
-              onClick={handleCustomApply}
-              size="sm"
-              type="button"
-              variant="secondary"
-            >
-              Apply
-            </Button>
-          </div>
+          <CustomRangeEditor
+            customEnd={customEnd}
+            customRangeIsValid={customRangeIsValid}
+            customStart={customStart}
+            onApply={handleCustomApply}
+            onEndChange={setCustomEnd}
+            onStartChange={setCustomStart}
+          />
         </div>
       </PopoverContent>
     </Popover>

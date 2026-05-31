@@ -8,6 +8,7 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClinicDataSourcesPage } from '../../pages/admin/clinic-data-sources/AdminClinicDataSourcesPage'
 import { AdminClinicSetupPage } from '../../pages/admin/clinic-setup/AdminClinicSetupPage'
+import { AdminWorkspacesPage } from '../../pages/admin/workspaces/AdminWorkspacesPage'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
@@ -37,5 +38,6 @@ export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, u
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, undefined)
 export const AdminClinicDataSourcesPageRoute = withPageProps(AdminClinicDataSourcesPage, undefined)
 export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)
+export const AdminWorkspacesPageRoute = withPageProps(AdminWorkspacesPage, undefined)
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, undefined)
 export const DentalGrowthReviewPageRoute = withPageProps(DentalGrowthReviewPage, undefined)

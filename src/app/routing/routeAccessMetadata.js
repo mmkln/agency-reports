@@ -52,6 +52,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'admin-workspaces',
+    path: '/admin/workspaces',
+    access: {
+      capability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
+      scope: AGENCY,
+    },
+  },
+  {
     id: 'admin-client-access',
     path: '/admin/client-access',
     access: {

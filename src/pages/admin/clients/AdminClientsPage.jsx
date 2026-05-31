@@ -29,11 +29,10 @@ function getPrimaryAgencyId(viewer) {
 function createClientForm() {
   return {
     name: '',
-    type: 'clinic',
   }
 }
 
-function CreateWorkspaceDialog({
+function CreateClientDialog({
   createStatus,
   error,
   form,
@@ -53,24 +52,24 @@ function CreateWorkspaceDialog({
     >
       <DialogContent className="max-w-modal-md">
         <DialogHeader>
-          <DialogTitle>Create workspace</DialogTitle>
+          <DialogTitle>Add client</DialogTitle>
           <DialogDescription>
-            Create the client workspace first. Setup and data sources are handled after creation.
+            Create the parent client record. Workspaces are managed separately.
           </DialogDescription>
         </DialogHeader>
-        <form className="grid gap-component" id="create-workspace-form" onSubmit={onSubmit}>
+        <form className="grid gap-component" id="create-client-form" onSubmit={onSubmit}>
           <label className="grid gap-item">
-            <span className="text-label text-text-secondary">Workspace name</span>
+            <span className="text-label text-text-secondary">Client name</span>
             <Input
               autoFocus
               onChange={(event) => onUpdateName(event.target.value)}
-              placeholder="Green Dental"
+              placeholder="Green Dental Group"
               required
               value={form.name}
             />
           </label>
           {error ? (
-            <ErrorBlock title="Workspace could not be created">
+            <ErrorBlock title="Client could not be created">
               {error}
             </ErrorBlock>
           ) : null}
@@ -79,8 +78,8 @@ function CreateWorkspaceDialog({
           <Button disabled={createStatus === 'creating'} onClick={onClose} type="button" variant="outline">
             Cancel
           </Button>
-          <Button disabled={createStatus === 'creating'} form="create-workspace-form" type="submit">
-            {createStatus === 'creating' ? 'Creating...' : 'Create workspace'}
+          <Button disabled={createStatus === 'creating'} form="create-client-form" type="submit">
+            {createStatus === 'creating' ? 'Creating...' : 'Add client'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -91,23 +90,23 @@ function CreateWorkspaceDialog({
 export function AdminClientsPage({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
   const navigate = useNavigate()
-  const isCreateDialogOpen = routeParams.createWorkspace === 'true'
-  const [workspaces, setWorkspaces] = useState([])
+  const isCreateDialogOpen = routeParams.createClient === 'true'
+  const [clients, setClients] = useState([])
   const [form, setForm] = useState(() => createClientForm())
   const [error, setError] = useState('')
   const [createError, setCreateError] = useState('')
   const [status, setStatus] = useState('loading')
   const [createStatus, setCreateStatus] = useState('idle')
 
-  function applyWorkspacesPayload(payload) {
-    setWorkspaces(payload.workspaces ?? [])
+  function applyClientsPayload(payload) {
+    setClients(payload.clients ?? [])
     setStatus('ready')
   }
 
-  function reloadWorkspaces() {
-    return apiClient.get('/api/workspaces/')
+  function reloadClients() {
+    return apiClient.get('/api/clients/')
       .then((payload) => {
-        applyWorkspacesPayload(payload)
+        applyClientsPayload(payload)
       })
       .catch((caughtError) => {
         setError(caughtError.message)
@@ -118,13 +117,13 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
   useEffect(() => {
     let isActive = true
 
-    apiClient.get('/api/workspaces/')
+    apiClient.get('/api/clients/')
       .then((payload) => {
         if (!isActive) {
           return
         }
 
-        applyWorkspacesPayload(payload)
+        applyClientsPayload(payload)
       })
       .catch((caughtError) => {
         if (!isActive) {
@@ -140,31 +139,27 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
     }
   }, [apiClient])
 
-  function createWorkspace(event) {
+  function createClient(event) {
     event.preventDefault()
 
     const agencyId = getPrimaryAgencyId(runtime.viewer)
     const name = form.name.trim()
 
     if (!agencyId || !name) {
-      setCreateError('Agency and workspace name are required.')
+      setCreateError('Agency and client name are required.')
       return
     }
 
     setCreateStatus('creating')
     setCreateError('')
-    apiClient.post('/api/workspaces/', {
+    apiClient.post('/api/clients/', {
       agency_id: agencyId,
       name,
-      type: form.type,
-    }).then((payload) => {
-      const workspace = payload.workspace
+    }).then(() => {
       setForm(createClientForm())
       setCreateStatus('idle')
-      void reloadWorkspaces()
-      if (workspace?.id) {
-        navigate(`/admin/clinic-setup?clientId=${workspace.id}`)
-      }
+      void reloadClients()
+      navigate('/admin/clients', { replace: true })
     }).catch((caughtError) => {
       setCreateError(caughtError.message)
       setCreateStatus('idle')
@@ -183,13 +178,13 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
 
   return (
     <div className="grid gap-card">
-      <CreateWorkspaceDialog
+      <CreateClientDialog
         createStatus={createStatus}
         error={createError}
         form={form}
         isOpen={isCreateDialogOpen}
         onClose={closeCreateDialog}
-        onSubmit={createWorkspace}
+        onSubmit={createClient}
         onUpdateName={(name) => {
           setCreateError('')
           setForm((current) => ({ ...current, name }))
@@ -203,13 +198,13 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
       ) : null}
 
       <Panel>
-        <PanelHeader divided title="Client workspaces" />
+        <PanelHeader divided title="Clients" />
         <PanelBody className="overflow-x-auto p-0">
           {status === 'loading' ? (
             <div className="min-h-[220px] animate-pulse" />
           ) : status === 'error' ? (
             <div className="p-card">
-              <ErrorBlock title="Client workspaces could not be loaded">
+              <ErrorBlock title="Clients could not be loaded">
                 {error}
               </ErrorBlock>
             </div>
@@ -218,36 +213,33 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Workspaces</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {workspaces.map((workspace) => (
-                  <TableRow key={workspace.id}>
-                    <TableCell className="font-medium">{workspace.name}</TableCell>
-                    <TableCell>{workspace.type}</TableCell>
-                    <TableCell>{workspace.status}</TableCell>
+                {clients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell className="font-medium">{client.name}</TableCell>
+                    <TableCell>{client.status}</TableCell>
+                    <TableCell>{client.workspace_count}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-tag">
                         <Button asChild size="sm" variant="outline">
-                          <Link to={`/admin/clinic-setup?clientId=${workspace.id}`}>Setup</Link>
-                        </Button>
-                        <Button asChild size="sm" variant="outline">
-                          <Link to={`/admin/clinic-data-sources?clientId=${workspace.id}`}>Data</Link>
+                          <Link to={`/admin/workspaces?clientAccountId=${client.id}`}>Workspaces</Link>
                         </Button>
                         <Button asChild size="sm" variant="ghost">
-                          <Link to={`/client/growth-review?clientId=${workspace.id}`}>Review</Link>
+                          <Link to={`/admin/workspaces?clientAccountId=${client.id}&createWorkspace=true`}>Add workspace</Link>
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                {workspaces.length === 0 ? (
+                {clients.length === 0 ? (
                   <TableRow>
                     <TableCell className="text-text-muted" colSpan={4}>
-                      No managed workspaces yet.
+                      No clients yet.
                     </TableCell>
                   </TableRow>
                 ) : null}
