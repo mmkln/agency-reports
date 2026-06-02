@@ -1,4 +1,9 @@
 export {
+  normalizeBackendWorkspace,
+  normalizeBackendWorkspacesPayload,
+} from './apiContract'
+
+export {
   isClinicWorkspace,
   normalizeWorkspaceId,
   WORKSPACE_STATUSES,
@@ -6,4 +11,3 @@ export {
   WORKSPACE_TYPES,
   WORKSPACE_TYPE_META,
 } from './model'
-

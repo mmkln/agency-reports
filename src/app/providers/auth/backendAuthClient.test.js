@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { AuthApiError } from './authApiClient'
-import { createBackendAuthClient } from './backendAuthClient'
+import { createBackendAuthClient, mapBackendViewerContextToViewer } from './backendAuthClient'
 
 function createViewerContext() {
   return {
     agency_memberships: [],
+    client_memberships: [],
     managed_workspace_relationships: [],
     user: {
       email: 'owner@example.com',
@@ -67,6 +68,7 @@ describe('createBackendAuthClient', () => {
     })
     expect(viewer).toEqual(expect.objectContaining({
       authSource: 'backend-token',
+      clientMemberships: [],
       email: 'owner@example.com',
       userId: 'user_1',
     }))
@@ -84,6 +86,35 @@ describe('createBackendAuthClient', () => {
 
     await expect(authClient.getCurrentViewer()).resolves.toBeNull()
     expect(apiClient.get).not.toHaveBeenCalled()
+  })
+
+  it('maps client memberships from the backend viewer context', () => {
+    const viewer = mapBackendViewerContextToViewer({
+      ...createViewerContext(),
+      client_memberships: [
+        {
+          agency_id: 'agency_1',
+          agency_name: 'Alpine Marketing',
+          client_id: 'client_1',
+          client_name: 'Inspo Dental',
+          id: 'membership_1',
+          role: 'client_admin',
+          status: 'active',
+        },
+      ],
+    })
+
+    expect(viewer).toEqual(expect.objectContaining({
+      activeClientId: 'client_1',
+      clientMemberships: [
+        expect.objectContaining({
+          agencyId: 'agency_1',
+          clientId: 'client_1',
+          clientName: 'Inspo Dental',
+          role: 'client_admin',
+        }),
+      ],
+    }))
   })
 
   it('clears tokens when /me rejects the stored token', async () => {

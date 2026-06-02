@@ -1,5 +1,6 @@
 import { createAuthApiClient, AuthApiError } from './authApiClient'
 import { createBrowserAuthTokenStorage } from './browserAuthTokenStorage'
+import { normalizeBackendClientMembership } from '../../../entities/client-membership'
 
 function normalizeCapabilities(capabilities) {
   return Array.isArray(capabilities) ? [...new Set(capabilities)] : []
@@ -63,6 +64,9 @@ export function mapBackendViewerContextToViewer(viewerContext) {
   const workspaceMemberships = (viewerContext.workspace_memberships ?? [])
     .map((workspace) => mapWorkspaceMembership(workspace, userId))
     .filter((membership) => membership.workspaceId)
+  const clientMemberships = (viewerContext.client_memberships ?? [])
+    .map((membership) => normalizeBackendClientMembership(membership, userId))
+    .filter((membership) => membership.clientId)
   const managedWorkspaceRelationships = (viewerContext.managed_workspace_relationships ?? [])
     .map(mapManagedWorkspaceRelationship)
     .filter((relationship) => relationship.agencyId && relationship.workspaceId)
@@ -78,10 +82,12 @@ export function mapBackendViewerContextToViewer(viewerContext) {
 
   return {
     activeAgencyId,
+    activeClientId: clientMemberships[0]?.clientId ?? null,
     activeWorkspaceId,
     agencyMemberships,
     authSource: 'backend-token',
     capabilities,
+    clientMemberships,
     email: user.email ?? '',
     managedWorkspaceRelationships,
     name,

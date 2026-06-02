@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { normalizeBackendClientsPayload } from '../../../entities/client'
 import {
   Button,
   Dialog,
@@ -99,7 +100,7 @@ export function AdminClientsPage({ routeParams = {}, runtime }) {
   const [createStatus, setCreateStatus] = useState('idle')
 
   function applyClientsPayload(payload) {
-    setClients(payload.clients ?? [])
+    setClients(normalizeBackendClientsPayload(payload).clients)
     setStatus('ready')
   }
 

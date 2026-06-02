@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import { normalizeBackendClientsPayload } from '../../../entities/client'
+import { normalizeBackendWorkspace, normalizeBackendWorkspacesPayload } from '../../../entities/workspace'
 import {
   Button,
   Dialog,
@@ -144,8 +146,8 @@ export function AdminWorkspacesPage({ routeParams = {}, runtime }) {
   const selectedClient = clients.find((client) => client.id === selectedClientAccountId) ?? null
 
   function applyPayloads(workspacesPayload, clientsPayload) {
-    setWorkspaces(workspacesPayload.workspaces ?? [])
-    setClients(clientsPayload.clients ?? [])
+    setWorkspaces(normalizeBackendWorkspacesPayload(workspacesPayload).workspaces)
+    setClients(normalizeBackendClientsPayload(clientsPayload).clients)
     setStatus('ready')
   }
 
@@ -201,13 +203,13 @@ export function AdminWorkspacesPage({ routeParams = {}, runtime }) {
 
     setCreateStatus('creating')
     setCreateError('')
-      apiClient.post('/api/workspaces/', {
-        agency_id: agencyId,
+    apiClient.post('/api/workspaces/', {
+      agency_id: agencyId,
       client_id: clientId,
       name,
       type: form.type,
     }).then((payload) => {
-      const workspace = payload.workspace
+      const workspace = normalizeBackendWorkspace(payload.workspace)
       setForm(createWorkspaceForm(selectedClientAccountId))
       setCreateStatus('idle')
       void reloadPageData()
