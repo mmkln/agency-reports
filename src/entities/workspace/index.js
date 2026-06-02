@@ -1,4 +1,5 @@
 export {
+  WORKSPACE_CLIENT_ACCESS_POLICIES,
   normalizeBackendWorkspace,
   normalizeBackendWorkspacesPayload,
 } from './apiContract'

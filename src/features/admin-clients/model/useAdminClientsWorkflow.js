@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { normalizeBackendClient, normalizeBackendClientsPayload } from '@/entities/client'
+import { WORKSPACE_CLIENT_ACCESS_POLICIES } from '@/entities/workspace'
 
 import { getAdminClientsPath } from './adminClientPaths'
 
@@ -32,6 +33,7 @@ function createInviteClientUserForm() {
 
 function createWorkspaceForm() {
   return {
+    clientAccessPolicy: WORKSPACE_CLIENT_ACCESS_POLICIES.OWNERS_ADMINS,
     name: '',
     type: 'clinic',
   }
@@ -286,6 +288,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     setWorkspaceError('')
     apiClient.post('/api/workspaces/', {
       agency_id: agencyId,
+      client_access_policy: workspaceForm.clientAccessPolicy,
       client_id: clientPendingWorkspace.id,
       name,
       type: workspaceForm.type,

@@ -2,6 +2,11 @@ function normalizeText(value) {
   return value === undefined || value === null ? '' : String(value)
 }
 
+export const WORKSPACE_CLIENT_ACCESS_POLICIES = Object.freeze({
+  NONE: 'none',
+  OWNERS_ADMINS: 'owners_admins',
+})
+
 function normalizeNullableText(value) {
   return value === undefined || value === null || value === '' ? null : String(value)
 }
