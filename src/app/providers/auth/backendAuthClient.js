@@ -73,6 +73,7 @@ export function mapBackendViewerContextToViewer(viewerContext) {
   const capabilities = [...new Set([
     ...agencyMemberships.flatMap((membership) => membership.capabilities),
     ...workspaceMemberships.flatMap((membership) => membership.capabilities),
+    ...clientMemberships.flatMap((membership) => membership.capabilities),
   ])]
   const activeAgencyId = agencyMemberships[0]?.agencyId ?? null
   const activeWorkspaceId = workspaceMemberships[0]?.workspaceId
