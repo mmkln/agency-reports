@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 import {
   Button,
   DropdownMenu,
@@ -10,10 +8,9 @@ import {
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 
-import { getClientAccountCreateWorkspacePath } from '../model/adminClientPaths'
-
 export function ClientMoreMenu({
   client,
+  onCreateWorkspace,
   onEditClient,
   onInviteClientUser,
   onOpenClient,
@@ -40,11 +37,9 @@ export function ClientMoreMenu({
           </DropdownMenuItem>
         ) : null}
         {permissions.canAddWorkspace ? (
-          <DropdownMenuItem asChild>
-            <Link to={getClientAccountCreateWorkspacePath(client.id)}>
-              <Icon name="plus" size={15} />
-              Add workspace
-            </Link>
+          <DropdownMenuItem onClick={() => onCreateWorkspace(client)}>
+            <Icon name="plus" size={15} />
+            Add workspace
           </DropdownMenuItem>
         ) : null}
         {permissions.canEditClient ? (

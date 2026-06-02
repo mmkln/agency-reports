@@ -3,7 +3,6 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -23,8 +22,6 @@ export function ClientInviteUserDialog({
   error,
   form,
   isOpen,
-  memberships,
-  membershipsStatus,
   onClose,
   onSubmit,
   onUpdateForm,
@@ -42,9 +39,6 @@ export function ClientInviteUserDialog({
       <DialogContent className="max-w-modal-md">
         <DialogHeader>
           <DialogTitle>Invite client user</DialogTitle>
-          <DialogDescription>
-            Add an existing user to the client account. Workspace-specific access remains managed on workspace access pages.
-          </DialogDescription>
         </DialogHeader>
         <form className="grid gap-component" id="invite-client-user-form" onSubmit={onSubmit}>
           <label className="grid gap-item">
@@ -66,11 +60,6 @@ export function ClientInviteUserDialog({
               ))}
             </Select>
           </label>
-          <div className="rounded-control bg-block-subtle px-control py-control text-ui text-text-secondary">
-            {membershipsStatus === 'loading'
-              ? 'Loading current client users...'
-              : `${memberships.length} client user${memberships.length === 1 ? '' : 's'} currently attached${client ? ` to ${client.name}` : ''}.`}
-          </div>
           {error ? (
             <ErrorBlock title="Client user could not be invited">
               {error}

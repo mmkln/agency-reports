@@ -16,6 +16,7 @@ import { ClientWorkspaceAction } from './ClientWorkspaceAction'
 
 export function ClientsTable({
   clients,
+  onCreateWorkspace,
   onEditClient,
   onInviteClientUser,
   onOpenClient,
@@ -28,7 +29,6 @@ export function ClientsTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Workspaces</TableHead>
             <TableActionHead>Actions</TableActionHead>
           </TableRow>
         </TableHeader>
@@ -40,27 +40,29 @@ export function ClientsTable({
               <TableRow key={client.id}>
                 <TableCell className="font-medium">{client.name}</TableCell>
                 <TableCell>{client.status}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-item">
-                    <ClientWorkspaceAction client={client} permissions={permissions} />
-                    <span className="text-label text-text-muted">{client.workspaceCount}</span>
-                  </div>
-                </TableCell>
                 <TableActionCell>
-                  <ClientMoreMenu
-                    client={client}
-                    onEditClient={onEditClient}
-                    onInviteClientUser={onInviteClientUser}
-                    onOpenClient={onOpenClient}
-                    permissions={permissions}
-                  />
+                  <div className="flex justify-end gap-item">
+                    <ClientWorkspaceAction
+                      client={client}
+                      onCreateWorkspace={onCreateWorkspace}
+                      permissions={permissions}
+                    />
+                    <ClientMoreMenu
+                      client={client}
+                      onCreateWorkspace={onCreateWorkspace}
+                      onEditClient={onEditClient}
+                      onInviteClientUser={onInviteClientUser}
+                      onOpenClient={onOpenClient}
+                      permissions={permissions}
+                    />
+                  </div>
                 </TableActionCell>
               </TableRow>
             )
           })}
           {clients.length === 0 ? (
             <TableRow>
-              <TableCell className="text-text-muted" colSpan={4}>
+              <TableCell className="text-text-muted" colSpan={3}>
                 No clients yet.
               </TableCell>
             </TableRow>

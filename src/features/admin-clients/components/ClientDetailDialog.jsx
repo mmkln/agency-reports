@@ -4,7 +4,6 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -34,25 +33,9 @@ export function ClientDetailDialog({
       <DialogContent className="max-w-modal-lg">
         <DialogHeader>
           <DialogTitle>{client?.name ?? 'Client'}</DialogTitle>
-          <DialogDescription>
-            Client account, workspaces, and access summary.
-          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-component">
-          <dl className="grid gap-item rounded-control bg-block-subtle px-control py-control text-ui">
-            <div className="flex items-center justify-between gap-component">
-              <dt className="text-text-secondary">Status</dt>
-              <dd className="font-medium text-text-primary">{client?.status ?? 'active'}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-component">
-              <dt className="text-text-secondary">Workspaces</dt>
-              <dd className="font-medium text-text-primary">{client?.workspaceCount ?? 0}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-component">
-              <dt className="text-text-secondary">Client users</dt>
-              <dd className="font-medium text-text-primary">{client?.membershipCount ?? 0}</dd>
-            </div>
-          </dl>
+          <p className="text-ui text-text-secondary">{client?.status ?? 'active'}</p>
           <div className="grid gap-item">
             <p className="text-label text-text-secondary">Workspaces</p>
             <div className="grid gap-item">

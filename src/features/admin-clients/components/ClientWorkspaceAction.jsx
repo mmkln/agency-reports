@@ -9,12 +9,9 @@ import {
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 
-import {
-  getClientAccountCreateWorkspacePath,
-  getWorkspaceAdminPath,
-} from '../model/adminClientPaths'
+import { getWorkspaceAdminPath } from '../model/adminClientPaths'
 
-export function ClientWorkspaceAction({ client, permissions }) {
+export function ClientWorkspaceAction({ client, onCreateWorkspace, permissions }) {
   const workspaces = client.workspaces ?? []
 
   if (workspaces.length === 0) {
@@ -23,8 +20,8 @@ export function ClientWorkspaceAction({ client, permissions }) {
     }
 
     return (
-      <Button asChild size="sm" variant="outline">
-        <Link to={getClientAccountCreateWorkspacePath(client.id)}>Add workspace</Link>
+      <Button onClick={() => onCreateWorkspace(client)} size="sm" type="button" variant="outline">
+        Add workspace
       </Button>
     )
   }

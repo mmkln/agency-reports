@@ -6,6 +6,7 @@ import { ClientCreateDialog } from './ClientCreateDialog'
 import { ClientDetailDialog } from './ClientDetailDialog'
 import { ClientInviteUserDialog } from './ClientInviteUserDialog'
 import { ClientQuickEditDialog } from './ClientQuickEditDialog'
+import { ClientWorkspaceCreateDialog } from './ClientWorkspaceCreateDialog'
 import { ClientsTable } from './ClientsTable'
 
 export function AdminClientsWorkspace({ routeParams = {}, runtime }) {
@@ -57,12 +58,6 @@ export function AdminClientsWorkspace({ routeParams = {}, runtime }) {
         error={workflow.inviteError}
         form={workflow.inviteForm}
         isOpen={workflow.isInviteDialogOpen}
-        memberships={workflow.memberships}
-        membershipsStatus={
-          workflow.isInviteDialogOpen && workflow.membershipsStatus === 'idle'
-            ? 'loading'
-            : workflow.membershipsStatus
-        }
         onClose={workflow.closeDialog}
         onSubmit={workflow.inviteClientUser}
         onUpdateForm={(patch) => {
@@ -70,6 +65,19 @@ export function AdminClientsWorkspace({ routeParams = {}, runtime }) {
           workflow.setInviteForm((current) => ({ ...current, ...patch }))
         }}
         status={workflow.inviteStatus}
+      />
+      <ClientWorkspaceCreateDialog
+        client={workflow.clientPendingWorkspace}
+        error={workflow.workspaceError}
+        form={workflow.workspaceForm}
+        isOpen={workflow.isWorkspaceDialogOpen}
+        onClose={workflow.closeDialog}
+        onSubmit={workflow.createWorkspace}
+        onUpdateForm={(patch) => {
+          workflow.setWorkspaceError('')
+          workflow.setWorkspaceForm((current) => ({ ...current, ...patch }))
+        }}
+        status={workflow.workspaceStatus}
       />
 
       {workflow.error ? (
@@ -94,6 +102,7 @@ export function AdminClientsWorkspace({ routeParams = {}, runtime }) {
           onEditClient={workflow.openEditDialog}
           onInviteClientUser={workflow.openInviteDialog}
           onOpenClient={workflow.openClientDetail}
+          onCreateWorkspace={workflow.openWorkspaceDialog}
           viewer={runtime.viewer}
         />
       )}

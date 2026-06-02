@@ -2,10 +2,6 @@ export function getClientAccountWorkspacesPath(clientId) {
   return `/admin/workspaces?clientAccountId=${clientId}`
 }
 
-export function getClientAccountCreateWorkspacePath(clientId) {
-  return `/admin/workspaces?clientAccountId=${clientId}&createWorkspace=true`
-}
-
 export function getWorkspaceAdminPath(workspace, client) {
   if (workspace?.type === 'clinic') {
     return `/admin/clinic-setup?clientId=${workspace.id}`

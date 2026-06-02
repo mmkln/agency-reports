@@ -2,7 +2,6 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,9 +32,6 @@ export function ClientQuickEditDialog({
       <DialogContent className="max-w-modal-md">
         <DialogHeader>
           <DialogTitle>Edit client</DialogTitle>
-          <DialogDescription>
-            Update the parent client record without changing workspace settings.
-          </DialogDescription>
         </DialogHeader>
         <form className="grid gap-component" id="edit-client-form" onSubmit={onSubmit}>
           <label className="grid gap-item">

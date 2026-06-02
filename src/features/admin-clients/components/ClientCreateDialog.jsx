@@ -2,7 +2,6 @@ import {
   Button,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -31,9 +30,6 @@ export function ClientCreateDialog({
       <DialogContent className="max-w-modal-md">
         <DialogHeader>
           <DialogTitle>Add client</DialogTitle>
-          <DialogDescription>
-            Create the parent client record. Workspaces are managed separately.
-          </DialogDescription>
         </DialogHeader>
         <form className="grid gap-component" id="create-client-form" onSubmit={onSubmit}>
           <label className="grid gap-item">

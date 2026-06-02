@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { normalizeBackendClient, normalizeBackendClientsPayload } from '@/entities/client'
-import { normalizeBackendClientMembership } from '@/entities/client-membership'
 
 import { getAdminClientsPath } from './adminClientPaths'
 
@@ -31,41 +30,58 @@ function createInviteClientUserForm() {
   }
 }
 
+function createWorkspaceForm() {
+  return {
+    name: '',
+    type: 'clinic',
+  }
+}
+
 export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
   const navigate = useNavigate()
   const [clients, setClients] = useState([])
+  const [openClientId, setOpenClientId] = useState('')
+  const [editClientId, setEditClientId] = useState('')
+  const [inviteClientUserId, setInviteClientUserId] = useState('')
+  const [workspaceClientId, setWorkspaceClientId] = useState('')
   const [createForm, setCreateForm] = useState(() => createClientForm())
   const [editForm, setEditForm] = useState(() => createEditClientForm(null))
   const [inviteForm, setInviteForm] = useState(() => createInviteClientUserForm())
-  const [memberships, setMemberships] = useState([])
+  const [workspaceForm, setWorkspaceForm] = useState(() => createWorkspaceForm())
   const [error, setError] = useState('')
   const [createError, setCreateError] = useState('')
   const [editError, setEditError] = useState('')
   const [inviteError, setInviteError] = useState('')
+  const [workspaceError, setWorkspaceError] = useState('')
   const [status, setStatus] = useState('loading')
   const [createStatus, setCreateStatus] = useState('idle')
   const [editStatus, setEditStatus] = useState('idle')
   const [inviteStatus, setInviteStatus] = useState('idle')
-  const [membershipsStatus, setMembershipsStatus] = useState('idle')
+  const [workspaceStatus, setWorkspaceStatus] = useState('idle')
 
   const openClient = useMemo(
-    () => clients.find((client) => client.id === routeParams.openClient) ?? null,
-    [clients, routeParams.openClient],
+    () => clients.find((client) => client.id === openClientId) ?? null,
+    [clients, openClientId],
   )
   const clientPendingEdit = useMemo(
-    () => clients.find((client) => client.id === routeParams.editClient) ?? null,
-    [clients, routeParams.editClient],
+    () => clients.find((client) => client.id === editClientId) ?? null,
+    [clients, editClientId],
   )
   const clientPendingInvite = useMemo(
-    () => clients.find((client) => client.id === routeParams.inviteClientUser) ?? null,
-    [clients, routeParams.inviteClientUser],
+    () => clients.find((client) => client.id === inviteClientUserId) ?? null,
+    [clients, inviteClientUserId],
+  )
+  const clientPendingWorkspace = useMemo(
+    () => clients.find((client) => client.id === workspaceClientId) ?? null,
+    [clients, workspaceClientId],
   )
 
   const isCreateDialogOpen = routeParams.createClient === 'true'
   const isDetailDialogOpen = Boolean(openClient)
   const isEditDialogOpen = Boolean(clientPendingEdit)
   const isInviteDialogOpen = Boolean(clientPendingInvite)
+  const isWorkspaceDialogOpen = Boolean(clientPendingWorkspace)
   const resolvedEditForm = clientPendingEdit && editForm.clientId !== clientPendingEdit.id
     ? createEditClientForm(clientPendingEdit)
     : editForm
@@ -111,68 +127,57 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     }
   }, [apiClient])
 
-  useEffect(() => {
-    if (!clientPendingInvite) {
-      return
-    }
-
-    let isActive = true
-    apiClient.get(`/api/clients/${clientPendingInvite.id}/memberships/`)
-      .then((payload) => {
-        if (!isActive) {
-          return
-        }
-
-        setMemberships((payload.memberships ?? []).map(normalizeBackendClientMembership))
-        setMembershipsStatus('ready')
-      })
-      .catch((caughtError) => {
-        if (!isActive) {
-          return
-        }
-
-        setInviteError(caughtError.message)
-        setMembershipsStatus('error')
-      })
-
-    return () => {
-      isActive = false
-    }
-  }, [apiClient, clientPendingInvite])
-
   function openCreateDialog() {
     navigate(getAdminClientsPath({ createClient: 'true' }))
   }
 
   function openClientDetail(client) {
-    navigate(getAdminClientsPath({ openClient: client.id }))
+    setOpenClientId(client.id)
   }
 
   function openEditDialog(client) {
     setEditForm(createEditClientForm(client))
     setEditError('')
-    navigate(getAdminClientsPath({ editClient: client.id }))
+    setEditClientId(client.id)
   }
 
   function openInviteDialog(client) {
-    setMemberships([])
-    setMembershipsStatus('loading')
     setInviteError('')
-    navigate(getAdminClientsPath({ inviteClientUser: client.id }))
+    setInviteClientUserId(client.id)
+  }
+
+  function openWorkspaceDialog(client) {
+    setWorkspaceClientId(client.id)
+    setWorkspaceForm(createWorkspaceForm())
+    setWorkspaceError('')
   }
 
   function closeDialog() {
-    if (createStatus === 'creating' || editStatus === 'saving' || inviteStatus === 'inviting') {
+    if (
+      createStatus === 'creating'
+      || editStatus === 'saving'
+      || inviteStatus === 'inviting'
+      || workspaceStatus === 'creating'
+    ) {
       return
     }
 
+    setOpenClientId('')
+    setEditClientId('')
+    setInviteClientUserId('')
+    setWorkspaceClientId('')
     setCreateForm(createClientForm())
     setEditForm(createEditClientForm(null))
     setInviteForm(createInviteClientUserForm())
+    setWorkspaceForm(createWorkspaceForm())
     setCreateError('')
     setEditError('')
     setInviteError('')
-    navigate('/admin/clients', { replace: true })
+    setWorkspaceError('')
+
+    if (isCreateDialogOpen) {
+      navigate('/admin/clients', { replace: true })
+    }
   }
 
   function createClient(event) {
@@ -227,7 +232,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
       const updatedClient = normalizeBackendClient(payload.client)
       setClients((current) => current.map((client) => (client.id === updatedClient.id ? updatedClient : client)))
       setEditStatus('idle')
-      navigate('/admin/clients', { replace: true })
+      setEditClientId('')
     }).catch((caughtError) => {
       setEditError(caughtError.message)
       setEditStatus('idle')
@@ -252,12 +257,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     apiClient.post(`/api/clients/${clientPendingInvite.id}/memberships/`, {
       email,
       role: inviteForm.role,
-    }).then((payload) => {
-      const membership = normalizeBackendClientMembership(payload.membership)
-      setMemberships((current) => [
-        membership,
-        ...current.filter((item) => item.id !== membership.id),
-      ])
+    }).then(() => {
       setInviteForm(createInviteClientUserForm())
       setInviteStatus('idle')
       void reloadClients()
@@ -267,15 +267,50 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     })
   }
 
+  function createWorkspace(event) {
+    event.preventDefault()
+
+    if (!clientPendingWorkspace) {
+      return
+    }
+
+    const agencyId = getPrimaryAgencyId(runtime.viewer)
+    const name = workspaceForm.name.trim()
+
+    if (!agencyId || !name) {
+      setWorkspaceError('Agency and workspace name are required.')
+      return
+    }
+
+    setWorkspaceStatus('creating')
+    setWorkspaceError('')
+    apiClient.post('/api/workspaces/', {
+      agency_id: agencyId,
+      client_id: clientPendingWorkspace.id,
+      name,
+      type: workspaceForm.type,
+    }).then(() => {
+      setWorkspaceForm(createWorkspaceForm())
+      setWorkspaceClientId('')
+      setWorkspaceStatus('idle')
+      void reloadClients()
+    }).catch((caughtError) => {
+      setWorkspaceError(caughtError.message)
+      setWorkspaceStatus('idle')
+    })
+  }
+
   return {
     clients,
     closeDialog,
     clientPendingEdit,
     clientPendingInvite,
+    clientPendingWorkspace,
     createClient,
     createError,
     createForm,
     createStatus,
+    createWorkspace,
     editError,
     editForm: resolvedEditForm,
     editStatus,
@@ -288,13 +323,13 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     isDetailDialogOpen,
     isEditDialogOpen,
     isInviteDialogOpen,
-    memberships,
-    membershipsStatus,
+    isWorkspaceDialogOpen,
     openClient,
     openClientDetail,
     openCreateDialog,
     openEditDialog,
     openInviteDialog,
+    openWorkspaceDialog,
     reloadClients,
     saveClientEdit,
     setCreateError,
@@ -303,6 +338,11 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     setEditForm,
     setInviteError,
     setInviteForm,
+    setWorkspaceError,
+    setWorkspaceForm,
     status,
+    workspaceError,
+    workspaceForm,
+    workspaceStatus,
   }
 }

@@ -72,6 +72,7 @@
 - The sidebar should show stable destinations for the current container, not every route the user has permission to access.
 - Choose top navigation, sidebar, or split navigation from the actual information architecture: use a top nav for a small flat set of destinations, a sidebar for many stable destinations or nested workspaces, and avoid role-specific shells until the role workflows truly diverge.
 - Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
+- Do not make mutation commands route users away as a side effect. Create, invite, edit, and similar commands should open the local workflow and keep the user on the current surface after success unless the user explicitly requests navigation.
 - Before changing navigation, identify the exact navigation layer: app shell navigation, workspace tabs, page tabs, table actions, or command buttons. Do not edit nearby navigation-looking UI by assumption.
 - For sidebar navigation, preserve stable collapsed/expanded geometry: icon anchors must not move, collapsed rows must be true icon targets, and vertical regions such as search, nav, utility, and account controls must not jump during expansion.
 - Sidebar navigation should use list/sidebar selection styling rather than generic button or control fills; communicate state with neutral fill, text/icon contrast, and focus before stronger color.
@@ -94,6 +95,7 @@
 - Do not wrap header toggles in input-like bordered containers; render them as lightweight label-and-switch controls aligned with the header actions.
 - Keep toggle labels stable across on/off states; use the switch state to express the value instead of changing adjacent label text.
 - Use compact, task-focused layouts for internal tools; avoid decorative or marketing-style composition in operational screens.
+- Do not add counters to tables, actions, headers, tabs, or list rows unless the user explicitly asks for a count or the count is required to choose an action. Prefer the object/action itself over count decoration.
 - Avoid nested card-on-card structures unless the inner card is a repeated item, modal, or genuinely framed tool.
 
 ## Forms And Inputs
