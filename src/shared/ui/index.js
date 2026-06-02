@@ -112,6 +112,7 @@ export {
 export { ReadOnlyField } from './ReadOnlyField'
 export { ScrollArea, ScrollBar } from './ScrollArea'
 export { ReportSection } from './ReportSection'
+export { ResourceState } from './ResourceState'
 export { SearchField } from './SearchField'
 export { SectionJumpNav } from './SectionJumpNav'
 export { SectionNav } from './SectionNav'

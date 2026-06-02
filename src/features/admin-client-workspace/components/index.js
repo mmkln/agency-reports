@@ -1,4 +1,5 @@
 export { AdminClientWorkspaceHeader } from './AdminClientWorkspaceHeader'
+export { AdminClientWorkspaceFrame } from './AdminClientWorkspaceFrame'
 export { ClientWorkspaceSwitcher } from './ClientWorkspaceSwitcher'
 export { ClientStatusSelector } from './ClientStatusSelector'
 export { ClinicClientPreviewLinks } from './ClinicClientPreviewLinks'

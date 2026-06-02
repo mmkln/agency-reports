@@ -4,9 +4,9 @@ import {
   HeroMetrics,
 } from './DentalGrowthReviewBlocks'
 
-export function DentalGrowthReviewDashboard({ page }) {
+export function DentalGrowthReviewDashboard({ onRetry, page }) {
   if (page.status === 'error' || !page.period) {
-    return <DentalGrowthReviewState page={page} />
+    return <DentalGrowthReviewState onRetry={onRetry} page={page} />
   }
 
   const content = page.period.content

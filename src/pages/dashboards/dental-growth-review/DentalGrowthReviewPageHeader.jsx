@@ -8,7 +8,8 @@ import {
 } from '../../../domain/services/growthReviewApiReadService'
 
 function resolveWorkspaceId({ routeParams = {}, runtime }) {
-  return routeParams.clientId
+  return routeParams.workspaceId
+    ?? routeParams.clientId
     ?? runtime.defaultClientId
     ?? runtime.viewer?.activeWorkspaceId
     ?? null

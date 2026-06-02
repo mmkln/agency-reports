@@ -4,17 +4,25 @@ import { useAsyncResource } from '../../shared/data/useAsyncResource'
 const GROWTH_REVIEW_DATA_SOURCE = 'backend'
 
 function resolveWorkspaceId({ routeParams = {}, runtime }) {
-  return routeParams.clientId
+  return routeParams.workspaceId
+    ?? routeParams.clientId
     ?? runtime.defaultClientId
     ?? runtime.viewer?.activeWorkspaceId
     ?? null
 }
 
-function createErrorPage(error) {
+function createErrorPage(error, errorInfo) {
+  const normalizedErrorInfo = errorInfo ?? {
+    kind: 'failure',
+    message: typeof error === 'string' ? error : error?.message ?? 'Could not load Growth Review.',
+    status: 0,
+  }
+
   return {
     error: typeof error === 'string' ? error : error?.message ?? 'Could not load Growth Review.',
+    errorInfo: normalizedErrorInfo,
     period: null,
-    reason: 'api_error',
+    reason: normalizedErrorInfo.kind,
     status: 'error',
   }
 }
@@ -51,7 +59,7 @@ export function useGrowthReviewReadModel({
   return {
     ...resource,
     dataSource: GROWTH_REVIEW_DATA_SOURCE,
-    page: resource.status === 'error' ? createErrorPage(resource.error) : resource.data,
+    page: resource.status === 'error' ? createErrorPage(resource.error, resource.errorInfo) : resource.data,
     workspaceId,
   }
 }

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { normalizeResourceError } from './resourceError'
+
 export function useAsyncResource({ dependencyKey = '', initialData = null, load }) {
   const requestIdRef = useRef(0)
   const loadRef = useRef(load)
   const [state, setState] = useState({
     data: initialData,
     error: '',
+    errorInfo: null,
     status: 'loading',
   })
 
@@ -20,6 +23,7 @@ export function useAsyncResource({ dependencyKey = '', initialData = null, load 
     setState((currentState) => ({
       ...currentState,
       error: '',
+      errorInfo: null,
       status: 'loading',
     }))
 
@@ -32,6 +36,7 @@ export function useAsyncResource({ dependencyKey = '', initialData = null, load 
         setState({
           data,
           error: '',
+          errorInfo: null,
           status: 'ready',
         })
 
@@ -45,6 +50,7 @@ export function useAsyncResource({ dependencyKey = '', initialData = null, load 
         setState({
           data: null,
           error: error.message,
+          errorInfo: normalizeResourceError(error),
           status: 'error',
         })
 

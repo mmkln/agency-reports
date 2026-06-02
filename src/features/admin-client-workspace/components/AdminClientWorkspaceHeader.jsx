@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { cn } from '@/lib/utils'
 import {
   PageHeader,
   PageShell,
@@ -21,7 +22,7 @@ function WorkspaceTabs({ client, currentPage, sections }) {
   }
 
   return (
-    <nav aria-label={`${client?.name ?? 'Client'} workspace`} className="flex min-w-0 items-center gap-tag overflow-x-auto">
+    <nav aria-label={`${client?.name ?? 'Client'} workspace sections`} className="flex min-w-0 items-center gap-control overflow-x-auto">
       {pages.map((page) => {
         const isActive = page.id === currentPage
         const label = getClientWorkspacePageLabel(page, client)
@@ -29,12 +30,12 @@ function WorkspaceTabs({ client, currentPage, sections }) {
         return (
           <Link
             aria-current={isActive ? 'page' : undefined}
-            className={[
-              'inline-flex h-control-small shrink-0 items-center gap-tag rounded-control px-control text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard',
+            className={cn(
+              'inline-flex h-control-small shrink-0 items-center gap-tag rounded-item px-item text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35',
               isActive
-                ? 'bg-control-selected text-text-primary'
-                : 'text-text-secondary hover:bg-control-hover hover:text-text-primary',
-            ].join(' ')}
+                ? 'text-text-primary'
+                : 'text-text-muted hover:bg-control-hover hover:text-text-primary',
+            )}
             key={page.id}
             title={label}
             to={getClientWorkspacePageHref(page, clientId)}
@@ -52,7 +53,6 @@ export function AdminClientWorkspaceHeader({
   actions,
   client,
   currentPage = 'overview',
-  eyebrow = 'Client workspace',
   primaryAction,
   width = 'full',
 }) {
@@ -60,11 +60,11 @@ export function AdminClientWorkspaceHeader({
 
   return (
     <header className="sticky top-0 z-20 border-b border-separator bg-surface">
-      <PageShell className="gap-control px-app-gutter py-control" width={width}>
+      <PageShell className="gap-tag px-app-gutter py-item" width={width}>
         <PageHeader
           actions={actions}
-          className="lg:items-center"
-          eyebrow={eyebrow}
+          className="gap-micro lg:items-center"
+          eyebrow={null}
           primaryAction={primaryAction}
           primaryActionContext="workspace"
           title={client?.name ?? 'Client workspace'}

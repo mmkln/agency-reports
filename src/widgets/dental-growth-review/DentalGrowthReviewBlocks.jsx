@@ -16,6 +16,7 @@ import {
   PanelBody,
   PanelHeader,
   ReportSection,
+  ResourceState,
   SectionJumpNav,
   StickyDashboardToolbar,
   TableBadge,
@@ -38,12 +39,25 @@ import {
 } from './format'
 import { createGrowthReviewMetricDetailViewModel } from './metricDetailPresenter'
 
-export function DentalGrowthReviewState({ page }) {
+export function DentalGrowthReviewState({ onRetry, page }) {
   if (page.status === 'error') {
     return (
       <Panel>
         <PanelBody>
-          <EmptyState iconName="shieldCheck" title="Access denied" />
+          <ResourceState
+            errorInfo={page.errorInfo}
+            labels={{
+              failureDescription: 'We could not load review data right now.',
+              failureTitle: 'Growth Review is unavailable',
+              networkDescription: 'Check the backend connection and try again.',
+              networkTitle: 'Growth Review is unavailable',
+              notFoundDescription: 'Connect source data and configure metrics before this workspace can show a review.',
+              notFoundTitle: 'Growth Review is not configured yet',
+              permissionDescription: 'Ask an admin to update your workspace permissions.',
+              permissionTitle: 'You do not have access to this review',
+            }}
+            onRetry={onRetry}
+          />
         </PanelBody>
       </Panel>
     )

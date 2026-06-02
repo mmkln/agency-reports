@@ -86,6 +86,15 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'admin-clinic-review',
+    path: '/admin/clinic-review',
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
+      scope: WORKSPACE,
+      workspaceTypes: [CLIENT_TYPES.CLINIC],
+    },
+  },
+  {
     id: 'dental-growth-review',
     path: '/client/growth-review',
     access: {

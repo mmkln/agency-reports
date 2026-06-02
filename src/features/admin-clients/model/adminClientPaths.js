@@ -1,10 +1,12 @@
+import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
+
 export function getClientAccountWorkspacesPath(clientId) {
   return `/admin/workspaces?clientAccountId=${clientId}`
 }
 
 export function getWorkspaceAdminPath(workspace, client) {
-  if (workspace?.type === 'clinic') {
-    return `/admin/clinic-setup?clientId=${workspace.id}`
+  if (workspace?.id) {
+    return getDefaultWorkspaceAdminPath(workspace)
   }
 
   return getClientAccountWorkspacesPath(client.id)

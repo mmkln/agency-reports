@@ -1,4 +1,11 @@
 export {
+  getDefaultWorkspaceAdminPath,
+  getWorkspaceDataSourcesPath,
+  getWorkspaceReviewPath,
+  getWorkspaceSetupPath,
+  resolveRouteWorkspaceId,
+} from './adminWorkspacePaths'
+export {
   getActiveClientWorkspaceSection,
   getClientWorkspacePageIdByRoutePath,
   getClientWorkspacePageHref,

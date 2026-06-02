@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
+import { normalizeResourceError } from '@/shared/data/resourceError'
 import {
   Button,
-  ErrorBlock,
   Input,
   Panel,
   PanelBody,
   PanelHeader,
+  ResourceState,
   UnavailableState,
 } from '@/shared/ui'
 
@@ -19,47 +20,38 @@ function createWorkspaceForm(workspace) {
 
 export function ClientSettingsPage({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
-  const workspaceId = routeParams.clientId ?? runtime.defaultClientId
+  const workspaceId = routeParams.workspaceId ?? routeParams.clientId ?? runtime.defaultClientId
   const [workspace, setWorkspace] = useState(null)
   const [form, setForm] = useState(() => createWorkspaceForm(null))
   const [error, setError] = useState('')
+  const [errorInfo, setErrorInfo] = useState(null)
   const [status, setStatus] = useState('loading')
 
-  useEffect(() => {
+  const loadWorkspaceSettings = useCallback(() => {
     if (!workspaceId) {
-      return undefined
+      return Promise.resolve()
     }
 
-    let isActive = true
+    setStatus('loading')
+    setError('')
+    setErrorInfo(null)
 
-    void Promise.resolve()
-      .then(() => {
-        setStatus('loading')
-        setError('')
-        return apiClient.get(`/api/workspaces/${workspaceId}/settings/`)
-      })
+    return apiClient.get(`/api/workspaces/${workspaceId}/settings/`)
       .then((payload) => {
-        if (!isActive) {
-          return
-        }
-
         setWorkspace(payload.workspace)
         setForm(createWorkspaceForm(payload.workspace))
         setStatus('ready')
       })
       .catch((caughtError) => {
-        if (!isActive) {
-          return
-        }
-
         setError(caughtError.message)
+        setErrorInfo(normalizeResourceError(caughtError))
         setStatus('error')
       })
-
-    return () => {
-      isActive = false
-    }
   }, [apiClient, workspaceId])
+
+  useEffect(() => {
+    void Promise.resolve().then(loadWorkspaceSettings)
+  }, [loadWorkspaceSettings])
 
   const hasChanges = Boolean(workspace) && (
     form.name.trim() !== String(workspace.name ?? '')
@@ -76,6 +68,7 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
 
     setStatus('saving')
     setError('')
+    setErrorInfo(null)
     apiClient.request(`/api/workspaces/${workspaceId}/settings/`, {
       body: {
         name: form.name.trim(),
@@ -88,6 +81,7 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
       setStatus('ready')
     }).catch((caughtError) => {
       setError(caughtError.message)
+      setErrorInfo(normalizeResourceError(caughtError))
       setStatus('ready')
     })
   }
@@ -112,9 +106,20 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
 
   if (status === 'error') {
     return (
-      <ErrorBlock title="Workspace settings could not be loaded">
-        {error}
-      </ErrorBlock>
+      <ResourceState
+        errorInfo={errorInfo}
+        labels={{
+          failureDescription: 'We could not load settings right now.',
+          failureTitle: 'Workspace settings are unavailable',
+          networkDescription: 'Check the backend connection and try again.',
+          networkTitle: 'Workspace settings are unavailable',
+          notFoundDescription: 'Add workspace details before this setup can be managed.',
+          notFoundTitle: 'Workspace settings are not configured yet',
+          permissionDescription: 'Ask an admin to update your workspace permissions.',
+          permissionTitle: 'You do not have access to workspace settings',
+        }}
+        onRetry={loadWorkspaceSettings}
+      />
     )
   }
 

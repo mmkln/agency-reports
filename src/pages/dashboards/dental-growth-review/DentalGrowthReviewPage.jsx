@@ -19,7 +19,7 @@ export function DentalGrowthReviewPage({ routeParams = {}, runtime }) {
 
   return (
     <PageShell className="pb-section pt-card" width="wide">
-      <DentalGrowthReviewDashboard page={page} />
+      <DentalGrowthReviewDashboard onRetry={growthReview.reload} page={page} />
     </PageShell>
   )
 }

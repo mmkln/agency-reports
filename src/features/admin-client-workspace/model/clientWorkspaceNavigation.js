@@ -1,4 +1,9 @@
 import { CLIENT_TYPES } from '../../../entities/client'
+import {
+  getWorkspaceDataSourcesPath,
+  getWorkspaceReviewPath,
+  getWorkspaceSetupPath,
+} from './adminWorkspacePaths'
 
 export const clientWorkspaceSections = [
   {
@@ -13,19 +18,22 @@ export const clientWorkspaceSections = [
         iconName: 'settings',
         label: 'Setup',
         route: '/admin/clinic-setup',
+        to: getWorkspaceSetupPath,
       },
       {
         id: 'clinic-data-sources',
         iconName: 'database',
-        label: 'Data Sources',
+        label: 'Data',
         previewRoute: '/client/growth-review',
         route: '/admin/clinic-data-sources',
+        to: getWorkspaceDataSourcesPath,
       },
       {
-        id: 'access',
-        iconName: 'users',
-        label: 'Access',
-        route: '/admin/client-access',
+        id: 'clinic-review',
+        iconName: 'trendingUp',
+        label: 'Review',
+        route: '/admin/clinic-review',
+        to: getWorkspaceReviewPath,
       },
     ],
   },
@@ -58,11 +66,11 @@ export function getClientWorkspacePageLabel(page, client) {
 export function getClientWorkspaceSectionHref(section, clientId) {
   const defaultPage = section.pages.find((page) => page.id === section.defaultPageId) ?? section.pages[0]
 
-  return `${defaultPage.route}?clientId=${clientId}`
+  return getClientWorkspacePageHref(defaultPage, clientId)
 }
 
 export function getClientWorkspacePageHref(page, clientId) {
-  return `${page.route}?clientId=${clientId}`
+  return page.to ? page.to(clientId) : `${page.route}?workspaceId=${clientId}`
 }
 
 export function getActiveClientWorkspaceSection(sections, currentPage) {

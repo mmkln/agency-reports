@@ -147,7 +147,7 @@ export function hasWorkspaceAdminMembership(viewer) {
 }
 
 export function getRouteClientId({ defaultClientId = null, routeParams = {}, viewer }) {
-  return routeParams.clientId ?? defaultClientId ?? viewer?.activeWorkspaceId ?? null
+  return routeParams.workspaceId ?? routeParams.clientId ?? defaultClientId ?? viewer?.activeWorkspaceId ?? null
 }
 
 export function isClientScopedRoute(route) {
