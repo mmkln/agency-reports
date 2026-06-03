@@ -4,21 +4,24 @@ import {
   HeroMetrics,
 } from './DentalGrowthReviewBlocks'
 
+function getDashboardMetrics(metrics = {}) {
+  return Object.values(metrics).slice(0, 6)
+}
+
 export function DentalGrowthReviewDashboard({ onRetry, page }) {
   if (page.status === 'error' || !page.period) {
     return <DentalGrowthReviewState onRetry={onRetry} page={page} />
   }
 
-  const content = page.period.content
-  const heroMetricSeries = page.charts?.hero_metric_series ?? {}
+  const metrics = getDashboardMetrics(page.charts?.metrics)
   const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages ?? []
 
   return (
     <>
-      <HeroMetrics heroMetricSeries={heroMetricSeries} metrics={content.hero_metrics} />
+      <HeroMetrics metrics={metrics} />
 
-      <FunnelView funnel={funnelStages} funnelChart={funnelChart} highlights={content.funnel_highlights} />
+      <FunnelView funnel={funnelStages} funnelChart={funnelChart} />
     </>
   )
 }

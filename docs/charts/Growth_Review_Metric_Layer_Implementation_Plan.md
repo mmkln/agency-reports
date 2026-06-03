@@ -572,6 +572,7 @@ Updated: 2026-06-03
 - [x] Frontend API adapter accepts canonical backend `metrics` and maps them to existing dashboard cards/charts.
 - [x] Dashboard no longer depends on the old `content.funnel` fallback for the funnel.
 - [x] Remove remaining legacy frontend label compatibility once no old payloads are needed.
+- [x] Dashboard widgets read hero cards and sparklines from `page.charts.metrics` instead of `period.content.hero_metrics`.
 - [x] Delete old backend helper modules after the new contract replaced them.
 - [ ] Add workspace timezone editing to the correct setup surface when the product needs non-UTC workspace control.
 

@@ -225,7 +225,7 @@ export function GrowthReviewToolbar({
 export function GrowthReviewExecutiveSummary({ page }) {
   const period = page.period
   const context = period.content.period_context
-  const heroMetric = period.content.hero_metrics[0]
+  const heroMetric = Object.values(page.charts?.metrics ?? {})[0]
   const calculationMeta = page.calculationMeta
 
   return (
@@ -483,11 +483,13 @@ function formatTrendDateRange(startValue, endValue, { includeYear = false } = {}
 }
 
 function getMetricTrendData(series) {
-  if (!series?.available || !Array.isArray(series.points) || !series.points.length) {
+  const points = series?.series ?? series?.points
+
+  if (!series?.available || !Array.isArray(points) || !points.length) {
     return []
   }
 
-  return series.points.map((point, index) => {
+  return points.map((point, index) => {
     const range = getMetricTrendPointRange(point)
     const date = range.start
     const fallbackLabel = point.label ?? point.period ?? `Point ${index + 1}`
@@ -823,7 +825,7 @@ export function MetricCard({ metric, onOpenDetails = () => {}, series }) {
   )
 }
 
-export function HeroMetrics({ heroMetricSeries = {}, metrics }) {
+export function HeroMetrics({ metrics }) {
   const [selectedMetric, setSelectedMetric] = useState(null)
 
   return (
@@ -834,14 +836,14 @@ export function HeroMetrics({ heroMetricSeries = {}, metrics }) {
             key={metric.id}
             metric={metric}
             onOpenDetails={setSelectedMetric}
-            series={heroMetricSeries[metric.id]}
+            series={metric}
           />
         ))}
       </section>
       <MetricDrilldownModal
         metric={selectedMetric}
         onClose={() => setSelectedMetric(null)}
-        series={selectedMetric ? heroMetricSeries[selectedMetric.id] : null}
+        series={selectedMetric}
       />
     </>
   )
