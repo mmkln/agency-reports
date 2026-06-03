@@ -8,6 +8,7 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClinicDataSourcesPage } from '../../pages/admin/clinic-data-sources/AdminClinicDataSourcesPage'
 import { AdminClinicReviewPage } from '../../pages/admin/clinic-review/AdminClinicReviewPage'
+import { AdminClinicReviewSetupPage } from '../../pages/admin/clinic-review-setup/AdminClinicReviewSetupPage'
 import { AdminClinicSetupPage } from '../../pages/admin/clinic-setup/AdminClinicSetupPage'
 import { AdminWorkspacesPage } from '../../pages/admin/workspaces/AdminWorkspacesPage'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
@@ -39,6 +40,7 @@ export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, u
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, undefined)
 export const AdminClinicDataSourcesPageRoute = withPageProps(AdminClinicDataSourcesPage, undefined)
 export const AdminClinicReviewPageRoute = withPageProps(AdminClinicReviewPage, undefined)
+export const AdminClinicReviewSetupPageRoute = withPageProps(AdminClinicReviewSetupPage, undefined)
 export const AdminClinicSetupPageRoute = withPageProps(AdminClinicSetupPage, undefined)
 export const AdminWorkspacesPageRoute = withPageProps(AdminWorkspacesPage, undefined)
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, undefined)

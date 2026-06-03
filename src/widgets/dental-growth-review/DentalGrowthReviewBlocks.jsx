@@ -94,14 +94,6 @@ function getProblemSources(sources = []) {
 }
 
 function getHeroMetricTitle(metric) {
-  if (metric.id === 'bookings-this-period' || metric.title === 'Bookings This Period') {
-    return 'Bookings'
-  }
-
-  if (metric.id === 'cost-per-new-reactivated-patient') {
-    return 'Cost Per Attended / New Patient'
-  }
-
   return metric.title
 }
 
@@ -753,11 +745,11 @@ function MetricDrilldownModal({ metric, onClose, series }) {
 }
 
 function formatPriorLine(metric) {
-  if (!metric.prior_period_value && !metric.delta_percent && !metric.delta_absolute) {
+  if (metric.prior_period_value !== 0 && !metric.prior_period_value && !metric.delta_percent && !metric.delta_absolute) {
     return ''
   }
 
-  if (metric.prior_period_value) {
+  if (metric.prior_period_value === 0 || metric.prior_period_value) {
     return `from ${metric.prior_period_value} prior`
   }
 

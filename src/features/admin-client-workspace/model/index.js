@@ -2,6 +2,7 @@ export {
   getDefaultWorkspaceAdminPath,
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
+  getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
   resolveRouteWorkspaceId,
 } from './adminWorkspacePaths'

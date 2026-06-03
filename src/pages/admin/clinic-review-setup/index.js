@@ -1,0 +1,1 @@
+export { AdminClinicReviewSetupPage } from './AdminClinicReviewSetupPage'

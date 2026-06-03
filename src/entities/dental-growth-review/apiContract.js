@@ -23,6 +23,29 @@ function toIsoDate(value, fallback) {
   return Number.isNaN(date.getTime()) ? fallback : date.toISOString().slice(0, 10)
 }
 
+function isPresent(value) {
+  return value !== null && value !== undefined && value !== ''
+}
+
+function formatSigned(value, suffix = '') {
+  if (!isPresent(value) || Number.isNaN(Number(value))) {
+    return ''
+  }
+
+  const number = Number(value)
+  const prefix = number > 0 ? '+' : ''
+
+  return `${prefix}${number}${suffix}`
+}
+
+function normalizeMetricSource(value) {
+  return Array.isArray(value) ? value.join(', ') : normalizeText(value)
+}
+
+function normalizeMetricSeriesPoints(source = {}) {
+  return normalizeArray(source.points ?? source.series).filter(isPlainObject)
+}
+
 function addDays(date, days) {
   const nextDate = new Date(date)
   nextDate.setUTCDate(nextDate.getUTCDate() + days)
@@ -49,22 +72,28 @@ function getPeriodRangeFromPayload(payload = {}) {
 
 function normalizeHeroMetric(metric = {}) {
   const source = isPlainObject(metric) ? metric : {}
+  const delta = isPlainObject(source.delta) ? source.delta : {}
+  const unit = source.available === false ? '' : normalizeText(source.unit)
 
   return {
     benchmark: normalizeText(source.benchmark),
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
-    delta_absolute: source.delta_absolute ?? source.period_delta?.absolute ?? '',
-    delta_percent: source.delta_percent ?? source.period_delta?.percent ?? '',
+    delta_absolute: isPresent(source.delta_absolute)
+      ? formatSigned(source.delta_absolute)
+      : formatSigned(delta.absolute),
+    delta_percent: isPresent(source.delta_percent)
+      ? formatSigned(String(source.delta_percent).replace('%', ''), '%')
+      : formatSigned(delta.percent, '%'),
     formula: normalizeText(source.formula),
-    id: normalizeText(source.id ?? source.metric_key),
+    id: normalizeText(source.id ?? source.metric_key ?? source.metric),
     last_updated_at: normalizeText(source.last_updated_at),
-    prior_period_value: source.prior_period_value ?? source.prior_value ?? '',
-    source: Array.isArray(source.source) ? source.source.join(', ') : normalizeText(source.source),
+    prior_period_value: source.prior_period_value ?? source.prior_value ?? source.prior_total ?? '',
+    source: normalizeMetricSource(source.source),
     status: normalizeText(source.status || DENTAL_GROWTH_REVIEW_STATUSES.GREY),
     target: source.target ?? '',
-    title: normalizeText(source.title ?? source.name),
+    title: normalizeText(source.title ?? source.label ?? source.name),
     tooltip_definition: normalizeText(source.tooltip_definition ?? source.description),
-    unit: normalizeText(source.unit),
+    unit,
     value: source.value ?? '',
   }
 }
@@ -132,13 +161,13 @@ function normalizeUnavailableMetric(metric = {}) {
 
 function getMetricArrays(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
-  const content = isPlainObject(source.content) ? source.content : {}
+  const metrics = isPlainObject(source.metrics) ? source.metrics : {}
 
   return {
-    dataSources: normalizeArray(source.data_sources ?? content.data_sources),
-    funnel: normalizeArray(source.funnel ?? content.funnel),
-    heroMetrics: normalizeArray(source.hero_metrics ?? content.hero_metrics),
-    unavailableMetrics: normalizeArray(source.unavailable_metrics ?? content.unavailable_metrics),
+    dataSources: normalizeArray(source.data_sources),
+    funnel: [],
+    heroMetrics: Object.values(metrics),
+    unavailableMetrics: normalizeArray(source.unavailable_metrics),
   }
 }
 
@@ -182,17 +211,19 @@ function normalizeChartMetric(metric = {}) {
   const source = isPlainObject(metric) ? metric : {}
 
   return {
+    available: source.available !== false,
     calculation_note: normalizeText(source.calculation_note),
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
     date_field: normalizeText(source.date_field),
     definition: normalizeText(source.definition),
     formula: normalizeText(source.formula),
     last_synced_at: normalizeText(source.last_synced_at),
-    metric: normalizeText(source.metric),
+    metric: normalizeText(source.metric ?? source.metric_key ?? source.id),
     notes: normalizeArray(source.notes).map(normalizeText).filter(Boolean),
-    series: normalizeArray(source.series).filter(isPlainObject),
-    source: normalizeText(source.source),
-    total: isPlainObject(source.total) ? source.total : {},
+    reason: normalizeText(source.reason ?? source.unavailable_reason),
+    series: normalizeMetricSeriesPoints(source),
+    source: normalizeMetricSource(source.source),
+    total: isPlainObject(source.total) ? source.total : { value: source.total ?? source.value },
   }
 }
 
@@ -209,10 +240,10 @@ function normalizeHeroMetricSeries(series = {}) {
       chart_type: normalizeText(metricSeries.chart_type),
       confidence: normalizeText(metricSeries.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
       date_field: normalizeText(metricSeries.date_field),
-      metric: normalizeText(metricSeries.metric || metricId),
-      points: normalizeArray(metricSeries.points).filter(isPlainObject),
+      metric: normalizeText(metricSeries.metric || metricSeries.metric_key || metricId),
+      points: normalizeMetricSeriesPoints(metricSeries),
       reason: normalizeText(metricSeries.reason),
-      source: normalizeText(metricSeries.source),
+      source: normalizeMetricSource(metricSeries.source),
       total: metricSeries.total ?? null,
       unit: normalizeText(metricSeries.unit),
     }
@@ -242,17 +273,18 @@ function normalizeFunnelChart(funnel = {}) {
 export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const metrics = isPlainObject(source.metrics) ? source.metrics : {}
+  const normalizedMetrics = Object.fromEntries(
+    Object.entries(metrics).map(([key, value]) => [key, normalizeChartMetric(value)]),
+  )
 
   return {
     calculated_at: normalizeText(source.calculated_at),
     calculation_version: normalizeText(source.calculation_version),
-    metrics: {
-      attended_appointments_by_day: normalizeChartMetric(metrics.attended_appointments_by_day),
-      booked_appointments_by_day: normalizeChartMetric(metrics.booked_appointments_by_day),
-      show_rate_by_day: normalizeChartMetric(metrics.show_rate_by_day),
-    },
+    metrics: normalizedMetrics,
     funnel: normalizeFunnelChart(source.funnel),
-    hero_metric_series: normalizeHeroMetricSeries(source.hero_metric_series),
+    hero_metric_series: normalizeHeroMetricSeries(
+      isPlainObject(source.hero_metric_series) ? source.hero_metric_series : metrics,
+    ),
     last_synced_at: normalizeText(source.last_synced_at),
     period: isPlainObject(source.period) ? source.period : {},
   }

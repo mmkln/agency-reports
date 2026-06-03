@@ -243,7 +243,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     ...payload,
     workspace_id: payload?.workspace_id ?? workspaceId,
   })
-  const charts = payload?.charts ? normalizeGrowthReviewChartsReadModel(payload.charts) : null
+  const charts = normalizeGrowthReviewChartsReadModel(payload)
   const periodOptions = createGrowthReviewPeriodOptions(now)
   const preset = getDentalGrowthReviewPresetForViewer(viewer)
 

@@ -7,14 +7,41 @@ import {
   Panel,
   PanelBody,
   PanelHeader,
+  RadixSelect,
   ResourceState,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   UnavailableState,
 } from '@/shared/ui'
+
+const WORKSPACE_TIMEZONE_OPTIONS = [
+  { label: 'Eastern Time', value: 'America/New_York' },
+  { label: 'Central Time', value: 'America/Chicago' },
+  { label: 'Mountain Time', value: 'America/Denver' },
+  { label: 'Pacific Time', value: 'America/Los_Angeles' },
+  { label: 'Arizona Time', value: 'America/Phoenix' },
+  { label: 'Budapest', value: 'Europe/Budapest' },
+  { label: 'UTC', value: 'UTC' },
+]
+
+function getWorkspaceTimezoneOptions(value) {
+  if (!value || WORKSPACE_TIMEZONE_OPTIONS.some((timezone) => timezone.value === value)) {
+    return WORKSPACE_TIMEZONE_OPTIONS
+  }
+
+  return [
+    { label: value, value },
+    ...WORKSPACE_TIMEZONE_OPTIONS,
+  ]
+}
 
 function createWorkspaceForm(workspace) {
   return {
     name: workspace?.name ?? '',
     slug: workspace?.slug ?? '',
+    timezone: workspace?.timezone ?? 'UTC',
   }
 }
 
@@ -56,8 +83,10 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
   const hasChanges = Boolean(workspace) && (
     form.name.trim() !== String(workspace.name ?? '')
     || form.slug.trim() !== String(workspace.slug ?? '')
+    || form.timezone !== String(workspace.timezone ?? 'UTC')
   )
   const canSave = status !== 'saving' && hasChanges && Boolean(form.name.trim() && form.slug.trim())
+  const timezoneOptions = getWorkspaceTimezoneOptions(form.timezone)
 
   function saveWorkspace(event) {
     event.preventDefault()
@@ -73,6 +102,7 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
       body: {
         name: form.name.trim(),
         slug: form.slug.trim(),
+        timezone: form.timezone,
       },
       method: 'PATCH',
     }).then((payload) => {
@@ -148,6 +178,26 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
                 required
                 value={form.slug}
               />
+            </label>
+          </div>
+          <div className="grid gap-control sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="text-label text-text-secondary">Timezone</span>
+              <RadixSelect
+                onValueChange={(timezone) => setForm((current) => ({ ...current, timezone }))}
+                value={form.timezone}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timezoneOptions.map((timezone) => (
+                    <SelectItem key={timezone.value} value={timezone.value}>
+                      {timezone.label} - {timezone.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </RadixSelect>
             </label>
           </div>
           <div className="grid gap-tag text-body text-text-muted sm:grid-cols-2">

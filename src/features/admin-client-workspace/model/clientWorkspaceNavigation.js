@@ -2,6 +2,7 @@ import { CLIENT_TYPES } from '../../../entities/client'
 import {
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
+  getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
 } from './adminWorkspacePaths'
 
@@ -27,6 +28,13 @@ export const clientWorkspaceSections = [
         previewRoute: '/client/growth-review',
         route: '/admin/clinic-data-sources',
         to: getWorkspaceDataSourcesPath,
+      },
+      {
+        id: 'clinic-review-setup',
+        iconName: 'settings',
+        label: 'Review Setup',
+        route: '/admin/clinic-review-setup',
+        to: getWorkspaceReviewSetupPath,
       },
       {
         id: 'clinic-review',

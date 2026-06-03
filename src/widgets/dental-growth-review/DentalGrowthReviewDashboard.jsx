@@ -12,9 +12,7 @@ export function DentalGrowthReviewDashboard({ onRetry, page }) {
   const content = page.period.content
   const heroMetricSeries = page.charts?.hero_metric_series ?? {}
   const funnelChart = page.charts?.funnel ?? null
-  const funnelStages = page.charts?.funnel?.stages?.length
-    ? page.charts.funnel.stages
-    : content.funnel
+  const funnelStages = page.charts?.funnel?.stages ?? []
 
   return (
     <>

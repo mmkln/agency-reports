@@ -27,6 +27,10 @@ export function getWorkspaceReviewPath(workspaceOrId) {
   return `/admin/clinic-review${getWorkspaceSearch(workspaceOrId)}`
 }
 
+export function getWorkspaceReviewSetupPath(workspaceOrId) {
+  return `/admin/clinic-review-setup${getWorkspaceSearch(workspaceOrId)}`
+}
+
 export function getDefaultWorkspaceAdminPath(workspace) {
   if (workspace?.type === 'clinic') {
     return getWorkspaceSetupPath(workspace)

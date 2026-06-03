@@ -14,6 +14,7 @@ export {
   getClientWorkspaceSidebarItems,
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
+  getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
   resolveRouteWorkspaceId,
 } from './model'
