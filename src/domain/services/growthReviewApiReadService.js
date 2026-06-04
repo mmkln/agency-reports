@@ -12,39 +12,53 @@ function addDays(date, days) {
   return nextDate
 }
 
+function getStartOfIsoWeek(date) {
+  const day = date.getUTCDay()
+  const diff = day === 0 ? -6 : 1 - day
+
+  return addDays(date, diff)
+}
+
+function getStartOfPreviousMonth(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - 1, 1))
+}
+
+function getEndOfPreviousMonth(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 0))
+}
+
 function formatIsoDate(date) {
   return date.toISOString().slice(0, 10)
 }
 
 function getDateRangeForPreset(preset, now = new Date()) {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  const weekStart = getStartOfIsoWeek(today)
 
   if (preset === 'previous_week') {
-    const end = addDays(today, -7)
     return {
-      end: formatIsoDate(end),
-      start: formatIsoDate(addDays(end, -6)),
+      end: formatIsoDate(addDays(weekStart, -1)),
+      start: formatIsoDate(addDays(weekStart, -7)),
     }
   }
 
   if (preset === 'current_biweekly') {
     return {
-      end: formatIsoDate(today),
-      start: formatIsoDate(addDays(today, -13)),
+      end: formatIsoDate(addDays(weekStart, -1)),
+      start: formatIsoDate(addDays(weekStart, -14)),
     }
   }
 
-  if (preset === 'previous_biweekly') {
-    const end = addDays(today, -14)
+  if (preset === 'previous_month') {
     return {
-      end: formatIsoDate(end),
-      start: formatIsoDate(addDays(end, -13)),
+      end: formatIsoDate(getEndOfPreviousMonth(today)),
+      start: formatIsoDate(getStartOfPreviousMonth(today)),
     }
   }
 
   return {
     end: formatIsoDate(today),
-    start: formatIsoDate(addDays(today, -6)),
+    start: formatIsoDate(weekStart),
   }
 }
 
@@ -66,7 +80,7 @@ export function resolveGrowthReviewDateRange({
     'current_week',
     'previous_week',
     'current_biweekly',
-    'previous_biweekly',
+    'previous_month',
   ].includes(periodId)
     ? periodId
     : 'current_week'
@@ -127,11 +141,11 @@ export function createGrowthReviewPeriodOptions(now) {
   const currentWeek = getDateRangeForPreset('current_week', now)
   const previousWeek = getDateRangeForPreset('previous_week', now)
   const currentBiweekly = getDateRangeForPreset('current_biweekly', now)
-  const previousBiweekly = getDateRangeForPreset('previous_biweekly', now)
+  const previousMonth = getDateRangeForPreset('previous_month', now)
   const currentWeekDateLabel = formatMonthDayRange(currentWeek.start, currentWeek.end)
   const previousWeekDateLabel = formatMonthDayRange(previousWeek.start, previousWeek.end)
   const currentBiweeklyDateLabel = formatMonthDayRange(currentBiweekly.start, currentBiweekly.end)
-  const previousBiweeklyDateLabel = formatMonthDayRange(previousBiweekly.start, previousBiweekly.end)
+  const previousMonthDateLabel = formatMonthDayRange(previousMonth.start, previousMonth.end)
 
   return {
     periodOptions: [
@@ -149,15 +163,15 @@ export function createGrowthReviewPeriodOptions(now) {
       }),
       createPeriodOption({
         key: 'current_biweekly',
-        label: 'Current bi-weekly period',
+        label: 'Previous 2 weeks',
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
         range: currentBiweekly,
       }),
       createPeriodOption({
-        key: 'previous_biweekly',
-        label: 'Previous bi-weekly period',
-        periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
-        range: previousBiweekly,
+        key: 'previous_month',
+        label: 'Previous month',
+        periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.MONTHLY,
+        range: previousMonth,
       }),
     ],
     reviewPeriodOptions: [
@@ -180,18 +194,18 @@ export function createGrowthReviewPeriodOptions(now) {
       {
         key: 'current_biweekly',
         dateLabel: currentBiweeklyDateLabel,
-        label: 'Bi-weekly review',
+        label: 'Previous 2 weeks',
         periodId: 'current_biweekly',
         periodLabel: formatPeriodRangeLabel(currentBiweekly.start, currentBiweekly.end),
         periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
       },
       {
-        key: 'previous_biweekly',
-        dateLabel: previousBiweeklyDateLabel,
-        label: 'Previous bi-weekly',
-        periodId: 'previous_biweekly',
-        periodLabel: formatPeriodRangeLabel(previousBiweekly.start, previousBiweekly.end),
-        periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY,
+        key: 'previous_month',
+        dateLabel: previousMonthDateLabel,
+        label: 'Previous month',
+        periodId: 'previous_month',
+        periodLabel: formatPeriodRangeLabel(previousMonth.start, previousMonth.end),
+        periodType: DENTAL_GROWTH_REVIEW_PERIOD_TYPES.MONTHLY,
       },
       {
         key: 'custom',

@@ -76,11 +76,12 @@ function getPeriodsForType(periods, periodType) {
 function createReviewPeriodOptions(periods) {
   const weeklyPeriods = getPeriodsForType(periods, DENTAL_GROWTH_REVIEW_PERIOD_TYPES.WEEKLY)
   const biweeklyPeriods = getPeriodsForType(periods, DENTAL_GROWTH_REVIEW_PERIOD_TYPES.BIWEEKLY)
+  const monthlyPeriods = getPeriodsForType(periods, DENTAL_GROWTH_REVIEW_PERIOD_TYPES.MONTHLY)
   const optionConfigs = [
     ['current_week', 'Current week', weeklyPeriods[0]],
     ['previous_week', 'Previous week', weeklyPeriods[1]],
-    ['current_biweekly', 'Current bi-weekly period', biweeklyPeriods[0]],
-    ['previous_biweekly', 'Previous bi-weekly period', biweeklyPeriods[1]],
+    ['current_biweekly', 'Previous 2 weeks', biweeklyPeriods[0]],
+    ['previous_month', 'Previous month', monthlyPeriods[0]],
   ]
 
   return [

@@ -72,7 +72,7 @@ function ReviewPeriodOption({
         {selected ? <Icon className="text-success" name="checkCircle2" size={14} /> : null}
       </span>
       <span className="min-w-0 truncate text-label font-medium">{label}</span>
-      <span className="shrink-0 text-label font-normal text-text-muted">{dateLabel}</span>
+      <span className="shrink-0 rounded-full bg-fill px-control py-tag text-label font-medium text-text-muted">{dateLabel}</span>
     </Button>
   )
 }

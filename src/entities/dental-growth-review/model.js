@@ -6,6 +6,7 @@ import {
 export const DENTAL_GROWTH_REVIEW_PERIOD_TYPES = Object.freeze({
   BIWEEKLY: 'biweekly',
   CUSTOM: 'custom',
+  MONTHLY: 'monthly',
   WEEKLY: 'weekly',
 })
 

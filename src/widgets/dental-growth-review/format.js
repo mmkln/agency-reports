@@ -15,6 +15,10 @@ export function formatLabel(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
+function shouldDisplayMetricUnit(unit) {
+  return Boolean(unit && !['$', 'count'].includes(unit))
+}
+
 export function formatMetricValue(metric) {
   if (!metric) {
     return ''
@@ -28,7 +32,7 @@ export function formatMetricValue(metric) {
     }).format(metric.value)
   }
 
-  return `${metric.value}${metric.unit && metric.unit !== '$' ? ` ${metric.unit}` : ''}`
+  return `${metric.value}${shouldDisplayMetricUnit(metric.unit) ? ` ${metric.unit}` : ''}`
 }
 
 export function formatDate(value) {
