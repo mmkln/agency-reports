@@ -168,6 +168,7 @@ function normalizeEnum(value, enumObject, fallback) {
 
 function normalizeMetric(value = {}) {
   const source = isPlainObject(value) ? value : {}
+  const target = isPlainObject(source.target) ? source.target : source.target ?? ''
 
   return {
     benchmark: normalizeText(source.benchmark),
@@ -184,7 +185,7 @@ function normalizeMetric(value = {}) {
     prior_period_value: source.prior_period_value ?? '',
     source: normalizeText(source.source),
     status: normalizeEnum(source.status, DENTAL_GROWTH_REVIEW_STATUSES, DENTAL_GROWTH_REVIEW_STATUSES.GREY),
-    target: source.target ?? '',
+    target,
     title: normalizeText(source.title ?? source.name),
     tooltip_definition: normalizeText(source.tooltip_definition ?? source.description),
     unit: normalizeText(source.unit),

@@ -116,6 +116,11 @@ export function createBackendAuthClient({
 
     try {
       const viewerContext = await apiClient.get('/api/auth/me/')
+
+      if (import.meta.env.DEV) {
+        console.info('[auth-me]', viewerContext)
+      }
+
       return mapBackendViewerContextToViewer(viewerContext)
     } catch (error) {
       if (error instanceof AuthApiError && error.status === 401) {

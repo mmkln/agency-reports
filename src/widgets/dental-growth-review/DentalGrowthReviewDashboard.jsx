@@ -8,7 +8,7 @@ function getDashboardMetrics(metrics = {}) {
   return Object.values(metrics).slice(0, 6)
 }
 
-export function DentalGrowthReviewDashboard({ onRetry, page }) {
+export function DentalGrowthReviewDashboard({ funnelEmptyAction, onRetry, page }) {
   if (page.status === 'error' || !page.period) {
     return <DentalGrowthReviewState onRetry={onRetry} page={page} />
   }
@@ -21,7 +21,11 @@ export function DentalGrowthReviewDashboard({ onRetry, page }) {
     <>
       <HeroMetrics metrics={metrics} />
 
-      <FunnelView funnel={funnelStages} funnelChart={funnelChart} />
+      <FunnelView
+        emptyAction={funnelEmptyAction}
+        funnel={funnelStages}
+        funnelChart={funnelChart}
+      />
     </>
   )
 }

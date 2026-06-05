@@ -211,6 +211,63 @@ export function canAccessRouteWithContext(viewer, route, {
   }))
 }
 
+function summarizeAccessRecord(record) {
+  if (!record) {
+    return null
+  }
+
+  return {
+    agencyId: record.agencyId,
+    capabilities: record.capabilities ?? [],
+    id: record.id,
+    role: record.role,
+    status: record.status,
+    workspaceId: record.workspaceId,
+    workspaceName: record.workspaceName,
+    workspaceType: record.workspaceType,
+  }
+}
+
+export function getRouteAccessDiagnostic(viewer, route, {
+  defaultClientId = null,
+  routeParams = {},
+} = {}) {
+  const access = getRouteAccess(route)
+  const workspaceId = access?.scope === ROUTE_ACCESS_SCOPES.WORKSPACE
+    ? getRouteClientId({ defaultClientId, routeParams, viewer })
+    : null
+  const requiredWorkspaceTypes = getRouteWorkspaceTypes(route)
+  const matchingWorkspaceMemberships = getActiveWorkspaceMemberships(viewer)
+    .filter((membership) => !workspaceId || membership.workspaceId === workspaceId)
+  const matchingManagedRelationships = getActiveManagedWorkspaceRelationships(viewer)
+    .filter((relationship) => !workspaceId || relationship.workspaceId === workspaceId)
+  const matchingAgencyMemberships = getActiveAgencyMemberships(viewer)
+    .filter((membership) => !viewer?.activeAgencyId || membership.agencyId === viewer.activeAgencyId)
+  const canAccess = canAccessRouteWithContext(viewer, route, {
+    defaultClientId,
+    routeParams,
+  })
+
+  return {
+    access,
+    activeAgencyId: viewer?.activeAgencyId ?? null,
+    activeWorkspaceId: viewer?.activeWorkspaceId ?? null,
+    canAccess,
+    defaultClientId,
+    matchingAgencyMemberships: matchingAgencyMemberships.map(summarizeAccessRecord),
+    matchingManagedRelationships: matchingManagedRelationships.map(summarizeAccessRecord),
+    matchingWorkspaceMemberships: matchingWorkspaceMemberships.map(summarizeAccessRecord),
+    requiredWorkspaceTypes,
+    route: route ? {
+      id: route.id,
+      path: route.path,
+    } : null,
+    routeParams,
+    userId: viewer?.userId ?? null,
+    workspaceId,
+  }
+}
+
 export function canAccessRoute(viewer, route) {
   return canAccessRouteWithContext(viewer, route)
 }

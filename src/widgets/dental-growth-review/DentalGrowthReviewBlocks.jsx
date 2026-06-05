@@ -290,77 +290,6 @@ export function GrowthReviewExecutiveSummary({ page }) {
   )
 }
 
-function parseNumericToken(token) {
-  const text = String(token ?? '').trim()
-  const numberMatch = text.match(/-?[\d.]+/)
-
-  if (!numberMatch) {
-    return null
-  }
-
-  const value = Number(numberMatch[0])
-
-  if (!Number.isFinite(value)) {
-    return null
-  }
-
-  return /k/i.test(text) ? value * 1000 : value
-}
-
-function parseMetricRange(value) {
-  const text = String(value ?? '').replaceAll(',', '')
-  const rangeMatch = text.match(/(\$?-?[\d.]+K?)\s*[-–—]\s*(\$?-?[\d.]+K?)/i)
-
-  if (!rangeMatch) {
-    return null
-  }
-
-  const low = parseNumericToken(rangeMatch[1])
-  const high = parseNumericToken(rangeMatch[2])
-
-  if (low == null || high == null) {
-    return null
-  }
-
-  return {
-    high: Math.max(low, high),
-    low: Math.min(low, high),
-    median: (low + high) / 2,
-  }
-}
-
-function parseComparableNumber(value) {
-  if (typeof value === 'number') {
-    return value
-  }
-
-  const text = String(value ?? '').replaceAll(',', '')
-  const ratioMatch = text.match(/([\d.]+)\s*:/)
-
-  if (ratioMatch) {
-    return Number(ratioMatch[1])
-  }
-
-  const range = parseMetricRange(text)
-
-  if (range) {
-    return range.median
-  }
-
-  return parseNumericToken(text)
-}
-
-function parseTargetNumber(value) {
-  const text = String(value ?? '').replaceAll(',', '')
-  const ratioMatch = text.match(/([\d.]+)\s*:/)
-
-  if (ratioMatch) {
-    return Number(ratioMatch[1])
-  }
-
-  return parseNumericToken(text)
-}
-
 function getMetricKind(metric) {
   const id = String(metric.id ?? '').toLowerCase()
   const title = String(metric.title ?? '').toLowerCase()
@@ -385,7 +314,25 @@ function getMetricKind(metric) {
 }
 
 function isLowerBetterMetric(metric) {
-  return ['cost', 'investment'].includes(getMetricKind(metric)) || String(metric.target ?? '').includes('<')
+  return ['cost', 'investment'].includes(getMetricKind(metric)) || metric.target?.comparator === 'lte'
+}
+
+function getMetricTargetLabel(metric) {
+  if (metric.target?.label) {
+    return metric.target.label
+  }
+
+  if (typeof metric.target === 'string') {
+    return metric.target
+  }
+
+  return ''
+}
+
+function getMetricTargetMeta(metric) {
+  const label = getMetricTargetLabel(metric)
+
+  return label ? [{ label }] : []
 }
 
 function getMetricAccent(metric) {
@@ -526,36 +473,24 @@ function MetricSparkline({ metric, series }) {
 }
 
 function getProgress(metric) {
-  const current = parseComparableNumber(metric.value)
-  const target = parseTargetNumber(metric.target)
+  const attainmentPercent = Number(metric.target?.attainment_percent)
 
-  if (current == null || target == null || target <= 0) {
+  if (!Number.isFinite(attainmentPercent)) {
     return null
   }
 
-  const ratio = isLowerBetterMetric(metric) ? target / Math.max(current, 1) : current / target
-
-  return Math.max(0, Math.min(1.2, ratio))
+  return Math.max(0, Math.min(1.2, attainmentPercent / 100))
 }
 
 function getProgressLabel(metric) {
-  const kind = getMetricKind(metric)
-
-  if (kind === 'investment') {
-    return `Budget ${metric.target}`
-  }
-
-  if (kind === 'ltv_cac') {
-    return `Minimum ${metric.target}`
-  }
-
-  return `Target ${metric.target}`
+  return getMetricTargetLabel(metric)
 }
 
 function MetricProgress({ metric }) {
   const progress = getProgress(metric)
+  const label = getProgressLabel(metric)
 
-  if (progress == null || getMetricKind(metric) === 'revenue_range') {
+  if (progress == null || !label || getMetricKind(metric) === 'revenue_range') {
     return null
   }
 
@@ -564,7 +499,7 @@ function MetricProgress({ metric }) {
   return (
     <div className="grid gap-tag">
       <div className="flex items-center justify-between gap-control text-label font-normal text-text-muted">
-        <span>{getProgressLabel(metric)}</span>
+        <span>{label}</span>
         <span>{percent}%</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-fill-secondary">
@@ -1255,7 +1190,7 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
   )
 }
 
-export function FunnelView({ funnel, funnelChart = null }) {
+export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   const [selectedStage, setSelectedStage] = useState(null)
   const funnelType = funnelChart?.type ?? ''
   const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
@@ -1298,9 +1233,18 @@ export function FunnelView({ funnel, funnelChart = null }) {
               stages={rows}
             />
           ) : (
-            <p className="rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
-              {funnelChart?.reason || 'Pipeline funnel is not configured yet.'}
-            </p>
+            <ResourceState
+              action={emptyAction}
+              className="min-h-[164px]"
+              errorInfo={{ kind: 'not-found' }}
+              labels={{
+                notFoundDescription: funnelChart?.reason
+                  || 'Check Review Setup or calculate this period before the funnel can be shown.',
+                notFoundTitle: isPipelineSnapshot
+                  ? 'Pipeline funnel is not calculated yet'
+                  : 'Patient funnel is not calculated yet',
+              }}
+            />
           )}
           {isPipelineSnapshot && funnelChart?.calculation_note ? (
             <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
@@ -1361,7 +1305,7 @@ function MetricStatusRow({ metric }) {
       <div className="flex flex-wrap items-center gap-tag text-label font-normal text-text-muted">
         <span>Prior {metric.prior_period_value}</span>
         <span>{metric.delta_absolute}{metric.delta_percent ? ` / ${metric.delta_percent}` : ''}</span>
-        <span>Target {metric.target}</span>
+        {getMetricTargetLabel(metric) ? <span>{getMetricTargetLabel(metric)}</span> : null}
         <span>{formatLabel(metric.confidence)} confidence</span>
       </div>
     </div>
@@ -1397,7 +1341,7 @@ function SpeedAlertStrip({ metrics = [] }) {
           </p>
           <p className="mt-item text-ui font-semibold text-text-primary">{metric.title}</p>
           <p className="mt-tag text-label font-normal text-text-muted">
-            {formatMetricValue(metric)} | Target {metric.target}
+            {formatMetricValue(metric)}{getMetricTargetLabel(metric) ? ` | ${getMetricTargetLabel(metric)}` : ''}
           </p>
         </div>
       ))}
@@ -1419,7 +1363,7 @@ function ResponseSummary({ metrics = [] }) {
           helper={`${metric.delta_absolute}${metric.delta_percent ? ` / ${metric.delta_percent}` : ''} vs prior`}
           key={metric.id}
           meta={[
-            { label: `Target ${metric.target}` },
+            ...getMetricTargetMeta(metric),
             { label: metric.source },
           ]}
           statusLabel={formatLabel(metric.status)}
@@ -1618,7 +1562,7 @@ function OperationsChipList({ metrics = [] }) {
           <MetricTile
             helper={`${metric.delta_absolute}${metric.delta_percent ? ` / ${metric.delta_percent}` : ''}`}
             key={metric.id}
-            meta={[{ label: `Target ${metric.target}` }]}
+            meta={getMetricTargetMeta(metric)}
             statusLabel={formatLabel(metric.status)}
             statusTone={metric.status}
             title={metric.title}

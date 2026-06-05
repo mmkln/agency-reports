@@ -46,6 +46,26 @@ function normalizeMetricSeriesPoints(source = {}) {
   return normalizeArray(source.points ?? source.series).filter(isPlainObject)
 }
 
+function normalizeMetricTarget(target) {
+  if (isPlainObject(target)) {
+    return {
+      attainment_percent: target.attainment_percent ?? null,
+      basis: normalizeText(target.basis),
+      comparator: normalizeText(target.comparator),
+      display_value: target.display_value ?? '',
+      kind: normalizeText(target.kind),
+      label: normalizeText(target.label),
+      period_value: target.period_value ?? null,
+      raw_value: target.raw_value ?? null,
+      status: normalizeText(target.status),
+    }
+  }
+
+  const label = normalizeText(target)
+
+  return label ? { label } : null
+}
+
 function addDays(date, days) {
   const nextDate = new Date(date)
   nextDate.setUTCDate(nextDate.getUTCDate() + days)
@@ -90,7 +110,7 @@ function normalizeHeroMetric(metric = {}) {
     prior_period_value: source.prior_period_value ?? source.prior_value ?? source.prior_total ?? '',
     source: normalizeMetricSource(source.source),
     status: normalizeText(source.status || DENTAL_GROWTH_REVIEW_STATUSES.GREY),
-    target: source.target ?? '',
+    target: normalizeMetricTarget(source.target),
     title: normalizeText(source.title ?? source.label ?? source.name),
     tooltip_definition: normalizeText(source.tooltip_definition ?? source.description),
     unit,
@@ -237,7 +257,7 @@ function normalizeChartMetric(metric = {}) {
     series: normalizeMetricSeriesPoints(source),
     source: normalizeMetricSource(source.source),
     status: normalizeText(source.status || DENTAL_GROWTH_REVIEW_STATUSES.GREY),
-    target: source.target ?? '',
+    target: normalizeMetricTarget(source.target),
     title: normalizeText(source.title ?? source.label ?? source.name),
     tooltip_definition: normalizeText(source.tooltip_definition ?? source.description ?? source.definition),
     total: isPlainObject(source.total) ? source.total : { value: source.total ?? source.value },

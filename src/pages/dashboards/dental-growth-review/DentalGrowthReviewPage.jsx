@@ -5,7 +5,7 @@ import {
   DentalGrowthReviewSkeleton,
 } from '../../../widgets/dental-growth-review'
 
-export function DentalGrowthReviewPage({ routeParams = {}, runtime }) {
+export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, runtime }) {
   const growthReview = useGrowthReviewReadModel({
     routeParams,
     runtime,
@@ -22,7 +22,11 @@ export function DentalGrowthReviewPage({ routeParams = {}, runtime }) {
 
   return (
     <PageShell className="pb-section pt-card" width="wide">
-      <DentalGrowthReviewDashboard onRetry={growthReview.reload} page={page} />
+      <DentalGrowthReviewDashboard
+        funnelEmptyAction={funnelEmptyAction}
+        onRetry={growthReview.reload}
+        page={page}
+      />
     </PageShell>
   )
 }
