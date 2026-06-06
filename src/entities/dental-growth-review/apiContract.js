@@ -133,12 +133,14 @@ function normalizeFunnelStage(stage = {}) {
     calculation_mode: normalizeText(source.calculation_mode),
     conversion_rate: hasConversion && Number.isFinite(conversionRate) ? conversionRate : null,
     count: Number.isFinite(outputCount) ? outputCount : 0,
+    description: normalizeText(source.description),
     drop_off_count: Number.isFinite(dropOffCount) ? dropOffCount : 0,
     drop_off_rate: source.drop_off_rate ?? source.dropOffRate ?? '',
     formula: normalizeText(source.formula),
-    id: normalizeText(source.id ?? source.stage ?? source.stage_key ?? source.name),
+    id: normalizeText(source.id ?? source.stage ?? source.stage_key ?? source.key ?? source.name),
     is_booked_stage: source.is_booked_stage === true,
     input_count: Number.isFinite(inputCount) ? inputCount : 0,
+    key: normalizeText(source.key ?? source.stage_key ?? source.stage),
     name: stageName,
     output_count: Number.isFinite(outputCount) ? outputCount : 0,
     pipeline_id: normalizeText(source.pipeline_id),
@@ -150,6 +152,7 @@ function normalizeFunnelStage(stage = {}) {
     stage_name: stageName,
     status: normalizeText(source.status || DENTAL_GROWTH_REVIEW_STATUSES.GREY),
     target: source.target ?? source.target_rate ?? '',
+    unit: normalizeText(source.unit),
   }
 }
 
@@ -276,6 +279,7 @@ function normalizeFunnelChart(funnel = {}) {
     calculation_note: normalizeText(source.calculation_note),
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
     date_range_applied: source.date_range_applied === true,
+    mode: normalizeText(source.mode),
     pipeline: isPlainObject(source.pipeline) ? source.pipeline : null,
     reason: normalizeText(source.reason),
     source: normalizeText(source.source),

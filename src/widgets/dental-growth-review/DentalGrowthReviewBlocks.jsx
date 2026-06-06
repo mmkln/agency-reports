@@ -879,8 +879,26 @@ function isPipelineStageSnapshot(stage) {
   return stage?.funnel_type === 'pipeline_stage_snapshot'
 }
 
+function isReactivationLifecycleSnapshot(stage) {
+  return stage?.funnel_type === 'reactivation_lifecycle'
+}
+
 function hasFunnelConversion(stage) {
   return stage.conversion_rate !== null && stage.conversion_rate !== ''
+}
+
+function createFunnelPoint({ centerY, maxCount, stage, x }) {
+  const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
+  const intensity = Math.sqrt(stageCount / maxCount)
+  const thickness = 42 + (intensity * 178)
+
+  return {
+    bottom: centerY + (thickness / 2),
+    stage,
+    thickness,
+    top: centerY - (thickness / 2),
+    x,
+  }
 }
 
 function getFunnelGeometry(stages) {
@@ -890,25 +908,25 @@ function getFunnelGeometry(stages) {
   const centerY = 170
   const maxCount = Math.max(...stages.map((stage) => Number(stage.stage_count) || 0), 1)
   const sectionWidth = (xEnd - xStart) / Math.max(stages.length, 1)
+  const points = stages.map((stage, index) => createFunnelPoint({
+    centerY,
+    maxCount,
+    stage,
+    x: xStart + (sectionWidth * index),
+  }))
+
+  if (stages.length > 0) {
+    points.push(createFunnelPoint({
+      centerY,
+      maxCount,
+      stage: stages[stages.length - 1],
+      x: xEnd,
+    }))
+  }
 
   return {
     centerY,
-    points: stages.map((stage, index) => {
-      const stageCount = Math.max(Number(stage.stage_count) || 0, 0)
-      const intensity = Math.sqrt(stageCount / maxCount)
-      const thickness = 42 + (intensity * 178)
-      const x = xStart + (sectionWidth * index) + (sectionWidth / 2)
-
-      return {
-        bottom: centerY + (thickness / 2),
-        leftX: xStart + (sectionWidth * index),
-        stage,
-        thickness,
-        top: centerY - (thickness / 2),
-        rightX: xStart + (sectionWidth * (index + 1)),
-        x,
-      }
-    }),
+    points,
     sectionWidth,
     width,
   }
@@ -950,41 +968,6 @@ function buildFunnelAreaPath(points) {
   return `${path} Z`
 }
 
-function getFunnelSegmentBoundaries(points) {
-  if (!points.length) {
-    return []
-  }
-
-  return Array.from({ length: points.length + 1 }, (_, index) => {
-    if (index === 0) {
-      return {
-        bottom: points[0].bottom,
-        top: points[0].top,
-        x: points[0].leftX,
-      }
-    }
-
-    if (index === points.length) {
-      const lastPoint = points[points.length - 1]
-
-      return {
-        bottom: lastPoint.bottom,
-        top: lastPoint.top,
-        x: lastPoint.rightX,
-      }
-    }
-
-    const leftPoint = points[index - 1]
-    const rightPoint = points[index]
-
-    return {
-      bottom: (leftPoint.bottom + rightPoint.bottom) / 2,
-      top: (leftPoint.top + rightPoint.top) / 2,
-      x: leftPoint.rightX,
-    }
-  })
-}
-
 function getFunnelAttentionTone(stage) {
   const conversionRate = Number(stage.conversion_rate) || 0
   const target = Number(stage.target) || 0
@@ -1014,6 +997,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
   const open = Boolean(stage)
   const status = stage ? getFunnelStageStatus(stage) : 'grey'
   const isPipelineSnapshot = isPipelineStageSnapshot(stage)
+  const isReactivationLifecycle = isReactivationLifecycleSnapshot(stage)
 
   return (
     <Dialog
@@ -1030,7 +1014,9 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
             <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
               <DialogTitle>{getStageDisplayName(stage)}</DialogTitle>
               <DialogDescription>
-                {isPipelineSnapshot
+                {isReactivationLifecycle
+                  ? 'Current workload count from configured reactivation tags and fields.'
+                  : isPipelineSnapshot
                   ? 'Current opportunity count in the configured GHL pipeline stage.'
                   : 'Funnel stage conversion, drop-off, target, and confidence.'}
               </DialogDescription>
@@ -1041,10 +1027,12 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                   <div>
                     <p className="text-data tabular-nums text-text-primary">{stage.stage_count}</p>
                     <p className="mt-tag text-label font-normal text-text-muted">
-                      {isPipelineSnapshot ? 'Current opportunities' : `${stage.conversion_rate}% conversion`}
+                      {isPipelineSnapshot || isReactivationLifecycle ? 'Current records' : `${stage.conversion_rate}% conversion`}
                     </p>
                   </div>
-                  {isPipelineSnapshot && stage.is_booked_stage ? (
+                  {isReactivationLifecycle ? (
+                    <Badge tone="neutral">Current state</Badge>
+                  ) : isPipelineSnapshot && stage.is_booked_stage ? (
                     <Badge tone="blue">Booked stage</Badge>
                   ) : (
                     <Badge tone={statusBadgeTone[status] ?? 'neutral'}>
@@ -1052,16 +1040,22 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                     </Badge>
                   )}
                 </div>
-                {!isPipelineSnapshot ? (
+                {!isPipelineSnapshot && !isReactivationLifecycle ? (
                   <p className="text-ui text-text-secondary">
                     {getStatusExplanation(status, `${stage.target}% target`)}
                   </p>
                 ) : null}
               </section>
 
-              <DetailSection title={isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
+              <DetailSection title={isReactivationLifecycle ? 'Lifecycle stage' : isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
                 <DetailRow label="Stage count" value={stage.stage_count} />
-                {isPipelineSnapshot ? (
+                {isReactivationLifecycle ? (
+                  <>
+                    <DetailRow label="Mode" value="Current state snapshot" />
+                    <DetailRow label="Date range" value="Not applied" />
+                    <DetailRow label="Key" value={stage.key} />
+                  </>
+                ) : isPipelineSnapshot ? (
                   <>
                     <DetailRow label="Pipeline" value={stage.pipeline_name} />
                     <DetailRow label="Calculation mode" value={formatLabel(stage.calculation_mode)} />
@@ -1083,7 +1077,9 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
               <DetailSection title="Calculation">
                 <DetailRow
                   label="Formula"
-                  value={stage.formula || (isPipelineSnapshot
+                  value={stage.formula || (isReactivationLifecycle
+                    ? 'count current records matching this configured reactivation lifecycle state'
+                    : isPipelineSnapshot
                     ? 'count current opportunities in this configured GHL pipeline stage'
                     : 'output count / input count * 100')}
                 />
@@ -1101,9 +1097,10 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
 
 function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
   const { points } = getFunnelGeometry(stages)
-  const segmentBoundaries = getFunnelSegmentBoundaries(points)
-  const path = buildFunnelAreaPath(segmentBoundaries)
+  const path = buildFunnelAreaPath(points)
   const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
+  const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
+  const isCurrentStateSnapshot = isPipelineSnapshot || isReactivationLifecycle
 
   if (!stages.length) {
     return null
@@ -1136,8 +1133,15 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
                         status="green"
                         tooltip="Configured booked stage"
                       />
+                    ) : isReactivationLifecycle ? (
+                      <StatusChevron
+                        label={`View ${getStageDisplayName(stage)} details`}
+                        onClick={() => onOpenStageDetails(stage)}
+                        status="grey"
+                        tooltip="View stage details"
+                      />
                     ) : null}
-                    {!isPipelineSnapshot && attentionTone ? (
+                    {!isCurrentStateSnapshot && attentionTone ? (
                       <StatusChevron
                         label={`View ${getStageDisplayName(stage)} details`}
                         onClick={() => onOpenStageDetails(stage)}
@@ -1147,7 +1151,7 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
                     ) : null}
                   </span>
                 </p>
-                {!isPipelineSnapshot && hasFunnelConversion(stage) ? (
+                {!isCurrentStateSnapshot && hasFunnelConversion(stage) ? (
                   <p className="mt-tag text-label font-normal text-text-muted">
                     {stage.conversion_rate}% conversion
                   </p>
@@ -1172,7 +1176,7 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
             </linearGradient>
           </defs>
           <path d={path} fill="url(#patient-funnel-fill)" opacity="0.86" />
-          {segmentBoundaries.slice(1, -1).map((point) => (
+          {points.slice(1, -1).map((point) => (
             <line
               className="text-text-primary/15"
               key={`segment-boundary-${point.x}`}
@@ -1194,12 +1198,13 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   const [selectedStage, setSelectedStage] = useState(null)
   const funnelType = funnelChart?.type ?? ''
   const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
+  const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
   const rows = funnel
     .filter((stage) => {
       const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
       const isVelocityStage = stage.unit === 'days' || String(stage.stage_name ?? '').toLowerCase().includes('funnel velocity')
 
-      return !isVelocityStage && (isPipelineSnapshot || !isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence))
+      return !isVelocityStage && (isPipelineSnapshot || isReactivationLifecycle || !isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence))
     })
     .map((stage) => ({
       ...stage,
@@ -1222,7 +1227,7 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
           <div className="pb-component">
             <div>
               <h2 className="text-heading text-text-primary">
-                {isPipelineSnapshot ? 'Pipeline Funnel' : 'Patient Funnel'}
+                {isReactivationLifecycle ? 'Reactivation Lifecycle' : isPipelineSnapshot ? 'Pipeline Funnel' : 'Patient Funnel'}
               </h2>
             </div>
           </div>
@@ -1240,13 +1245,15 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
               labels={{
                 notFoundDescription: funnelChart?.reason
                   || 'Check Review Setup or calculate this period before the funnel can be shown.',
-                notFoundTitle: isPipelineSnapshot
+                notFoundTitle: isReactivationLifecycle
+                  ? 'Reactivation lifecycle is not calculated yet'
+                  : isPipelineSnapshot
                   ? 'Pipeline funnel is not calculated yet'
                   : 'Patient funnel is not calculated yet',
               }}
             />
           )}
-          {isPipelineSnapshot && funnelChart?.calculation_note ? (
+          {(isPipelineSnapshot || isReactivationLifecycle) && funnelChart?.calculation_note ? (
             <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
               {funnelChart.calculation_note}
             </p>

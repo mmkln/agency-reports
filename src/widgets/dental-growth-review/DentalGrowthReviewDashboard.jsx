@@ -4,8 +4,47 @@ import {
   HeroMetrics,
 } from './DentalGrowthReviewBlocks'
 
+const LEAD_TO_CONTACTED_METRIC_ID = 'lead_to_contacted_rate'
+
+const dashboardMetricOrder = [
+  'booked_appointments_created',
+  'leads_received',
+  LEAD_TO_CONTACTED_METRIC_ID,
+  // 'opportunities_created',
+  // Temporarily hidden from the hero grid. Keep the API metric available because it may return later.
+  'lead_to_booked_rate',
+  'known_source_rate',
+  'attended_appointments',
+]
+
+function createLeadToContactedPlaceholder() {
+  return {
+    available: false,
+    confidence: 'unavailable',
+    delta_absolute: '',
+    delta_percent: '',
+    formula: 'lead contacted events / leads received',
+    id: LEAD_TO_CONTACTED_METRIC_ID,
+    prior_period_value: '',
+    reason: 'Lead contact events are not calculated yet.',
+    series: [],
+    source: 'GHL Conversations',
+    status: 'grey',
+    target: null,
+    title: 'Lead -> Contacted',
+    unit: '%',
+    value: 'Unavailable',
+  }
+}
+
 function getDashboardMetrics(metrics = {}) {
-  return Object.values(metrics).slice(0, 6)
+  const leadToContactedMetric = metrics[LEAD_TO_CONTACTED_METRIC_ID]
+    ?? metrics.lead_contacted_rate
+    ?? createLeadToContactedPlaceholder()
+
+  return dashboardMetricOrder
+    .map((metricId) => (metricId === LEAD_TO_CONTACTED_METRIC_ID ? leadToContactedMetric : metrics[metricId]))
+    .filter(Boolean)
 }
 
 export function DentalGrowthReviewDashboard({ funnelEmptyAction, onRetry, page }) {
