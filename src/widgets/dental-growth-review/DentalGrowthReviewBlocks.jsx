@@ -884,21 +884,6 @@ function isReactivationLifecycleSnapshot(stage) {
   return stage?.funnel_type === 'reactivation_lifecycle'
 }
 
-function hasFunnelConversion(stage) {
-  return stage.conversion_rate !== null && stage.conversion_rate !== ''
-}
-
-function formatCohortPercent(stage, cohortCount) {
-  if (!cohortCount) {
-    return ''
-  }
-
-  const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
-  const percent = (stageCount / cohortCount) * 100
-
-  return percent >= 10 ? `${Math.round(percent)}%` : `${percent.toFixed(1)}%`
-}
-
 function getStageIdentityValues(stage) {
   return [
     stage?.stage_id,
@@ -941,104 +926,6 @@ function getStageTrackMix(stage, trackBreakdowns) {
 
 function formatTrackMixPercent(value) {
   return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
-}
-
-function createFunnelPoint({ centerY, maxCount, stage, x }) {
-  const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
-  const ratio = maxCount > 0 ? stageCount / maxCount : 0
-  const minThickness = stageCount > 0 ? 10 : 2
-  const maxThickness = 220
-  const thickness = minThickness + (ratio * (maxThickness - minThickness))
-
-  return {
-    bottom: centerY + (thickness / 2),
-    stage,
-    thickness,
-    top: centerY - (thickness / 2),
-    x,
-  }
-}
-
-function getFunnelGeometry(stages) {
-  const width = 1000
-  const xStart = 48
-  const xEnd = 952
-  const centerY = 170
-  const maxCount = Math.max(...stages.map((stage) => Number(stage.stage_count) || 0), 1)
-  const sectionWidth = (xEnd - xStart) / Math.max(stages.length, 1)
-  const points = stages.map((stage, index) => createFunnelPoint({
-    centerY,
-    maxCount,
-    stage,
-    x: xStart + (sectionWidth * index),
-  }))
-
-  if (stages.length > 0) {
-    points.push(createFunnelPoint({
-      centerY,
-      maxCount,
-      stage: stages[stages.length - 1],
-      x: xEnd,
-    }))
-  }
-
-  return {
-    centerY,
-    points,
-    sectionWidth,
-    width,
-  }
-}
-
-function buildFunnelCurvePath(points, getY) {
-  if (!points.length) {
-    return ''
-  }
-
-  if (points.length === 1) {
-    const point = points[0]
-    const y = getY(point)
-
-    return `M ${point.x - 120} ${y} L ${point.x + 120} ${y}`
-  }
-
-  const first = points[0]
-  let path = `M ${first.x} ${getY(first)}`
-
-  for (let index = 1; index < points.length; index += 1) {
-    const previous = points[index - 1]
-    const current = points[index]
-    const previousY = getY(previous)
-    const currentY = getY(current)
-    const segmentControl = (current.x - previous.x) * 0.32
-    const controlOneX = previous.x + segmentControl
-    const controlTwoX = current.x - segmentControl
-
-    path += ` C ${controlOneX} ${previousY}, ${controlTwoX} ${currentY}, ${current.x} ${currentY}`
-  }
-
-  return path
-}
-
-function buildFunnelAreaPath(points) {
-  if (!points.length) {
-    return ''
-  }
-
-  if (points.length === 1) {
-    const point = points[0]
-
-    return `M ${point.x - 120} ${point.top} L ${point.x + 120} ${point.top} L ${point.x + 120} ${point.bottom} L ${point.x - 120} ${point.bottom} Z`
-  }
-
-  const topPath = buildFunnelCurvePath(points, (point) => point.top)
-  const last = points[points.length - 1]
-  const bottomPath = buildFunnelCurvePath(
-    [...points].reverse(),
-    (point) => point.bottom,
-  ).replace(/^M\s+[\d.-]+\s+[\d.-]+/, `L ${last.x} ${last.bottom}`)
-
-  return `${topPath} ${bottomPath} Z`
 }
 
 function getFunnelAttentionTone(stage) {
@@ -1188,131 +1075,23 @@ function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
   )
 }
 
-function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
-  const { points } = getFunnelGeometry(stages)
-  const path = buildFunnelAreaPath(points)
-  const cohortCount = Math.max(Number(stages[0]?.stage_count) || 0, 0)
-  const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
-  const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
-  const isCurrentStateSnapshot = isPipelineSnapshot || isReactivationLifecycle
-
-  if (!stages.length) {
-    return null
-  }
-
-  return (
-    <div className="overflow-x-auto rounded-block">
-      <div className="min-w-[760px]">
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `repeat(${stages.length}, minmax(120px, 1fr))`,
-            paddingInline: '4.8%',
-          }}
-        >
-          {stages.map((stage, index) => {
-            const attentionTone = getFunnelAttentionTone(stage)
-            const status = attentionTone === 'critical' ? 'red' : 'yellow'
-
-            return (
-              <div className="min-w-0 text-center" key={`${stage.stage_name}-label`}>
-                <p className="text-data tabular-nums text-text-primary">{stage.stage_count}</p>
-                <p className="mt-tag text-label font-semibold text-text-secondary">
-                  <span className="inline-flex items-center justify-center gap-tag">
-                    {getStageDisplayName(stage)}
-                    {isPipelineSnapshot && stage.is_booked_stage ? (
-                      <StatusChevron
-                        label={`View ${getStageDisplayName(stage)} details`}
-                        onClick={() => onOpenStageDetails(stage)}
-                        status="green"
-                        tooltip="Configured booked stage"
-                      />
-                    ) : isReactivationLifecycle ? (
-                      <StatusChevron
-                        label={`View ${getStageDisplayName(stage)} details`}
-                        onClick={() => onOpenStageDetails(stage)}
-                        status="grey"
-                        tooltip="View stage details"
-                      />
-                    ) : null}
-                    {!isCurrentStateSnapshot && attentionTone ? (
-                      <StatusChevron
-                        label={`View ${getStageDisplayName(stage)} details`}
-                        onClick={() => onOpenStageDetails(stage)}
-                        status={status}
-                        tooltip="View stage details"
-                      />
-                    ) : null}
-                  </span>
-                </p>
-                {isReactivationLifecycle && index > 0 && cohortCount > 0 ? (
-                  <p className="mt-tag text-label font-normal text-text-muted">
-                    {formatCohortPercent(stage, cohortCount)}
-                  </p>
-                ) : null}
-                {!isCurrentStateSnapshot && hasFunnelConversion(stage) ? (
-                  <p className="mt-tag text-label font-normal text-text-muted">
-                    {stage.conversion_rate}% conversion
-                  </p>
-                ) : null}
-              </div>
-            )
-          })}
-        </div>
-
-        <svg
-          aria-label="Patient funnel chart"
-          className="mt-component h-[260px] w-full overflow-visible"
-          preserveAspectRatio="none"
-          role="img"
-          viewBox="0 0 1000 300"
-        >
-          <defs>
-            <linearGradient id="patient-funnel-fill" x1="0%" x2="100%" y1="0%" y2="0%">
-              <stop offset="0%" stopColor="var(--premium-blue)" />
-              <stop offset="56%" stopColor="var(--premium-indigo)" />
-              <stop offset="100%" stopColor="var(--premium-graphite)" />
-            </linearGradient>
-          </defs>
-          <path d={path} fill="url(#patient-funnel-fill)" opacity="0.86" />
-          {points.slice(1, -1).map((point) => (
-            <line
-              className="text-text-primary/15"
-              key={`segment-boundary-${point.x}`}
-              stroke="currentColor"
-              strokeWidth="1"
-              x1={point.x}
-              x2={point.x}
-              y1="10"
-              y2="290"
-            />
-          ))}
-        </svg>
-      </div>
-    </div>
-  )
-}
-
 export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   const [selectedStage, setSelectedStage] = useState(null)
   const funnelType = funnelChart?.type ?? ''
-  const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
   const trackBreakdowns = funnelChart?.breakdowns?.by_track ?? []
-  const canRenderStackedTracks = isReactivationLifecycle && trackBreakdowns.length > 1
-  const rows = funnel
+  const rows = isReactivationLifecycle ? funnel
     .filter((stage) => {
-      const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
       const isVelocityStage = stage.unit === 'days' || String(stage.stage_name ?? '').toLowerCase().includes('funnel velocity')
 
-      return !isVelocityStage && (isPipelineSnapshot || isReactivationLifecycle || !isTreatmentStage || !['low', 'unavailable'].includes(stage.confidence))
+      return !isVelocityStage
     })
     .map((stage) => ({
       ...stage,
       id: stage.id ?? stage.stage_name,
       funnel_type: funnelType,
-    }))
-  const treatmentUnavailable = !isPipelineSnapshot && funnel.some((stage) => (
+    })) : []
+  const treatmentUnavailable = isReactivationLifecycle && funnel.some((stage) => (
     String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
     && ['low', 'unavailable'].includes(stage.confidence)
   ))
@@ -1324,25 +1103,17 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
           <div className="pb-component">
             <div>
               <h2 className="text-heading text-text-primary">
-                {isReactivationLifecycle ? 'Reactivation Lifecycle' : isPipelineSnapshot ? 'Pipeline Funnel' : 'Patient Funnel'}
+                Reactivation Lifecycle
               </h2>
             </div>
           </div>
           {rows.length ? (
-            canRenderStackedTracks ? (
-              <StackedFunnelFlowChart
-                onOpenStageDetails={setSelectedStage}
-                series={trackBreakdowns}
-                showCohortPercent={isReactivationLifecycle}
-                stages={rows}
-              />
-            ) : (
-              <FunnelFlowChart
-                funnelType={funnelType}
-                onOpenStageDetails={setSelectedStage}
-                stages={rows}
-              />
-            )
+            <StackedFunnelFlowChart
+              onOpenStageDetails={setSelectedStage}
+              series={trackBreakdowns}
+              showCohortPercent
+              stages={rows}
+            />
           ) : (
             <ResourceState
               action={emptyAction}
@@ -1351,15 +1122,11 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
               labels={{
                 notFoundDescription: funnelChart?.reason
                   || 'Check Review Setup or calculate this period before the funnel can be shown.',
-                notFoundTitle: isReactivationLifecycle
-                  ? 'Reactivation lifecycle is not calculated yet'
-                  : isPipelineSnapshot
-                  ? 'Pipeline funnel is not calculated yet'
-                  : 'Patient funnel is not calculated yet',
+                notFoundTitle: 'Reactivation lifecycle is not calculated yet',
               }}
             />
           )}
-          {(isPipelineSnapshot || isReactivationLifecycle) && funnelChart?.calculation_note ? (
+          {isReactivationLifecycle && funnelChart?.calculation_note ? (
             <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
               {funnelChart.calculation_note}
             </p>
