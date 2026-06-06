@@ -887,6 +887,17 @@ function hasFunnelConversion(stage) {
   return stage.conversion_rate !== null && stage.conversion_rate !== ''
 }
 
+function formatCohortPercent(stage, cohortCount) {
+  if (!cohortCount) {
+    return ''
+  }
+
+  const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
+  const percent = (stageCount / cohortCount) * 100
+
+  return percent >= 10 ? `${Math.round(percent)}%` : `${percent.toFixed(1)}%`
+}
+
 function createFunnelPoint({ centerY, maxCount, stage, x }) {
   const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
   const ratio = maxCount > 0 ? stageCount / maxCount : 0
@@ -1115,6 +1126,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
 function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
   const { points } = getFunnelGeometry(stages)
   const path = buildFunnelAreaPath(points)
+  const cohortCount = Math.max(Number(stages[0]?.stage_count) || 0, 0)
   const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
   const isCurrentStateSnapshot = isPipelineSnapshot || isReactivationLifecycle
@@ -1133,7 +1145,7 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
             paddingInline: '4.8%',
           }}
         >
-          {stages.map((stage) => {
+          {stages.map((stage, index) => {
             const attentionTone = getFunnelAttentionTone(stage)
             const status = attentionTone === 'critical' ? 'red' : 'yellow'
 
@@ -1168,6 +1180,11 @@ function FunnelFlowChart({ funnelType, onOpenStageDetails, stages }) {
                     ) : null}
                   </span>
                 </p>
+                {isReactivationLifecycle && index > 0 && cohortCount > 0 ? (
+                  <p className="mt-tag text-label font-normal text-text-muted">
+                    {formatCohortPercent(stage, cohortCount)}
+                  </p>
+                ) : null}
                 {!isCurrentStateSnapshot && hasFunnelConversion(stage) ? (
                   <p className="mt-tag text-label font-normal text-text-muted">
                     {stage.conversion_rate}% conversion
