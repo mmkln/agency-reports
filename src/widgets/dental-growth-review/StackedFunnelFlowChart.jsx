@@ -40,7 +40,10 @@ export function StackedFunnelFlowChart({
           onOpenStageDetails={onOpenStageDetails}
           stages={chartModel.stages}
         />
-        <StackedFunnelLegend series={chartModel.series} />
+        <StackedFunnelStageMix
+          series={chartModel.series}
+          stages={chartModel.stages}
+        />
       </div>
     </div>
   )
@@ -217,24 +220,54 @@ function StackedFunnelSvg({ layers, onOpenStageDetails, stages }) {
   )
 }
 
-function StackedFunnelLegend({ series }) {
+function StackedFunnelStageMix({ series, stages }) {
+  const hasVisibleMix = stages.some((_, stageIndex) => sumSeriesAtStage(series, stageIndex) > 0)
+  const cohortTotal = Math.max(stages[0]?.count ?? 0, sumSeriesAtStage(series, 0), 1)
+
+  if (!hasVisibleMix) {
+    return null
+  }
+
   return (
-    <div className="mt-control flex flex-wrap justify-center gap-control">
-      {series.map((track) => (
-        <span
-          className="inline-flex items-center gap-tag text-label font-medium text-text-muted"
-          key={track.id}
-        >
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full opacity-70"
-            style={{ backgroundColor: track.color }}
-          />
-          {track.label}
-        </span>
+    <div
+      className="mt-item grid gap-control px-control"
+      style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(120px, 1fr))` }}
+    >
+      {stages.map((stage, stageIndex) => (
+        <div className="grid content-start justify-items-center gap-tag" key={`stage-mix-${stage.id}`}>
+          {series.map((track) => {
+            const count = track.stages[stageIndex]?.count ?? 0
+            const percent = (count / cohortTotal) * 100
+
+            return (
+              <div
+                className={`grid w-full max-w-[112px] grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-micro text-label leading-tight ${count > 0 ? 'text-text-muted' : 'text-text-quaternary'}`}
+                key={`${stage.id}-${track.id}`}
+                title={`${track.label}: ${count} (${formatStageMixPercent(percent)})`}
+              >
+                <span className="flex min-w-0 items-center gap-micro">
+                  <span
+                    aria-hidden="true"
+                    className={`size-1.5 shrink-0 rounded-full ${count > 0 ? 'opacity-80' : 'opacity-30'}`}
+                    style={{ backgroundColor: track.color }}
+                  />
+                  <span className="truncate font-medium">{track.key}</span>
+                </span>
+                <span className="text-right tabular-nums text-text-secondary">{count}</span>
+                <span className="text-right tabular-nums text-text-quaternary">
+                  ({formatStageMixPercent(percent)})
+                </span>
+              </div>
+            )
+          })}
+        </div>
       ))}
     </div>
   )
+}
+
+function formatStageMixPercent(value) {
+  return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
 }
 
 function buildLayerPath(points) {
