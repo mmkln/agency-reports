@@ -889,8 +889,10 @@ function hasFunnelConversion(stage) {
 
 function createFunnelPoint({ centerY, maxCount, stage, x }) {
   const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
-  const intensity = Math.sqrt(stageCount / maxCount)
-  const thickness = 42 + (intensity * 178)
+  const ratio = maxCount > 0 ? stageCount / maxCount : 0
+  const minThickness = stageCount > 0 ? 10 : 2
+  const maxThickness = 220
+  const thickness = minThickness + (ratio * (maxThickness - minThickness))
 
   return {
     bottom: centerY + (thickness / 2),
@@ -932,6 +934,36 @@ function getFunnelGeometry(stages) {
   }
 }
 
+function buildFunnelCurvePath(points, getY) {
+  if (!points.length) {
+    return ''
+  }
+
+  if (points.length === 1) {
+    const point = points[0]
+    const y = getY(point)
+
+    return `M ${point.x - 120} ${y} L ${point.x + 120} ${y}`
+  }
+
+  const first = points[0]
+  let path = `M ${first.x} ${getY(first)}`
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1]
+    const current = points[index]
+    const previousY = getY(previous)
+    const currentY = getY(current)
+    const segmentControl = (current.x - previous.x) * 0.32
+    const controlOneX = previous.x + segmentControl
+    const controlTwoX = current.x - segmentControl
+
+    path += ` C ${controlOneX} ${previousY}, ${controlTwoX} ${currentY}, ${current.x} ${currentY}`
+  }
+
+  return path
+}
+
 function buildFunnelAreaPath(points) {
   if (!points.length) {
     return ''
@@ -943,29 +975,14 @@ function buildFunnelAreaPath(points) {
     return `M ${point.x - 120} ${point.top} L ${point.x + 120} ${point.top} L ${point.x + 120} ${point.bottom} L ${point.x - 120} ${point.bottom} Z`
   }
 
-  const first = points[0]
-  let path = `M ${first.x} ${first.top}`
-
-  for (let index = 1; index < points.length; index += 1) {
-    const previous = points[index - 1]
-    const current = points[index]
-    const controlX = (previous.x + current.x) / 2
-
-    path += ` C ${controlX} ${previous.top}, ${controlX} ${current.top}, ${current.x} ${current.top}`
-  }
-
+  const topPath = buildFunnelCurvePath(points, (point) => point.top)
   const last = points[points.length - 1]
-  path += ` L ${last.x} ${last.bottom}`
+  const bottomPath = buildFunnelCurvePath(
+    [...points].reverse(),
+    (point) => point.bottom,
+  ).replace(/^M\s+[\d.-]+\s+[\d.-]+/, `L ${last.x} ${last.bottom}`)
 
-  for (let index = points.length - 2; index >= 0; index -= 1) {
-    const previous = points[index + 1]
-    const current = points[index]
-    const controlX = (previous.x + current.x) / 2
-
-    path += ` C ${controlX} ${previous.bottom}, ${controlX} ${current.bottom}, ${current.x} ${current.bottom}`
-  }
-
-  return `${path} Z`
+  return `${topPath} ${bottomPath} Z`
 }
 
 function getFunnelAttentionTone(stage) {
