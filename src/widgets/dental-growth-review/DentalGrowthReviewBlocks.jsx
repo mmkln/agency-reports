@@ -1316,10 +1316,6 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
     String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
     && ['low', 'unavailable'].includes(stage.confidence)
   ))
-  const treatmentPartial = !isPipelineSnapshot && funnel.some((stage) => (
-    String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
-    && stage.confidence === 'medium'
-  ))
 
   return (
     <>
@@ -1371,11 +1367,6 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
           {treatmentUnavailable ? (
             <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
               Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
-            </p>
-          ) : null}
-          {treatmentPartial ? (
-            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
-              Treatment acceptance is shown with partial PMS data. Treat this stage as directional, not exact.
             </p>
           ) : null}
         </div>
