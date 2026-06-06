@@ -276,6 +276,7 @@ function normalizeFunnelChart(funnel = {}) {
   return {
     available: source.available === true || rawStages.length > 0,
     booked_stage_id: normalizeText(source.booked_stage_id),
+    breakdowns: normalizeFunnelBreakdowns(source.breakdowns),
     calculation_note: normalizeText(source.calculation_note),
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
     date_range_applied: source.date_range_applied === true,
@@ -285,6 +286,26 @@ function normalizeFunnelChart(funnel = {}) {
     source: normalizeText(source.source),
     stages: rawStages.map(normalizeFunnelStage),
     type: normalizeText(source.type),
+  }
+}
+
+function normalizeFunnelBreakdown(source = {}) {
+  const value = isPlainObject(source) ? source : {}
+
+  return {
+    dimension: normalizeText(value.dimension),
+    id: normalizeText(value.id ?? value.key),
+    key: normalizeText(value.key),
+    label: normalizeText(value.label ?? value.key),
+    stages: normalizeArray(value.stages).map(normalizeFunnelStage),
+  }
+}
+
+function normalizeFunnelBreakdowns(source = {}) {
+  const value = isPlainObject(source) ? source : {}
+
+  return {
+    by_track: normalizeArray(value.by_track).map(normalizeFunnelBreakdown),
   }
 }
 

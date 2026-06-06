@@ -38,6 +38,7 @@ import {
   statusClass,
 } from './format'
 import { createGrowthReviewMetricDetailViewModel } from './metricDetailPresenter'
+import { StackedFunnelFlowChart } from './StackedFunnelFlowChart'
 
 export function DentalGrowthReviewState({ onRetry, page }) {
   if (page.status === 'error') {
@@ -1043,7 +1044,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
               <DialogTitle>{getStageDisplayName(stage)}</DialogTitle>
               <DialogDescription>
                 {isReactivationLifecycle
-                  ? 'Current workload count from configured reactivation tags and fields.'
+                  ? 'Reached-step count from configured reactivation tags and fields.'
                   : isPipelineSnapshot
                   ? 'Current opportunity count in the configured GHL pipeline stage.'
                   : 'Funnel stage conversion, drop-off, target, and confidence.'}
@@ -1059,7 +1060,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                     </p>
                   </div>
                   {isReactivationLifecycle ? (
-                    <Badge tone="neutral">Current state</Badge>
+                    <Badge tone="neutral">Reached step</Badge>
                   ) : isPipelineSnapshot && stage.is_booked_stage ? (
                     <Badge tone="blue">Booked stage</Badge>
                   ) : (
@@ -1079,7 +1080,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                 <DetailRow label="Stage count" value={stage.stage_count} />
                 {isReactivationLifecycle ? (
                   <>
-                    <DetailRow label="Mode" value="Current state snapshot" />
+                    <DetailRow label="Mode" value={formatLabel(stage.calculation_mode)} />
                     <DetailRow label="Date range" value="Not applied" />
                     <DetailRow label="Key" value={stage.key} />
                   </>
@@ -1106,7 +1107,7 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                 <DetailRow
                   label="Formula"
                   value={stage.formula || (isReactivationLifecycle
-                    ? 'count current records matching this configured reactivation lifecycle state'
+                    ? 'reached-step count from configured reactivation signals'
                     : isPipelineSnapshot
                     ? 'count current opportunities in this configured GHL pipeline stage'
                     : 'output count / input count * 100')}
@@ -1233,6 +1234,8 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   const funnelType = funnelChart?.type ?? ''
   const isPipelineSnapshot = funnelType === 'pipeline_stage_snapshot'
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
+  const trackBreakdowns = funnelChart?.breakdowns?.by_track ?? []
+  const canRenderStackedTracks = isReactivationLifecycle && trackBreakdowns.length > 1
   const rows = funnel
     .filter((stage) => {
       const isTreatmentStage = String(stage.stage_name ?? '').toLowerCase().includes('treatment accepted')
@@ -1266,11 +1269,20 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
             </div>
           </div>
           {rows.length ? (
-            <FunnelFlowChart
-              funnelType={funnelType}
-              onOpenStageDetails={setSelectedStage}
-              stages={rows}
-            />
+            canRenderStackedTracks ? (
+              <StackedFunnelFlowChart
+                onOpenStageDetails={setSelectedStage}
+                series={trackBreakdowns}
+                showCohortPercent={isReactivationLifecycle}
+                stages={rows}
+              />
+            ) : (
+              <FunnelFlowChart
+                funnelType={funnelType}
+                onOpenStageDetails={setSelectedStage}
+                stages={rows}
+              />
+            )
           ) : (
             <ResourceState
               action={emptyAction}
