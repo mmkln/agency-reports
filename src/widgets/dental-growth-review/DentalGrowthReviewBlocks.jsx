@@ -899,6 +899,50 @@ function formatCohortPercent(stage, cohortCount) {
   return percent >= 10 ? `${Math.round(percent)}%` : `${percent.toFixed(1)}%`
 }
 
+function getStageIdentityValues(stage) {
+  return [
+    stage?.stage_id,
+    stage?.id,
+    stage?.stage_name,
+    stage?.name,
+    stage?.key,
+  ].map((value) => String(value ?? '').trim()).filter(Boolean)
+}
+
+function getStageTrackMix(stage, trackBreakdowns) {
+  if (!stage || !trackBreakdowns.length) {
+    return []
+  }
+
+  const stageIds = new Set(getStageIdentityValues(stage))
+  const rows = trackBreakdowns.map((track) => {
+    const matchingStage = track.stages?.find((item) => (
+      getStageIdentityValues(item).some((value) => stageIds.has(value))
+    ))
+    const count = Math.max(Number(matchingStage?.stage_count) || 0, 0)
+
+    return {
+      count,
+      id: track.id || track.key || track.label,
+      label: track.label || track.key || 'Track',
+    }
+  }).filter((row) => row.count > 0)
+  const total = rows.reduce((sum, row) => sum + row.count, 0)
+
+  if (!total) {
+    return []
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    percent: (row.count / total) * 100,
+  }))
+}
+
+function formatTrackMixPercent(value) {
+  return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
+}
+
 function createFunnelPoint({ centerY, maxCount, stage, x }) {
   const stageCount = Math.max(Number(stage?.stage_count) || 0, 0)
   const ratio = maxCount > 0 ? stageCount / maxCount : 0
@@ -1022,11 +1066,12 @@ function getFunnelStageStatus(stage) {
   return stage.status ?? 'green'
 }
 
-function FunnelStageDrilldownModal({ onClose, stage }) {
+function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
   const open = Boolean(stage)
   const status = stage ? getFunnelStageStatus(stage) : 'grey'
   const isPipelineSnapshot = isPipelineStageSnapshot(stage)
   const isReactivationLifecycle = isReactivationLifecycleSnapshot(stage)
+  const trackMix = isReactivationLifecycle ? getStageTrackMix(stage, trackBreakdowns) : []
 
   return (
     <Dialog
@@ -1102,6 +1147,25 @@ function FunnelStageDrilldownModal({ onClose, stage }) {
                   </>
                 )}
               </DetailSection>
+
+              {trackMix.length ? (
+                <DetailSection title="Track mix">
+                  {trackMix.map((track) => (
+                    <div
+                      className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-control py-item text-ui"
+                      key={track.id}
+                    >
+                      <dt className="min-w-0 truncate text-label font-normal text-text-muted">
+                        {track.label}
+                      </dt>
+                      <dd className="tabular-nums text-text-primary">{track.count}</dd>
+                      <dd className="w-12 text-right tabular-nums text-text-secondary">
+                        {formatTrackMixPercent(track.percent)}
+                      </dd>
+                    </div>
+                  ))}
+                </DetailSection>
+              ) : null}
 
               <DetailSection title="Calculation">
                 <DetailRow
@@ -1319,6 +1383,7 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
       <FunnelStageDrilldownModal
         onClose={() => setSelectedStage(null)}
         stage={selectedStage}
+        trackBreakdowns={trackBreakdowns}
       />
     </>
   )
