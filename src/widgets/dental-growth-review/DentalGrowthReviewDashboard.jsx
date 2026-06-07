@@ -3,6 +3,7 @@ import {
   FunnelView,
   HeroMetrics,
 } from './DentalGrowthReviewBlocks'
+import { ReactivationActivityChart } from './ReactivationActivityChart'
 
 const LEAD_TO_CONTACTED_METRIC_ID = 'lead_to_contacted_rate'
 
@@ -55,10 +56,13 @@ export function DentalGrowthReviewDashboard({ funnelEmptyAction, onRetry, page }
   const metrics = getDashboardMetrics(page.charts?.metrics)
   const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages ?? []
+  const reactivationActivity = page.charts?.reactivationActivity ?? null
 
   return (
     <>
       <HeroMetrics metrics={metrics} />
+
+      <ReactivationActivityChart chart={reactivationActivity} />
 
       <FunnelView
         emptyAction={funnelEmptyAction}

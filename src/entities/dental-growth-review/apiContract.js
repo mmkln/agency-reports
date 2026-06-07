@@ -309,18 +309,69 @@ function normalizeFunnelBreakdowns(source = {}) {
   }
 }
 
+function normalizeReactivationActivityPoint(point = {}) {
+  const source = isPlainObject(point) ? point : {}
+  const date = normalizeText(source.date)
+
+  return {
+    bookings: Number(source.bookings ?? 0),
+    call: Number(source.call ?? 0),
+    cumulativeBookings: Number(source.cumulative_bookings ?? source.cumulativeBookings ?? 0),
+    date,
+    email: Number(source.email ?? 0),
+    label: normalizeText(source.label) || date,
+    sms: Number(source.sms ?? 0),
+    totalTouches: Number(source.total_touches ?? source.totalTouches ?? 0),
+  }
+}
+
+function normalizeReactivationActivityCard(card = {}) {
+  const source = isPlainObject(card) ? card : {}
+
+  return {
+    displayValue: normalizeText(source.display_value ?? source.displayValue),
+    key: normalizeText(source.key),
+    label: normalizeText(source.label),
+    unit: normalizeText(source.unit),
+    value: source.value ?? 0,
+  }
+}
+
+function normalizeReactivationActivityChart(chart = {}) {
+  const source = isPlainObject(chart) ? chart : {}
+
+  return {
+    available: source.available === true,
+    cards: normalizeArray(source.cards).map(normalizeReactivationActivityCard),
+    label: normalizeText(source.label),
+    reason: normalizeText(source.reason),
+    series: normalizeArray(source.series).map(normalizeReactivationActivityPoint),
+    summary: isPlainObject(source.summary) ? source.summary : {},
+    type: normalizeText(source.type),
+  }
+}
+
 export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
-  const metrics = isPlainObject(source.metrics) ? source.metrics : {}
+  const charts = isPlainObject(source.charts) ? source.charts : source
+  const metrics = isPlainObject(charts.metrics)
+    ? charts.metrics
+    : isPlainObject(source.metrics)
+      ? source.metrics
+      : {}
   const normalizedMetrics = Object.fromEntries(
     Object.entries(metrics).map(([key, value]) => [key, normalizeChartMetric(value)]),
   )
+  const funnel = isPlainObject(charts.funnel) ? charts.funnel : source.funnel
 
   return {
     calculated_at: normalizeText(source.calculated_at),
     calculation_version: normalizeText(source.calculation_version),
     metrics: normalizedMetrics,
-    funnel: normalizeFunnelChart(source.funnel),
+    funnel: normalizeFunnelChart(funnel),
+    reactivationActivity: normalizeReactivationActivityChart(
+      charts.reactivation_activity ?? charts.reactivationActivity,
+    ),
     last_synced_at: normalizeText(source.last_synced_at),
     period: isPlainObject(source.period) ? source.period : {},
   }

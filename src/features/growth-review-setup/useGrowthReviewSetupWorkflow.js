@@ -33,6 +33,7 @@ function createDraftFromPayload(payload) {
       bookedStageId: payload.settings.bookedStageId,
       funnelPipelineId: payload.settings.funnelPipelineId,
       funnelSteps: payload.settings.funnelSteps,
+      reactivationActivityStartDate: payload.settings.reactivationActivityStartDate,
       sourceConnectionId: payload.settings.sourceConnectionId,
     }
   }
@@ -45,6 +46,7 @@ function createDraftFromPayload(payload) {
     bookedStageId: bookedStage?.id ?? '',
     funnelPipelineId: pipeline?.id ?? '',
     funnelSteps: createStepsFromPipeline(pipeline, bookedStage?.id),
+    reactivationActivityStartDate: '',
     sourceConnectionId: sourceConnection?.id ?? '',
   }
 }

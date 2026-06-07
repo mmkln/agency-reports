@@ -5,6 +5,7 @@ import {
 } from '@/entities/growth-review-settings'
 import {
   Button,
+  Input,
   Panel,
   PanelBody,
   PanelHeader,
@@ -57,6 +58,35 @@ function SelectField({ children, disabled, label, onValueChange, placeholder, va
         </SelectContent>
       </RadixSelect>
     </label>
+  )
+}
+
+function CampaignSection({ draft, onUpdate }) {
+  function updateActivityStartDate(event) {
+    onUpdate((current) => ({
+      ...current,
+      reactivationActivityStartDate: event.target.value,
+    }))
+  }
+
+  return (
+    <Panel>
+      <PanelHeader
+        divided
+        subtitle="Activity charts use this date as the start of the configured reactivation campaign."
+        title="Reactivation campaign"
+      />
+      <PanelBody>
+        <label className="grid max-w-sm gap-item">
+          <span className="text-label text-text-muted">Activity start date</span>
+          <Input
+            onChange={updateActivityStartDate}
+            type="date"
+            value={draft.reactivationActivityStartDate}
+          />
+        </label>
+      </PanelBody>
+    </Panel>
   )
 }
 
@@ -327,6 +357,7 @@ export function GrowthReviewSetupWorkspace({ apiClient, workspaceId }) {
   return (
     <div className="grid gap-card">
       <SourceConnectionSection draft={draft} onUpdate={updateDraft} options={options} />
+      <CampaignSection draft={draft} onUpdate={updateDraft} />
       <PipelineSection draft={draft} onUpdate={updateDraft} options={options} />
       <FunnelSection draft={draft} onUpdate={updateDraft} options={options} />
       <PreviewSection draft={draft} options={options} />

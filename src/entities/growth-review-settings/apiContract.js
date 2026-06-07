@@ -72,6 +72,9 @@ export function normalizeGrowthReviewSettings(source = {}) {
     funnelPipelineId: normalizeText(source.funnel_pipeline_id ?? source.funnelPipelineId),
     funnelSteps: normalizeArray(source.funnel_steps ?? source.funnelSteps).map(normalizeGrowthReviewFunnelStep),
     id: normalizeText(source.id),
+    reactivationActivityStartDate: normalizeText(
+      source.reactivation_activity_start_date ?? source.reactivationActivityStartDate,
+    ),
     sourceConnectionId: normalizeText(source.source_connection_id ?? source.sourceConnectionId),
     workspaceId: normalizeText(source.workspace_id ?? source.workspaceId),
   }
@@ -103,6 +106,7 @@ export function toGrowthReviewSettingsApiInput(draft) {
       label: step.label,
       stage_ids: normalizeArray(step.stageIds).filter(Boolean),
     })),
+    reactivation_activity_start_date: draft.reactivationActivityStartDate || '',
     source_connection_id: draft.sourceConnectionId,
   }
 }
