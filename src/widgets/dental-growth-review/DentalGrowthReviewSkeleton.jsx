@@ -1,56 +1,50 @@
 import { Skeleton } from '@/shared/ui'
 
-const heroMetricPlaceholders = Array.from({ length: 6 })
-const funnelStepPlaceholders = Array.from({ length: 4 })
+const activityCardPlaceholders = Array.from({ length: 6 })
+const lifecycleStepPlaceholders = Array.from({ length: 5 })
 
 export function DentalGrowthReviewSkeleton() {
   return (
     <div className="grid gap-card">
-      <section className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
-        {heroMetricPlaceholders.map((_, index) => (
-          <MetricCardSkeleton key={`growth-review-metric-skeleton-${index}`} />
-        ))}
-      </section>
-
-      <FunnelSkeleton />
+      <ReactivationActivitySkeleton />
+      <LifecycleFunnelSkeleton />
     </div>
   )
 }
 
-function MetricCardSkeleton() {
+function ReactivationActivitySkeleton() {
   return (
-    <article className="grid min-h-52 gap-component rounded-block bg-block p-component">
+    <section className="rounded-block bg-block p-component">
       <div className="flex min-w-0 items-start justify-between gap-control">
-        <Skeleton className="h-control-small w-32" />
-        <Skeleton className="h-control-small w-control-small rounded-full" />
-      </div>
-
-      <div className="grid gap-item">
-        <Skeleton className="h-9 w-24" />
-        <Skeleton className="h-control-small w-36" />
-      </div>
-
-      <Skeleton className="h-16 w-44" />
-
-      <div className="grid gap-tag">
-        <div className="flex items-center justify-between gap-control">
-          <Skeleton className="h-control-small w-24" />
-          <Skeleton className="h-control-small w-12" />
+        <div className="grid gap-tag">
+          <Skeleton className="h-control w-44" />
+          <Skeleton className="h-control-small w-72 max-w-full" />
         </div>
-        <Skeleton className="h-tag w-full rounded-full" />
+        <Skeleton className="h-control-small w-24" />
       </div>
-    </article>
+
+      <div className="mt-component grid gap-control md:grid-cols-3 xl:grid-cols-6">
+        {activityCardPlaceholders.map((_, index) => (
+          <div className="grid gap-tag rounded-item bg-fill-secondary p-control" key={`reactivation-activity-card-skeleton-${index}`}>
+            <Skeleton className="h-7 w-14" />
+            <Skeleton className="h-control-small w-24" />
+          </div>
+        ))}
+      </div>
+
+      <Skeleton className="mt-component h-[320px] w-full rounded-block" />
+    </section>
   )
 }
 
-function FunnelSkeleton() {
+function LifecycleFunnelSkeleton() {
   return (
     <section className="rounded-block bg-block p-component">
-      <Skeleton className="h-control w-40" />
+      <Skeleton className="h-control w-48" />
 
-      <div className="mt-card grid grid-cols-4 gap-control">
-        {funnelStepPlaceholders.map((_, index) => (
-          <div className="grid justify-items-center gap-tag" key={`growth-review-funnel-step-skeleton-${index}`}>
+      <div className="mt-card grid gap-control md:grid-cols-5">
+        {lifecycleStepPlaceholders.map((_, index) => (
+          <div className="grid justify-items-center gap-tag" key={`reactivation-lifecycle-step-skeleton-${index}`}>
             <Skeleton className="h-8 w-14" />
             <Skeleton className="h-control-small w-24" />
           </div>
