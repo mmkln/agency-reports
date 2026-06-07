@@ -1,28 +1,34 @@
 import { ComposedStackedBarLineChart } from '@/shared/charts'
+import { semanticColors } from '@/shared/theme'
 import { Panel, PanelBody, PanelHeader } from '@/shared/ui'
 
 const activityBars = [
   {
-    color: 'var(--chart-5)',
+    color: semanticColors.premiumBlue,
+    stroke: semanticColors.block,
     key: 'sms',
     label: 'SMS',
   },
   {
-    color: 'var(--chart-2)',
+    color: semanticColors.premiumPurple,
+    stroke: semanticColors.block,
     key: 'email',
     label: 'Email',
   },
   {
-    color: 'var(--chart-3)',
+    color: semanticColors.premiumGraphite,
+    stroke: semanticColors.block,
     key: 'call',
     label: 'Manager calls',
   },
 ]
 
 const bookingsLine = {
-  color: 'var(--text-muted)',
+  color: semanticColors.textPrimary,
   key: 'cumulativeBookings',
   label: 'Cumulative bookings',
+  strokeDasharray: '4 4',
+  strokeWidth: 3,
 }
 
 function formatCardValue(card) {

@@ -217,6 +217,8 @@ export function ComposedStackedBarLineChart({
               key={bar.key}
               name={bar.label}
               radius={0}
+              stroke={bar.stroke}
+              strokeWidth={bar.stroke ? 1.5 : 0}
               stackId="touches"
               yAxisId="left"
             />
@@ -229,9 +231,9 @@ export function ComposedStackedBarLineChart({
               isAnimationActive={false}
               name={line.label}
               stroke={line.color}
-              strokeDasharray="6 5"
+              strokeDasharray={line.strokeDasharray ?? '6 5'}
               strokeLinecap="round"
-              strokeWidth={2.5}
+              strokeWidth={line.strokeWidth ?? 2.5}
               type="monotone"
               yAxisId="right"
             />
