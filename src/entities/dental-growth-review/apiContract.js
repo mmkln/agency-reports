@@ -362,7 +362,11 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   const normalizedMetrics = Object.fromEntries(
     Object.entries(metrics).map(([key, value]) => [key, normalizeChartMetric(value)]),
   )
-  const funnel = isPlainObject(charts.funnel) ? charts.funnel : source.funnel
+  const funnel = isPlainObject(charts.funnel)
+    ? charts.funnel
+    : isPlainObject(charts.reactivation_lifecycle)
+      ? charts.reactivation_lifecycle
+      : source.funnel
 
   return {
     calculated_at: normalizeText(source.calculated_at),

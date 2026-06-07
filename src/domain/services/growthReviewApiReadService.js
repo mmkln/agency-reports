@@ -231,7 +231,6 @@ function mapZoneState(preset) {
 export async function getGrowthReviewDashboardPageFromApi({
   apiClient,
   now = new Date(),
-  routeParams = {},
   viewer,
   workspaceId,
 }) {
@@ -242,17 +241,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     }
   }
 
-  const dateRange = resolveGrowthReviewDateRange({
-    end: routeParams.end,
-    now,
-    periodId: routeParams.periodId,
-    start: routeParams.start,
-  })
-  const query = {
-    end: dateRange.end,
-    start: dateRange.start,
-  }
-  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`, { query })
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`)
   const readModel = normalizeGrowthReviewReadModel({
     ...payload,
     workspace_id: payload?.workspace_id ?? workspaceId,
@@ -276,7 +265,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     previousPeriod: null,
     reason: null,
     reviewPeriodOptions: periodOptions.reviewPeriodOptions,
-    selectedReviewPeriodOptionKey: dateRange.selectedKey,
+    selectedReviewPeriodOptionKey: '',
     source: 'published',
     status: 'ready',
     zones: mapZoneState(preset),

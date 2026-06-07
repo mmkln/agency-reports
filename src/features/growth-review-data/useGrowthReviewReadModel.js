@@ -40,10 +40,6 @@ export function useGrowthReviewReadModel({
     'dental-growth-review',
     GROWTH_REVIEW_DATA_SOURCE,
     workspaceId ?? '',
-    routeParams.periodId ?? '',
-    routeParams.periodType ?? '',
-    routeParams.start ?? '',
-    routeParams.end ?? '',
     source,
   ].join(':')
   const resource = useAsyncResource({
