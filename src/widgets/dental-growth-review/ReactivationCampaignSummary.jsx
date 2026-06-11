@@ -77,34 +77,6 @@ const cardToneByKey = {
 const DURATION_CARD_KEY = 'duration'
 const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
 
-function formatMonthDay(value) {
-  if (!value) {
-    return ''
-  }
-
-  const date = new Date(`${value}T00:00:00.000Z`)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
-}
-
-function formatPeriodRange(period) {
-  const start = formatMonthDay(period?.start ?? period?.period_start)
-  const end = formatMonthDay(period?.end ?? period?.period_end)
-
-  if (!start && !end) {
-    return 'Active campaign'
-  }
-
-  return [start, end].filter(Boolean).join(' - ')
-}
-
 function formatUpdatedAt(value) {
   if (!value) {
     return 'Data update pending'
@@ -122,20 +94,6 @@ function formatUpdatedAt(value) {
     month: 'short',
     year: 'numeric',
   })}`
-}
-
-function formatDuration(summary) {
-  const days = Number(summary?.duration_days ?? summary?.durationDays ?? 0)
-  if (!Number.isFinite(days) || days <= 0) {
-    return ''
-  }
-
-  const weeks = days / 7
-  if (weeks >= 1) {
-    return `${weeks.toFixed(weeks >= 10 ? 0 : 1)} wk`
-  }
-
-  return `${days} d`
 }
 
 function formatCardValue(card) {
@@ -250,64 +208,35 @@ function buildActivityCards({ cards, funnelChart }) {
   return nextCards
 }
 
-function CampaignHero({ campaign, period, summary }) {
-  const duration = formatDuration(summary)
-  const periodLabel = formatPeriodRange(period)
-  const campaignLabel = campaign?.name || campaign?.value || 'Reactivation campaign'
-
-  return (
-    <section className="overflow-hidden rounded-block bg-premium-indigo text-white shadow-block">
-      <div className="grid gap-panel p-panel md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-        <div className="max-w-readable">
-          <p className="inline-flex rounded-control bg-white/10 px-control-small py-micro text-label font-medium text-white/80">
-            Automated reactivation campaign
-          </p>
-          <h2 className="mt-control text-heading text-white">Reactivation Activity</h2>
-          <p className="mt-item text-label text-white/60">{campaignLabel}</p>
-        </div>
-
-        <div className="grid min-w-[280px] grid-cols-2 overflow-hidden rounded-block border border-white/10 bg-white/10">
-          <div className="border-r border-white/10 p-control">
-            <p className="text-label font-medium uppercase tracking-normal text-white/55">Duration</p>
-            <p className="mt-micro text-data text-white">{duration || 'Current'}</p>
-          </div>
-          <div className="p-control">
-            <p className="text-label font-medium uppercase tracking-normal text-white/55">Period</p>
-            <p className="mt-micro text-ui font-semibold text-white">{periodLabel}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function ActivityCard({ card }) {
   const tone = getCardTone(card)
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
   const isEmphasized = tone === 'green'
 
   return (
-    <article className={`rounded-block p-control shadow-block ${classes.surface}`}>
-      <div className="flex items-start justify-between gap-control">
-        <span className={`inline-flex size-control-large items-center justify-center rounded-control ${classes.icon}`}>
-          <Icon name={getCardIconName(card)} size={18} />
+    <article className={`flex min-h-[150px] flex-col justify-between rounded-block p-5 shadow-block ${classes.surface}`}>
+      <div className="flex items-start justify-between gap-4">
+        <span className={`inline-flex size-12 shrink-0 items-center justify-center rounded-[14px] ${classes.icon}`}>
+          <Icon name={getCardIconName(card)} size={19} />
         </span>
-        <p className={`text-label font-semibold uppercase tracking-normal ${isEmphasized ? 'text-white/75' : 'text-text-muted'}`}>
+        <p className={`pt-0.5 text-label font-semibold uppercase leading-5 tracking-normal ${isEmphasized ? 'text-white/75' : 'text-text-muted'}`}>
           {getCardTitle(card)}
         </p>
       </div>
 
-      <p className={`mt-component text-data tabular-nums ${isEmphasized ? 'text-white' : 'text-text-primary'}`}>
-        {formatCardValue(card)}
-      </p>
-      <p className={`mt-micro text-ui ${isEmphasized ? 'text-white/80' : 'text-text-secondary'}`}>
-        {formatCardCaption(card)}
-      </p>
+      <div>
+        <p className={`text-[32px] font-bold leading-none tabular-nums tracking-tight ${isEmphasized ? 'text-white' : 'text-text-primary'}`}>
+          {formatCardValue(card)}
+        </p>
+        <p className={`mt-2 text-ui leading-5 ${isEmphasized ? 'text-white/80' : 'text-text-secondary'}`}>
+          {formatCardCaption(card)}
+        </p>
+      </div>
     </article>
   )
 }
 
-export function ReactivationCampaignSummary({ campaign, chart, funnelChart, period, updatedAt }) {
+export function ReactivationCampaignSummary({ chart, funnelChart, updatedAt }) {
   if (!chart?.available) {
     return null
   }
@@ -319,8 +248,6 @@ export function ReactivationCampaignSummary({ campaign, chart, funnelChart, peri
 
   return (
     <div className="grid gap-component">
-      <CampaignHero campaign={campaign} period={period} summary={chart.summary} />
-
       {cards.length ? (
         <section className="grid gap-control">
           <div className="flex justify-end">
