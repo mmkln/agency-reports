@@ -19,7 +19,7 @@ export const reactivationTrackColors = {
 }
 
 export const reactivationChartLayout = {
-  body: 'mt-6',
+  body: 'mt-component',
   footer: 'mt-control border-t border-separator pt-control text-label font-normal text-text-muted',
   header: 'flex flex-col gap-4 border-b border-separator pb-4 sm:flex-row sm:items-start sm:justify-between',
   headerAction: 'flex flex-wrap gap-3 sm:justify-end',

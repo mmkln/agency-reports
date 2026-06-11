@@ -12,13 +12,18 @@ import {
 import { reactivationText } from './reactivationTypography'
 
 const CHART_WIDTH = 1000
-const CHART_HEIGHT = 240
+const CHART_HEIGHT = 210
 const CHART_X_START = 50
 const CHART_X_END = 950
-const CHART_CENTER_Y = 128
-const MAX_STACK_THICKNESS = 112
+const CHART_CENTER_Y = 112
+const MAX_STACK_THICKNESS = 100
 const MIN_VISIBLE_THICKNESS = 6
 const MORPH_DURATION_MS = 450
+
+const stageLabelDisplayName = {
+  'sequence active': 'Sequence Progress',
+  sequence_active: 'Sequence Progress',
+}
 
 export function StackedFunnelFlowChart({
   activeSegmentKey = ALL_SEGMENTS_KEY,
@@ -55,7 +60,7 @@ export function StackedFunnelFlowChart({
           stages={activeModel.stages}
         />
 
-        <div className="relative mt-control">
+        <div className="relative mt-tag">
           <FunnelTooltip point={hoverPoint} />
           <FunnelSvg
             layers={animatedLayers}
@@ -66,7 +71,6 @@ export function StackedFunnelFlowChart({
           />
         </div>
 
-        <ConversionStrip stages={activeModel.stages} />
       </div>
     </div>
   )
@@ -76,7 +80,7 @@ export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
   const options = createFunnelSegmentOptions(series)
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1 rounded-island bg-fill-secondary p-1">
       {options.map((option) => {
         const active = option.id === activeSegmentKey
 
@@ -84,7 +88,7 @@ export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
           <Button
             className={`h-8 rounded-control px-3 text-label transition-colors duration-motion-fast ${
               active
-                ? 'bg-control-selected text-text-primary hover:bg-control-selected'
+                ? 'bg-block text-text-primary shadow-block hover:bg-block'
                 : 'bg-transparent text-text-secondary hover:bg-control-hover hover:text-text-primary'
             }`}
             key={option.id}
@@ -173,7 +177,7 @@ function FunnelSvg({
   return (
     <svg
       aria-label="Reactivation lifecycle funnel by segment"
-      className="h-[240px] w-full overflow-visible"
+      className="h-[210px] w-full overflow-visible"
       preserveAspectRatio="none"
       role="img"
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
@@ -191,8 +195,8 @@ function FunnelSvg({
           strokeWidth="1"
           x1={stage.x}
           x2={stage.x}
-          y1="64"
-          y2="196"
+          y1="54"
+          y2="176"
         />
       ))}
 
@@ -261,29 +265,6 @@ function FunnelSvg({
         )
       }))}
     </svg>
-  )
-}
-
-function ConversionStrip({ stages }) {
-  if (stages.length < 2) {
-    return null
-  }
-
-  return (
-    <div
-      className="mt-item grid gap-tag text-center text-label font-normal text-text-muted"
-      style={{ gridTemplateColumns: `repeat(${stages.length - 1}, minmax(120px, 1fr))` }}
-    >
-      {stages.slice(1).map((stage, index) => {
-        const previous = stages[index]
-        const percent = previous?.count > 0 ? (stage.count / previous.count) * 100 : 0
-        return (
-          <div className="rounded-control bg-fill-secondary px-control py-tag" key={`${previous.id}-${stage.id}`}>
-            {stage.label}: {formatPercentValue(percent)}
-          </div>
-        )
-      })}
-    </div>
   )
 }
 
@@ -414,10 +395,17 @@ function normalizeStages(stages) {
   return stages.map((stage, index) => ({
     count: toNumber(stage.stage_count),
     id: String(stage.stage_id ?? stage.id ?? stage.stage_name ?? `stage-${index}`),
-    label: String(stage.stage_name ?? stage.name ?? `Stage ${index + 1}`),
+    label: formatStageLabel(stage.stage_name ?? stage.name ?? `Stage ${index + 1}`),
     source: stage,
     x: CHART_X_START + (sectionWidth * index),
   }))
+}
+
+function formatStageLabel(value) {
+  const label = String(value)
+  const normalized = label.trim().toLowerCase().replaceAll(' ', '_')
+
+  return stageLabelDisplayName[normalized] ?? stageLabelDisplayName[label.trim().toLowerCase()] ?? label
 }
 
 function normalizeSeries({ series, stages }) {

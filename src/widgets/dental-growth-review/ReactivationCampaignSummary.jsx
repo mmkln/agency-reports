@@ -214,26 +214,20 @@ function buildActivityCards({ cards, funnelChart }) {
 function ActivityCard({ card }) {
   const tone = getCardTone(card)
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
-  const labelClass = reactivationText.metricLabel
   const valueClass = classes.value ?? reactivationText.metricValue
   const captionClass = reactivationText.metricCaption
 
   return (
-    <article className={`flex min-h-[150px] flex-col justify-between rounded-block p-5 shadow-block ${classes.surface}`}>
-      <div className="flex items-start justify-between gap-4">
-        <span className={`inline-flex size-12 shrink-0 items-center justify-center rounded-[14px] ${classes.icon}`}>
-          <Icon name={getCardIconName(card)} size={19} />
-        </span>
-        <p className={`pt-0.5 ${labelClass}`}>
-          {getCardTitle(card)}
-        </p>
-      </div>
+    <article className={`flex min-h-[76px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
+      <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
+        <Icon name={getCardIconName(card)} size={15} />
+      </span>
 
-      <div>
+      <div className="min-w-0">
         <p className={valueClass}>
           {formatCardValue(card)}
         </p>
-        <p className={`mt-2 ${captionClass}`}>
+        <p className={`mt-tag truncate ${captionClass}`} title={`${getCardTitle(card)}: ${formatCardCaption(card)}`}>
           {formatCardCaption(card)}
         </p>
       </div>
