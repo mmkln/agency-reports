@@ -12,11 +12,11 @@ import {
 import { reactivationText } from './reactivationTypography'
 
 const CHART_WIDTH = 1000
-const CHART_HEIGHT = 210
+const CHART_HEIGHT = 320
 const CHART_X_START = 50
 const CHART_X_END = 950
-const CHART_CENTER_Y = 112
-const MAX_STACK_THICKNESS = 100
+const CHART_CENTER_Y = 168
+const MAX_STACK_THICKNESS = 190
 const MIN_VISIBLE_THICKNESS = 6
 const MORPH_DURATION_MS = 450
 
@@ -177,7 +177,7 @@ function FunnelSvg({
   return (
     <svg
       aria-label="Reactivation lifecycle funnel by segment"
-      className="h-[210px] w-full overflow-visible"
+      className="h-[320px] w-full overflow-visible"
       preserveAspectRatio="none"
       role="img"
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
@@ -196,7 +196,7 @@ function FunnelSvg({
           x1={stage.x}
           x2={stage.x}
           y1="54"
-          y2="176"
+          y2="282"
         />
       ))}
 
@@ -376,7 +376,12 @@ function buildActiveFunnelModel({ activeSegmentKey, model }) {
     }
   })
   const layers = buildStackedLayers({
-    baseMax: model.baseMax,
+    baseMax: getActiveBaseMax({
+      activeSegmentKey,
+      activeSeries,
+      fallbackBaseMax: model.baseMax,
+      stages,
+    }),
     series: activeSeries,
     stages,
   })
@@ -385,6 +390,23 @@ function buildActiveFunnelModel({ activeSegmentKey, model }) {
     layers,
     stages,
   }
+}
+
+function getActiveBaseMax({
+  activeSegmentKey,
+  activeSeries,
+  fallbackBaseMax,
+  stages,
+}) {
+  if (activeSegmentKey === ALL_SEGMENTS_KEY) {
+    return fallbackBaseMax
+  }
+
+  const activeMax = Math.max(...stages.map((_, stageIndex) => (
+    sumSeriesAtStage(activeSeries.filter((track) => track.active), stageIndex)
+  )), 1)
+
+  return activeMax
 }
 
 function normalizeStages(stages) {
