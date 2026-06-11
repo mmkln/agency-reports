@@ -1,4 +1,7 @@
-import { useGrowthReviewReadModel } from '../../../features/growth-review-data'
+import {
+  useGrowthReviewReadModel,
+  useGrowthReviewRefresh,
+} from '../../../features/growth-review-data'
 import { PageShell } from '@/shared/ui'
 import {
   DentalGrowthReviewDashboard,
@@ -9,6 +12,11 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
   const growthReview = useGrowthReviewReadModel({
     routeParams,
     runtime,
+  })
+  const refresh = useGrowthReviewRefresh({
+    apiClient: runtime.apiClient,
+    onCompleted: growthReview.reload,
+    workspaceId: growthReview.workspaceId,
   })
   const page = growthReview.page
 
@@ -26,6 +34,7 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
         funnelEmptyAction={funnelEmptyAction}
         onRetry={growthReview.reload}
         page={page}
+        refresh={refresh}
       />
     </PageShell>
   )

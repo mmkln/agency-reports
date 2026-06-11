@@ -1,4 +1,10 @@
 import { Icon } from '@/shared/icons'
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui'
 
 import { reactivationText } from './reactivationTypography'
 
@@ -80,6 +86,23 @@ const cardToneByKey = {
 const DURATION_CARD_KEY = 'duration'
 const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
 
+const refreshStatusLabel = {
+  completed: 'Updated',
+  failed: 'Failed',
+  idle: 'Ready',
+  pending: 'Waiting',
+  running: 'Updating',
+  skipped: 'Skipped',
+}
+
+const refreshStatusClass = {
+  completed: 'text-success',
+  failed: 'text-destructive',
+  pending: 'text-text-quaternary',
+  running: 'text-premium-blue',
+  skipped: 'text-text-muted',
+}
+
 function formatUpdatedAt(value) {
   if (!value) {
     return 'Data update pending'
@@ -97,6 +120,18 @@ function formatUpdatedAt(value) {
     month: 'short',
     year: 'numeric',
   })}`
+}
+
+function getRefreshButtonLabel(refresh) {
+  if (refresh?.isRefreshing) {
+    return 'Updating'
+  }
+
+  if (refresh?.status === 'failed') {
+    return 'Retry'
+  }
+
+  return 'Refresh'
 }
 
 function formatCardValue(card) {
@@ -235,7 +270,80 @@ function ActivityCard({ card }) {
   )
 }
 
-export function ReactivationCampaignSummary({ chart, funnelChart, updatedAt }) {
+function RefreshStepStatus({ step }) {
+  const status = step.status || 'pending'
+  const label = refreshStatusLabel[status] ?? status
+  const toneClass = refreshStatusClass[status] ?? 'text-text-muted'
+
+  return (
+    <li className="flex items-center justify-between gap-component">
+      <span className="min-w-0 truncate text-label font-medium text-text-secondary">
+        {step.label}
+      </span>
+      <span className={`shrink-0 text-label font-semibold ${toneClass}`}>
+        {label}
+      </span>
+    </li>
+  )
+}
+
+function RefreshStatusPopover({ refresh }) {
+  const steps = refresh?.refreshRun?.steps ?? []
+  const hasSteps = steps.length > 0
+  const isRefreshing = refresh?.isRefreshing
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          className="h-8 rounded-control px-3 text-label"
+          onClick={refresh?.startRefresh}
+          size="sm"
+          type="button"
+          variant="secondary"
+        >
+          <Icon name={isRefreshing ? 'clock' : 'zap'} size={14} />
+          {getRefreshButtonLabel(refresh)}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <div>
+          <p className="text-ui font-semibold text-text-primary">
+            {isRefreshing ? 'Updating Growth Review' : 'Data refresh'}
+          </p>
+          <p className="mt-tag text-label font-normal text-text-muted">
+            Source data sync and dashboard calculation run on the backend.
+          </p>
+        </div>
+
+        {hasSteps ? (
+          <ul className="mt-component grid gap-control">
+            {steps.map((step) => (
+              <RefreshStepStatus key={step.key || step.id} step={step} />
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-component rounded-control bg-fill-secondary px-control py-item text-label text-text-muted">
+            No refresh has been run in this session.
+          </p>
+        )}
+
+        {refresh?.error ? (
+          <p className="mt-control rounded-control bg-destructive/10 px-control py-item text-label font-medium text-destructive">
+            {refresh.error}
+          </p>
+        ) : null}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function ReactivationCampaignSummary({
+  chart,
+  funnelChart,
+  refresh,
+  updatedAt,
+}) {
   if (!chart?.available) {
     return null
   }
@@ -249,8 +357,9 @@ export function ReactivationCampaignSummary({ chart, funnelChart, updatedAt }) {
     <div className="grid gap-component">
       {cards.length ? (
         <section className="grid gap-control">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-control">
             <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
+            {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
           </div>
           <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
             {cards.map((card) => (
