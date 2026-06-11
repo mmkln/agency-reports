@@ -28,7 +28,7 @@ export function StackedFunnelFlowChart({
   showCohortPercent = false,
   stages = [],
 }) {
-  const [hoverLabel, setHoverLabel] = useState('')
+  const [hoverPoint, setHoverPoint] = useState(null)
   const baseModel = useMemo(() => buildStackedFunnelModel({ series, stages }), [series, stages])
   const resolvedActiveSegmentKey = activeSegmentKey === ALL_SEGMENTS_KEY
     || baseModel.series.some((track) => track.id === activeSegmentKey)
@@ -56,10 +56,10 @@ export function StackedFunnelFlowChart({
         />
 
         <div className="relative mt-control">
-          <HoverStatus label={hoverLabel} />
+          <FunnelTooltip point={hoverPoint} />
           <FunnelSvg
             layers={animatedLayers}
-            onHover={setHoverLabel}
+            onHover={setHoverPoint}
             onOpenStageDetails={onOpenStageDetails}
             onSelectSegment={onSegmentChange}
             stages={activeModel.stages}
@@ -136,11 +136,30 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
   )
 }
 
-function HoverStatus({ label }) {
+function FunnelTooltip({ point }) {
+  if (!point) {
+    return (
+      <p className={`pointer-events-none absolute left-0 right-0 top-0 z-10 text-center ${reactivationText.chartHelper}`}>
+        Hover a stream segment to inspect stage data.
+      </p>
+    )
+  }
+
   return (
-    <p className={`absolute left-0 right-0 top-0 z-10 text-center ${reactivationText.chartHelper}`}>
-      {label || 'Hover a colored stream to inspect its segment.'}
-    </p>
+    <div className="pointer-events-none absolute left-1/2 top-0 z-10 min-w-[260px] -translate-x-1/2 rounded-island bg-premium-shark px-4 py-3 text-label text-text-on-dark shadow-premium">
+      <div>
+        <p className="font-semibold text-white">{point.title}</p>
+        <p className="mt-tag font-normal text-white/65">{point.subtitle}</p>
+      </div>
+      <div className="mt-2 grid gap-1.5">
+        {point.rows.map((row) => (
+          <div className="flex items-center justify-between gap-6" key={row.label}>
+            <span className="text-white/65">{row.label}</span>
+            <span className="font-semibold text-white">{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -177,13 +196,15 @@ function FunnelSvg({
         />
       ))}
 
-      {stages.map((stage) => (
+      {stages.map((stage, stageIndex) => (
         <rect
           aria-label={`View ${stage.label} details`}
           className="cursor-pointer fill-transparent"
           height={CHART_HEIGHT}
           key={`stacked-funnel-hit-${stage.id}`}
           onClick={() => onOpenStageDetails?.(stage.source)}
+          onMouseEnter={() => onHover(createStageTooltip({ stage, stageIndex, stages }))}
+          onMouseLeave={() => onHover(null)}
           width={CHART_WIDTH / Math.max(stages.length, 1)}
           x={stage.x - ((CHART_WIDTH / Math.max(stages.length, 1)) / 2)}
           y="0"
@@ -206,14 +227,39 @@ function FunnelSvg({
             filter={hasValue ? 'url(#funnelShadow)' : undefined}
             key={layer.id}
             onClick={() => onSelectSegment?.(layer.id)}
-            onMouseEnter={() => onHover(`${layer.label}: ${layer.points[0]?.value ?? 0} at campaign entry`)}
-            onMouseLeave={() => onHover('')}
+            onMouseEnter={() => onHover(createSegmentTooltip({ layer }))}
+            onMouseLeave={() => onHover(null)}
             opacity={hasValue ? 0.82 : 0}
           >
             <title>{layer.label}</title>
           </path>
         )
       })}
+
+      {layers.flatMap((layer) => layer.points.map((point, stageIndex) => {
+        if (point.value <= 0) {
+          return null
+        }
+
+        return (
+          <circle
+            aria-label={`${layer.label} at ${stages[stageIndex]?.label}`}
+            className="cursor-pointer fill-transparent"
+            cx={point.x}
+            cy={(point.top + point.bottom) / 2}
+            key={`funnel-point-${layer.id}-${stages[stageIndex]?.id}`}
+            onClick={() => onSelectSegment?.(layer.id)}
+            onMouseEnter={() => onHover(createLayerStageTooltip({
+              layer,
+              point,
+              stage: stages[stageIndex],
+              stageIndex,
+            }))}
+            onMouseLeave={() => onHover(null)}
+            r="34"
+          />
+        )
+      }))}
     </svg>
   )
 }
@@ -239,6 +285,79 @@ function ConversionStrip({ stages }) {
       })}
     </div>
   )
+}
+
+function createStageTooltip({ stage, stageIndex, stages }) {
+  const cohort = stages[0]?.count ?? 0
+  const previous = stages[stageIndex - 1]?.count ?? 0
+
+  return {
+    rows: [
+      {
+        label: 'Contacts',
+        value: formatInteger(stage.count),
+      },
+      {
+        label: 'Of cohort',
+        value: cohort > 0 ? formatPercentValue((stage.count / cohort) * 100) : '0%',
+      },
+      {
+        label: 'From previous',
+        value: stageIndex === 0 ? '100%' : previous > 0 ? formatPercentValue((stage.count / previous) * 100) : '0%',
+      },
+    ],
+    subtitle: 'All tracks',
+    title: stage.label,
+  }
+}
+
+function createLayerStageTooltip({ layer, point, stage, stageIndex }) {
+  const cohort = layer.points[0]?.value ?? 0
+  const previous = layer.points[stageIndex - 1]?.value ?? 0
+
+  return {
+    rows: [
+      {
+        label: 'Contacts',
+        value: formatInteger(point.value),
+      },
+      {
+        label: 'Of segment cohort',
+        value: cohort > 0 ? formatPercentValue((point.value / cohort) * 100) : '0%',
+      },
+      {
+        label: 'From previous',
+        value: stageIndex === 0 ? '100%' : previous > 0 ? formatPercentValue((point.value / previous) * 100) : '0%',
+      },
+    ],
+    subtitle: layer.label,
+    title: stage?.label ?? 'Lifecycle stage',
+  }
+}
+
+function createSegmentTooltip({ layer }) {
+  const first = layer.points[0]
+  const last = layer.points[layer.points.length - 1]
+  const peak = Math.max(0, ...layer.points.map((point) => point.value))
+
+  return {
+    rows: [
+      {
+        label: 'Campaign entry',
+        value: formatInteger(first?.value ?? 0),
+      },
+      {
+        label: 'Peak stage',
+        value: formatInteger(peak),
+      },
+      {
+        label: 'Final stage',
+        value: formatInteger(last?.value ?? 0),
+      },
+    ],
+    subtitle: 'Segment lifecycle',
+    title: layer.label,
+  }
 }
 
 function buildStackedFunnelModel({ series, stages }) {
@@ -470,6 +589,12 @@ function formatPercent(stageCount, cohortCount) {
 
 function formatPercentValue(value) {
   return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
+}
+
+function formatInteger(value) {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0)
 }
 
 function buildLayerPath(points) {
