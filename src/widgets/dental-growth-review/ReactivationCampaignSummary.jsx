@@ -1,5 +1,7 @@
 import { Icon } from '@/shared/icons'
 
+import { reactivationText } from './reactivationTypography'
+
 const cardToneClass = {
   amber: {
     icon: 'bg-warning-muted text-warning-foreground',
@@ -11,7 +13,8 @@ const cardToneClass = {
   },
   green: {
     icon: 'bg-success-muted text-success',
-    surface: 'bg-success text-success-foreground',
+    surface: 'bg-block text-text-primary',
+    value: reactivationText.metricValuePositive,
   },
   neutral: {
     icon: 'bg-fill-secondary text-text-muted',
@@ -211,7 +214,9 @@ function buildActivityCards({ cards, funnelChart }) {
 function ActivityCard({ card }) {
   const tone = getCardTone(card)
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
-  const isEmphasized = tone === 'green'
+  const labelClass = reactivationText.metricLabel
+  const valueClass = classes.value ?? reactivationText.metricValue
+  const captionClass = reactivationText.metricCaption
 
   return (
     <article className={`flex min-h-[150px] flex-col justify-between rounded-block p-5 shadow-block ${classes.surface}`}>
@@ -219,16 +224,16 @@ function ActivityCard({ card }) {
         <span className={`inline-flex size-12 shrink-0 items-center justify-center rounded-[14px] ${classes.icon}`}>
           <Icon name={getCardIconName(card)} size={19} />
         </span>
-        <p className={`pt-0.5 text-label font-semibold uppercase leading-5 tracking-normal ${isEmphasized ? 'text-white/75' : 'text-text-muted'}`}>
+        <p className={`pt-0.5 ${labelClass}`}>
           {getCardTitle(card)}
         </p>
       </div>
 
       <div>
-        <p className={`text-[32px] font-bold leading-none tabular-nums tracking-tight ${isEmphasized ? 'text-white' : 'text-text-primary'}`}>
+        <p className={valueClass}>
           {formatCardValue(card)}
         </p>
-        <p className={`mt-2 text-ui leading-5 ${isEmphasized ? 'text-white/80' : 'text-text-secondary'}`}>
+        <p className={`mt-2 ${captionClass}`}>
           {formatCardCaption(card)}
         </p>
       </div>
@@ -251,7 +256,7 @@ export function ReactivationCampaignSummary({ chart, funnelChart, updatedAt }) {
       {cards.length ? (
         <section className="grid gap-control">
           <div className="flex justify-end">
-            <p className="text-label text-text-muted">{formatUpdatedAt(updatedAt)}</p>
+            <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
           </div>
           <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
             {cards.map((card) => (

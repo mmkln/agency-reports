@@ -10,13 +10,16 @@ import {
 } from 'recharts'
 
 import { semanticColors } from '@/shared/theme'
-import { Panel, PanelBody } from '@/shared/ui'
+
+import { ReactivationChartPanel } from './ReactivationChartPanel'
+import { reactivationColors } from './reactivationChartTheme'
+import { reactivationText } from './reactivationTypography'
 
 const referenceColors = {
-  booking: '#22c55e',
-  bookingDark: '#10b981',
-  email: '#a78bfa',
-  sms: '#6366f1',
+  booking: reactivationColors.booking,
+  bookingDark: reactivationColors.bookingDark,
+  email: reactivationColors.email,
+  sms: reactivationColors.sms,
 }
 
 const touchSeries = [
@@ -122,7 +125,7 @@ function TooltipContent({ active, label, payload }) {
 
 function LegendItem({ color, label, line = false }) {
   return (
-    <span className="inline-flex items-center gap-2 whitespace-nowrap text-label text-text-secondary">
+    <span className={`inline-flex items-center gap-2 whitespace-nowrap ${reactivationText.chartLegend}`}>
       {line ? (
         <span className="relative inline-flex h-2 w-5 items-center">
           <span className="h-0.5 w-full rounded-full" style={{ backgroundColor: color }} />
@@ -146,27 +149,21 @@ export function ReactivationActivityChart({ chart }) {
   const rightAxisMax = getRightAxisMax(series)
   const xTickInterval = getXAxisTickInterval(series.length)
 
-  return (
-    <Panel>
-      <PanelBody className="p-6">
-        <div className="flex flex-col gap-4 border-b border-separator pb-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="text-ui font-semibold text-text-primary">
-              {chart.label || 'Reactivation Activity'}
-            </h3>
-            <p className="mt-1 max-w-2xl text-label font-medium text-text-muted">
-              Daily communication volume and cumulative booking growth.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3 sm:justify-end">
-            {touchSeries.map((item) => (
-              <LegendItem color={item.color} key={item.key} label={item.label} />
-            ))}
-            <LegendItem color={bookingLine.color} label={bookingLine.label} line />
-          </div>
-        </div>
+  const legend = (
+    <>
+      {touchSeries.map((item) => (
+        <LegendItem color={item.color} key={item.key} label={item.label} />
+      ))}
+      <LegendItem color={bookingLine.color} label={bookingLine.label} line />
+    </>
+  )
 
-        <div aria-label="Reactivation touches and cumulative bookings" className="mt-6 h-[360px]" role="img">
+  return (
+    <ReactivationChartPanel
+      rightSlot={legend}
+      title={chart.label || 'Reactivation Activity'}
+    >
+        <div aria-label="Reactivation touches and cumulative bookings" className="h-[360px]" role="img">
           <ResponsiveContainer height="100%" width="100%">
             <ComposedChart
               barCategoryGap="22%"
@@ -270,7 +267,6 @@ export function ReactivationActivityChart({ chart }) {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-      </PanelBody>
-    </Panel>
+    </ReactivationChartPanel>
   )
 }

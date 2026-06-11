@@ -1,34 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { chartColorSequence } from '@/shared/theme/chartColors'
 import { Button } from '@/shared/ui'
 
-const TRACK_COLORS = {
-  A: '#a5b4fc',
-  B: '#38bdf8',
-  C: '#c084fc',
-  R: '#cbd5e1',
-  unknown: 'var(--text-quaternary)',
-}
+import {
+  ALL_SEGMENTS_KEY,
+  createFunnelSegmentOptions,
+  getTrackColor,
+  getTrackKey,
+  getTrackLabel,
+} from './reactivationFunnelSegments'
+import { reactivationText } from './reactivationTypography'
 
 const CHART_WIDTH = 1000
-const CHART_HEIGHT = 320
+const CHART_HEIGHT = 240
 const CHART_X_START = 50
 const CHART_X_END = 950
-const CHART_CENTER_Y = 166
-const MAX_STACK_THICKNESS = 150
+const CHART_CENTER_Y = 128
+const MAX_STACK_THICKNESS = 112
 const MIN_VISIBLE_THICKNESS = 6
 const MORPH_DURATION_MS = 450
 
-const ALL_SEGMENTS_KEY = 'all'
-
 export function StackedFunnelFlowChart({
+  activeSegmentKey = ALL_SEGMENTS_KEY,
   onOpenStageDetails,
+  onSegmentChange,
   series = [],
   showCohortPercent = false,
   stages = [],
 }) {
-  const [activeSegmentKey, setActiveSegmentKey] = useState(ALL_SEGMENTS_KEY)
   const [hoverLabel, setHoverLabel] = useState('')
   const baseModel = useMemo(() => buildStackedFunnelModel({ series, stages }), [series, stages])
   const resolvedActiveSegmentKey = activeSegmentKey === ALL_SEGMENTS_KEY
@@ -48,57 +47,36 @@ export function StackedFunnelFlowChart({
   }
 
   return (
-    <div className="grid gap-component">
-      {baseModel.series.length > 1 ? (
-        <SegmentSwitcher
-          activeSegmentKey={resolvedActiveSegmentKey}
-          onChange={setActiveSegmentKey}
-          series={baseModel.series}
+    <div className="min-w-0 overflow-x-auto">
+      <div className="min-w-[760px]">
+        <FunnelStageHeader
+          onOpenStageDetails={onOpenStageDetails}
+          showCohortPercent={showCohortPercent}
+          stages={activeModel.stages}
         />
-      ) : null}
 
-      <div className="min-w-0 overflow-x-auto rounded-block bg-block-subtle p-component">
-        <div className="min-w-[760px]">
-          <FunnelStageHeader
+        <div className="relative mt-control">
+          <HoverStatus label={hoverLabel} />
+          <FunnelSvg
+            layers={animatedLayers}
+            onHover={setHoverLabel}
             onOpenStageDetails={onOpenStageDetails}
-            showCohortPercent={showCohortPercent}
+            onSelectSegment={onSegmentChange}
             stages={activeModel.stages}
           />
-
-          <div className="relative mt-component">
-            <HoverStatus label={hoverLabel} />
-            <FunnelSvg
-              layers={animatedLayers}
-              onHover={setHoverLabel}
-              onOpenStageDetails={onOpenStageDetails}
-              onSelectSegment={setActiveSegmentKey}
-              stages={activeModel.stages}
-            />
-          </div>
-
-          <ConversionStrip stages={activeModel.stages} />
         </div>
+
+        <ConversionStrip stages={activeModel.stages} />
       </div>
     </div>
   )
 }
 
-function SegmentSwitcher({ activeSegmentKey, onChange, series }) {
-  const options = [
-    {
-      color: 'var(--premium-indigo)',
-      id: ALL_SEGMENTS_KEY,
-      label: 'All',
-    },
-    ...series.map((track) => ({
-      color: track.color,
-      id: track.id,
-      label: track.label,
-    })),
-  ]
+export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
+  const options = createFunnelSegmentOptions(series)
 
   return (
-    <div className="flex flex-wrap gap-1.5 rounded-island bg-block-subtle p-1.5">
+    <div className="flex flex-wrap gap-1.5">
       {options.map((option) => {
         const active = option.id === activeSegmentKey
 
@@ -106,11 +84,11 @@ function SegmentSwitcher({ activeSegmentKey, onChange, series }) {
           <Button
             className={`h-8 rounded-control px-3 text-label transition-colors duration-motion-fast ${
               active
-                ? 'bg-premium-indigo text-white hover:bg-premium-indigo'
+                ? 'bg-control-selected text-text-primary hover:bg-control-selected'
                 : 'bg-transparent text-text-secondary hover:bg-control-hover hover:text-text-primary'
             }`}
             key={option.id}
-            onClick={() => onChange(option.id)}
+            onClick={() => onChange?.(option.id)}
             size="sm"
             type="button"
             variant="ghost"
@@ -145,10 +123,10 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
           onClick={() => onOpenStageDetails?.(stage.source)}
           type="button"
         >
-          <p className="text-label font-semibold uppercase leading-4 text-text-muted">{stage.label}</p>
-          <p className="mt-tag text-data tabular-nums text-text-primary">{stage.count.toLocaleString()}</p>
+          <p className={reactivationText.stageLabel}>{stage.label}</p>
+          <p className={`mt-tag ${reactivationText.stageValue}`}>{stage.count.toLocaleString()}</p>
           {showCohortPercent && cohortCount > 0 ? (
-            <p className="mt-tag text-label font-normal text-text-muted">
+            <p className={`mt-tag ${reactivationText.stageHelper}`}>
               {index === 0 ? '100% cohort' : `${formatPercent(stage.count, cohortCount)} of cohort`}
             </p>
           ) : null}
@@ -160,7 +138,7 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
 
 function HoverStatus({ label }) {
   return (
-    <p className="absolute left-0 right-0 top-0 z-10 text-center text-label font-medium text-text-muted">
+    <p className={`absolute left-0 right-0 top-0 z-10 text-center ${reactivationText.chartHelper}`}>
       {label || 'Hover a colored stream to inspect its segment.'}
     </p>
   )
@@ -176,7 +154,7 @@ function FunnelSvg({
   return (
     <svg
       aria-label="Reactivation lifecycle funnel by segment"
-      className="h-[320px] w-full overflow-visible"
+      className="h-[240px] w-full overflow-visible"
       preserveAspectRatio="none"
       role="img"
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
@@ -194,8 +172,8 @@ function FunnelSvg({
           strokeWidth="1"
           x1={stage.x}
           x2={stage.x}
-          y1="82"
-          y2="244"
+          y1="64"
+          y2="196"
         />
       ))}
 
@@ -227,7 +205,7 @@ function FunnelSvg({
             fill={layer.color}
             filter={hasValue ? 'url(#funnelShadow)' : undefined}
             key={layer.id}
-            onClick={() => onSelectSegment(layer.id)}
+            onClick={() => onSelectSegment?.(layer.id)}
             onMouseEnter={() => onHover(`${layer.label}: ${layer.points[0]?.value ?? 0} at campaign entry`)}
             onMouseLeave={() => onHover('')}
             opacity={hasValue ? 0.82 : 0}
@@ -247,20 +225,14 @@ function ConversionStrip({ stages }) {
 
   return (
     <div
-      className="mt-control grid gap-tag text-center text-label"
+      className="mt-item grid gap-tag text-center text-label font-normal text-text-muted"
       style={{ gridTemplateColumns: `repeat(${stages.length - 1}, minmax(120px, 1fr))` }}
     >
       {stages.slice(1).map((stage, index) => {
         const previous = stages[index]
         const percent = previous?.count > 0 ? (stage.count / previous.count) * 100 : 0
-        const tone = percent >= 50
-          ? 'bg-premium-indigo/10 text-premium-indigo'
-          : percent > 0
-          ? 'bg-warning-muted text-warning-foreground'
-          : 'bg-fill-secondary text-text-muted'
-
         return (
-          <div className={`rounded-control px-control py-tag font-semibold ${tone}`} key={`${previous.id}-${stage.id}`}>
+          <div className="rounded-control bg-fill-secondary px-control py-tag" key={`${previous.id}-${stage.id}`}>
             {stage.label}: {formatPercentValue(percent)}
           </div>
         )
@@ -334,7 +306,7 @@ function normalizeSeries({ series, stages }) {
     const trackKey = getTrackKey(track, index)
 
     return {
-      color: TRACK_COLORS[trackKey] ?? chartColorSequence[index % chartColorSequence.length] ?? TRACK_COLORS.unknown,
+      color: getTrackColor(trackKey, index),
       id: String(track.id ?? track.key ?? `track-${index}`),
       key: trackKey,
       label: getTrackLabel(track, trackKey, index),
@@ -356,7 +328,7 @@ function normalizeSeries({ series, stages }) {
 function createFallbackSeries(stages) {
   return [{
     active: true,
-    color: TRACK_COLORS.A,
+    color: getTrackColor('A', 0),
     id: 'all-records',
     key: 'ALL',
     label: 'All records',
@@ -366,26 +338,6 @@ function createFallbackSeries(stages) {
       stageId: stage.id,
     })),
   }]
-}
-
-function getTrackKey(track, index) {
-  const source = String(track.key ?? track.id ?? track.label ?? `track-${index}`).trim()
-  const compact = source.toUpperCase().replace(/[^A-Z0-9]/g, '')
-  const segmentMatch = compact.match(/([ABCR])$/)
-
-  return segmentMatch?.[1] ?? compact
-}
-
-function getTrackLabel(track, trackKey, index) {
-  const explicitLabel = String(track.label ?? '').trim()
-
-  if (explicitLabel) {
-    return explicitLabel
-  }
-
-  return ['A', 'B', 'C', 'R'].includes(trackKey)
-    ? `Segment ${trackKey}`
-    : `Track ${index + 1}`
 }
 
 function getBaseMax({ series, stages }) {

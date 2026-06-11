@@ -38,7 +38,16 @@ import {
   statusClass,
 } from './format'
 import { createGrowthReviewMetricDetailViewModel } from './metricDetailPresenter'
-import { StackedFunnelFlowChart } from './StackedFunnelFlowChart'
+import { ReactivationChartPanel } from './ReactivationChartPanel'
+import {
+  ALL_SEGMENTS_KEY,
+  createFunnelSegmentOptions,
+} from './reactivationFunnelSegments'
+import { reactivationText } from './reactivationTypography'
+import {
+  FunnelSegmentSwitcher,
+  StackedFunnelFlowChart,
+} from './StackedFunnelFlowChart'
 
 export function DentalGrowthReviewState({ onRetry, page }) {
   if (page.status === 'error') {
@@ -1077,9 +1086,16 @@ function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
 
 export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   const [selectedStage, setSelectedStage] = useState(null)
+  const [activeSegmentKey, setActiveSegmentKey] = useState(ALL_SEGMENTS_KEY)
   const funnelType = funnelChart?.type ?? ''
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
   const trackBreakdowns = funnelChart?.breakdowns?.by_track ?? []
+  const segmentOptions = createFunnelSegmentOptions(trackBreakdowns)
+  const hasSegmentControls = trackBreakdowns.length > 1
+  const resolvedActiveSegmentKey = activeSegmentKey === ALL_SEGMENTS_KEY
+    || segmentOptions.some((option) => option.id === activeSegmentKey)
+    ? activeSegmentKey
+    : ALL_SEGMENTS_KEY
   const rows = isReactivationLifecycle ? funnel
     .filter((stage) => {
       const isVelocityStage = stage.unit === 'days' || String(stage.stage_name ?? '').toLowerCase().includes('funnel velocity')
@@ -1098,18 +1114,21 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
 
   return (
     <>
-      <section className="grid gap-component">
-        <div className="rounded-block bg-block p-component">
-          <div className="pb-component">
-            <div>
-              <h2 className="text-heading text-text-primary">
-                Reactivation Lifecycle
-              </h2>
-            </div>
-          </div>
+      <ReactivationChartPanel
+        rightSlot={hasSegmentControls ? (
+          <FunnelSegmentSwitcher
+            activeSegmentKey={resolvedActiveSegmentKey}
+            onChange={setActiveSegmentKey}
+            series={trackBreakdowns}
+          />
+        ) : null}
+        title="Reactivation Lifecycle"
+      >
           {rows.length ? (
             <StackedFunnelFlowChart
+              activeSegmentKey={resolvedActiveSegmentKey}
               onOpenStageDetails={setSelectedStage}
+              onSegmentChange={setActiveSegmentKey}
               series={trackBreakdowns}
               showCohortPercent
               stages={rows}
@@ -1126,18 +1145,12 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
               }}
             />
           )}
-          {isReactivationLifecycle && funnelChart?.calculation_note ? (
-            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
-              {funnelChart.calculation_note}
-            </p>
-          ) : null}
           {treatmentUnavailable ? (
-            <p className="mt-component rounded-control bg-block-subtle p-control text-label font-normal text-text-muted">
+            <p className={`mt-component rounded-control bg-block-subtle p-control ${reactivationText.stageHelper}`}>
               Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
             </p>
           ) : null}
-        </div>
-      </section>
+      </ReactivationChartPanel>
       <FunnelStageDrilldownModal
         onClose={() => setSelectedStage(null)}
         stage={selectedStage}
