@@ -60,10 +60,10 @@ export function AdminClientWorkspaceHeader({
 
   return (
     <header className="sticky top-0 z-20 border-b border-separator bg-surface">
-      <PageShell className="gap-tag px-app-gutter py-item" width={width}>
+      <PageShell className="gap-control px-app-gutter py-item sm:flex-row sm:flex-wrap sm:items-center" width={width}>
         <PageHeader
           actions={actions}
-          className="gap-micro lg:items-center"
+          className="min-w-0 shrink-0 gap-micro lg:items-center"
           eyebrow={null}
           primaryAction={primaryAction}
           primaryActionContext="workspace"
