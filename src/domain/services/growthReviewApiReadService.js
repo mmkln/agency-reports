@@ -228,6 +228,19 @@ function mapZoneState(preset) {
   }))
 }
 
+function normalizeCampaignMetadata(payload) {
+  const campaign = payload?.campaign && typeof payload.campaign === 'object'
+    ? payload.campaign
+    : {}
+
+  return {
+    activityStartDate: campaign.activity_start_date ?? campaign.activityStartDate ?? '',
+    id: campaign.id ?? '',
+    name: campaign.name ?? campaign.label ?? '',
+    value: campaign.value ?? campaign.campaign_value ?? campaign.campaignValue ?? '',
+  }
+}
+
 export async function getGrowthReviewDashboardPageFromApi({
   apiClient,
   now = new Date(),
@@ -252,6 +265,7 @@ export async function getGrowthReviewDashboardPageFromApi({
 
   return {
     calculationMeta: null,
+    campaign: normalizeCampaignMetadata(payload),
     charts,
     client: {
       id: workspaceId,

@@ -3,6 +3,7 @@ import {
   FunnelView,
 } from './DentalGrowthReviewBlocks'
 import { ReactivationActivityChart } from './ReactivationActivityChart'
+import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
 
 export function DentalGrowthReviewDashboard({ funnelEmptyAction, onRetry, page }) {
   if (page.status === 'error' || !page.period) {
@@ -15,6 +16,14 @@ export function DentalGrowthReviewDashboard({ funnelEmptyAction, onRetry, page }
 
   return (
     <>
+      <ReactivationCampaignSummary
+        campaign={page.campaign}
+        chart={reactivationActivity}
+        funnelChart={funnelChart}
+        period={page.charts?.period ?? page.period}
+        updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
+      />
+
       <ReactivationActivityChart chart={reactivationActivity} />
 
       <FunnelView

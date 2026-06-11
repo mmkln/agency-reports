@@ -31,18 +31,6 @@ const bookingsLine = {
   strokeWidth: 3,
 }
 
-function formatCardValue(card) {
-  if (card.displayValue) {
-    return card.displayValue
-  }
-
-  if (card.unit === 'days') {
-    return `${card.value} days`
-  }
-
-  return card.value
-}
-
 function formatDateLabel(value) {
   if (!value) {
     return ''
@@ -86,20 +74,7 @@ export function ReactivationActivityChart({ chart }) {
   return (
     <Panel>
       <PanelHeader title={chart.label || 'Reactivation Activity'} />
-      <PanelBody className="grid gap-component">
-        {chart.cards?.length ? (
-          <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
-            {chart.cards.map((card) => (
-              <div className="rounded-control bg-fill-quaternary p-control" key={card.key}>
-                <p className="text-label font-medium text-text-muted">{card.label}</p>
-                <p className="mt-1 text-data tabular-nums text-text-primary">
-                  {formatCardValue(card)}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
+      <PanelBody>
         <ComposedStackedBarLineChart
           ariaLabel="Reactivation activity by day"
           bars={activityBars}
