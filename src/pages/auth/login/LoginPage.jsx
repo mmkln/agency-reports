@@ -64,46 +64,47 @@ export function LoginPage({ onAuthChange }) {
 
   return (
     <main className="grid min-h-screen place-items-center bg-background-grouped-tertiary px-app-gutter py-page text-text-primary">
-      <div className="mx-auto w-full max-w-modal-xl">
+      <div className="mx-auto w-full max-w-modal-lg">
         <Card className="w-full overflow-hidden border border-block-border bg-block p-0 py-0">
           <CardContent className="grid gap-0 p-0 lg:min-h-[560px] lg:grid-cols-2">
-            <section className="flex min-w-0 flex-col justify-between gap-panel border-separator bg-surface-raised p-card lg:border-r lg:p-panel">
-              <div className="grid gap-spacious">
+            <section className="flex min-w-0 flex-col justify-between gap-panel border-separator bg-surface-raised p-panel lg:border-r lg:p-page">
+              <div className="grid gap-layout">
                 <BrandLogo href="/" size="sm" variant="static" />
 
-                <div className="max-w-form">
-                  <p className="text-ui font-semibold text-brand">AGENCY PORTAL</p>
+                <div className="max-w-inspector">
+                  <p className="text-ui font-semibold text-brand">CLIENT DASHBOARD</p>
                   <h1 className="mt-component text-display text-text-primary">
-                    Secure access for client growth operations.
+                    <span className="block">Your dashboard</span>
+                    <span className="block">is ready.</span>
                   </h1>
                   <p className="mt-component text-body text-text-secondary">
-                    Review work, reports, requests, resources, and client workspace access from one portal.
+                    Sign in to see the latest results we've shared with you.
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-component">
-                <div className="rounded-block bg-block p-component shadow-block">
+                <div className="w-full max-w-inspector rounded-block bg-block p-card shadow-block">
                   <div className="flex items-center gap-component">
-                    <span className="flex size-target shrink-0 items-center justify-center rounded-control bg-success-muted text-success-foreground">
-                      <Icon name="shieldCheck" size={20} />
+                    <span className="flex size-control-large shrink-0 items-center justify-center rounded-control bg-success-muted text-success-foreground">
+                      <Icon name="shieldCheck" size={22} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-ui font-semibold text-text-primary">Protected workspace</p>
-                      <p className="text-ui text-text-secondary">Role-based agency and client access</p>
+                      <p className="text-ui font-semibold text-text-primary">Private by invite</p>
+                      <p className="text-ui text-text-secondary">Only people with access can view this dashboard.</p>
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
-            <section className="flex items-center p-card lg:p-panel">
+            <section className="flex items-center p-panel lg:p-page">
               <div className="mx-auto w-full max-w-form">
                 <div>
                   <p className="text-ui text-brand">Welcome back</p>
-                  <h2 className="mt-item text-display text-text-primary">Sign in to your account</h2>
+                  <h2 className="mt-item text-display text-text-primary">Sign in</h2>
                   <p className="mt-item text-body text-text-secondary">
-                    Use your username to continue to the portal workspace.
+                    Use your username and password to continue.
                   </p>
                 </div>
 
@@ -154,8 +155,9 @@ export function LoginPage({ onAuthChange }) {
                 <p className="mt-card text-center text-ui text-text-secondary">
                   Have an invitation?{' '}
                   <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
-                    Accept invite
+                    Accept
                   </Link>
+                  {' '}it
                 </p>
               </div>
             </section>
