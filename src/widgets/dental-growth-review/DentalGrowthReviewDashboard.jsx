@@ -4,6 +4,8 @@ import {
 } from './DentalGrowthReviewBlocks'
 import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
+import { ReactivationTrackPerformanceCard } from './ReactivationTrackPerformanceCard'
+import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
 
 export function DentalGrowthReviewDashboard({
   funnelEmptyAction,
@@ -18,6 +20,7 @@ export function DentalGrowthReviewDashboard({
   const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages ?? []
   const reactivationActivity = page.charts?.reactivationActivity ?? null
+  const trackPerformance = buildTrackPerformanceModel(funnelChart)
 
   return (
     <>
@@ -30,7 +33,14 @@ export function DentalGrowthReviewDashboard({
         updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
       />
 
-      <ReactivationActivityChart chart={reactivationActivity} />
+      {trackPerformance ? (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <ReactivationActivityChart chart={reactivationActivity} />
+          <ReactivationTrackPerformanceCard model={trackPerformance} />
+        </div>
+      ) : (
+        <ReactivationActivityChart chart={reactivationActivity} />
+      )}
 
       <FunnelView
         emptyAction={funnelEmptyAction}
