@@ -19,6 +19,12 @@ const CHART_CENTER_Y = 168
 const MAX_STACK_THICKNESS = 190
 const MIN_VISIBLE_THICKNESS = 6
 const MORPH_DURATION_MS = 450
+const VERTICAL_CHART_WIDTH = 540
+const VERTICAL_CHART_HEIGHT = 360
+const VERTICAL_CENTER_X = 190
+const VERTICAL_Y_START = 42
+const VERTICAL_Y_END = 318
+const VERTICAL_LABEL_X = 330
 
 const stageLabelDisplayName = {
   'sequence active': 'Sequence Progress',
@@ -26,6 +32,50 @@ const stageLabelDisplayName = {
 }
 
 export function StackedFunnelFlowChart({
+  activeSegmentKey = ALL_SEGMENTS_KEY,
+  onSegmentChange,
+  series = [],
+  showCohortPercent = false,
+  stages = [],
+}) {
+  const baseModel = useMemo(() => buildStackedFunnelModel({ series, stages }), [series, stages])
+  const resolvedActiveSegmentKey = activeSegmentKey === ALL_SEGMENTS_KEY
+    || baseModel.series.some((track) => track.id === activeSegmentKey)
+    ? activeSegmentKey
+    : ALL_SEGMENTS_KEY
+  const activeModel = useMemo(() => (
+    buildActiveFunnelModel({
+      activeSegmentKey: resolvedActiveSegmentKey,
+      model: baseModel,
+    })
+  ), [resolvedActiveSegmentKey, baseModel])
+  const animatedLayers = useAnimatedLayers(activeModel.layers)
+
+  if (!baseModel.stages.length || !activeModel.layers.length) {
+    return null
+  }
+
+  const handleSegmentSelect = (segmentKey) => {
+    onSegmentChange?.(
+      resolvedActiveSegmentKey === segmentKey ? ALL_SEGMENTS_KEY : segmentKey,
+    )
+  }
+
+  return (
+    <div className="min-w-0 overflow-x-auto">
+      <div className="min-w-[540px]">
+        <VerticalFunnelComparison
+          layers={animatedLayers}
+          onSelectSegment={handleSegmentSelect}
+          showCohortPercent={showCohortPercent}
+          stages={activeModel.stages}
+        />
+      </div>
+    </div>
+  )
+}
+
+export function HorizontalFunnelFlowChart({
   activeSegmentKey = ALL_SEGMENTS_KEY,
   onSegmentChange,
   series = [],
@@ -58,7 +108,7 @@ export function StackedFunnelFlowChart({
 
   return (
     <div className="min-w-0 overflow-x-auto">
-      <div className="min-w-[760px]">
+      <div className="min-w-[620px]">
         <FunnelStageHeader
           showCohortPercent={showCohortPercent}
           stages={activeModel.stages}
@@ -67,13 +117,13 @@ export function StackedFunnelFlowChart({
         <div className="relative mt-tag">
           <FunnelTooltip point={hoverPoint} />
           <FunnelSvg
+            className="h-[260px]"
             layers={animatedLayers}
             onHover={setHoverPoint}
             onSelectSegment={handleSegmentSelect}
             stages={activeModel.stages}
           />
         </div>
-
       </div>
     </div>
   )
@@ -165,6 +215,7 @@ function FunnelTooltip({ point }) {
 }
 
 function FunnelSvg({
+  className = 'h-[320px]',
   layers,
   onHover,
   onSelectSegment,
@@ -173,7 +224,7 @@ function FunnelSvg({
   return (
     <svg
       aria-label="Reactivation lifecycle funnel by segment"
-      className="h-[320px] w-full overflow-visible"
+      className={`${className} w-full overflow-visible`}
       preserveAspectRatio="none"
       role="img"
       viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
@@ -260,6 +311,127 @@ function FunnelSvg({
         )
       }))}
     </svg>
+  )
+}
+
+function VerticalFunnelComparison({
+  layers,
+  onSelectSegment,
+  showCohortPercent,
+  stages,
+}) {
+  const [hoverPoint, setHoverPoint] = useState(null)
+  const cohortCount = stages[0]?.count ?? 0
+  const verticalStages = stages.map((stage) => ({
+    ...stage,
+    y: mapStageXToVerticalY(stage.x),
+  }))
+
+  return (
+    <div>
+      <div className="relative">
+        <FunnelTooltip point={hoverPoint} />
+        <svg
+          aria-label="Compact vertical reactivation lifecycle funnel"
+          className="h-[300px] w-full overflow-visible"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          viewBox={`0 0 ${VERTICAL_CHART_WIDTH} ${VERTICAL_CHART_HEIGHT}`}
+        >
+        <defs>
+          <filter height="120%" id="verticalFunnelShadow" width="120%" x="-10%" y="-10%">
+            <feDropShadow dx="0" dy="4" floodColor="var(--premium-shark)" floodOpacity="0.07" stdDeviation="5" />
+          </filter>
+        </defs>
+
+        {verticalStages.map((stage) => (
+          <line
+            key={`vertical-funnel-grid-${stage.id}`}
+            stroke="var(--separator)"
+            strokeWidth="1"
+            x1="46"
+            x2="302"
+            y1={stage.y}
+            y2={stage.y}
+          />
+        ))}
+
+        {verticalStages.map((stage, stageIndex) => (
+          <rect
+            aria-hidden="true"
+            className="fill-transparent"
+            height="52"
+            key={`vertical-funnel-hit-${stage.id}`}
+            onMouseEnter={() => setHoverPoint(createStageTooltip({ stage, stageIndex, stages }))}
+            onMouseLeave={() => setHoverPoint(null)}
+            width={VERTICAL_CHART_WIDTH}
+            x="0"
+            y={stage.y - 26}
+          />
+        ))}
+
+        {layers.map((layer) => {
+          const verticalPoints = layer.points.map(toVerticalPoint)
+          const path = buildVerticalLayerPath(verticalPoints)
+          const hasValue = layer.points.some((point) => point.value > 0)
+
+          if (!path) {
+            return null
+          }
+
+          return (
+            <path
+              className="cursor-pointer transition-[filter,opacity] duration-motion-fast hover:brightness-95"
+              d={path}
+              fill={layer.color}
+              filter={hasValue ? 'url(#verticalFunnelShadow)' : undefined}
+              key={`vertical-${layer.id}`}
+              onClick={() => onSelectSegment?.(layer.id)}
+              onMouseEnter={() => setHoverPoint(createSegmentTooltip({ layer }))}
+              onMouseLeave={() => setHoverPoint(null)}
+              opacity={hasValue ? 0.82 : 0}
+            >
+              <title>{layer.label}</title>
+            </path>
+          )
+        })}
+
+        {verticalStages.map((stage, stageIndex) => (
+          <g key={`vertical-funnel-stage-${stage.id}`} pointerEvents="none">
+            <text
+              fill="var(--text-secondary)"
+              fontSize="13"
+              fontWeight="500"
+              x={VERTICAL_LABEL_X}
+              y={stage.y - 10}
+            >
+              {stage.label}
+            </text>
+            <text
+              fill="var(--text-primary)"
+              fontSize="22"
+              fontWeight="650"
+              x={VERTICAL_LABEL_X}
+              y={stage.y + 15}
+            >
+              {stage.count.toLocaleString()}
+            </text>
+            {showCohortPercent && cohortCount > 0 ? (
+              <text
+                fill="var(--text-muted)"
+                fontSize="12"
+                fontWeight="500"
+                x={VERTICAL_LABEL_X + 68}
+                y={stage.y + 15}
+              >
+                {stageIndex === 0 ? '100% cohort' : `${formatPercent(stage.count, cohortCount)} of cohort`}
+              </text>
+            ) : null}
+          </g>
+        ))}
+        </svg>
+      </div>
+    </div>
   )
 }
 
@@ -618,6 +790,22 @@ function buildLayerPath(points) {
   return `${topPath} ${bottomPath} Z`
 }
 
+function buildVerticalLayerPath(points) {
+  if (!points.length) {
+    return ''
+  }
+
+  const leftPath = buildVerticalCurvePath(points, (point) => point.left)
+  const reversed = [...points].reverse()
+  const last = points[points.length - 1]
+  const rightPath = buildVerticalCurvePath(
+    reversed,
+    (point) => point.right,
+  ).replace(/^M\s+[\d.-]+\s+[\d.-]+/, `L ${last.right} ${last.y}`)
+
+  return `${leftPath} ${rightPath} Z`
+}
+
 function buildCurvePath(points, getY) {
   if (!points.length) {
     return ''
@@ -646,6 +834,51 @@ function buildCurvePath(points, getY) {
   }
 
   return path
+}
+
+function buildVerticalCurvePath(points, getX) {
+  if (!points.length) {
+    return ''
+  }
+
+  if (points.length === 1) {
+    const point = points[0]
+    const x = getX(point)
+
+    return `M ${x} ${point.y - 40} L ${x} ${point.y + 40}`
+  }
+
+  const first = points[0]
+  let path = `M ${getX(first)} ${first.y}`
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1]
+    const current = points[index]
+    const previousX = getX(previous)
+    const currentX = getX(current)
+    const segmentControl = (current.y - previous.y) * 0.5
+    const controlOneY = previous.y + segmentControl
+    const controlTwoY = current.y - segmentControl
+
+    path += ` C ${previousX} ${controlOneY}, ${currentX} ${controlTwoY}, ${currentX} ${current.y}`
+  }
+
+  return path
+}
+
+function toVerticalPoint(point) {
+  return {
+    ...point,
+    left: VERTICAL_CENTER_X + (point.top - CHART_CENTER_Y),
+    right: VERTICAL_CENTER_X + (point.bottom - CHART_CENTER_Y),
+    y: mapStageXToVerticalY(point.x),
+  }
+}
+
+function mapStageXToVerticalY(x) {
+  const progress = (x - CHART_X_START) / Math.max(CHART_X_END - CHART_X_START, 1)
+
+  return VERTICAL_Y_START + (Math.min(Math.max(progress, 0), 1) * (VERTICAL_Y_END - VERTICAL_Y_START))
 }
 
 function sumSeriesAtStage(series, stageIndex) {

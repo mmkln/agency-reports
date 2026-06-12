@@ -43,7 +43,7 @@ export function ReactivationTrackPerformanceCard({ funnelChart, model: providedM
     <Panel className="h-full">
       <PanelBody className="flex h-full flex-col p-6">
         <div>
-          <h3 className={reactivationText.sectionTitle}>Performance by Track</h3>
+          <h3 className={reactivationText.sectionTitle}>Bookings by Track</h3>
           <p className={`mt-1 ${reactivationText.sectionSubtitle}`}>
             Which message sequences converted best.
           </p>

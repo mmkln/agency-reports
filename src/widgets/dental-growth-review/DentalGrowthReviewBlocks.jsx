@@ -46,6 +46,7 @@ import {
 import { reactivationText } from './reactivationTypography'
 import {
   FunnelSegmentSwitcher,
+  HorizontalFunnelFlowChart,
   StackedFunnelFlowChart,
 } from './StackedFunnelFlowChart'
 
@@ -893,42 +894,56 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   ))
 
   return (
-    <ReactivationChartPanel
-      rightSlot={hasSegmentControls ? (
-        <FunnelSegmentSwitcher
-          activeSegmentKey={resolvedActiveSegmentKey}
-          onChange={setActiveSegmentKey}
-          series={trackBreakdowns}
-        />
-      ) : null}
-      title="Reactivation Lifecycle"
-    >
+    <div className="grid gap-component xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.72fr)]">
+      <ReactivationChartPanel
+        rightSlot={hasSegmentControls ? (
+          <FunnelSegmentSwitcher
+            activeSegmentKey={resolvedActiveSegmentKey}
+            onChange={setActiveSegmentKey}
+            series={trackBreakdowns}
+          />
+        ) : null}
+        title="Reactivation Lifecycle"
+      >
+        {rows.length ? (
+          <StackedFunnelFlowChart
+            activeSegmentKey={resolvedActiveSegmentKey}
+            onSegmentChange={setActiveSegmentKey}
+            series={trackBreakdowns}
+            showCohortPercent
+            stages={rows}
+          />
+        ) : (
+          <ResourceState
+            action={emptyAction}
+            className="min-h-[164px]"
+            errorInfo={{ kind: 'not-found' }}
+            labels={{
+              notFoundDescription: funnelChart?.reason
+                || 'Check Review Setup or calculate this period before the funnel can be shown.',
+              notFoundTitle: 'Reactivation lifecycle is not calculated yet',
+            }}
+          />
+        )}
+        {treatmentUnavailable ? (
+          <p className={`mt-component rounded-control bg-block-subtle p-control ${reactivationText.stageHelper}`}>
+            Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
+          </p>
+        ) : null}
+      </ReactivationChartPanel>
+
       {rows.length ? (
-        <StackedFunnelFlowChart
-          activeSegmentKey={resolvedActiveSegmentKey}
-          onSegmentChange={setActiveSegmentKey}
-          series={trackBreakdowns}
-          showCohortPercent
-          stages={rows}
-        />
-      ) : (
-        <ResourceState
-          action={emptyAction}
-          className="min-h-[164px]"
-          errorInfo={{ kind: 'not-found' }}
-          labels={{
-            notFoundDescription: funnelChart?.reason
-              || 'Check Review Setup or calculate this period before the funnel can be shown.',
-            notFoundTitle: 'Reactivation lifecycle is not calculated yet',
-          }}
-        />
-      )}
-      {treatmentUnavailable ? (
-        <p className={`mt-component rounded-control bg-block-subtle p-control ${reactivationText.stageHelper}`}>
-          Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
-        </p>
+        <ReactivationChartPanel title="Bookings by Track">
+          <HorizontalFunnelFlowChart
+            activeSegmentKey={resolvedActiveSegmentKey}
+            onSegmentChange={setActiveSegmentKey}
+            series={trackBreakdowns}
+            showCohortPercent
+            stages={rows}
+          />
+        </ReactivationChartPanel>
       ) : null}
-    </ReactivationChartPanel>
+    </div>
   )
 }
 

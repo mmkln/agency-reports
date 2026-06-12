@@ -50,15 +50,15 @@ const cardIconByKey = {
 }
 
 const cardCaptionByKey = {
-  actual_bookings: 'Bookings obtained',
+  actual_bookings: 'Booked appointments',
   conversion_rate: 'Booking conversion',
   emails_sent: 'Emails sent',
   manager_calls: 'Calls completed',
   patients: 'Target patients',
-  replied_positive: 'Patients replied',
+  replied_positive: 'Patient replies',
   sms_sent: 'SMS sent',
   success_rate: 'Booking conversion',
-  treatment_accepted: 'Treatment accepted',
+  treatment_accepted: 'Accepted treatment',
 }
 
 const cardTitleByKey = {
@@ -237,7 +237,7 @@ function createTreatmentAcceptedCard(funnelChart) {
   const treatmentAcceptedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
 
   return {
-    caption: 'Treatment accepted',
+    caption: 'Accepted treatment',
     displayValue: treatmentAcceptedCount.toLocaleString('en-US'),
     key: TREATMENT_ACCEPTED_STAGE_KEY,
     label: 'Treatment',
@@ -267,7 +267,7 @@ function createRepliedCard(funnelChart) {
   const repliedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
 
   return {
-    caption: 'Patients replied',
+    caption: 'Patient replies',
     displayValue: repliedCount.toLocaleString('en-US'),
     key: 'replied_positive',
     label: 'Replied',
@@ -360,7 +360,7 @@ function RefreshStatusPopover({ refresh }) {
           type="button"
           variant="secondary"
         >
-          <Icon name={isRefreshing ? 'clock' : 'zap'} size={14} />
+          <Icon name={isRefreshing ? 'clock' : 'refreshCw'} size={14} />
           {getRefreshButtonLabel(refresh)}
         </Button>
       </PopoverTrigger>
@@ -440,7 +440,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
         <Icon name="calendar" size={19} />
       </span>
       <div className="min-w-0">
-        <p className={reactivationText.metricLabel}>Bookings obtained</p>
+        <p className={reactivationText.metricLabel}>Booked appointments</p>
         <p className="mt-tag flex flex-wrap items-baseline gap-x-2">
           <span className="text-[40px] font-semibold leading-[42px] tracking-normal tabular-nums text-success">
             {formatCardValue(card)}
