@@ -865,210 +865,7 @@ export function NarrativeColumns({ items }) {
   )
 }
 
-function getStageDisplayName(stage) {
-  const sourceName = String(stage.stage_name ?? stage.name ?? '')
-  const normalized = sourceName.toLowerCase()
-  const stageNameMap = [
-    ['lead -> contacted', 'Contacted'],
-    ['lead → contacted', 'Contacted'],
-    ['lead -> booked', 'Booked'],
-    ['lead → booked', 'Booked'],
-    ['booked -> confirmed', 'Confirmed'],
-    ['booked → confirmed', 'Confirmed'],
-    ['confirmed -> attended', 'Attended'],
-    ['confirmed → attended', 'Attended'],
-    ['attended -> treatment accepted', 'Treatment Accepted'],
-    ['attended → treatment accepted', 'Treatment Accepted'],
-  ]
-  const mappedName = stageNameMap.find(([key]) => normalized.includes(key))?.[1]
-
-  return mappedName ?? sourceName.replace(/\s*->\s*/g, ' → ')
-}
-
-function isPipelineStageSnapshot(stage) {
-  return stage?.funnel_type === 'pipeline_stage_snapshot'
-}
-
-function isReactivationLifecycleSnapshot(stage) {
-  return stage?.funnel_type === 'reactivation_lifecycle'
-}
-
-function getStageIdentityValues(stage) {
-  return [
-    stage?.stage_id,
-    stage?.id,
-    stage?.stage_name,
-    stage?.name,
-    stage?.key,
-  ].map((value) => String(value ?? '').trim()).filter(Boolean)
-}
-
-function getStageTrackMix(stage, trackBreakdowns) {
-  if (!stage || !trackBreakdowns.length) {
-    return []
-  }
-
-  const stageIds = new Set(getStageIdentityValues(stage))
-  const rows = trackBreakdowns.map((track) => {
-    const matchingStage = track.stages?.find((item) => (
-      getStageIdentityValues(item).some((value) => stageIds.has(value))
-    ))
-    const count = Math.max(Number(matchingStage?.stage_count) || 0, 0)
-
-    return {
-      count,
-      id: track.id || track.key || track.label,
-      label: track.label || track.key || 'Track',
-    }
-  }).filter((row) => row.count > 0)
-  const total = rows.reduce((sum, row) => sum + row.count, 0)
-
-  if (!total) {
-    return []
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    percent: (row.count / total) * 100,
-  }))
-}
-
-function formatTrackMixPercent(value) {
-  return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
-}
-
-function getFunnelAttentionTone(stage) {
-  const conversionRate = Number(stage.conversion_rate) || 0
-  const target = Number(stage.target) || 0
-
-  if (!target || conversionRate >= target) {
-    return null
-  }
-
-  return conversionRate >= target * 0.85 ? 'warning' : 'critical'
-}
-
-function getFunnelStageStatus(stage) {
-  const attentionTone = getFunnelAttentionTone(stage)
-
-  if (attentionTone === 'critical') {
-    return 'red'
-  }
-
-  if (attentionTone === 'warning') {
-    return 'yellow'
-  }
-
-  return stage.status ?? 'green'
-}
-
-function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
-  const open = Boolean(stage)
-  const status = stage ? getFunnelStageStatus(stage) : 'grey'
-  const isPipelineSnapshot = isPipelineStageSnapshot(stage)
-  const isReactivationLifecycle = isReactivationLifecycleSnapshot(stage)
-  const trackMix = isReactivationLifecycle ? getStageTrackMix(stage, trackBreakdowns) : []
-
-  return (
-    <Dialog
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose()
-        }
-      }}
-      open={open}
-    >
-      <DialogContent className="max-h-overlay w-[calc(100vw-2rem)] max-w-modal-lg gap-0 overflow-hidden p-0">
-        {stage ? (
-          <>
-            <DialogHeader className="border-b border-island-border bg-material-chrome px-panel py-card text-left backdrop-blur-2xl">
-              <DialogTitle>{getStageDisplayName(stage)}</DialogTitle>
-              <DialogDescription>
-                {isReactivationLifecycle
-                  ? 'Reached-step count from configured reactivation tags and fields.'
-                  : isPipelineSnapshot
-                  ? 'Current opportunity count in the configured GHL pipeline stage.'
-                  : 'Funnel stage conversion, drop-off, target, and confidence.'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid max-h-overlay-body gap-component overflow-y-auto px-panel pb-panel">
-              <section className="grid gap-item pt-component">
-                <div className="flex items-start justify-between gap-component">
-                  <div>
-                    <p className="text-data tabular-nums text-text-primary">{stage.stage_count}</p>
-                    <p className="mt-tag text-label font-normal text-text-muted">
-                      {isPipelineSnapshot || isReactivationLifecycle ? 'Current records' : `${stage.conversion_rate}% conversion`}
-                    </p>
-                  </div>
-                  {isReactivationLifecycle ? (
-                    <Badge tone="neutral">Reached step</Badge>
-                  ) : isPipelineSnapshot && stage.is_booked_stage ? (
-                    <Badge tone="blue">Booked stage</Badge>
-                  ) : (
-                    <Badge tone={statusBadgeTone[status] ?? 'neutral'}>
-                      {formatLabel(status)}
-                    </Badge>
-                  )}
-                </div>
-                {!isPipelineSnapshot && !isReactivationLifecycle ? (
-                  <p className="text-ui text-text-secondary">
-                    {getStatusExplanation(status, `${stage.target}% target`)}
-                  </p>
-                ) : null}
-              </section>
-
-              {isReactivationLifecycle ? null : (
-              <DetailSection title={isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
-                <DetailRow label="Stage count" value={stage.stage_count} />
-                {isPipelineSnapshot ? (
-                  <>
-                    <DetailRow label="Pipeline" value={stage.pipeline_name} />
-                    <DetailRow label="Calculation mode" value={formatLabel(stage.calculation_mode)} />
-                    <DetailRow label="Position" value={stage.position} />
-                    <DetailRow label="Booked stage" value={stage.is_booked_stage ? 'Yes' : 'No'} />
-                  </>
-                ) : (
-                  <>
-                    <DetailRow label="Input count" value={stage.input_count} />
-                    <DetailRow label="Output count" value={stage.output_count} />
-                    <DetailRow label="Conversion" value={`${stage.conversion_rate}%`} />
-                    <DetailRow label="Drop-off count" value={stage.drop_off_count} />
-                    <DetailRow label="Drop-off rate" value={stage.drop_off_rate} />
-                    <DetailRow label="Target" value={stage.target ? `${stage.target}%` : ''} />
-                  </>
-                )}
-              </DetailSection>
-              )}
-
-              {trackMix.length ? (
-                <DetailSection title="Track mix">
-                  {trackMix.map((track) => (
-                    <div
-                      className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-control py-item text-ui"
-                      key={track.id}
-                    >
-                      <dt className="min-w-0 truncate text-label font-normal text-text-muted">
-                        {track.label}
-                      </dt>
-                      <dd className="tabular-nums text-text-primary">{track.count}</dd>
-                      <dd className="w-12 text-right tabular-nums text-text-secondary">
-                        {formatTrackMixPercent(track.percent)}
-                      </dd>
-                    </div>
-                  ))}
-                </DetailSection>
-              ) : null}
-
-            </div>
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
-  const [selectedStage, setSelectedStage] = useState(null)
   const [activeSegmentKey, setActiveSegmentKey] = useState(ALL_SEGMENTS_KEY)
   const funnelType = funnelChart?.type ?? ''
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
@@ -1096,50 +893,42 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
   ))
 
   return (
-    <>
-      <ReactivationChartPanel
-        rightSlot={hasSegmentControls ? (
-          <FunnelSegmentSwitcher
-            activeSegmentKey={resolvedActiveSegmentKey}
-            onChange={setActiveSegmentKey}
-            series={trackBreakdowns}
-          />
-        ) : null}
-        title="Reactivation Lifecycle"
-      >
-          {rows.length ? (
-            <StackedFunnelFlowChart
-              activeSegmentKey={resolvedActiveSegmentKey}
-              onOpenStageDetails={setSelectedStage}
-              onSegmentChange={setActiveSegmentKey}
-              series={trackBreakdowns}
-              showCohortPercent
-              stages={rows}
-            />
-          ) : (
-            <ResourceState
-              action={emptyAction}
-              className="min-h-[164px]"
-              errorInfo={{ kind: 'not-found' }}
-              labels={{
-                notFoundDescription: funnelChart?.reason
-                  || 'Check Review Setup or calculate this period before the funnel can be shown.',
-                notFoundTitle: 'Reactivation lifecycle is not calculated yet',
-              }}
-            />
-          )}
-          {treatmentUnavailable ? (
-            <p className={`mt-component rounded-control bg-block-subtle p-control ${reactivationText.stageHelper}`}>
-              Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
-            </p>
-          ) : null}
-      </ReactivationChartPanel>
-      <FunnelStageDrilldownModal
-        onClose={() => setSelectedStage(null)}
-        stage={selectedStage}
-        trackBreakdowns={trackBreakdowns}
-      />
-    </>
+    <ReactivationChartPanel
+      rightSlot={hasSegmentControls ? (
+        <FunnelSegmentSwitcher
+          activeSegmentKey={resolvedActiveSegmentKey}
+          onChange={setActiveSegmentKey}
+          series={trackBreakdowns}
+        />
+      ) : null}
+      title="Reactivation Lifecycle"
+    >
+      {rows.length ? (
+        <StackedFunnelFlowChart
+          activeSegmentKey={resolvedActiveSegmentKey}
+          onSegmentChange={setActiveSegmentKey}
+          series={trackBreakdowns}
+          showCohortPercent
+          stages={rows}
+        />
+      ) : (
+        <ResourceState
+          action={emptyAction}
+          className="min-h-[164px]"
+          errorInfo={{ kind: 'not-found' }}
+          labels={{
+            notFoundDescription: funnelChart?.reason
+              || 'Check Review Setup or calculate this period before the funnel can be shown.',
+            notFoundTitle: 'Reactivation lifecycle is not calculated yet',
+          }}
+        />
+      )}
+      {treatmentUnavailable ? (
+        <p className={`mt-component rounded-control bg-block-subtle p-control ${reactivationText.stageHelper}`}>
+          Treatment acceptance data is unavailable for this period, so the funnel stops at attended appointments.
+        </p>
+      ) : null}
+    </ReactivationChartPanel>
   )
 }
 

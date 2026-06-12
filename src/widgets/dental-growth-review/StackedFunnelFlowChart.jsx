@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Icon } from '@/shared/icons'
 import { Button } from '@/shared/ui'
 
 import {
@@ -28,7 +27,6 @@ const stageLabelDisplayName = {
 
 export function StackedFunnelFlowChart({
   activeSegmentKey = ALL_SEGMENTS_KEY,
-  onOpenStageDetails,
   onSegmentChange,
   series = [],
   showCohortPercent = false,
@@ -62,7 +60,6 @@ export function StackedFunnelFlowChart({
     <div className="min-w-0 overflow-x-auto">
       <div className="min-w-[760px]">
         <FunnelStageHeader
-          onOpenStageDetails={onOpenStageDetails}
           showCohortPercent={showCohortPercent}
           stages={activeModel.stages}
         />
@@ -72,7 +69,6 @@ export function StackedFunnelFlowChart({
           <FunnelSvg
             layers={animatedLayers}
             onHover={setHoverPoint}
-            onOpenStageDetails={onOpenStageDetails}
             onSelectSegment={handleSegmentSelect}
             stages={activeModel.stages}
           />
@@ -122,7 +118,7 @@ export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
   )
 }
 
-function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
+function FunnelStageHeader({ showCohortPercent, stages }) {
   const cohortCount = stages[0]?.count ?? 0
 
   return (
@@ -131,28 +127,15 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
       style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(120px, 1fr))` }}
     >
       {stages.map((stage, index) => (
-        <button
-          className="group min-w-0 rounded-control px-control py-item text-center transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          key={stage.id}
-          onClick={() => onOpenStageDetails?.(stage.source)}
-          type="button"
-        >
-          <p className={`inline-flex items-center gap-1 ${reactivationText.stageLabel}`}>
-            {stage.label}
-            <Icon
-              aria-hidden="true"
-              className="text-text-quaternary transition-colors duration-motion-fast group-hover:text-text-secondary"
-              name="chevronDown"
-              size={12}
-            />
-          </p>
+        <div className="min-w-0 px-control py-item text-center" key={stage.id}>
+          <p className={reactivationText.stageLabel}>{stage.label}</p>
           <p className={`mt-tag ${reactivationText.stageValue}`}>{stage.count.toLocaleString()}</p>
           {showCohortPercent && cohortCount > 0 ? (
             <p className={`mt-tag ${reactivationText.stageHelper}`}>
               {index === 0 ? '100% cohort' : `${formatPercent(stage.count, cohortCount)} of cohort`}
             </p>
           ) : null}
-        </button>
+        </div>
       ))}
     </div>
   )
@@ -184,7 +167,6 @@ function FunnelTooltip({ point }) {
 function FunnelSvg({
   layers,
   onHover,
-  onOpenStageDetails,
   onSelectSegment,
   stages,
 }) {
@@ -216,11 +198,10 @@ function FunnelSvg({
 
       {stages.map((stage, stageIndex) => (
         <rect
-          aria-label={`View ${stage.label} details`}
-          className="cursor-pointer fill-transparent"
+          aria-hidden="true"
+          className="fill-transparent"
           height={CHART_HEIGHT}
           key={`stacked-funnel-hit-${stage.id}`}
-          onClick={() => onOpenStageDetails?.(stage.source)}
           onMouseEnter={() => onHover(createStageTooltip({ stage, stageIndex, stages }))}
           onMouseLeave={() => onHover(null)}
           width={CHART_WIDTH / Math.max(stages.length, 1)}

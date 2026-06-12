@@ -43,6 +43,7 @@ const cardIconByKey = {
   emails_sent: 'mail',
   manager_calls: 'phone',
   patients: 'users',
+  replied_positive: 'messageSquare',
   sms_sent: 'messageSquare',
   success_rate: 'checkCircle2',
   treatment_accepted: 'checkCircle2',
@@ -54,6 +55,7 @@ const cardCaptionByKey = {
   emails_sent: 'Emails sent',
   manager_calls: 'Calls completed',
   patients: 'Target patients',
+  replied_positive: 'Patients replied',
   sms_sent: 'SMS sent',
   success_rate: 'Booking conversion',
   treatment_accepted: 'Treatment accepted',
@@ -66,6 +68,7 @@ const cardTitleByKey = {
   emails_sent: 'Email',
   manager_calls: 'Managers',
   patients: 'Reach',
+  replied_positive: 'Replied',
   sms_sent: 'SMS',
   success_rate: 'Conversion',
   treatment_accepted: 'Treatment',
@@ -74,13 +77,14 @@ const cardTitleByKey = {
 const cardToneByKey = {
   actual_bookings: 'green',
   bookings: 'green',
-  conversion_rate: 'green',
+  conversion_rate: 'neutral',
   emails_sent: 'purple',
   manager_calls: 'amber',
   patients: 'blue',
+  replied_positive: 'amber',
   sms_sent: 'blue',
-  success_rate: 'green',
-  treatment_accepted: 'green',
+  success_rate: 'neutral',
+  treatment_accepted: 'neutral',
 }
 
 const DURATION_CARD_KEY = 'duration'
@@ -249,30 +253,52 @@ function formatCohortPercent(value) {
   return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
 }
 
-function buildActivityCards({ cards, funnelChart }) {
-  const treatmentAcceptedCard = createTreatmentAcceptedCard(funnelChart)
-  const sourceCards = (Array.isArray(cards) ? cards : [])
-    .filter((card) => !(card.key === 'manager_calls' && !Number(card.value)))
+function createRepliedCard(funnelChart) {
+  const stages = Array.isArray(funnelChart?.stages) ? funnelChart.stages : []
+  const stage = stages.find((item) => (
+    normalizeStageKey(item.id ?? item.stage_id).includes('replied')
+    || normalizeStageKey(item.stage_name ?? item.name).includes('replied')
+  ))
 
-  if (!treatmentAcceptedCard) {
-    return sourceCards.filter((card) => card.key !== DURATION_CARD_KEY)
+  if (!stage) {
+    return null
   }
 
+  const repliedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
+
+  return {
+    caption: 'Patients replied',
+    displayValue: repliedCount.toLocaleString('en-US'),
+    key: 'replied_positive',
+    label: 'Replied',
+    value: repliedCount,
+  }
+}
+
+function buildActivityCards({ cards, funnelChart }) {
+  const derivedCards = [
+    createRepliedCard(funnelChart),
+    createTreatmentAcceptedCard(funnelChart),
+  ].filter(Boolean)
+  const sourceCards = (Array.isArray(cards) ? cards : [])
+    .filter((card) => card.key !== 'patients')
+    .filter((card) => !(card.key === 'manager_calls' && !Number(card.value)))
+
   const nextCards = []
-  let inserted = false
+  let derivedInserted = false
 
   sourceCards.forEach((card) => {
     if (card.key === DURATION_CARD_KEY) {
-      nextCards.push(treatmentAcceptedCard)
-      inserted = true
+      nextCards.push(...derivedCards)
+      derivedInserted = true
       return
     }
 
     nextCards.push(card)
   })
 
-  if (!inserted) {
-    nextCards.push(treatmentAcceptedCard)
+  if (!derivedInserted) {
+    nextCards.push(...derivedCards)
   }
 
   return nextCards
@@ -372,18 +398,58 @@ function RefreshStatusPopover({ refresh }) {
 
 const HERO_CARD_KEYS = ['actual_bookings', 'bookings']
 
-function HeroBookingsCard({ bookedPercent, card }) {
+function getRecentBookingsDelta(series = [], days = 7) {
+  const points = (Array.isArray(series) ? series : []).filter((point) => point?.date)
+  const lastPoint = points[points.length - 1]
+
+  if (!lastPoint) {
+    return 0
+  }
+
+  const lastDate = new Date(`${lastPoint.date}T00:00:00.000Z`)
+
+  if (Number.isNaN(lastDate.getTime())) {
+    return 0
+  }
+
+  const cutoff = new Date(lastDate)
+  cutoff.setUTCDate(cutoff.getUTCDate() - days)
+
+  let baseline = 0
+
+  points.forEach((point) => {
+    const pointDate = new Date(`${point.date}T00:00:00.000Z`)
+
+    if (!Number.isNaN(pointDate.getTime()) && pointDate <= cutoff) {
+      baseline = Number(point.cumulativeBookings ?? baseline) || baseline
+    }
+  })
+
+  return Math.max(0, Number(lastPoint.cumulativeBookings ?? 0) - baseline)
+}
+
+function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
+  const context = [
+    bookedPercent ? `${bookedPercent} of cohort` : '',
+    weeklyDelta > 0 ? `+${weeklyDelta.toLocaleString('en-US')} this week` : '',
+  ].filter(Boolean).join(' · ')
+
   return (
-    <article className="flex min-h-[76px] flex-col justify-center gap-tag rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
-      <p className={reactivationText.metricLabel}>Bookings obtained</p>
-      <p className="text-[34px] font-semibold leading-[38px] tracking-normal tabular-nums text-success">
-        {formatCardValue(card)}
-        {bookedPercent ? (
-          <span className="ml-2 align-middle text-[15px] font-medium leading-5 text-text-secondary">
-            {bookedPercent} of cohort
+    <article className="flex min-h-[76px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
+      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
+        <Icon name="calendar" size={19} />
+      </span>
+      <div className="min-w-0">
+        <p className={reactivationText.metricLabel}>Bookings obtained</p>
+        <p className="mt-tag flex flex-wrap items-baseline gap-x-2">
+          <span className="text-[40px] font-semibold leading-[42px] tracking-normal tabular-nums text-success">
+            {formatCardValue(card)}
           </span>
-        ) : null}
-      </p>
+          {context ? (
+            <span className="text-ui font-normal leading-5 text-text-secondary">{context}</span>
+          ) : null}
+        </p>
+      </div>
     </article>
   )
 }
@@ -416,6 +482,7 @@ export function ReactivationCampaignSummary({
   const bookedPercent = heroCard && cohortCount > 0
     ? formatCohortPercent((bookingsCount / cohortCount) * 100)
     : ''
+  const weeklyDelta = getRecentBookingsDelta(chart.series)
   const periodRange = formatPeriodRange(period)
   const headerMeta = [
     periodRange,
@@ -441,7 +508,7 @@ export function ReactivationCampaignSummary({
         </div>
       </header>
       <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
-        {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} /> : null}
+        {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         {secondaryCards.map((card) => (
           <ActivityCard card={card} key={card.key || card.label} />
         ))}
