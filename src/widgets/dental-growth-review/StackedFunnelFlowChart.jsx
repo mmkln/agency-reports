@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { Icon } from '@/shared/icons'
 import { Button } from '@/shared/ui'
 
 import {
@@ -122,12 +123,20 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
     >
       {stages.map((stage, index) => (
         <button
-          className="min-w-0 rounded-control px-control py-item text-center transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group min-w-0 rounded-control px-control py-item text-center transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           key={stage.id}
           onClick={() => onOpenStageDetails?.(stage.source)}
           type="button"
         >
-          <p className={reactivationText.stageLabel}>{stage.label}</p>
+          <p className={`inline-flex items-center gap-1 ${reactivationText.stageLabel}`}>
+            {stage.label}
+            <Icon
+              aria-hidden="true"
+              className="text-text-quaternary transition-colors duration-motion-fast group-hover:text-text-secondary"
+              name="chevronDown"
+              size={12}
+            />
+          </p>
           <p className={`mt-tag ${reactivationText.stageValue}`}>{stage.count.toLocaleString()}</p>
           {showCohortPercent && cohortCount > 0 ? (
             <p className={`mt-tag ${reactivationText.stageHelper}`}>
@@ -142,11 +151,7 @@ function FunnelStageHeader({ onOpenStageDetails, showCohortPercent, stages }) {
 
 function FunnelTooltip({ point }) {
   if (!point) {
-    return (
-      <p className={`pointer-events-none absolute left-0 right-0 top-0 z-10 text-center ${reactivationText.chartHelper}`}>
-        Hover a stream segment to inspect stage data.
-      </p>
-    )
+    return null
   }
 
   return (
@@ -184,7 +189,7 @@ function FunnelSvg({
     >
       <defs>
         <filter height="120%" id="funnelShadow" width="120%" x="-10%" y="-10%">
-          <feDropShadow dx="0" dy="4" floodColor="rgb(15 23 42)" floodOpacity="0.08" stdDeviation="5" />
+          <feDropShadow dx="0" dy="4" floodColor="var(--premium-shark)" floodOpacity="0.08" stdDeviation="5" />
         </filter>
       </defs>
 
@@ -524,7 +529,7 @@ function getStageThickness(stageTotal, baseMax) {
 
   return Math.max(
     MIN_VISIBLE_THICKNESS,
-    MAX_STACK_THICKNESS * Math.pow(stageTotal / Math.max(baseMax, 1), 0.58),
+    MAX_STACK_THICKNESS * (stageTotal / Math.max(baseMax, 1)),
   )
 }
 

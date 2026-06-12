@@ -50,13 +50,13 @@ const cardIconByKey = {
 
 const cardCaptionByKey = {
   actual_bookings: 'Bookings obtained',
-  conversion_rate: 'Conversion rate (CR)',
+  conversion_rate: 'Booking conversion',
   emails_sent: 'Emails sent',
   manager_calls: 'Calls completed',
   patients: 'Target patients',
   sms_sent: 'SMS sent',
-  success_rate: 'Conversion rate (CR)',
-  treatment_accepted: 'Conversion rate (CR)',
+  success_rate: 'Booking conversion',
+  treatment_accepted: 'Treatment accepted',
 }
 
 const cardTitleByKey = {
@@ -68,19 +68,19 @@ const cardTitleByKey = {
   patients: 'Reach',
   sms_sent: 'SMS',
   success_rate: 'Conversion',
-  treatment_accepted: 'Conversion',
+  treatment_accepted: 'Treatment',
 }
 
 const cardToneByKey = {
   actual_bookings: 'green',
   bookings: 'green',
-  conversion_rate: 'red',
+  conversion_rate: 'green',
   emails_sent: 'purple',
   manager_calls: 'amber',
   patients: 'blue',
   sms_sent: 'blue',
-  success_rate: 'red',
-  treatment_accepted: 'red',
+  success_rate: 'green',
+  treatment_accepted: 'green',
 }
 
 const DURATION_CARD_KEY = 'duration'
@@ -101,6 +101,35 @@ const refreshStatusClass = {
   pending: 'text-text-quaternary',
   running: 'text-premium-blue',
   skipped: 'text-text-muted',
+}
+
+function formatPeriodDate(value) {
+  if (!value) {
+    return ''
+  }
+
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00.000Z`)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+}
+
+function formatPeriodRange(period) {
+  const start = formatPeriodDate(period?.start ?? period?.period_start)
+  const end = formatPeriodDate(period?.end ?? period?.period_end)
+
+  if (!start || !end) {
+    return ''
+  }
+
+  return `${start} – ${end}`
 }
 
 function formatUpdatedAt(value) {
@@ -209,18 +238,26 @@ function createTreatmentAcceptedCard(funnelChart) {
     : 0
 
   return {
-    caption: 'Conversion rate (CR)',
-    displayValue: `${conversionRate.toFixed(conversionRate >= 10 || conversionRate === 0 ? 0 : 2)}%`,
+    caption: `Treatment accepted · ${formatCohortPercent(conversionRate)} of cohort`,
+    displayValue: treatmentAcceptedCount.toLocaleString('en-US'),
     key: TREATMENT_ACCEPTED_STAGE_KEY,
-    label: 'Conversion',
-    unit: '%',
-    value: conversionRate,
+    label: 'Treatment',
+    value: treatmentAcceptedCount,
   }
+}
+
+function formatCohortPercent(value) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '0%'
+  }
+
+  return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
 }
 
 function buildActivityCards({ cards, funnelChart }) {
   const treatmentAcceptedCard = createTreatmentAcceptedCard(funnelChart)
-  const sourceCards = Array.isArray(cards) ? cards : []
+  const sourceCards = (Array.isArray(cards) ? cards : [])
+    .filter((card) => !(card.key === 'manager_calls' && !Number(card.value)))
 
   if (!treatmentAcceptedCard) {
     return sourceCards.filter((card) => card.key !== DURATION_CARD_KEY)
@@ -338,9 +375,29 @@ function RefreshStatusPopover({ refresh }) {
   )
 }
 
+const HERO_CARD_KEYS = ['actual_bookings', 'bookings']
+
+function HeroBookingsCard({ bookedPercent, card }) {
+  return (
+    <article className="flex min-h-[76px] flex-col justify-center gap-tag rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
+      <p className={reactivationText.metricLabel}>Bookings obtained</p>
+      <p className="text-[34px] font-semibold leading-[38px] tracking-normal tabular-nums text-success">
+        {formatCardValue(card)}
+        {bookedPercent ? (
+          <span className="ml-2 align-middle text-[15px] font-medium leading-5 text-text-secondary">
+            {bookedPercent} of cohort
+          </span>
+        ) : null}
+      </p>
+    </article>
+  )
+}
+
 export function ReactivationCampaignSummary({
+  campaign,
   chart,
   funnelChart,
+  period,
   refresh,
   updatedAt,
 }) {
@@ -353,21 +410,47 @@ export function ReactivationCampaignSummary({
     funnelChart,
   })
 
+  if (!cards.length) {
+    return null
+  }
+
+  const heroCard = cards.find((card) => HERO_CARD_KEYS.includes(card.key))
+  const secondaryCards = cards.filter((card) => card !== heroCard)
+  const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
+  const bookingsCount = Number(heroCard?.value ?? 0)
+  const bookedPercent = heroCard && cohortCount > 0
+    ? formatCohortPercent((bookingsCount / cohortCount) * 100)
+    : ''
+  const periodRange = formatPeriodRange(period)
+  const headerMeta = [
+    periodRange,
+    cohortCount > 0 ? `${cohortCount.toLocaleString('en-US')} patients in cohort` : '',
+  ].filter(Boolean)
+
   return (
-    <div className="grid gap-component">
-      {cards.length ? (
-        <section className="grid gap-control">
-          <div className="flex flex-wrap items-center justify-end gap-control">
-            <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
-            {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
-          </div>
-          <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
-            {cards.map((card) => (
-              <ActivityCard card={card} key={card.key || card.label} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
+    <section className="grid gap-control">
+      <header className="flex flex-wrap items-start justify-between gap-control">
+        <div className="min-w-0">
+          <h2 className={reactivationText.sectionTitle}>
+            {campaign?.name || 'Reactivation campaign'}
+          </h2>
+          {headerMeta.length ? (
+            <p className={`mt-tag ${reactivationText.updatedMeta}`}>
+              {headerMeta.join(' · ')}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-control">
+          <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
+          {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
+        </div>
+      </header>
+      <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
+        {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} /> : null}
+        {secondaryCards.map((card) => (
+          <ActivityCard card={card} key={card.key || card.label} />
+        ))}
+      </div>
+    </section>
   )
 }

@@ -1017,15 +1017,10 @@ function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
                 ) : null}
               </section>
 
-              <DetailSection title={isReactivationLifecycle ? 'Lifecycle stage' : isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
+              {isReactivationLifecycle ? null : (
+              <DetailSection title={isPipelineSnapshot ? 'Pipeline stage' : 'Stage performance'}>
                 <DetailRow label="Stage count" value={stage.stage_count} />
-                {isReactivationLifecycle ? (
-                  <>
-                    <DetailRow label="Mode" value={formatLabel(stage.calculation_mode)} />
-                    <DetailRow label="Date range" value="Not applied" />
-                    <DetailRow label="Key" value={stage.key} />
-                  </>
-                ) : isPipelineSnapshot ? (
+                {isPipelineSnapshot ? (
                   <>
                     <DetailRow label="Pipeline" value={stage.pipeline_name} />
                     <DetailRow label="Calculation mode" value={formatLabel(stage.calculation_mode)} />
@@ -1043,6 +1038,7 @@ function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
                   </>
                 )}
               </DetailSection>
+              )}
 
               {trackMix.length ? (
                 <DetailSection title="Track mix">
@@ -1063,19 +1059,6 @@ function FunnelStageDrilldownModal({ onClose, stage, trackBreakdowns = [] }) {
                 </DetailSection>
               ) : null}
 
-              <DetailSection title="Calculation">
-                <DetailRow
-                  label="Formula"
-                  value={stage.formula || (isReactivationLifecycle
-                    ? 'reached-step count from configured reactivation signals'
-                    : isPipelineSnapshot
-                    ? 'count current opportunities in this configured GHL pipeline stage'
-                    : 'output count / input count * 100')}
-                />
-                <DetailRow label="Source" value={stage.source} />
-                <DetailRow label="Confidence" value={formatLabel(stage.confidence)} />
-                <DetailRow label="Raw stage name" value={stage.stage_name ?? stage.name} />
-              </DetailSection>
             </div>
           </>
         ) : null}

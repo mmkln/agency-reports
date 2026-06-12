@@ -139,12 +139,48 @@ function LegendItem({ color, label, line = false }) {
   )
 }
 
+function dropUnfinishedToday(series) {
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const lastPoint = series[series.length - 1]
+
+  if (lastPoint?.date === todayIso && series.length > 1) {
+    return series.slice(0, -1)
+  }
+
+  return series
+}
+
+function createLastPointLabel(lastIndex) {
+  return function LastPointLabel({ index, value, x, y }) {
+    if (index !== lastIndex || !Number.isFinite(x) || !Number.isFinite(y)) {
+      return null
+    }
+
+    return (
+      <text
+        fill={referenceColors.booking}
+        fontSize={12}
+        fontWeight={600}
+        textAnchor="middle"
+        x={x}
+        y={y - 12}
+      >
+        {value}
+      </text>
+    )
+  }
+}
+
 export function ReactivationActivityChart({ chart }) {
   if (!chart?.available || !chart.series?.length) {
     return null
   }
 
-  const series = normalizeChartSeries(chart.series)
+  const series = normalizeChartSeries(dropUnfinishedToday(chart.series))
+
+  if (!series.length) {
+    return null
+  }
   const leftAxisMax = Math.ceil(getMaxValue(series, touchSeries.map((item) => item.key)) * 1.12)
   const rightAxisMax = getRightAxisMax(series)
   const xTickInterval = getXAxisTickInterval(series.length)
@@ -172,8 +208,8 @@ export function ReactivationActivityChart({ chart }) {
               margin={{
                 bottom: 8,
                 left: 6,
-                right: 10,
-                top: 8,
+                right: 24,
+                top: 18,
               }}
             >
               <defs>
@@ -213,16 +249,9 @@ export function ReactivationActivityChart({ chart }) {
                 yAxisId="touches"
               />
               <YAxis
-                axisLine={false}
                 domain={[0, rightAxisMax]}
+                hide
                 orientation="right"
-                tick={{
-                  fill: semanticColors.textMuted,
-                  fontSize: 12,
-                  fontWeight: 500,
-                }}
-                tickLine={false}
-                width={34}
                 yAxisId="bookings"
               />
               <Tooltip
@@ -257,6 +286,7 @@ export function ReactivationActivityChart({ chart }) {
                   strokeWidth: 2.5,
                 }}
                 isAnimationActive={false}
+                label={createLastPointLabel(series.length - 1)}
                 name={bookingLine.label}
                 stroke="url(#reactivationBookingLine)"
                 strokeLinecap="round"

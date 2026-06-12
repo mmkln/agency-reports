@@ -1,12 +1,12 @@
 export const reactivationColors = {
-  booking: '#22c55e',
-  bookingDark: '#10b981',
-  email: '#a78bfa',
-  sms: '#6366f1',
-  trackA: '#a5b4fc',
-  trackB: '#38bdf8',
-  trackC: '#c084fc',
-  trackR: '#cbd5e1',
+  booking: 'var(--success)',
+  bookingDark: 'var(--chart-2)',
+  email: 'var(--chart-4)',
+  sms: 'var(--premium-indigo)',
+  trackA: 'var(--chart-1)',
+  trackB: 'var(--chart-5)',
+  trackC: 'var(--premium-purple)',
+  trackR: 'var(--text-quaternary)',
   unknownTrack: 'var(--text-quaternary)',
 }
 
