@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
+import { Navigate } from 'react-router-dom'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
@@ -24,12 +25,6 @@ import {
   DentalGrowthReviewPageRoute,
 } from './RoutePages'
 
-function lazyNamed(loader, exportName) {
-  return lazy(() => loader().then((module) => ({ default: module[exportName] })))
-}
-
-const LandingPage = lazyNamed(() => import('../../pages/legacy/landing/LandingPage'), 'LandingPage')
-
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
 const {
   AGENCY,
@@ -45,7 +40,7 @@ export const routeDefinitions = [
     redirectAuthenticated: routeAccessMetadataById.landing.redirectAuthenticated,
     access: routeAccessMetadataById.landing.access,
     showInNav: false,
-    element: <LandingPage />,
+    element: <Navigate replace to="/login" />,
   },
   {
     path: '/accept-invite',
