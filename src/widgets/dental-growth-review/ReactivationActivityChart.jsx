@@ -108,7 +108,7 @@ function TooltipContent({ active, label, payload }) {
               <span className="size-2.5 rounded-[3px]" style={{ backgroundColor: item.color }} />
               {item.label}
             </span>
-            <span className="font-semibold text-white">{valuesByKey.get(item.key) ?? 0}</span>
+            <span className="font-semibold text-white">{valuesByKey.get(item.key) ?? '—'}</span>
           </div>
         ))}
         <div className="mt-1 flex items-center justify-between gap-6 border-t border-white/10 pt-2">
@@ -139,15 +139,22 @@ function LegendItem({ color, label, line = false }) {
   )
 }
 
-function dropUnfinishedToday(series) {
+function muteUnfinishedTodayBars(series) {
   const todayIso = new Date().toISOString().slice(0, 10)
   const lastPoint = series[series.length - 1]
 
-  if (lastPoint?.date === todayIso && series.length > 1) {
-    return series.slice(0, -1)
+  if (lastPoint?.date !== todayIso) {
+    return series
   }
 
-  return series
+  return [
+    ...series.slice(0, -1),
+    {
+      ...lastPoint,
+      email: null,
+      sms: null,
+    },
+  ]
 }
 
 function createLastPointLabel(lastIndex) {
@@ -176,7 +183,7 @@ export function ReactivationActivityChart({ chart }) {
     return null
   }
 
-  const series = normalizeChartSeries(dropUnfinishedToday(chart.series))
+  const series = normalizeChartSeries(muteUnfinishedTodayBars(chart.series))
 
   if (!series.length) {
     return null

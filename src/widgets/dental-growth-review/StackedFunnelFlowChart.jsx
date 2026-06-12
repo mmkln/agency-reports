@@ -52,6 +52,12 @@ export function StackedFunnelFlowChart({
     return null
   }
 
+  const handleSegmentSelect = (segmentKey) => {
+    onSegmentChange?.(
+      resolvedActiveSegmentKey === segmentKey ? ALL_SEGMENTS_KEY : segmentKey,
+    )
+  }
+
   return (
     <div className="min-w-0 overflow-x-auto">
       <div className="min-w-[760px]">
@@ -67,7 +73,7 @@ export function StackedFunnelFlowChart({
             layers={animatedLayers}
             onHover={setHoverPoint}
             onOpenStageDetails={onOpenStageDetails}
-            onSelectSegment={onSegmentChange}
+            onSelectSegment={handleSegmentSelect}
             stages={activeModel.stages}
           />
         </div>
@@ -84,6 +90,9 @@ export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
     <div className="flex flex-wrap gap-1 rounded-island bg-fill-secondary p-1">
       {options.map((option) => {
         const active = option.id === activeSegmentKey
+        const nextSegmentKey = active && option.id !== ALL_SEGMENTS_KEY
+          ? ALL_SEGMENTS_KEY
+          : option.id
 
         return (
           <Button
@@ -93,7 +102,7 @@ export function FunnelSegmentSwitcher({ activeSegmentKey, onChange, series }) {
                 : 'bg-transparent text-text-secondary hover:bg-control-hover hover:text-text-primary'
             }`}
             key={option.id}
-            onClick={() => onChange?.(option.id)}
+            onClick={() => onChange?.(nextSegmentKey)}
             size="sm"
             type="button"
             variant="ghost"

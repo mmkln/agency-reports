@@ -230,15 +230,10 @@ function createTreatmentAcceptedCard(funnelChart) {
   if (!stage) {
     return null
   }
-  const stages = Array.isArray(funnelChart?.stages) ? funnelChart.stages : []
-  const cohortCount = Number(stages[0]?.stage_count ?? stages[0]?.count ?? 0)
   const treatmentAcceptedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
-  const conversionRate = cohortCount > 0
-    ? (treatmentAcceptedCount / cohortCount) * 100
-    : 0
 
   return {
-    caption: `Treatment accepted · ${formatCohortPercent(conversionRate)} of cohort`,
+    caption: 'Treatment accepted',
     displayValue: treatmentAcceptedCount.toLocaleString('en-US'),
     key: TREATMENT_ACCEPTED_STAGE_KEY,
     label: 'Treatment',
