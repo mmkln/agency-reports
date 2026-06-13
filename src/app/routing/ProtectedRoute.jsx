@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo } from 'react'
 import { useAuth } from '../providers/auth/useAuth'
 import { canAccessRouteWithContext, getRouteAccessDiagnostic } from './roleAccess'
@@ -7,10 +7,14 @@ export function ProtectedRoute({ children, route }) {
   const { isAuthLoading, runtime, viewer } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const params = useParams()
   const [searchParams] = useSearchParams()
   const routeParams = useMemo(() => (
-    Object.fromEntries(searchParams.entries())
-  ), [searchParams])
+    {
+      ...params,
+      ...Object.fromEntries(searchParams.entries()),
+    }
+  ), [params, searchParams])
   const canAccess = canAccessRouteWithContext(viewer, route, {
     defaultClientId: runtime.defaultClientId,
     routeParams,

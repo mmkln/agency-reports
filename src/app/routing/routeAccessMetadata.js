@@ -1,3 +1,5 @@
+import { matchPath } from 'react-router-dom'
+
 import { CLIENT_TYPES } from '../../entities/client'
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
@@ -137,5 +139,7 @@ export const routeAccessMetadataById = Object.freeze(Object.fromEntries(
 ))
 
 export function findRouteAccessMetadataByPath(pathname) {
-  return routeAccessMetadata.find((route) => route.path === pathname) ?? null
+  return routeAccessMetadata.find((route) => (
+    matchPath({ end: true, path: route.path }, pathname)
+  )) ?? null
 }

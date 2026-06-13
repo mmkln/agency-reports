@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Suspense } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../providers/auth/useAuth'
 import { DentalGrowthReviewPage } from '../../pages/dashboards/dental-growth-review'
 import { AccountSettingsPage } from '../../pages/account/settings/AccountSettingsPage'
+import { AdminClientDetailPage } from '../../pages/admin/client-detail/AdminClientDetailPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminClinicDataSourcesPage } from '../../pages/admin/clinic-data-sources/AdminClinicDataSourcesPage'
@@ -18,8 +19,12 @@ const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loadi
 function withPageProps(PageComponent, HeaderComponent) {
   return function PageWithProps() {
     const { runtime, onAuthChange, onSignOut } = useAuth()
+    const params = useParams()
     const [searchParams] = useSearchParams()
-    const routeParams = Object.fromEntries(searchParams.entries())
+    const routeParams = {
+      ...params,
+      ...Object.fromEntries(searchParams.entries()),
+    }
 
     return (
       <Suspense fallback={<LoadingFallback />}>
@@ -37,6 +42,7 @@ function withPageProps(PageComponent, HeaderComponent) {
 
 export const AccountSettingsPageRoute = withPageProps(AccountSettingsPage, undefined)
 export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, undefined)
+export const AdminClientDetailPageRoute = withPageProps(AdminClientDetailPage, undefined)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, undefined)
 export const AdminClinicDataSourcesPageRoute = withPageProps(AdminClinicDataSourcesPage, undefined)
 export const AdminClinicReviewPageRoute = withPageProps(AdminClinicReviewPage, undefined)

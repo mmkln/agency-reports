@@ -7,6 +7,9 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
+import { Link } from 'react-router-dom'
+
+import { getAgencyClientDetailPath } from '@/domain/navigation/routePaths'
 
 export function ClientMoreMenu({
   client,
@@ -25,10 +28,18 @@ export function ClientMoreMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
         {permissions.canOpenClient ? (
-          <DropdownMenuItem onClick={() => onOpenClient(client)}>
-            <Icon name="users" size={15} />
-            Open client
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem asChild>
+              <Link to={getAgencyClientDetailPath(client.id)}>
+                <Icon name="users" size={15} />
+                Open client
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onOpenClient(client)}>
+              <Icon name="fileText" size={15} />
+              View details
+            </DropdownMenuItem>
+          </>
         ) : null}
         {permissions.canInviteClientUser ? (
           <DropdownMenuItem onClick={() => onInviteClientUser(client)}>

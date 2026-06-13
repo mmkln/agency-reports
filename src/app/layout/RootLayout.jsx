@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { matchPath, Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuth } from '../providers/auth/useAuth'
 import { AppShell } from '../../shared/layout'
@@ -57,9 +57,15 @@ export function RootLayout() {
   const { onAuthChange, onSignOut, runtime, viewer } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const params = useParams()
   const [searchParams] = useSearchParams()
-  const routeParams = Object.fromEntries(searchParams.entries())
-  const activeRoute = routeMetadata.find((route) => route.path === location.pathname) ?? routeMetadata[0]
+  const routeParams = {
+    ...params,
+    ...Object.fromEntries(searchParams.entries()),
+  }
+  const activeRoute = routeMetadata.find((route) => (
+    matchPath({ end: true, path: route.path }, location.pathname)
+  )) ?? routeMetadata[0]
 
   useEffect(() => {
     const hashRoute = legacyHashRouteMap[location.hash]
