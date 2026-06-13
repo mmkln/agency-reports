@@ -2,6 +2,7 @@ import { CLIENT_TYPES } from '../../entities/client'
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
+import { ROUTE_PATHS } from '../../domain/navigation/routePaths'
 import { ROUTE_ACCESS_SCOPES } from './roleAccess'
 
 const {
@@ -40,12 +41,20 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'account-settings',
-    path: '/account/settings',
+    path: ROUTE_PATHS.accountSettings,
     access: { scope: ACCOUNT },
   },
   {
     id: 'admin-clients',
-    path: '/admin/clients',
+    path: ROUTE_PATHS.agencyClients,
+    access: {
+      capability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
+      scope: AGENCY,
+    },
+  },
+  {
+    id: 'admin-client-detail',
+    path: ROUTE_PATHS.agencyClientDetail,
     access: {
       capability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
       scope: AGENCY,
@@ -53,7 +62,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-workspaces',
-    path: '/admin/workspaces',
+    path: ROUTE_PATHS.agencyWorkspaces,
     access: {
       capability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
       scope: AGENCY,
@@ -61,7 +70,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-client-access',
-    path: '/admin/client-access',
+    path: ROUTE_PATHS.agencyClientAccess,
     access: {
       capability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS,
       scope: AGENCY,
@@ -69,7 +78,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-clinic-setup',
-    path: '/admin/clinic-setup',
+    path: ROUTE_PATHS.agencyClinicSetup,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
       scope: WORKSPACE,
@@ -78,7 +87,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-clinic-data-sources',
-    path: '/admin/clinic-data-sources',
+    path: ROUTE_PATHS.agencyClinicDataSources,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
       scope: WORKSPACE,
@@ -87,7 +96,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-clinic-review',
-    path: '/admin/clinic-review',
+    path: ROUTE_PATHS.agencyClinicReview,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
@@ -96,7 +105,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'admin-clinic-review-setup',
-    path: '/admin/clinic-review-setup',
+    path: ROUTE_PATHS.agencyClinicReviewSetup,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
       scope: WORKSPACE,
@@ -105,7 +114,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'dental-growth-review',
-    path: '/client/growth-review',
+    path: ROUTE_PATHS.portalGrowthReview,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
@@ -115,7 +124,7 @@ export const routeAccessMetadata = Object.freeze([
   },
   {
     id: 'client-settings',
-    path: '/client/settings',
+    path: ROUTE_PATHS.portalSettings,
     access: {
       scope: WORKSPACE,
       workspaceCapability: WORKSPACE_CAPABILITIES.MANAGE_SETTINGS,

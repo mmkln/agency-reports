@@ -2,6 +2,7 @@ import {
   CLINIC_REPORTING_CAPABILITIES,
 } from '../../entities/profile'
 import { AGENCY_CAPABILITIES, AGENCY_ROLES } from '../../entities/agency-membership'
+import { ROUTE_PATHS, withSearchParams } from '../navigation/routePaths'
 
 export function getHomeHrefForViewer(viewer) {
   if (!viewer) {
@@ -15,11 +16,11 @@ export function getHomeHrefForViewer(viewer) {
     [AGENCY_ROLES.OWNER, AGENCY_ROLES.ADMIN, AGENCY_ROLES.MANAGER].includes(agencyRole)
     && (agencyMembership.capabilities ?? []).includes(AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS)
   ) {
-    return '/admin/clients'
+    return ROUTE_PATHS.agencyClients
   }
 
   if (agencyRole) {
-    return '/account/settings'
+    return ROUTE_PATHS.accountSettings
   }
 
   const growthReviewWorkspaceMembership = (viewer.workspaceMemberships ?? [])
@@ -28,12 +29,14 @@ export function getHomeHrefForViewer(viewer) {
     ))
 
   if (growthReviewWorkspaceMembership) {
-    return `/client/growth-review?clientId=${growthReviewWorkspaceMembership.workspaceId}`
+    return withSearchParams(ROUTE_PATHS.portalGrowthReview, {
+      clientId: growthReviewWorkspaceMembership.workspaceId,
+    })
   }
 
   const fallbackWorkspaceId = viewer.activeWorkspaceId ?? viewer.workspaceMemberships?.[0]?.workspaceId ?? null
 
   return fallbackWorkspaceId
-    ? `/client/settings?clientId=${fallbackWorkspaceId}`
-    : '/account/settings'
+    ? withSearchParams(ROUTE_PATHS.portalSettings, { clientId: fallbackWorkspaceId })
+    : ROUTE_PATHS.accountSettings
 }

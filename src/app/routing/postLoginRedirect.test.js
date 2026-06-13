@@ -36,36 +36,43 @@ describe('getPostLoginHref', () => {
 
   it('keeps a safe accessible next href', () => {
     expect(getPostLoginHref({
+      nextHref: '/portal/growth-review?clientId=workspace_1',
+      viewer: createViewer(),
+    })).toBe('/portal/growth-review?clientId=workspace_1')
+  })
+
+  it('normalizes legacy next hrefs to canonical routes', () => {
+    expect(getPostLoginHref({
       nextHref: '/client/growth-review?clientId=workspace_1',
       viewer: createViewer(),
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
   it('falls back when next href targets a denied workspace', () => {
     expect(getPostLoginHref({
-      nextHref: '/client/growth-review?clientId=workspace_2',
+      nextHref: '/portal/growth-review?clientId=workspace_2',
       viewer: createViewer(),
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
   it('falls back for external next hrefs', () => {
     expect(getPostLoginHref({
       nextHref: 'https://example.com/client/growth-review?clientId=workspace_1',
       viewer: createViewer(),
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
   it('falls back when next href targets the public landing route', () => {
     expect(getPostLoginHref({
       nextHref: '/',
       viewer: createViewer(),
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
   it('falls back when next href targets the login route', () => {
     expect(getPostLoginHref({
       nextHref: '/login',
       viewer: createViewer(),
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 })

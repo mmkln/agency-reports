@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
 import {
   Button,
   ConfirmationDialog,
@@ -95,7 +96,7 @@ export function ClientsTable({
                   <TableActionCell>
                     <div className="flex justify-end gap-1.5">
                       <Button asChild size="sm" variant="outline">
-                        <Link to={`/admin/clinic-setup?clientId=${client.id}`}>
+                        <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, { clientId: client.id })}>
                           Open
                         </Link>
                       </Button>
@@ -111,7 +112,7 @@ export function ClientsTable({
                             Edit client
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to={`/client/growth-review?clientId=${client.id}`}>
+                            <Link to={withSearchParams(ROUTE_PATHS.portalGrowthReview, { clientId: client.id })}>
                               <Icon name="arrowUpRight" size={15} />
                               Preview Growth Review
                             </Link>
@@ -125,7 +126,7 @@ export function ClientsTable({
                             </DropdownMenuItem>
                           ) : null}
                           <DropdownMenuItem asChild>
-                            <Link to={`/admin/client-access?clientId=${client.id}`}>
+                            <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, { clientId: client.id })}>
                               <Icon name="users" size={15} />
                               Access
                             </Link>

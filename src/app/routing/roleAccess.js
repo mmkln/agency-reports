@@ -155,8 +155,8 @@ export function isClientScopedRoute(route) {
 
   return Boolean(
     access?.scope === ROUTE_ACCESS_SCOPES.WORKSPACE
-    || route?.path?.startsWith('/client/')
-    || route?.path?.startsWith('/admin/client-')
+    || route?.path?.startsWith('/portal/')
+    || route?.path?.startsWith('/agency/client-')
     || route?.id === 'dental-growth-review'
   )
 }
@@ -301,6 +301,10 @@ function getRouteNavigationScopes(route) {
 }
 
 function isRouteAvailableForNavigationScope(route, navigationScope) {
+  if (route.isLegacyRedirect) {
+    return false
+  }
+
   if (route.showInNav === false) {
     return true
   }

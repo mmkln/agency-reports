@@ -1,4 +1,5 @@
 import { getHomeHrefForViewer } from '../../domain/services/viewerHomeService'
+import { getCanonicalRoutePath } from '../../domain/navigation/routePaths'
 import { canAccessRouteWithContext } from './roleAccess'
 import { findRouteAccessMetadataByPath } from './routeAccessMetadata'
 
@@ -14,7 +15,7 @@ function getSafeInternalHref(href) {
       return null
     }
 
-    return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`
+    return `${getCanonicalRoutePath(parsedUrl.pathname)}${parsedUrl.search}${parsedUrl.hash}`
   } catch {
     return null
   }

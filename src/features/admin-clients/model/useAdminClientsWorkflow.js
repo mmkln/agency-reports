@@ -178,7 +178,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     setWorkspaceError('')
 
     if (isCreateDialogOpen) {
-      navigate('/admin/clients', { replace: true })
+      navigate(getAdminClientsPath(), { replace: true })
     }
   }
 
@@ -202,7 +202,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
       setCreateForm(createClientForm())
       setCreateStatus('idle')
       void reloadClients()
-      navigate('/admin/clients', { replace: true })
+      navigate(getAdminClientsPath(), { replace: true })
     }).catch((caughtError) => {
       setCreateError(caughtError.message)
       setCreateStatus('idle')

@@ -1,7 +1,8 @@
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
+import { ROUTE_PATHS, withSearchParams } from '../../../domain/navigation/routePaths'
 
 export function getClientAccountWorkspacesPath(clientId) {
-  return `/admin/workspaces?clientAccountId=${clientId}`
+  return withSearchParams(ROUTE_PATHS.agencyWorkspaces, { clientAccountId: clientId })
 }
 
 export function getWorkspaceAdminPath(workspace, client) {
@@ -21,6 +22,5 @@ export function getAdminClientsPath(params = {}) {
     }
   })
 
-  const queryString = search.toString()
-  return queryString ? `/admin/clients?${queryString}` : '/admin/clients'
+  return withSearchParams(ROUTE_PATHS.agencyClients, Object.fromEntries(search.entries()))
 }

@@ -12,17 +12,18 @@ import {
 import { routeMetadata } from '../routing/routeDefinitions'
 import { AGENCY_ROLE_META } from '../../entities/agency-membership'
 import { WORKSPACE_ROLE_META } from '../../entities/workspace-membership'
+import { ROUTE_PATHS } from '../../domain/navigation/routePaths'
 
 const legacyHashRouteMap = Object.freeze({
-  '#client-dashboard': '/client/growth-review',
-  '#client-overview': '/client/growth-review',
-  '#client-performance': '/client/growth-review',
-  '#growth-review': '/client/growth-review',
-  '#settings': '/client/growth-review',
-  '#client-settings': '/client/growth-review',
-  '#dashboard': '/client/growth-review',
-  '#performance': '/client/growth-review',
-  '#performance-dashboard': '/client/growth-review',
+  '#client-dashboard': ROUTE_PATHS.portalGrowthReview,
+  '#client-overview': ROUTE_PATHS.portalGrowthReview,
+  '#client-performance': ROUTE_PATHS.portalGrowthReview,
+  '#growth-review': ROUTE_PATHS.portalGrowthReview,
+  '#settings': ROUTE_PATHS.portalGrowthReview,
+  '#client-settings': ROUTE_PATHS.portalGrowthReview,
+  '#dashboard': ROUTE_PATHS.portalGrowthReview,
+  '#performance': ROUTE_PATHS.portalGrowthReview,
+  '#performance-dashboard': ROUTE_PATHS.portalGrowthReview,
 })
 
 function getSidebarViewerMeta(viewer) {

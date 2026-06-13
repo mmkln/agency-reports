@@ -1,4 +1,5 @@
 import { CLIENT_TYPES } from '../../../entities/client'
+import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
 import {
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
@@ -18,29 +19,29 @@ export const clientWorkspaceSections = [
         id: 'clinic-setup',
         iconName: 'settings',
         label: 'Setup',
-        route: '/admin/clinic-setup',
+        route: ROUTE_PATHS.agencyClinicSetup,
         to: getWorkspaceSetupPath,
       },
       {
         id: 'clinic-data-sources',
         iconName: 'database',
         label: 'Data',
-        previewRoute: '/client/growth-review',
-        route: '/admin/clinic-data-sources',
+        previewRoute: ROUTE_PATHS.portalGrowthReview,
+        route: ROUTE_PATHS.agencyClinicDataSources,
         to: getWorkspaceDataSourcesPath,
       },
       {
         id: 'clinic-review-setup',
         iconName: 'settings',
         label: 'Review Setup',
-        route: '/admin/clinic-review-setup',
+        route: ROUTE_PATHS.agencyClinicReviewSetup,
         to: getWorkspaceReviewSetupPath,
       },
       {
         id: 'clinic-review',
         iconName: 'trendingUp',
         label: 'Review',
-        route: '/admin/clinic-review',
+        route: ROUTE_PATHS.agencyClinicReview,
         to: getWorkspaceReviewPath,
       },
     ],
@@ -90,7 +91,7 @@ export function getClientWorkspacePreviewRoute(sections, currentPage) {
     .flatMap((section) => section.pages)
     .find((page) => page.id === currentPage)
 
-  return currentPageConfig?.previewRoute ?? '/client/growth-review'
+  return currentPageConfig?.previewRoute ?? ROUTE_PATHS.portalGrowthReview
 }
 
 export function getClientWorkspacePageIdByRoutePath(path) {

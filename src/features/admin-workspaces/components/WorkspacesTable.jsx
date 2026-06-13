@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { ROUTE_PATHS } from '@/domain/navigation/routePaths'
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
 import { WORKSPACE_STATUS_META } from '@/entities/workspace'
 import {
@@ -30,7 +31,7 @@ export function WorkspacesTable({
       <PanelHeader
         action={selectedClient ? (
           <Button asChild size="sm" variant="ghost">
-            <Link to="/admin/workspaces">Show all</Link>
+            <Link to={ROUTE_PATHS.agencyWorkspaces}>Show all</Link>
           </Button>
         ) : null}
         divided

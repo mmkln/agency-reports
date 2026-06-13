@@ -9,6 +9,7 @@ import {
   getInvitationStatus,
   requestClientInvitationAccessLink,
 } from '../../domain/services/clientInviteService'
+import { ROUTE_PATHS, withSearchParams } from '../../domain/navigation/routePaths'
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../entities/client-invitation'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { Icon } from '../../shared/icons'
@@ -153,7 +154,7 @@ export function AcceptClientInvitation({ onAuthChange, runtime, token }) {
       })).then((result) => {
       onAuthChange?.()
       toast.success('Invitation accepted', `You now have access to ${result.client.name}.`)
-      navigate(`/client/growth-review?clientId=${result.client.id}`, { replace: true })
+      navigate(withSearchParams(ROUTE_PATHS.portalGrowthReview, { clientId: result.client.id }), { replace: true })
     }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Invite was not accepted', caughtError.message)

@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Suspense } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
+import { LEGACY_ROUTE_REDIRECTS, ROUTE_PATHS } from '../../domain/navigation/routePaths'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
@@ -15,6 +16,7 @@ import { routeAccessMetadataById } from './routeAccessMetadata'
 import {
   AccountSettingsPageRoute,
   AdminClientAccessPageRoute,
+  AdminClientDetailPageRoute,
   AdminClientsPageRoute,
   AdminClinicDataSourcesPageRoute,
   AdminClinicReviewPageRoute,
@@ -30,6 +32,12 @@ const {
   AGENCY,
   CLIENT_PORTAL,
 } = NAVIGATION_SCOPES
+
+function LegacyRouteRedirect({ to }) {
+  const location = useLocation()
+
+  return <Navigate replace to={`${to}${location.search}${location.hash}`} />
+}
 
 export const routeDefinitions = [
   {
@@ -84,7 +92,7 @@ export const routeDefinitions = [
     element: <AccountSettingsPageRoute />,
   },
   {
-    path: '/admin/clients',
+    path: ROUTE_PATHS.agencyClients,
     id: 'admin-clients',
     label: 'Clients',
     pageTitle: 'Clients',
@@ -96,7 +104,17 @@ export const routeDefinitions = [
     element: <AdminClientsPageRoute />,
   },
   {
-    path: '/admin/workspaces',
+    path: ROUTE_PATHS.agencyClientDetail,
+    id: 'admin-client-detail',
+    label: 'Client',
+    pageTitle: 'Client',
+    access: routeAccessMetadataById['admin-client-detail'].access,
+    iconName: 'users',
+    showInNav: false,
+    element: <AdminClientDetailPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaces,
     id: 'admin-workspaces',
     label: 'Workspaces',
     pageTitle: 'Workspaces',
@@ -108,7 +126,7 @@ export const routeDefinitions = [
     element: <AdminWorkspacesPageRoute />,
   },
   {
-    path: '/admin/client-access',
+    path: ROUTE_PATHS.agencyClientAccess,
     id: 'admin-client-access',
     label: 'Access',
     pageTitle: 'Client Access',
@@ -120,7 +138,7 @@ export const routeDefinitions = [
     element: <AdminClientAccessPageRoute />,
   },
   {
-    path: '/admin/clinic-setup',
+    path: ROUTE_PATHS.agencyClinicSetup,
     id: 'admin-clinic-setup',
     label: 'Setup',
     pageTitle: 'Setup',
@@ -132,7 +150,7 @@ export const routeDefinitions = [
     element: <AdminClinicSetupPageRoute />,
   },
   {
-    path: '/admin/clinic-data-sources',
+    path: ROUTE_PATHS.agencyClinicDataSources,
     id: 'admin-clinic-data-sources',
     label: 'Data Sources',
     pageTitle: 'Data Sources',
@@ -144,7 +162,7 @@ export const routeDefinitions = [
     element: <AdminClinicDataSourcesPageRoute />,
   },
   {
-    path: '/admin/clinic-review',
+    path: ROUTE_PATHS.agencyClinicReview,
     id: 'admin-clinic-review',
     label: 'Review',
     pageTitle: 'Review',
@@ -156,7 +174,7 @@ export const routeDefinitions = [
     element: <AdminClinicReviewPageRoute />,
   },
   {
-    path: '/admin/clinic-review-setup',
+    path: ROUTE_PATHS.agencyClinicReviewSetup,
     id: 'admin-clinic-review-setup',
     label: 'Review Setup',
     pageTitle: 'Review Setup',
@@ -168,7 +186,7 @@ export const routeDefinitions = [
     element: <AdminClinicReviewSetupPageRoute />,
   },
   {
-    path: '/client/growth-review',
+    path: ROUTE_PATHS.portalGrowthReview,
     id: 'dental-growth-review',
     label: 'Growth Review',
     pageTitle: 'Growth Review',
@@ -182,7 +200,7 @@ export const routeDefinitions = [
     element: <DentalGrowthReviewPageRoute />,
   },
   {
-    path: '/client/settings',
+    path: ROUTE_PATHS.portalSettings,
     id: 'client-settings',
     label: 'Settings',
     pageTitle: 'Settings',
@@ -194,6 +212,16 @@ export const routeDefinitions = [
     showInNav: false,
     element: <ClientSettingsPageRoute />,
   },
+  ...Object.entries(LEGACY_ROUTE_REDIRECTS).map(([legacyPath, nextPath]) => ({
+    path: legacyPath,
+    id: `legacy:${legacyPath}`,
+    label: 'Legacy Redirect',
+    layout: 'public',
+    access: { scope: ROUTE_ACCESS_SCOPES.PUBLIC },
+    isLegacyRedirect: true,
+    showInNav: false,
+    element: <LegacyRouteRedirect to={nextPath} />,
+  })),
 ]
 
 export const routeMetadata = routeDefinitions.map((route) => {

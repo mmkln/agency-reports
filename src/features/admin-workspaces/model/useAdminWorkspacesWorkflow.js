@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
 import { normalizeBackendClientsPayload } from '@/entities/client'
 import { WORKSPACE_CLIENT_ACCESS_POLICIES, normalizeBackendWorkspacesPayload } from '@/entities/workspace'
 
@@ -18,7 +19,7 @@ function createWorkspaceForm(clientId = '') {
 }
 
 function getWorkspacesPath(clientAccountId = '') {
-  return clientAccountId ? `/admin/workspaces?clientAccountId=${clientAccountId}` : '/admin/workspaces'
+  return withSearchParams(ROUTE_PATHS.agencyWorkspaces, { clientAccountId })
 }
 
 export function useAdminWorkspacesWorkflow({ routeParams = {}, runtime }) {

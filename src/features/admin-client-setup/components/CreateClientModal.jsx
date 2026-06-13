@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
 import {
   Button,
   Dialog,
@@ -138,11 +139,21 @@ export function CreateClientModal({
                 <div className="mt-3 flex flex-wrap gap-2">
                   {lastCreatedClient.client.type === CLIENT_TYPES.CLINIC ? (
                     <Button asChild size="sm" variant="outline">
-                      <Link to={`/admin/clinic-setup?clientId=${lastCreatedClient.client.id}`}>Setup</Link>
+                      <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, {
+                        clientId: lastCreatedClient.client.id,
+                      })}
+                      >
+                        Setup
+                      </Link>
                     </Button>
                   ) : null}
                   <Button asChild size="sm" variant="outline">
-                    <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Access</Link>
+                    <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, {
+                      clientId: lastCreatedClient.client.id,
+                    })}
+                    >
+                      Access
+                    </Link>
                   </Button>
                 </div>
               </div>

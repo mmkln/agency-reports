@@ -89,7 +89,7 @@ function getRouteSidebarSectionId(route) {
     return 'performance'
   }
 
-  if (route.path?.startsWith('/client/')) {
+  if (route.path?.startsWith('/portal/')) {
     return 'systems'
   }
 

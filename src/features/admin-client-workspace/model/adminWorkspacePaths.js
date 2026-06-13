@@ -1,3 +1,5 @@
+import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
+
 function getWorkspaceId(workspaceOrId) {
   return typeof workspaceOrId === 'object' ? workspaceOrId?.id : workspaceOrId
 }
@@ -16,19 +18,19 @@ function getWorkspaceSearch(workspaceOrId) {
 }
 
 export function getWorkspaceSetupPath(workspaceOrId) {
-  return `/admin/clinic-setup${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClinicSetup}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceDataSourcesPath(workspaceOrId) {
-  return `/admin/clinic-data-sources${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClinicDataSources}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceReviewPath(workspaceOrId) {
-  return `/admin/clinic-review${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClinicReview}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {
-  return `/admin/clinic-review-setup${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClinicReviewSetup}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getDefaultWorkspaceAdminPath(workspace) {

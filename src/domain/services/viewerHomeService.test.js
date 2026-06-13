@@ -15,7 +15,7 @@ describe('viewerHomeService', () => {
         capabilities: [AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS],
         role: AGENCY_ROLES.ADMIN,
       }],
-    })).toBe('/admin/clients')
+    })).toBe('/agency/clients')
   })
 
   it('sends clinic workspace members with growth review access to Growth Review', () => {
@@ -25,7 +25,7 @@ describe('viewerHomeService', () => {
         workspaceId: 'workspace_1',
         workspaceType: 'clinic',
       }],
-    })).toBe('/client/growth-review?clientId=workspace_1')
+    })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
   it('sends workspace members without growth review access to workspace settings', () => {
@@ -36,6 +36,6 @@ describe('viewerHomeService', () => {
         workspaceId: 'workspace_1',
         workspaceType: 'clinic',
       }],
-    })).toBe('/client/settings?clientId=workspace_1')
+    })).toBe('/portal/settings?clientId=workspace_1')
   })
 })

@@ -13,8 +13,8 @@ describe('app href routing adapter', () => {
     vi.stubEnv('VITE_ROUTING_MODE', 'browser')
 
     expect(getAppHref('/login')).toBe('/agency-reports/login')
-    expect(getAppHref('/client/growth-review?clientId=clinic_1')).toBe(
-      '/agency-reports/client/growth-review?clientId=clinic_1',
+    expect(getAppHref('/portal/growth-review?clientId=clinic_1')).toBe(
+      '/agency-reports/portal/growth-review?clientId=clinic_1',
     )
   })
 
@@ -23,8 +23,8 @@ describe('app href routing adapter', () => {
     vi.stubEnv('VITE_ROUTING_MODE', 'hash')
 
     expect(getAppHref('/login')).toBe('/agency-reports/#/login')
-    expect(getAppHref('/client/growth-review?clientId=clinic_1')).toBe(
-      '/agency-reports/#/client/growth-review?clientId=clinic_1',
+    expect(getAppHref('/portal/growth-review?clientId=clinic_1')).toBe(
+      '/agency-reports/#/portal/growth-review?clientId=clinic_1',
     )
   })
 
