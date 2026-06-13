@@ -56,7 +56,7 @@ function getCellClassName(column) {
     meta.nowrap ? 'whitespace-nowrap' : '',
     meta.truncate ? 'max-w-title truncate' : '',
     meta.minWidthClassName,
-    meta.isAction ? 'sticky right-0 z-20 bg-block text-right group-hover/table-row:bg-control-hover' : '',
+    meta.isAction ? 'sticky right-0 z-20 bg-inherit text-right shadow-[-1px_0_0_var(--color-separator)]' : '',
     meta.cellClassName,
   )
 }
@@ -197,7 +197,10 @@ export function DataTable({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                data-state={row.getIsSelected() ? 'selected' : undefined}
+                key={row.id}
+              >
                 {row.getVisibleCells().map((cell) => {
                   return (
                     <TableCell
