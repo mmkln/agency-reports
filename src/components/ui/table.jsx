@@ -23,7 +23,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-block text-label text-text-muted [&_tr]:border-b", className)}
+      className={cn("bg-block text-label text-text-muted [&_tr]:border-b [&_tr:hover]:bg-block", className)}
       {...props} />
   );
 }
