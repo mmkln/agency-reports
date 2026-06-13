@@ -1,5 +1,6 @@
 import {
   DataTableSurface,
+  StatusBadge,
   Table,
   TableActionCell,
   TableActionHead,
@@ -9,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui'
+import { CLIENT_STATUS_META } from '@/entities/client'
 
 import { getClientActionPermissions } from '../model/clientActionPermissions'
 import { ClientMoreMenu } from './ClientMoreMenu'
@@ -39,7 +41,14 @@ export function ClientsTable({
             return (
               <TableRow key={client.id}>
                 <TableCell className="font-medium">{client.name}</TableCell>
-                <TableCell>{client.status}</TableCell>
+                <TableCell>
+                  <StatusBadge
+                    meta={CLIENT_STATUS_META[client.status] ?? {
+                      label: client.status || 'Unknown',
+                      tone: 'neutral',
+                    }}
+                  />
+                </TableCell>
                 <TableActionCell>
                   <div className="flex justify-end gap-item">
                     <ClientWorkspaceAction

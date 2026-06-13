@@ -1,4 +1,6 @@
 export const CLIENT_STATUSES = Object.freeze({
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
   BLOCKED: 'blocked',
   NEEDS_ATTENTION: 'needs_attention',
   ON_TRACK: 'on_track',
@@ -26,6 +28,16 @@ export const CLIENT_TYPE_META = Object.freeze({
 })
 
 export const CLIENT_STATUS_META = Object.freeze({
+  [CLIENT_STATUSES.ACTIVE]: {
+    icon: 'checkCircle2',
+    label: 'Active',
+    tone: 'green',
+  },
+  [CLIENT_STATUSES.ARCHIVED]: {
+    icon: 'archive',
+    label: 'Archived',
+    tone: 'neutral',
+  },
   [CLIENT_STATUSES.SETUP]: {
     icon: 'wrench',
     label: 'Setup',
