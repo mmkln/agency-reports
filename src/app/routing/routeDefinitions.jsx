@@ -109,6 +109,7 @@ export const routeDefinitions = [
     label: 'Client',
     pageTitle: 'Client',
     access: routeAccessMetadataById['admin-client-detail'].access,
+    hidePageHeader: true,
     iconName: 'users',
     showInNav: false,
     element: <AdminClientDetailPageRoute />,
