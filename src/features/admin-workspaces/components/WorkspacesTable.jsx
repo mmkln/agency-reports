@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
+import { WORKSPACE_STATUS_META } from '@/entities/workspace'
 import {
   Button,
   ErrorBlock,
@@ -15,6 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  StatusBadge,
 } from '@/shared/ui'
 
 export function WorkspacesTable({
@@ -60,7 +62,14 @@ export function WorkspacesTable({
                   <TableCell className="font-medium">{workspace.name}</TableCell>
                   <TableCell>{workspace.client_name || 'Unassigned'}</TableCell>
                   <TableCell>{workspace.type}</TableCell>
-                  <TableCell>{workspace.status}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      meta={WORKSPACE_STATUS_META[workspace.status] ?? {
+                        label: workspace.status || 'Unknown',
+                        tone: 'neutral',
+                      }}
+                    />
+                  </TableCell>
                   <TableActionCell>
                     <Button asChild size="sm" variant="outline">
                       <Link to={getDefaultWorkspaceAdminPath(workspace)}>Open</Link>
