@@ -1,23 +1,43 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { getPostLoginHref } from './postLoginRedirect'
+import { canAccessRouteWithContext } from './roleAccess'
+import { findRouteAccessMetadataByPath } from './routeAccessMetadata'
 
 const ORIGINAL_WINDOW = globalThis.window
 
-function createViewer() {
+function createViewer({
+  capabilities = [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+  role = WORKSPACE_ROLES.OWNER,
+} = {}) {
   return {
     activeWorkspaceId: 'workspace_1',
     agencyMemberships: [],
     managedWorkspaceRelationships: [],
     userId: 'user_1',
     workspaceMemberships: [{
-      capabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
-      role: 'owner',
+      capabilities,
+      role,
       status: 'active',
       workspaceId: 'workspace_1',
     }],
   }
+}
+
+function canViewerAccessHref(href, viewer) {
+  const parsedUrl = new URL(href, window.location.origin)
+  const route = findRouteAccessMetadataByPath(parsedUrl.pathname)
+
+  if (!route) {
+    return false
+  }
+
+  return canAccessRouteWithContext(viewer, route, {
+    defaultClientId: viewer.activeWorkspaceId,
+    routeParams: Object.fromEntries(parsedUrl.searchParams.entries()),
+  })
 }
 
 describe('getPostLoginHref', () => {
@@ -73,5 +93,19 @@ describe('getPostLoginHref', () => {
       nextHref: '/login',
       viewer: createViewer(),
     })).toBe('/portal/growth-review?clientId=workspace_1')
+  })
+
+  it('localizes invited workspace viewer access denied after login', () => {
+    const viewer = createViewer({
+      capabilities: [WORKSPACE_CAPABILITIES.VIEW_PORTAL],
+      role: WORKSPACE_ROLES.VIEWER,
+    })
+    const href = getPostLoginHref({
+      nextHref: '/portal',
+      viewer,
+    })
+
+    expect(href).toBe('/portal/settings?clientId=workspace_1')
+    expect(canViewerAccessHref(href, viewer)).toBe(false)
   })
 })
