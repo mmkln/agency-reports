@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Suspense } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
+import { getHomeHrefForViewer } from '../../domain/services/viewerHomeService'
 import { LEGACY_ROUTE_REDIRECTS, ROUTE_PATHS } from '../../domain/navigation/routePaths'
 import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePage'
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
@@ -15,13 +16,20 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { routeAccessMetadataById } from './routeAccessMetadata'
 import {
   AccountSettingsPageRoute,
+  AgencyWorkspaceAccessPageRoute,
+  AgencyWorkspaceDataPageRoute,
+  AgencyWorkspaceReviewPageRoute,
+  AgencyWorkspaceReviewSetupPageRoute,
+  AgencyWorkspaceSetupPageRoute,
   AdminClientAccessPageRoute,
   AdminClientDetailPageRoute,
   AdminClientsPageRoute,
   AdminWorkspacesPageRoute,
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
+  PortalWorkspaceReviewPageRoute,
 } from './RoutePages'
+import { useAuth } from '../providers/auth/useAuth'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
 const {
@@ -33,6 +41,12 @@ function LegacyRouteRedirect({ to }) {
   const location = useLocation()
 
   return <Navigate replace to={`${to}${location.search}${location.hash}`} />
+}
+
+function PortalHomeRedirect() {
+  const { viewer } = useAuth()
+
+  return <Navigate replace to={getHomeHrefForViewer(viewer)} />
 }
 
 export const routeDefinitions = [
@@ -125,6 +139,7 @@ export const routeDefinitions = [
   {
     path: ROUTE_PATHS.agencyClientAccess,
     id: 'admin-client-access',
+    activeNavigationId: 'admin-workspaces',
     label: 'Access',
     pageTitle: 'Client Access',
     access: routeAccessMetadataById['admin-client-access'].access,
@@ -133,6 +148,116 @@ export const routeDefinitions = [
     hidePageHeader: true,
     iconName: 'users',
     element: <AdminClientAccessPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceDetail,
+    id: 'agency-workspace-detail',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Workspace',
+    pageTitle: 'Workspace',
+    access: routeAccessMetadataById['agency-workspace-detail'].access,
+    hidePageHeader: true,
+    showInNav: false,
+    element: <Navigate replace to="setup" />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceSetup,
+    id: 'agency-workspace-setup',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Setup',
+    pageTitle: 'Setup',
+    access: routeAccessMetadataById['agency-workspace-setup'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'settings',
+    showInNav: false,
+    element: <AgencyWorkspaceSetupPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceData,
+    id: 'agency-workspace-data',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Data',
+    pageTitle: 'Data',
+    access: routeAccessMetadataById['agency-workspace-data'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'database',
+    showInNav: false,
+    element: <AgencyWorkspaceDataPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceReviewSetup,
+    id: 'agency-workspace-review-setup',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Review Setup',
+    pageTitle: 'Review Setup',
+    access: routeAccessMetadataById['agency-workspace-review-setup'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'settings',
+    showInNav: false,
+    element: <AgencyWorkspaceReviewSetupPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceReview,
+    id: 'agency-workspace-review',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Review',
+    pageTitle: 'Review',
+    access: routeAccessMetadataById['agency-workspace-review'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'trendingUp',
+    showInNav: false,
+    element: <AgencyWorkspaceReviewPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceAccess,
+    id: 'agency-workspace-access',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Access',
+    pageTitle: 'Access',
+    access: routeAccessMetadataById['agency-workspace-access'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'users',
+    showInNav: false,
+    element: <AgencyWorkspaceAccessPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalHome,
+    id: 'portal-home',
+    label: 'Portal',
+    pageTitle: 'Portal',
+    access: routeAccessMetadataById['portal-home'].access,
+    showInNav: false,
+    element: <PortalHomeRedirect />,
+  },
+  {
+    path: ROUTE_PATHS.portalWorkspaceDetail,
+    id: 'portal-workspace-detail',
+    activeNavigationId: 'dental-growth-review',
+    label: 'Portal Workspace',
+    pageTitle: 'Portal Workspace',
+    access: routeAccessMetadataById['portal-workspace-detail'].access,
+    showInNav: false,
+    element: <Navigate replace to="review" />,
+  },
+  {
+    path: ROUTE_PATHS.portalWorkspaceReview,
+    id: 'portal-workspace-review',
+    activeNavigationId: 'dental-growth-review',
+    label: 'Growth Review',
+    pageTitle: 'Growth Review',
+    access: routeAccessMetadataById['portal-workspace-review'].access,
+    contentWidth: 'content',
+    header: DentalGrowthReviewPageHeader,
+    iconName: 'trendingUp',
+    navLabel: 'Growth Review',
+    navigationScope: CLIENT_PORTAL,
+    showInNav: false,
+    element: <PortalWorkspaceReviewPageRoute />,
   },
   {
     path: ROUTE_PATHS.portalGrowthReview,

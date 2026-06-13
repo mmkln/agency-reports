@@ -1,4 +1,5 @@
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
+import { getPortalWorkspaceReviewPath, ROUTE_PATHS } from '../../domain/navigation/routePaths'
 
 export const REDIRECT_DELAY_MS = 1000
 
@@ -6,8 +7,10 @@ export function getLoginHref(token) {
   return `/login?next=${encodeURIComponent(`/accept-invite?token=${token}`)}`
 }
 
-export function getPostAcceptLoginHref() {
-  return `/login?next=${encodeURIComponent('/portal')}`
+export function getPostAcceptLoginHref(workspaceId) {
+  const nextHref = workspaceId ? getPortalWorkspaceReviewPath(workspaceId) : ROUTE_PATHS.portalHome
+
+  return `/login?next=${encodeURIComponent(nextHref)}`
 }
 
 export function formatInvitationDate(value) {

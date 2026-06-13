@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
+import { getAgencyWorkspaceAccessPath } from '@/domain/navigation/routePaths'
 import {
   Button,
   Dialog,
@@ -135,10 +135,7 @@ export function CreateClientModal({
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, {
-                      clientId: lastCreatedClient.client.id,
-                    })}
-                    >
+                    <Link to={getAgencyWorkspaceAccessPath(lastCreatedClient.client.id)}>
                       Access
                     </Link>
                   </Button>

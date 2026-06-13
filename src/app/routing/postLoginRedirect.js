@@ -1,3 +1,5 @@
+import { matchPath } from 'react-router-dom'
+
 import { getHomeHrefForViewer } from '../../domain/services/viewerHomeService'
 import { getCanonicalRoutePath } from '../../domain/navigation/routePaths'
 import { canAccessRouteWithContext } from './roleAccess'
@@ -21,10 +23,16 @@ function getSafeInternalHref(href) {
   }
 }
 
-function getRouteParamsFromHref(href) {
+function getRouteParamsFromHref(href, route) {
   const parsedUrl = new URL(href, window.location.origin)
+  const pathMatch = route?.path
+    ? matchPath({ end: true, path: route.path }, parsedUrl.pathname)
+    : null
 
-  return Object.fromEntries(parsedUrl.searchParams.entries())
+  return {
+    ...(pathMatch?.params ?? {}),
+    ...Object.fromEntries(parsedUrl.searchParams.entries()),
+  }
 }
 
 export function getPostLoginHref({ nextHref, viewer }) {
@@ -44,7 +52,7 @@ export function getPostLoginHref({ nextHref, viewer }) {
 
   if (!canAccessRouteWithContext(viewer, route, {
     defaultClientId: viewer?.activeWorkspaceId,
-    routeParams: getRouteParamsFromHref(safeNextHref),
+    routeParams: getRouteParamsFromHref(safeNextHref, route),
   })) {
     return fallbackHref
   }

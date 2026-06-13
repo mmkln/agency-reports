@@ -1,5 +1,6 @@
 export {
   getDefaultWorkspaceAdminPath,
+  getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,

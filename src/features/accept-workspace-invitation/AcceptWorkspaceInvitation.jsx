@@ -136,7 +136,7 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
       }
 
       window.setTimeout(() => {
-        navigate(getPostAcceptLoginHref(), { replace: true })
+        navigate(getPostAcceptLoginHref(payload.workspace?.id), { replace: true })
       }, REDIRECT_DELAY_MS)
     }).catch((caughtError) => {
       const controlledInvitation = caughtError?.payload?.invitation

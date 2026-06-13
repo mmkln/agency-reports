@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { matchPath } from 'react-router-dom'
 
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
 import {
@@ -39,7 +40,10 @@ function canViewerAccessHref(href, viewer) {
 
   return canAccessRouteWithContext(viewer, route, {
     defaultClientId: viewer.activeWorkspaceId,
-    routeParams: Object.fromEntries(parsedUrl.searchParams.entries()),
+    routeParams: {
+      ...(matchPath({ end: true, path: route.path }, parsedUrl.pathname)?.params ?? {}),
+      ...Object.fromEntries(parsedUrl.searchParams.entries()),
+    },
   })
 }
 
@@ -74,28 +78,35 @@ describe('getPostLoginHref', () => {
     expect(getPostLoginHref({
       nextHref: '/portal/growth-review?clientId=workspace_2',
       viewer: createViewer(),
-    })).toBe('/portal/growth-review?clientId=workspace_1')
+    })).toBe('/portal/workspaces/workspace_1/review')
   })
 
   it('falls back for external next hrefs', () => {
     expect(getPostLoginHref({
       nextHref: 'https://example.com/client/growth-review?clientId=workspace_1',
       viewer: createViewer(),
-    })).toBe('/portal/growth-review?clientId=workspace_1')
+    })).toBe('/portal/workspaces/workspace_1/review')
   })
 
   it('falls back when next href targets the public landing route', () => {
     expect(getPostLoginHref({
       nextHref: '/',
       viewer: createViewer(),
-    })).toBe('/portal/growth-review?clientId=workspace_1')
+    })).toBe('/portal/workspaces/workspace_1/review')
   })
 
   it('falls back when next href targets the login route', () => {
     expect(getPostLoginHref({
       nextHref: '/login',
       viewer: createViewer(),
-    })).toBe('/portal/growth-review?clientId=workspace_1')
+    })).toBe('/portal/workspaces/workspace_1/review')
+  })
+
+  it('keeps a safe accessible workspace path-param next href', () => {
+    expect(getPostLoginHref({
+      nextHref: '/portal/workspaces/workspace_1/review',
+      viewer: createViewer(),
+    })).toBe('/portal/workspaces/workspace_1/review')
   })
 
   it('routes invited workspace viewers to Growth Review after login', () => {
@@ -104,11 +115,11 @@ describe('getPostLoginHref', () => {
       role: WORKSPACE_ROLES.VIEWER,
     })
     const href = getPostLoginHref({
-      nextHref: '/portal',
+      nextHref: '/portal/workspaces/workspace_1/review',
       viewer,
     })
 
-    expect(href).toBe('/portal/growth-review?clientId=workspace_1')
+    expect(href).toBe('/portal/workspaces/workspace_1/review')
     expect(canViewerAccessHref(href, viewer)).toBe(true)
   })
 })

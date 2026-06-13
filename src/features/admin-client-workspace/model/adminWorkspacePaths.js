@@ -1,36 +1,33 @@
-import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
+import {
+  getAgencyWorkspaceAccessPath,
+  getAgencyWorkspaceDataPath,
+  getAgencyWorkspaceReviewPath,
+  getAgencyWorkspaceReviewSetupPath,
+  getAgencyWorkspaceSetupPath,
+} from '../../../domain/navigation/routePaths'
 
 function getWorkspaceId(workspaceOrId) {
   return typeof workspaceOrId === 'object' ? workspaceOrId?.id : workspaceOrId
 }
 
-function getWorkspaceSearch(workspaceOrId) {
-  const workspaceId = getWorkspaceId(workspaceOrId)
-  const search = new URLSearchParams()
-
-  if (workspaceId) {
-    search.set('workspaceId', workspaceId)
-  }
-
-  const queryString = search.toString()
-
-  return queryString ? `?${queryString}` : ''
-}
-
 export function getWorkspaceSetupPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
+  return getAgencyWorkspaceSetupPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceDataSourcesPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
+  return getAgencyWorkspaceDataPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewPath(workspaceOrId) {
-  return `${ROUTE_PATHS.portalGrowthReview}${getWorkspaceSearch(workspaceOrId)}`
+  return getAgencyWorkspaceReviewPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
+  return getAgencyWorkspaceReviewSetupPath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceAccessPath(workspaceOrId) {
+  return getAgencyWorkspaceAccessPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getDefaultWorkspaceAdminPath(workspace) {

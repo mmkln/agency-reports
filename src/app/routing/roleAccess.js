@@ -30,6 +30,7 @@ const WORKSPACE_ADMIN_ROLES = Object.freeze(new Set([
 
 const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
   'dental-growth-review',
+  'portal-workspace-review',
   'client-settings',
   'account-settings',
 ]))
@@ -134,7 +135,9 @@ export function isClientScopedRoute(route) {
     access?.scope === ROUTE_ACCESS_SCOPES.WORKSPACE
     || route?.path?.startsWith('/portal/')
     || route?.path?.startsWith('/agency/client-')
+    || route?.path?.startsWith('/agency/workspaces/')
     || route?.id === 'dental-growth-review'
+    || route?.id === 'portal-workspace-review'
   )
 }
 

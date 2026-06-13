@@ -2,7 +2,11 @@ import {
   CLINIC_REPORTING_CAPABILITIES,
 } from '../../entities/profile'
 import { AGENCY_CAPABILITIES, AGENCY_ROLES } from '../../entities/agency-membership'
-import { ROUTE_PATHS, withSearchParams } from '../navigation/routePaths'
+import {
+  getPortalWorkspaceReviewPath,
+  ROUTE_PATHS,
+  withSearchParams,
+} from '../navigation/routePaths'
 
 export function getHomeHrefForViewer(viewer) {
   if (!viewer) {
@@ -29,9 +33,7 @@ export function getHomeHrefForViewer(viewer) {
     ))
 
   if (growthReviewWorkspaceMembership) {
-    return withSearchParams(ROUTE_PATHS.portalGrowthReview, {
-      clientId: growthReviewWorkspaceMembership.workspaceId,
-    })
+    return getPortalWorkspaceReviewPath(growthReviewWorkspaceMembership.workspaceId)
   }
 
   const fallbackWorkspaceId = viewer.activeWorkspaceId ?? viewer.workspaceMemberships?.[0]?.workspaceId ?? null

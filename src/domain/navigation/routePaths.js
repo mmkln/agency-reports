@@ -5,8 +5,17 @@ export const ROUTE_PATHS = Object.freeze({
   agencyClientDetail: '/agency/clients/:clientId',
   agencyWorkspaces: '/agency/workspaces',
   agencyClientAccess: '/agency/client-access',
+  agencyWorkspaceDetail: '/agency/workspaces/:workspaceId',
+  agencyWorkspaceSetup: '/agency/workspaces/:workspaceId/setup',
+  agencyWorkspaceData: '/agency/workspaces/:workspaceId/data',
+  agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
+  agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
+  agencyWorkspaceAccess: '/agency/workspaces/:workspaceId/access',
 
+  portalHome: '/portal',
   portalGrowthReview: '/portal/growth-review',
+  portalWorkspaceDetail: '/portal/workspaces/:workspaceId',
+  portalWorkspaceReview: '/portal/workspaces/:workspaceId/review',
   portalSettings: '/portal/settings',
 })
 
@@ -14,10 +23,6 @@ export const LEGACY_ROUTE_REDIRECTS = Object.freeze({
   '/admin/clients': ROUTE_PATHS.agencyClients,
   '/admin/workspaces': ROUTE_PATHS.agencyWorkspaces,
   '/admin/client-access': ROUTE_PATHS.agencyClientAccess,
-  '/admin/clinic-setup': ROUTE_PATHS.agencyClientAccess,
-  '/admin/clinic-data-sources': ROUTE_PATHS.agencyClientAccess,
-  '/admin/clinic-review': ROUTE_PATHS.portalGrowthReview,
-  '/admin/clinic-review-setup': ROUTE_PATHS.agencyClientAccess,
 
   '/client/growth-review': ROUTE_PATHS.portalGrowthReview,
   '/client/settings': ROUTE_PATHS.portalSettings,
@@ -29,6 +34,37 @@ export function getCanonicalRoutePath(pathname) {
 
 export function getAgencyClientDetailPath(clientId) {
   return `/agency/clients/${clientId}`
+}
+
+function buildPath(pattern, params = {}) {
+  return Object.entries(params).reduce(
+    (path, [key, value]) => path.replace(`:${key}`, encodeURIComponent(String(value))),
+    pattern,
+  )
+}
+
+export function getAgencyWorkspaceSetupPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceSetup, { workspaceId })
+}
+
+export function getAgencyWorkspaceDataPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceData, { workspaceId })
+}
+
+export function getAgencyWorkspaceReviewSetupPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceReviewSetup, { workspaceId })
+}
+
+export function getAgencyWorkspaceReviewPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceReview, { workspaceId })
+}
+
+export function getAgencyWorkspaceAccessPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceAccess, { workspaceId })
+}
+
+export function getPortalWorkspaceReviewPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.portalWorkspaceReview, { workspaceId })
 }
 
 export function withSearchParams(path, params = {}) {

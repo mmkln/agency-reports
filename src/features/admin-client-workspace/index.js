@@ -12,6 +12,7 @@ export {
   getDefaultWorkspaceAdminPath,
   getClientWorkspacePageIdByRoutePath,
   getClientWorkspaceSidebarItems,
+  getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,

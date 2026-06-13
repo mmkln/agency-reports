@@ -24,7 +24,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
       <AppTopHeader
-        activeNavigationId={activeSidebarNavigationId}
+        activeNavigationId={activeSidebarNavigationId ?? activeRoute.activeNavigationId}
         activeRoute={activeRoute}
         hasUnsavedChanges={hasUnsavedChanges}
         navigationItems={sidebarNavigationItems}

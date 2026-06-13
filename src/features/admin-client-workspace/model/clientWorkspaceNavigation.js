@@ -1,29 +1,55 @@
+import { matchPath } from 'react-router-dom'
+
 import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
 import {
+  getWorkspaceAccessPath,
+  getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
+  getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
 } from './adminWorkspacePaths'
 
 export const clientWorkspaceSections = [
   {
-    defaultPageId: 'access',
+    defaultPageId: 'setup',
     iconName: 'settings',
     id: 'client-workspace',
     label: 'Client workspace',
     pages: [
       {
-        id: 'access',
-        iconName: 'users',
-        label: 'Access',
-        route: ROUTE_PATHS.agencyClientAccess,
+        id: 'setup',
+        iconName: 'settings',
+        label: 'Setup',
+        route: ROUTE_PATHS.agencyWorkspaceSetup,
         to: getWorkspaceSetupPath,
       },
       {
-        id: 'growth-review',
+        id: 'data',
+        iconName: 'database',
+        label: 'Data',
+        route: ROUTE_PATHS.agencyWorkspaceData,
+        to: getWorkspaceDataSourcesPath,
+      },
+      {
+        id: 'review-setup',
+        iconName: 'settings',
+        label: 'Review Setup',
+        route: ROUTE_PATHS.agencyWorkspaceReviewSetup,
+        to: getWorkspaceReviewSetupPath,
+      },
+      {
+        id: 'review',
         iconName: 'trendingUp',
-        label: 'Growth Review',
-        route: ROUTE_PATHS.portalGrowthReview,
+        label: 'Review',
+        route: ROUTE_PATHS.agencyWorkspaceReview,
         to: getWorkspaceReviewPath,
+      },
+      {
+        id: 'access',
+        iconName: 'users',
+        label: 'Access',
+        route: ROUTE_PATHS.agencyWorkspaceAccess,
+        to: getWorkspaceAccessPath,
       },
     ],
   },
@@ -61,13 +87,13 @@ export function getClientWorkspacePreviewRoute(sections, currentPage) {
     .flatMap((section) => section.pages)
     .find((page) => page.id === currentPage)
 
-  return currentPageConfig?.previewRoute ?? ROUTE_PATHS.portalGrowthReview
+  return currentPageConfig?.previewRoute ?? ROUTE_PATHS.portalWorkspaceReview
 }
 
 export function getClientWorkspacePageIdByRoutePath(path) {
   const page = clientWorkspaceSections
     .flatMap((section) => section.pages)
-    .find((workspacePage) => workspacePage.route === path)
+    .find((workspacePage) => matchPath({ end: true, path: workspacePage.route }, path))
 
   return page?.id ?? null
 }

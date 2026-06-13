@@ -78,6 +78,75 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-workspace-detail',
+    path: ROUTE_PATHS.agencyWorkspaceDetail,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-setup',
+    path: ROUTE_PATHS.agencyWorkspaceSetup,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-data',
+    path: ROUTE_PATHS.agencyWorkspaceData,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-review-setup',
+    path: ROUTE_PATHS.agencyWorkspaceReviewSetup,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-review',
+    path: ROUTE_PATHS.agencyWorkspaceReview,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-access',
+    path: ROUTE_PATHS.agencyWorkspaceAccess,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_ACCESS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'portal-home',
+    path: ROUTE_PATHS.portalHome,
+    access: { scope: ACCOUNT },
+  },
+  {
+    id: 'portal-workspace-detail',
+    path: ROUTE_PATHS.portalWorkspaceDetail,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+    },
+  },
+  {
+    id: 'portal-workspace-review',
+    path: ROUTE_PATHS.portalWorkspaceReview,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+    },
+  },
+  {
     id: 'dental-growth-review',
     path: ROUTE_PATHS.portalGrowthReview,
     access: {

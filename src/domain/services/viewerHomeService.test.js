@@ -24,7 +24,7 @@ describe('viewerHomeService', () => {
         capabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
         workspaceId: 'workspace_1',
       }],
-    })).toBe('/portal/growth-review?clientId=workspace_1')
+    })).toBe('/portal/workspaces/workspace_1/review')
   })
 
   it('sends workspace members without growth review access to workspace settings', () => {
