@@ -1,11 +1,19 @@
 import { useState } from 'react'
 
 import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  cancelWorkspaceInvitation,
+  createWorkspaceInvitation,
+  listWorkspaceInvitations,
+  resendWorkspaceInvitation,
+} from '../invitations'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
 import { getEmailValidationIssue } from '../../shared/validation/email'
 
+const EMAIL_REQUIRED_ERROR = 'Email is required.'
 const EMAIL_VALIDATION_ERROR = 'Enter a valid email address.'
+const NAME_REQUIRED_ERROR = 'Name is required.'
 
 const initialInvitationForm = Object.freeze({
   email: '',
@@ -26,16 +34,17 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
         return Promise.resolve([])
       }
 
-      return runtime.apiClient
-        .get(`/api/workspaces/${workspaceId}/invitations/`)
+      return listWorkspaceInvitations(runtime.apiClient, workspaceId)
         .then((payload) => payload.invitations ?? [])
     },
   })
   const invitations = invitationsResource.data ?? []
+  const trimmedInvitationName = form.name.trim()
   const trimmedInvitationEmail = form.email.trim()
+  const invitationNameIssue = error === NAME_REQUIRED_ERROR ? error : ''
   const invitationEmailIssue = form.email
     ? getEmailValidationIssue(trimmedInvitationEmail, EMAIL_VALIDATION_ERROR)
-    : ''
+    : error === EMAIL_REQUIRED_ERROR || error === EMAIL_VALIDATION_ERROR ? error : ''
 
   function refreshInvitations() {
     void invitationsResource.reload()
@@ -52,13 +61,27 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
   function createInvitation(event) {
     event.preventDefault()
 
-    if (!workspaceId || invitationEmailIssue) {
+    if (!workspaceId) {
       return
     }
 
-    void runtime.apiClient.post(`/api/workspaces/${workspaceId}/invitations/`, {
-      email: form.email.trim(),
-      name: form.name.trim(),
+    if (!trimmedInvitationName) {
+      setError(NAME_REQUIRED_ERROR)
+      return
+    }
+
+    if (!trimmedInvitationEmail) {
+      setError(EMAIL_REQUIRED_ERROR)
+      return
+    }
+
+    if (invitationEmailIssue) {
+      return
+    }
+
+    void createWorkspaceInvitation(runtime.apiClient, workspaceId, {
+      email: trimmedInvitationEmail,
+      name: trimmedInvitationName,
       role: form.role,
     }).then((payload) => {
       const invitation = payload.invitation
@@ -76,8 +99,7 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
       return
     }
 
-    void runtime.apiClient
-      .post(`/api/workspaces/${workspaceId}/invitations/${invitationPendingCancel.id}/cancel/`, {})
+    void cancelWorkspaceInvitation(runtime.apiClient, workspaceId, invitationPendingCancel.id)
       .then(() => {
         const cancelledEmail = invitationPendingCancel.email
         setInvitationPendingCancel(null)
@@ -94,8 +116,7 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
       return
     }
 
-    void runtime.apiClient
-      .post(`/api/workspaces/${workspaceId}/invitations/${invitation.id}/resend/`, {})
+    void resendWorkspaceInvitation(runtime.apiClient, workspaceId, invitation.id)
       .then((payload) => {
         refreshInvitations()
         toast.success('Invitation resent', `${payload.invitation?.email ?? invitation.email} will receive a new link.`)
@@ -111,6 +132,7 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
     error,
     form,
     invitationEmailIssue,
+    invitationNameIssue,
     invitationPendingCancel,
     invitations,
     resendInvitation,

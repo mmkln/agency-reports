@@ -1,1 +1,0 @@
-export { AdminClinicReputationPage } from './AdminClinicReputationPage'

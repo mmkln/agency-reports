@@ -63,7 +63,7 @@ function ClientActions({
   return (
     <div className="flex justify-end gap-1.5">
       <Button asChild size="sm" variant="outline">
-        <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, { clientId: client.id })}>
+        <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, { clientId: client.id })}>
           Open
         </Link>
       </Button>

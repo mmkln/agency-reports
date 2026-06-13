@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 
-import { WORKSPACE_TYPE_META } from '@/entities/workspace'
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
 import { Icon } from '@/shared/icons'
 import {
@@ -9,20 +8,7 @@ import {
 
 import { getWorkspaceStatusMeta } from '../model/clientDetailPresentation'
 
-function formatLabel(value) {
-  if (!value) {
-    return 'Unknown'
-  }
-
-  return value
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ')
-}
-
 function WorkspaceListItem({ workspace }) {
-  const typeMeta = WORKSPACE_TYPE_META[workspace.type]
   const statusMeta = getWorkspaceStatusMeta(workspace)
   const isActive = workspace.status === 'active'
   const statusClassName = 'text-text-secondary'
@@ -33,8 +19,6 @@ function WorkspaceListItem({ workspace }) {
       <div className="min-w-0 sm:flex sm:items-center sm:gap-card">
         <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{workspace.name}</h3>
         <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
-          <span>{typeMeta?.label ?? formatLabel(workspace.type)}</span>
-          <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
           <span className={`inline-flex items-center gap-tag ${statusClassName}`}>
             <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
             {statusMeta.label}

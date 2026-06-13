@@ -52,14 +52,14 @@ describe('createBackendAuthClient', () => {
     }
     const authClient = createBackendAuthClient({ apiClient, tokenStorage })
 
-    const viewer = await authClient.signInWithUsername({
+    const viewer = await authClient.signInWithEmail({
+      email: 'owner@example.com',
       password: 'secret',
-      username: 'owner',
     })
 
     expect(apiClient.post).toHaveBeenCalledWith('/api/auth/login/', {
+      email: 'owner@example.com',
       password: 'secret',
-      username: 'owner',
     }, { skipAuth: true })
     expect(tokenStorage.write).toHaveBeenCalledWith({
       access: 'access-token',

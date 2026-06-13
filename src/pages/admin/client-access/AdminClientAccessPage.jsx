@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
+import { InvitationsPanel } from '@/features/admin-client-access'
+import { listWorkspaceMemberships } from '@/features/workspace-access'
 import {
   ErrorBlock,
   Panel,
@@ -13,7 +15,6 @@ import {
   TableRow,
   UnavailableState,
 } from '@/shared/ui'
-import { InvitationsPanel } from '@/features/admin-client-access'
 
 export function AdminClientAccessPage({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
@@ -30,7 +31,7 @@ export function AdminClientAccessPage({ routeParams = {}, runtime }) {
     setStatus('loading')
     setError('')
 
-    return apiClient.get(`/api/workspaces/${workspaceId}/memberships/`)
+    return listWorkspaceMemberships(apiClient, workspaceId)
       .then((payload) => {
         setMemberships(payload.memberships ?? [])
         setStatus('ready')

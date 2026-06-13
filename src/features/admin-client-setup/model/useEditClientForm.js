@@ -1,6 +1,5 @@
 import { useState } from 'react'
 
-import { CLIENT_TYPES } from '../../../entities/client'
 import {
   getPortalSlugIssueFromClients,
   normalizePortalSlug,
@@ -16,7 +15,6 @@ function clientToForm(client) {
     primaryContactEmail: client?.primary_contact_email ?? '',
     primaryContactName: client?.primary_contact_name ?? '',
     status: client?.status ?? '',
-    type: client?.type ?? CLIENT_TYPES.GENERIC,
   }
 }
 

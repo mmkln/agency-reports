@@ -1,4 +1,4 @@
-import { CLIENT_STATUS_META, CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_STATUS_META, CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../entities/client-work-item'
@@ -307,7 +307,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     repositories,
     viewer,
   })
-  const clinicOverview = client.type === CLIENT_TYPES.CLINIC
+  const clinicOverview = isClinicClient(client)
     ? getClinicOverviewPreview({
         clientId,
         neededActions,
@@ -336,7 +336,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
       primaryContactName: client.primary_contact_name,
       status: collections.clientStatus,
       statusMeta: getStatusMeta(collections.clientStatus, CLIENT_STATUS_META),
-      type: client.type ?? CLIENT_TYPES.GENERIC,
+      type: CLIENT_TYPES.CLINIC,
     },
     clinicOverview,
     currentFocus,
@@ -379,7 +379,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     performancePreview,
     progressSummary: projects,
     status: 'ready',
-    template: clinicOverview ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC,
+    template: CLIENT_TYPES.CLINIC,
   }
 }
 

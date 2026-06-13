@@ -9,7 +9,7 @@ import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
 import { useAuth } from '../../../app/providers/auth/useAuth'
 
-const DEFAULT_USERNAME = ''
+const DEFAULT_EMAIL = ''
 
 function AuthInput({ iconName, label, ...props }) {
   return (
@@ -35,13 +35,13 @@ export function LoginPage({ onAuthChange }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const toast = useToast()
-  const [username, setUsername] = useState(DEFAULT_USERNAME)
+  const [email, setEmail] = useState(DEFAULT_EMAIL)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  function signIn(nextUsername, nextPassword) {
-    void (auth.onSignIn ?? authClient.signInWithUsername)({
-      username: nextUsername,
+  function signIn(nextEmail, nextPassword) {
+    void (auth.onSignIn ?? authClient.signInWithEmail)({
+      email: nextEmail,
       password: nextPassword,
     }).then((viewer) => {
       resolvedOnAuthChange?.()
@@ -59,7 +59,7 @@ export function LoginPage({ onAuthChange }) {
 
   function handleSubmit(event) {
     event.preventDefault()
-    signIn(username, password)
+    signIn(email, password)
   }
 
   return (
@@ -104,24 +104,25 @@ export function LoginPage({ onAuthChange }) {
                   <p className="text-ui text-brand">Welcome back</p>
                   <h2 className="mt-item text-display text-text-primary">Sign in</h2>
                   <p className="mt-item text-body text-text-secondary">
-                    Use your username and password to continue.
+                    Use your email and password to continue.
                   </p>
                 </div>
 
                 <form className="mt-panel grid gap-component" onSubmit={handleSubmit}>
                   <AuthInput
-                    autoComplete="username"
-                    iconName="user"
-                    label="Username"
-                    name="username"
+                    autoComplete="email"
+                    iconName="mail"
+                    inputMode="email"
+                    label="Email"
+                    name="email"
                     onChange={(event) => {
-                      setUsername(event.target.value)
+                      setEmail(event.target.value)
                       setError('')
                     }}
-                    placeholder="Username"
+                    placeholder="owner@example.com"
                     required
-                    type="text"
-                    value={username}
+                    type="email"
+                    value={email}
                   />
 
                   <div className="grid gap-item">

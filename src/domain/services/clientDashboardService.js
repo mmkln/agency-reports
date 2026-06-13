@@ -1,4 +1,4 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
@@ -97,11 +97,11 @@ export function getClientDashboardPage({
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
-      type: client.type ?? CLIENT_TYPES.GENERIC,
+      type: CLIENT_TYPES.CLINIC,
     },
     dashboard: dashboard ? mapDashboard(dashboard) : null,
     latestReport: latestReport ? mapReport(latestReport) : null,
-    redirectTo: client.type === CLIENT_TYPES.CLINIC
+    redirectTo: isClinicClient(client)
       ? buildClinicResultsRedirect({ clientId, dashboard })
       : null,
     reason: dashboardId && !dashboard ? 'dashboard_not_found' : null,

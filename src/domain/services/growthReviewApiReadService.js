@@ -271,7 +271,6 @@ export async function getGrowthReviewDashboardPageFromApi({
       id: workspaceId,
       name: payload?.workspace?.name ?? payload?.client?.name ?? 'Workspace',
       portalSlug: payload?.workspace?.slug ?? payload?.client?.portalSlug ?? '',
-      type: payload?.workspace?.type ?? payload?.client?.type ?? 'clinic',
     },
     period: readModel.period,
     periodOptions: periodOptions.periodOptions,

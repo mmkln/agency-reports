@@ -2,9 +2,17 @@ export function normalizeResourceError(error) {
   const status = Number(error?.status ?? 0) || 0
   const message = error?.message || 'Something went wrong.'
 
-  if (status === 401 || status === 403) {
+  if (status === 401) {
     return {
-      kind: 'permission',
+      kind: error?.code === 'session_expired' ? 'session-expired' : 'unauthenticated',
+      message,
+      status,
+    }
+  }
+
+  if (status === 403) {
+    return {
+      kind: 'forbidden',
       message,
       status,
     }
@@ -13,6 +21,14 @@ export function normalizeResourceError(error) {
   if (status === 404) {
     return {
       kind: 'not-found',
+      message,
+      status,
+    }
+  }
+
+  if (status === 400) {
+    return {
+      kind: 'validation',
       message,
       status,
     }

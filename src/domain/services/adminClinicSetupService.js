@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import {
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_PROFILE_SPECIALTIES,
@@ -32,7 +32,7 @@ function getEditableClinicClient({ clientId, repositories, viewer }) {
     throw new Error('Clinic setup is not available for this admin.')
   }
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic setup is only available for clinic clients.')
   }
 
@@ -98,8 +98,8 @@ function mapClient(client) {
     primaryContactEmail: client.primary_contact_email,
     primaryContactName: client.primary_contact_name,
     status: client.status,
-    type: client.type,
-    typeMeta: CLIENT_TYPE_META[client.type],
+    type: CLIENT_TYPES.CLINIC,
+    typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     updatedAt: client.updated_at,
   }
 }

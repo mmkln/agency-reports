@@ -15,8 +15,6 @@ import { cn } from '@/lib/utils'
 import {
   CLIENT_STATUSES,
   CLIENT_STATUS_META,
-  CLIENT_TYPES,
-  CLIENT_TYPE_META,
 } from '../../../entities/client'
 import { Icon } from '../../../shared/icons'
 
@@ -122,32 +120,6 @@ export function StatusSelect({ onFieldChange, value }) {
 
             return (
               <SelectItem key={status} value={status}>
-                <span className="inline-flex items-center gap-2">
-                  <Icon name={meta.icon} size={15} />
-                  {meta.label}
-                </span>
-              </SelectItem>
-            )
-          })}
-        </SelectContent>
-      </Select>
-    </FormField>
-  )
-}
-
-export function ClientTypeSelect({ onFieldChange, value }) {
-  return (
-    <FormField hint="Clinic clients unlock patient acquisition, calls, reputation, and compliance portal surfaces." label="Client type" required>
-      <Select onValueChange={(nextValue) => onFieldChange('type', nextValue)} value={value || CLIENT_TYPES.GENERIC}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select client type" />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.values(CLIENT_TYPES).map((type) => {
-            const meta = CLIENT_TYPE_META[type]
-
-            return (
-              <SelectItem key={type} value={type}>
                 <span className="inline-flex items-center gap-2">
                   <Icon name={meta.icon} size={15} />
                   {meta.label}

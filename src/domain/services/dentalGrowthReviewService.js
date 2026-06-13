@@ -1,4 +1,4 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { isClinicClient } from '../../entities/client'
 import {
   canViewerAccessDentalGrowthReview,
   DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
@@ -34,7 +34,7 @@ function isVisiblePeriod(period, source) {
 function getClinicClient({ clientId, repositories, viewer }) {
   const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.type !== CLIENT_TYPES.CLINIC || !canAccessWorkspaceResource(viewer, clientId)) {
+  if (!client || !isClinicClient(client) || !canAccessWorkspaceResource(viewer, clientId)) {
     return null
   }
 
@@ -177,7 +177,6 @@ export function getDentalGrowthReviewDashboardPage({
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
-      type: client.type,
     },
     period: selectedPeriod ? normalizeDentalGrowthReviewPeriod(selectedPeriod) : null,
     periodOptions: periods.map(mapPeriodOption),

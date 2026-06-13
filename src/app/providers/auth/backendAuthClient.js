@@ -32,7 +32,6 @@ function mapWorkspaceMembership(workspace, userId) {
     workspaceId,
     workspaceName: workspace.workspace_name ?? '',
     workspaceSlug: workspace.workspace_slug ?? '',
-    workspaceType: workspace.workspace_type ?? 'generic',
   }
 }
 
@@ -47,7 +46,6 @@ function mapManagedWorkspaceRelationship(relationship) {
     workspaceId,
     workspaceName: relationship.workspace_name ?? '',
     workspaceSlug: relationship.workspace_slug ?? '',
-    workspaceType: relationship.workspace_type ?? 'generic',
   }
 }
 
@@ -136,10 +134,10 @@ export function createBackendAuthClient({
     getCurrentViewer() {
       return fetchCurrentViewer()
     },
-    async signInWithUsername({ username, password }) {
+    async signInWithEmail({ email, password }) {
       const response = await apiClient.post('/api/auth/login/', {
+        email,
         password,
-        username,
       }, { skipAuth: true })
 
       tokenStorage.write(response.tokens)

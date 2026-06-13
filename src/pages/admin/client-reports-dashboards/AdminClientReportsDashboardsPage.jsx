@@ -9,7 +9,6 @@ import { listAdminClients } from '../../../domain/services/adminClientService'
 import { listAdminPerformanceDashboardPeriods } from '../../../domain/services/adminPerformanceDashboardService'
 import { listAdminReports } from '../../../domain/services/adminReportService'
 import { listAdminDashboardLinks } from '../../../domain/services/dashboardLinkService'
-import { CLIENT_TYPES } from '../../../entities/client'
 import {
   AdminClientWorkspaceHeader,
   WorkspaceState,
@@ -69,7 +68,7 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
   const dashboardLinks = workspace?.dashboardLinks.filter((dashboardLink) => dashboardLink.clientId === selectedClientId) ?? []
   const periods = workspace?.periods.filter((period) => period.clientId === selectedClientId) ?? []
   const reports = workspace?.reports.filter((report) => report.clientId === selectedClientId) ?? []
-  const isClinic = client?.type === CLIENT_TYPES.CLINIC
+  const isClinic = Boolean(client)
 
   if (workspaceResource.status === 'loading') {
     return <WorkspaceLoadingState />

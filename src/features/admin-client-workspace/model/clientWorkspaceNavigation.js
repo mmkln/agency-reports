@@ -1,75 +1,45 @@
-import { CLIENT_TYPES } from '../../../entities/client'
 import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
 import {
-  getWorkspaceDataSourcesPath,
   getWorkspaceReviewPath,
-  getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
 } from './adminWorkspacePaths'
 
 export const clientWorkspaceSections = [
   {
-    clientTypes: [CLIENT_TYPES.CLINIC],
-    defaultPageId: 'clinic-setup',
+    defaultPageId: 'access',
     iconName: 'settings',
     id: 'client-workspace',
     label: 'Client workspace',
     pages: [
       {
-        id: 'clinic-setup',
-        iconName: 'settings',
-        label: 'Setup',
-        route: ROUTE_PATHS.agencyClinicSetup,
+        id: 'access',
+        iconName: 'users',
+        label: 'Access',
+        route: ROUTE_PATHS.agencyClientAccess,
         to: getWorkspaceSetupPath,
       },
       {
-        id: 'clinic-data-sources',
-        iconName: 'database',
-        label: 'Data',
-        previewRoute: ROUTE_PATHS.portalGrowthReview,
-        route: ROUTE_PATHS.agencyClinicDataSources,
-        to: getWorkspaceDataSourcesPath,
-      },
-      {
-        id: 'clinic-review-setup',
-        iconName: 'settings',
-        label: 'Review Setup',
-        route: ROUTE_PATHS.agencyClinicReviewSetup,
-        to: getWorkspaceReviewSetupPath,
-      },
-      {
-        id: 'clinic-review',
+        id: 'growth-review',
         iconName: 'trendingUp',
-        label: 'Review',
-        route: ROUTE_PATHS.agencyClinicReview,
+        label: 'Growth Review',
+        route: ROUTE_PATHS.portalGrowthReview,
         to: getWorkspaceReviewPath,
       },
     ],
   },
 ]
 
-function isVisibleForClientType(item, clientType) {
-  return !item.clientTypes?.length || item.clientTypes.includes(clientType)
-}
-
-function getVisiblePages(section, clientType) {
-  return section.pages.filter((page) => isVisibleForClientType(page, clientType))
-}
-
-export function getVisibleClientWorkspaceSections(client) {
-  const clientType = client?.type
-
+export function getVisibleClientWorkspaceSections() {
   return clientWorkspaceSections
-    .filter((section) => isVisibleForClientType(section, clientType))
     .map((section) => ({
       ...section,
-      pages: getVisiblePages(section, clientType),
+      pages: section.pages,
     }))
     .filter((section) => section.pages.length > 0)
 }
 
-export function getClientWorkspacePageLabel(page, client) {
-  return page.labelByClientType?.[client?.type] ?? page.label
+export function getClientWorkspacePageLabel(page) {
+  return page.label
 }
 
 export function getClientWorkspaceSectionHref(section, clientId) {

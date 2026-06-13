@@ -1,8 +1,10 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { getClientDashboardPage } from './clientDashboardService'
 import { getClientPerformanceDashboardPage } from './clientPerformanceDashboardService'
 import { getClientReportsPage } from './clientReportsService'
+
+const GENERIC_REPORT_TEMPLATE = 'generic'
 
 const RESULTS_PAGE_COPY = Object.freeze({
   [CLIENT_TYPES.CLINIC]: {
@@ -20,7 +22,7 @@ const RESULTS_PAGE_COPY = Object.freeze({
     trustSubtitle: 'Aggregate source status, freshness, and interpretation caveats before clinic results are used for decisions.',
     trustTitle: 'Clinic Data Trust',
   },
-  [CLIENT_TYPES.GENERIC]: {
+  [GENERIC_REPORT_TEMPLATE]: {
     currentPerformanceEmptyDescription: 'Published outcome metrics, goals, trends, and interpretation will appear here after team review.',
     currentPerformanceEmptyTitle: 'Current performance is being prepared',
     currentPerformanceEyebrow: 'Current Performance',
@@ -38,12 +40,12 @@ const RESULTS_PAGE_COPY = Object.freeze({
 })
 
 function getResultsPageCopy(template) {
-  return RESULTS_PAGE_COPY[template] ?? RESULTS_PAGE_COPY[CLIENT_TYPES.GENERIC]
+  return RESULTS_PAGE_COPY[template] ?? RESULTS_PAGE_COPY[CLIENT_TYPES.CLINIC]
 }
 
 export function getClientReportsDashboardsFallbackTitle({ clientId, repositories }) {
   const client = clientId ? repositories.workspaces.findById(clientId) : null
-  const template = client?.type === CLIENT_TYPES.CLINIC ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC
+  const template = isClinicClient(client) ? CLIENT_TYPES.CLINIC : GENERIC_REPORT_TEMPLATE
 
   return getResultsPageCopy(template).pageTitle
 }
@@ -171,7 +173,7 @@ export function getClientReportsDashboardsPage({
   }
 
   const client = reportsPage.client ?? performancePage.client ?? dashboardPage.client
-  const template = client?.type === CLIENT_TYPES.CLINIC ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC
+  const template = isClinicClient(client) ? CLIENT_TYPES.CLINIC : GENERIC_REPORT_TEMPLATE
   const copy = getResultsPageCopy(template)
 
   return {

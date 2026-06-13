@@ -1,4 +1,4 @@
-import { CLIENT_STATUSES, CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_STATUSES } from '../../entities/client'
 import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { createClientInvitation } from './clientInviteService'
 import {
@@ -13,7 +13,6 @@ import { listManagedWorkspaceIds } from './viewerAccessContextService'
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PORTAL_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const VALID_CLIENT_STATUSES = new Set(Object.values(CLIENT_STATUSES))
-const VALID_CLIENT_TYPES = new Set(Object.values(CLIENT_TYPES))
 
 function getViewerAgencyId(viewer) {
   return viewer?.activeAgencyId ?? null
@@ -148,16 +147,6 @@ function assertClientStatus(status) {
   return normalizedStatus
 }
 
-function assertClientType(type) {
-  const normalizedType = type || CLIENT_TYPES.GENERIC
-
-  if (!VALID_CLIENT_TYPES.has(normalizedType)) {
-    throw new Error('Account type is invalid.')
-  }
-
-  return normalizedType
-}
-
 export function getPortalSlugIssueFromClients({
   clients = [],
   ignoreClientId = null,
@@ -281,7 +270,6 @@ export function createAdminClient({
     primary_contact_email: primaryContactEmail,
     primary_contact_name: primaryContactName,
     status: assertClientStatus(input.status),
-    type: assertClientType(input.type),
     updated_at: timestamp,
   }
 
@@ -355,7 +343,6 @@ export function updateAdminClient({
     primary_contact_email: primaryContactEmail,
     primary_contact_name: primaryContactName,
     status: assertClientStatus(input.status || existingClient.status),
-    type: assertClientType(input.type || existingClient.type),
     updated_at: now(),
   }
 

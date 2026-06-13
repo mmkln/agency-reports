@@ -14,7 +14,6 @@ function createViewer({
   managedWorkspaceId = null,
   workspaceCapabilities = [],
   workspaceId = WORKSPACE_ID,
-  workspaceType = 'clinic',
 } = {}) {
   return {
     activeAgencyId: agencyCapabilities.length ? AGENCY_ID : null,
@@ -32,7 +31,6 @@ function createViewer({
           agencyId: AGENCY_ID,
           status: 'active',
           workspaceId: managedWorkspaceId,
-          workspaceType,
         }]
       : [],
     userId: 'user_1',
@@ -42,7 +40,6 @@ function createViewer({
           role: 'owner',
           status: 'active',
           workspaceId,
-          workspaceType,
         }]
       : [],
   }
@@ -84,16 +81,6 @@ describe('canAccessRouteWithContext', () => {
     })).toBe(false)
   })
 
-  it('denies clinic routes for non-clinic workspaces', () => {
-    const viewer = createViewer({
-      workspaceCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
-      workspaceType: 'generic',
-    })
-
-    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['dental-growth-review'], {
-      routeParams: { clientId: WORKSPACE_ID },
-    })).toBe(false)
-  })
 })
 
 describe('filterRoutesForNavigation', () => {

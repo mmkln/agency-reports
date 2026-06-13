@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import { DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import {
   CLINIC_ACQUISITION_CHANNEL_META,
@@ -1011,7 +1011,7 @@ function summarizeCompliance({ approvals, reviews }) {
 }
 
 function canReadClinicClient({ client, clientId, viewer }) {
-  if (!client || client.type !== CLIENT_TYPES.CLINIC) {
+  if (!client || !isClinicClient(client)) {
     return false
   }
 
@@ -1067,8 +1067,8 @@ export function getClientClinicFoundationPage({
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
-      type: client.type,
-      typeMeta: CLIENT_TYPE_META[client.type],
+      type: CLIENT_TYPES.CLINIC,
+      typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     },
     locations,
     profile: mapProfile(profileRecord),

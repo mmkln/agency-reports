@@ -28,6 +28,7 @@ export function createAuthApiClient({
     } catch (error) {
       if (error instanceof BackendApiError) {
         throw new AuthApiError(error.message, {
+          code: error.code,
           detail: error.detail,
           payload: error.payload,
           status: error.status,

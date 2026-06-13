@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 import { cn } from '@/lib/utils'
-import { CLIENT_STATUS_META, CLIENT_TYPE_META } from '@/entities/client'
+import { CLIENT_STATUS_META } from '@/entities/client'
 import { Icon } from '@/shared/icons'
 
 function getClientInitials(client) {
@@ -34,11 +34,9 @@ function getClientMeta(client) {
   }
 
   const statusLabel = CLIENT_STATUS_META[client.status]?.label
-  const typeLabel = CLIENT_TYPE_META[client.type]?.label
-  const metaParts = [statusLabel, typeLabel].filter(Boolean)
 
-  if (metaParts.length > 0) {
-    return metaParts.join(' | ')
+  if (statusLabel) {
+    return statusLabel
   }
 
   return 'Client workspace'

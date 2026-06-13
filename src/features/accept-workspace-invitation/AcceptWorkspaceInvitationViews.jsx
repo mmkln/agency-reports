@@ -38,11 +38,20 @@ export function AcceptInvitationLayout({ children }) {
   )
 }
 
-export function AuthInput({ label, ...props }) {
+export function FieldError({ children }) {
+  if (!children) {
+    return null
+  }
+
+  return <p className="text-label text-destructive" role="alert">{children}</p>
+}
+
+export function AuthInput({ error, label, ...props }) {
   return (
     <label className="grid gap-item">
       <span className="text-label text-text-secondary">{label}</span>
-      <Input {...props} />
+      <Input aria-invalid={Boolean(error)} {...props} />
+      <FieldError>{error}</FieldError>
     </label>
   )
 }
@@ -159,8 +168,11 @@ export function AcceptInvitationForm({
   name,
   onNameChange,
   onPasswordChange,
+  onPasswordConfirmationChange,
   onSubmit,
   password,
+  passwordConfirmation,
+  passwordConfirmationError,
   shouldCreateUser,
 }) {
   return (
@@ -186,6 +198,17 @@ export function AcceptInvitationForm({
             required
             type="password"
             value={password}
+          />
+          <AuthInput
+            autoComplete="new-password"
+            error={passwordConfirmationError}
+            label="Confirm password"
+            minLength={8}
+            onChange={onPasswordConfirmationChange}
+            placeholder="Confirm your password"
+            required
+            type="password"
+            value={passwordConfirmation}
           />
         </div>
       ) : null}

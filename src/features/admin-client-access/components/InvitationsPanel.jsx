@@ -42,6 +42,7 @@ export function InvitationsPanel({ runtime, workspaceId }) {
           error={invitationsPanel.error}
           form={invitationsPanel.form}
           invitationEmailIssue={invitationsPanel.invitationEmailIssue}
+          invitationNameIssue={invitationsPanel.invitationNameIssue}
           onSubmit={invitationsPanel.createInvitation}
           onUpdateForm={invitationsPanel.updateForm}
         />

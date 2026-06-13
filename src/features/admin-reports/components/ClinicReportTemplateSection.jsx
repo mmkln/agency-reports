@@ -5,8 +5,6 @@ import {
   Textarea,
 } from '@/shared/ui'
 
-import { CLIENT_TYPES } from '../../../entities/client'
-
 function createEmptyClinicSections() {
   return {
     agencyWorkCompleted: [],
@@ -114,7 +112,7 @@ export function ClinicReportTemplateSection({
 }) {
   const selectedClient = clients.find((client) => client.id === form.clientId)
 
-  if (selectedClient?.type !== CLIENT_TYPES.CLINIC) {
+  if (!selectedClient) {
     return null
   }
 

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 
-import { Icon } from '../icons'
 import { BrandLogo } from '../ui'
 import { AccountMenu } from './AccountMenu'
 import { defaultSidebarViewerMeta } from './appSidebarStyles'
@@ -32,7 +31,6 @@ function TopNavLink({ isActive, route }) {
       title={label}
       to={route.path}
     >
-      {route.iconName ? <Icon className="text-current" name={route.iconName} size={15} /> : null}
       <span className="truncate">{label}</span>
     </Link>
   )

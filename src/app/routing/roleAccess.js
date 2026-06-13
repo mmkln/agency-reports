@@ -1,4 +1,3 @@
-import { CLIENT_TYPES } from '../../entities/client'
 import { AGENCY_ROLES } from '../../entities/agency-membership'
 import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 
@@ -27,7 +26,6 @@ const WORKSPACE_ADMIN_ROLES = Object.freeze(new Set([
   WORKSPACE_ROLES.OWNER,
   WORKSPACE_ROLES.ADMIN,
   WORKSPACE_ROLES.CLINIC_OWNER,
-  WORKSPACE_ROLES.PRACTICE_MANAGER,
 ]))
 
 const CLIENT_TEAM_BASE_NAV_ROUTE_IDS = Object.freeze(new Set([
@@ -59,20 +57,6 @@ function getRouteAccess(route) {
     : null)
 }
 
-function getRouteWorkspaceTypes(route) {
-  return getRouteAccess(route)?.workspaceTypes ?? route?.workspaceTypes ?? route?.clientTypes ?? []
-}
-
-function hasWorkspaceType(route, workspaceType) {
-  const workspaceTypes = getRouteWorkspaceTypes(route)
-
-  if (!workspaceTypes.length) {
-    return true
-  }
-
-  return workspaceTypes.includes(workspaceType ?? CLIENT_TYPES.GENERIC)
-}
-
 function getActiveAgencyMemberships(viewer) {
   return (viewer?.agencyMemberships ?? []).filter(isActive)
 }
@@ -97,27 +81,20 @@ function getAgencyMembershipForCapability(viewer, {
 
 function getWorkspaceMembershipForCapability(viewer, {
   capability = null,
-  route = null,
   workspaceId = null,
 } = {}) {
   return getActiveWorkspaceMemberships(viewer).find((membership) => (
     (!workspaceId || membership.workspaceId === workspaceId)
     && hasCapability(membership, capability)
-    && hasWorkspaceType(route, membership.workspaceType)
   )) ?? null
 }
 
 function getManagedWorkspaceRelationshipForCapability(viewer, {
   capability = null,
-  route = null,
   workspaceId = null,
 } = {}) {
   return getActiveManagedWorkspaceRelationships(viewer).find((relationship) => {
     if (workspaceId && relationship.workspaceId !== workspaceId) {
-      return false
-    }
-
-    if (!hasWorkspaceType(route, relationship.workspaceType)) {
       return false
     }
 
@@ -198,7 +175,6 @@ export function canAccessRouteWithContext(viewer, route, {
 
   if (access.workspaceCapability && getWorkspaceMembershipForCapability(viewer, {
     capability: access.workspaceCapability,
-    route,
     workspaceId,
   })) {
     return true
@@ -206,7 +182,6 @@ export function canAccessRouteWithContext(viewer, route, {
 
   return Boolean(access.agencyCapability && getManagedWorkspaceRelationshipForCapability(viewer, {
     capability: access.agencyCapability,
-    route,
     workspaceId,
   }))
 }
@@ -224,7 +199,6 @@ function summarizeAccessRecord(record) {
     status: record.status,
     workspaceId: record.workspaceId,
     workspaceName: record.workspaceName,
-    workspaceType: record.workspaceType,
   }
 }
 
@@ -236,7 +210,6 @@ export function getRouteAccessDiagnostic(viewer, route, {
   const workspaceId = access?.scope === ROUTE_ACCESS_SCOPES.WORKSPACE
     ? getRouteClientId({ defaultClientId, routeParams, viewer })
     : null
-  const requiredWorkspaceTypes = getRouteWorkspaceTypes(route)
   const matchingWorkspaceMemberships = getActiveWorkspaceMemberships(viewer)
     .filter((membership) => !workspaceId || membership.workspaceId === workspaceId)
   const matchingManagedRelationships = getActiveManagedWorkspaceRelationships(viewer)
@@ -257,7 +230,6 @@ export function getRouteAccessDiagnostic(viewer, route, {
     matchingAgencyMemberships: matchingAgencyMemberships.map(summarizeAccessRecord),
     matchingManagedRelationships: matchingManagedRelationships.map(summarizeAccessRecord),
     matchingWorkspaceMemberships: matchingWorkspaceMemberships.map(summarizeAccessRecord),
-    requiredWorkspaceTypes,
     route: route ? {
       id: route.id,
       path: route.path,

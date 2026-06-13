@@ -18,26 +18,22 @@ function getWorkspaceSearch(workspaceOrId) {
 }
 
 export function getWorkspaceSetupPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClinicSetup}${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceDataSourcesPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClinicDataSources}${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceReviewPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClinicReview}${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.portalGrowthReview}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {
-  return `${ROUTE_PATHS.agencyClinicReviewSetup}${getWorkspaceSearch(workspaceOrId)}`
+  return `${ROUTE_PATHS.agencyClientAccess}${getWorkspaceSearch(workspaceOrId)}`
 }
 
 export function getDefaultWorkspaceAdminPath(workspace) {
-  if (workspace?.type === 'clinic') {
-    return getWorkspaceSetupPath(workspace)
-  }
-
   return getWorkspaceSetupPath(workspace)
 }
 

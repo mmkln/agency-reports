@@ -33,12 +33,14 @@ function isLocalHostname(hostname) {
 
 export class BackendApiError extends Error {
   constructor(message, {
+    code = null,
     detail = null,
     payload = null,
     status = 0,
   } = {}) {
     super(message)
     this.name = 'BackendApiError'
+    this.code = code
     this.detail = detail
     this.payload = payload
     this.status = status

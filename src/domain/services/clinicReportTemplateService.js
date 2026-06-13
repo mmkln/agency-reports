@@ -1,4 +1,4 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { isClinicClient } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
 import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
@@ -233,7 +233,7 @@ export function buildClinicReportDraftFromClientData({
 
   const client = getAdminClient({ clientId, repositories, viewer })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic report templates are only available for clinic clients.')
   }
 

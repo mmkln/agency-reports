@@ -15,9 +15,10 @@ import { EMAIL_VALIDATION_ERROR, getEmailValidationIssue } from '@/shared/valida
 const CLIENT_SAFE_WORKSPACE_ROLE_OPTIONS = [
   WORKSPACE_ROLES.VIEWER,
   WORKSPACE_ROLES.CLINIC_OWNER,
-  WORKSPACE_ROLES.PRACTICE_MANAGER,
-  WORKSPACE_ROLES.DOCTOR_REVIEWER,
 ]
+const EMAIL_REQUIRED_ERROR = 'Email is required.'
+const NAME_REQUIRED_ERROR = 'Name is required.'
+
 function FieldError({ children }) {
   if (!children) {
     return null
@@ -26,12 +27,16 @@ function FieldError({ children }) {
   return <p className="text-label text-destructive" role="alert">{children}</p>
 }
 
+function getInviteNameIssue({ error }) {
+  return error === NAME_REQUIRED_ERROR ? error : ''
+}
+
 function getInviteEmailIssue({ email, error }) {
   if (email) {
     return getEmailValidationIssue(email)
   }
 
-  return error === EMAIL_VALIDATION_ERROR ? error : ''
+  return error === EMAIL_REQUIRED_ERROR || error === EMAIL_VALIDATION_ERROR ? error : ''
 }
 
 export function ClientInviteUserDialog({
@@ -44,8 +49,9 @@ export function ClientInviteUserDialog({
   onUpdateForm,
   status,
 }) {
+  const nameIssue = getInviteNameIssue({ error })
   const emailIssue = getInviteEmailIssue({ email: form.email, error })
-  const formError = emailIssue === error ? '' : error
+  const formError = nameIssue === error || emailIssue === error ? '' : error
 
   return (
     <Dialog
@@ -60,14 +66,17 @@ export function ClientInviteUserDialog({
         <DialogHeader>
           <DialogTitle>Invite client user</DialogTitle>
         </DialogHeader>
-        <form className="grid gap-component" id="invite-client-user-form" onSubmit={onSubmit}>
+        <form className="grid gap-component" id="invite-client-user-form" noValidate onSubmit={onSubmit}>
           <label className="grid gap-item">
             <span className="text-label text-text-secondary">Name</span>
             <Input
+              aria-invalid={Boolean(nameIssue)}
               onChange={(event) => onUpdateForm({ name: event.target.value })}
               placeholder="Sarah Johnson"
+              required
               value={form.name}
             />
+            <FieldError>{nameIssue}</FieldError>
           </label>
           <label className="grid gap-item">
             <span className="text-label text-text-secondary">Email</span>

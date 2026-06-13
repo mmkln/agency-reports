@@ -1,4 +1,3 @@
-import { CLIENT_TYPES } from '../../entities/client'
 import {
   AGENCY_WORKSPACE_RELATIONSHIP_STATUSES,
 } from '../../entities/agency-workspace-relationship'
@@ -64,14 +63,10 @@ export function getRouteAccessClientContext({
       canManageWorkspaceSettings: false,
       canViewWorkspacePortal: false,
       clientId: null,
-      clientType: CLIENT_TYPES.GENERIC,
       workspaceId: null,
-      workspaceType: CLIENT_TYPES.GENERIC,
     }
   }
 
-  const client = repositories.workspaces.findById(clientId)
-  const workspaceType = client?.type ?? CLIENT_TYPES.GENERIC
   const hasWorkspaceMembership = hasCurrentWorkspaceMembership({ repositories, viewer, workspaceId: clientId })
   const hasAgencyWorkspaceRelationship = hasCurrentAgencyWorkspaceRelationship({ repositories, viewer, workspaceId: clientId })
   const canManageWorkspace = hasAgencyWorkspaceRelationship && canManageAgencyWorkspace(viewer, clientId)
@@ -84,8 +79,6 @@ export function getRouteAccessClientContext({
     canManageWorkspaceSettings: hasWorkspaceMembership && canManageWorkspaceSettings(viewer, clientId),
     canViewWorkspacePortal,
     clientId,
-    clientType: workspaceType,
     workspaceId: clientId,
-    workspaceType,
   }
 }

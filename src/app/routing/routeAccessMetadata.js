@@ -1,6 +1,5 @@
 import { matchPath } from 'react-router-dom'
 
-import { CLIENT_TYPES } from '../../entities/client'
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
@@ -79,49 +78,12 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
-    id: 'admin-clinic-setup',
-    path: ROUTE_PATHS.agencyClinicSetup,
-    access: {
-      agencyCapability: AGENCY_CAPABILITIES.MANAGE_WORKSPACE_RELATIONSHIPS,
-      scope: WORKSPACE,
-      workspaceTypes: [CLIENT_TYPES.CLINIC],
-    },
-  },
-  {
-    id: 'admin-clinic-data-sources',
-    path: ROUTE_PATHS.agencyClinicDataSources,
-    access: {
-      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
-      scope: WORKSPACE,
-      workspaceTypes: [CLIENT_TYPES.CLINIC],
-    },
-  },
-  {
-    id: 'admin-clinic-review',
-    path: ROUTE_PATHS.agencyClinicReview,
-    access: {
-      agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
-      scope: WORKSPACE,
-      workspaceTypes: [CLIENT_TYPES.CLINIC],
-    },
-  },
-  {
-    id: 'admin-clinic-review-setup',
-    path: ROUTE_PATHS.agencyClinicReviewSetup,
-    access: {
-      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
-      scope: WORKSPACE,
-      workspaceTypes: [CLIENT_TYPES.CLINIC],
-    },
-  },
-  {
     id: 'dental-growth-review',
     path: ROUTE_PATHS.portalGrowthReview,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
       workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
-      workspaceTypes: [CLIENT_TYPES.CLINIC],
     },
   },
   {

@@ -59,16 +59,16 @@ describe('createBackendApiClient', () => {
     })
 
     await client.post('/api/auth/login/', {
+      email: 'owner@example.com',
       password: 'secret',
-      username: 'owner',
     }, { skipAuth: true })
 
     expect(fetchImpl).toHaveBeenCalledWith(
       'https://mxllagency.pythonanywhere.com/api/auth/login/',
       expect.objectContaining({
         body: JSON.stringify({
+          email: 'owner@example.com',
           password: 'secret',
-          username: 'owner',
         }),
         headers: expect.objectContaining({
           Accept: 'application/json',
@@ -88,8 +88,8 @@ describe('createBackendApiClient', () => {
     })
 
     await client.post('/api/auth/login/', {
+      email: 'owner@example.com',
       password: 'secret',
-      username: 'owner',
     })
 
     const [, options] = fetchImpl.mock.calls[0]

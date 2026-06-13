@@ -17,7 +17,6 @@ function normalizeWorkspaceSummary(source = {}) {
     name: normalizeText(source.name),
     slug: normalizeText(source.slug),
     status: normalizeText(source.status) || 'active',
-    type: normalizeText(source.type) || 'generic',
   }
 }
 

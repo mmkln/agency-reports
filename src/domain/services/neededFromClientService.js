@@ -7,6 +7,7 @@ import {
 } from '../../entities/clinic'
 import {
   CLIENT_TYPES,
+  isClinicClient,
 } from '../../entities/client'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
@@ -417,7 +418,7 @@ function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }
     viewer,
   })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic booking suggestions are only available for clinic clients.')
   }
 
@@ -444,7 +445,7 @@ function getAdminReputationSnapshot({ repositories, reputationSnapshotId, viewer
     viewer,
   })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic reputation suggestions are only available for clinic clients.')
   }
 
@@ -471,7 +472,7 @@ function getAdminComplianceReview({ complianceReviewId, repositories, viewer }) 
     viewer,
   })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic compliance suggestions are only available for clinic clients.')
   }
 
@@ -498,7 +499,7 @@ function getAdminMedicalApproval({ medicalApprovalId, repositories, viewer }) {
     viewer,
   })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic medical approval suggestions are only available for clinic clients.')
   }
 
@@ -786,7 +787,7 @@ export function listClientNeededActions({
       portalSlug: client.portal_slug,
       primaryContactEmail: client.primary_contact_email,
       primaryContactName: client.primary_contact_name,
-      type: client.type,
+      type: CLIENT_TYPES.CLINIC,
     },
     status: 'ready',
   }

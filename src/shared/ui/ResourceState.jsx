@@ -11,6 +11,12 @@ const KIND_CONFIG = {
     defaultTitle: 'This content is unavailable',
     toneClassName: 'text-destructive',
   },
+  forbidden: {
+    defaultDescription: 'Ask an admin to update your permissions.',
+    defaultIconName: 'shieldCheck',
+    defaultTitle: 'You do not have access',
+    toneClassName: 'text-text-quaternary',
+  },
   network: {
     defaultDescription: 'Check the connection and try again.',
     defaultIconName: 'circleAlert',
@@ -28,6 +34,24 @@ const KIND_CONFIG = {
     defaultIconName: 'shieldCheck',
     defaultTitle: 'You do not have access',
     toneClassName: 'text-text-quaternary',
+  },
+  'session-expired': {
+    defaultDescription: 'Sign in again to continue.',
+    defaultIconName: 'lock',
+    defaultTitle: 'Your session expired',
+    toneClassName: 'text-text-quaternary',
+  },
+  unauthenticated: {
+    defaultDescription: 'Sign in to continue.',
+    defaultIconName: 'lock',
+    defaultTitle: 'Authentication required',
+    toneClassName: 'text-text-quaternary',
+  },
+  validation: {
+    defaultDescription: 'Check the fields and try again.',
+    defaultIconName: 'circleAlert',
+    defaultTitle: 'Some information needs attention',
+    toneClassName: 'text-destructive',
   },
 }
 

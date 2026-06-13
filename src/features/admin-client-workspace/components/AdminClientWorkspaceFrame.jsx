@@ -1,6 +1,7 @@
 import { normalizeBackendWorkspacesPayload } from '@/entities/workspace'
-import { PageShell } from '@/shared/ui'
+import { listWorkspaces } from '@/features/workspaces'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
+import { PageShell } from '@/shared/ui'
 
 import { resolveRouteWorkspaceId } from '../model'
 import { AdminClientWorkspaceHeader } from './AdminClientWorkspaceHeader'
@@ -11,7 +12,7 @@ function loadWorkspace({ apiClient, workspaceId }) {
     return Promise.resolve(null)
   }
 
-  return apiClient.get('/api/workspaces/')
+  return listWorkspaces(apiClient)
     .then((payload) => normalizeBackendWorkspacesPayload(payload).workspaces
       .find((workspace) => workspace.id === workspaceId) ?? null)
 }

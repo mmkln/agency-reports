@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { normalizeBackendClient, normalizeBackendClientsPayload } from '@/entities/client'
 import { WORKSPACE_CLIENT_ACCESS_POLICIES } from '@/entities/workspace'
 import { WORKSPACE_ROLES } from '@/entities/workspace-membership'
+import { createClient as createClientRecord, listClients, updateClient } from '@/features/clients'
+import { createWorkspaceInvitation } from '@/features/invitations'
+import { createWorkspace as createWorkspaceRecord } from '@/features/workspaces'
 
 import { getAdminClientsPath } from './adminClientPaths'
 
@@ -102,7 +105,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
   }
 
   function reloadClients() {
-    return apiClient.get('/api/clients/')
+    return listClients(apiClient)
       .then((payload) => {
         applyClientsPayload(payload)
       })
@@ -115,7 +118,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
   useEffect(() => {
     let isActive = true
 
-    apiClient.get('/api/clients/')
+    listClients(apiClient)
       .then((payload) => {
         if (!isActive) {
           return
@@ -203,7 +206,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
 
     setCreateStatus('creating')
     setCreateError('')
-    apiClient.post('/api/clients/', {
+    createClientRecord(apiClient, {
       agency_id: agencyId,
       name,
     }).then(() => {
@@ -232,12 +235,9 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
 
     setEditStatus('saving')
     setEditError('')
-    apiClient.request(`/api/clients/${clientPendingEdit.id}/`, {
-      body: {
-        name,
-        status: resolvedEditForm.status,
-      },
-      method: 'PATCH',
+    updateClient(apiClient, clientPendingEdit.id, {
+      name,
+      status: resolvedEditForm.status,
     }).then((payload) => {
       const updatedClient = normalizeBackendClient(payload.client)
       setClients((current) => current.map((client) => (client.id === updatedClient.id ? updatedClient : client)))
@@ -257,7 +257,13 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     }
 
     const email = inviteForm.email.trim().toLowerCase()
+    const name = inviteForm.name.trim()
     const workspace = getPrimaryClientWorkspace(clientPendingInvite)
+
+    if (!name) {
+      setInviteError('Name is required.')
+      return
+    }
 
     if (!email) {
       setInviteError('Email is required.')
@@ -271,9 +277,9 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
 
     setInviteStatus('inviting')
     setInviteError('')
-    apiClient.post(`/api/workspaces/${workspace.id}/invitations/`, {
+    createWorkspaceInvitation(apiClient, workspace.id, {
       email,
-      name: inviteForm.name.trim(),
+      name,
       role: inviteForm.role,
     }).then(() => {
       setInviteForm(createInviteClientUserForm())
@@ -303,7 +309,7 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
 
     setWorkspaceStatus('creating')
     setWorkspaceError('')
-    apiClient.post('/api/workspaces/', {
+    createWorkspaceRecord(apiClient, {
       agency_id: agencyId,
       client_access_policy: workspaceForm.clientAccessPolicy,
       client_id: clientPendingWorkspace.id,

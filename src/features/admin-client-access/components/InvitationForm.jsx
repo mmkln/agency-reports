@@ -14,27 +14,31 @@ import { FieldError } from '../../admin-client-workspace'
 const CLIENT_SAFE_WORKSPACE_ROLES = [
   WORKSPACE_ROLES.VIEWER,
   WORKSPACE_ROLES.CLINIC_OWNER,
-  WORKSPACE_ROLES.PRACTICE_MANAGER,
-  WORKSPACE_ROLES.DOCTOR_REVIEWER,
 ]
 
 export function InvitationForm({
   error,
   form,
   invitationEmailIssue,
+  invitationNameIssue,
   onSubmit,
   onUpdateForm,
 }) {
+  const formError = error === invitationNameIssue || error === invitationEmailIssue ? '' : error
+
   return (
     <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={onSubmit}>
       <p className="text-label text-text-secondary">Invite workspace user</p>
       <label className="grid gap-1.5">
         <span className="text-label text-text-secondary">Name</span>
         <Input
+          aria-invalid={Boolean(invitationNameIssue)}
           onChange={(event) => onUpdateForm('name', event.target.value)}
           placeholder="Sarah Johnson"
+          required
           value={form.name}
         />
+        <FieldError>{invitationNameIssue}</FieldError>
       </label>
       <label className="grid gap-1.5">
         <span className="text-label text-text-secondary">Email</span>
@@ -47,7 +51,7 @@ export function InvitationForm({
           type="email"
           value={form.email}
         />
-          <FieldError>{invitationEmailIssue}</FieldError>
+        <FieldError>{invitationEmailIssue}</FieldError>
       </label>
       <label className="grid gap-1.5">
         <span className="text-label text-text-secondary">Role</span>
@@ -62,8 +66,8 @@ export function InvitationForm({
           </SelectContent>
         </Select>
       </label>
-      <Button disabled={Boolean(invitationEmailIssue) || !form.email.trim()} type="submit">Send invite</Button>
-      <FieldError>{error}</FieldError>
+      <Button disabled={Boolean(invitationEmailIssue)} type="submit">Send invite</Button>
+      <FieldError>{formError}</FieldError>
     </form>
   )
 }

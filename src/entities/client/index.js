@@ -8,4 +8,6 @@ export {
   CLIENT_STATUS_META,
   CLIENT_TYPES,
   CLIENT_TYPE_META,
+  getClientType,
+  isClinicClient,
 } from './model'

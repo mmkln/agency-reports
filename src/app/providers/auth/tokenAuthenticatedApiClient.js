@@ -4,6 +4,7 @@ import { createBearerAuthInterceptor } from '../../../shared/api/httpInterceptor
 export function createTokenAuthenticatedApiClient({
   baseApiClient = null,
   createBaseApiClient = createBackendApiClient,
+  onSessionExpired,
   refreshPath = '/api/auth/refresh/',
   tokenStorage,
 } = {}) {
@@ -15,25 +16,48 @@ export function createTokenAuthenticatedApiClient({
       }),
     ],
   })
+  let refreshPromise = null
+
+  function isAuthError(error) {
+    return error instanceof BackendApiError && error.status === 401
+  }
+
+  function createSessionExpiredError(error) {
+    return new BackendApiError('Your session expired. Sign in again.', {
+      code: 'session_expired',
+      detail: error?.detail ?? null,
+      payload: error?.payload ?? null,
+      status: 401,
+    })
+  }
+
+  function expireSession(error) {
+    const sessionExpiredError = createSessionExpiredError(error)
+
+    tokenStorage.clear()
+    onSessionExpired?.(sessionExpiredError)
+
+    return sessionExpiredError
+  }
 
   async function refreshTokens() {
     const refresh = tokenStorage.read()?.refresh
     if (!refresh) {
-      tokenStorage.clear()
       return null
     }
 
-    try {
-      const response = await rawApiClient.post(refreshPath, { refresh }, { skipAuth: true })
-      return tokenStorage.write(response)
-    } catch (error) {
-      tokenStorage.clear()
-      if (error instanceof BackendApiError && error.status === 401) {
-        return null
-      }
+    const response = await rawApiClient.post(refreshPath, { refresh }, { skipAuth: true })
+    return tokenStorage.write(response)
+  }
 
-      throw error
+  function refreshTokensOnce() {
+    if (!refreshPromise) {
+      refreshPromise = refreshTokens().finally(() => {
+        refreshPromise = null
+      })
     }
+
+    return refreshPromise
   }
 
   async function requestWithRefresh(path, options = {}) {
@@ -45,15 +69,36 @@ export function createTokenAuthenticatedApiClient({
         || options.didRefresh
         || !(error instanceof BackendApiError)
         || error.status !== 401
-        || !await refreshTokens()
       ) {
         throw error
       }
 
-      return authenticatedApiClient.request(path, {
-        ...options,
-        didRefresh: true,
-      })
+      try {
+        const refreshedTokens = await refreshTokensOnce()
+
+        if (!refreshedTokens) {
+          throw expireSession(error)
+        }
+      } catch (refreshError) {
+        if (refreshError instanceof BackendApiError && refreshError.code === 'session_expired') {
+          throw refreshError
+        }
+
+        throw expireSession(refreshError)
+      }
+
+      try {
+        return await authenticatedApiClient.request(path, {
+          ...options,
+          didRefresh: true,
+        })
+      } catch (retryError) {
+        if (isAuthError(retryError)) {
+          throw expireSession(retryError)
+        }
+
+        throw retryError
+      }
     }
   }
 

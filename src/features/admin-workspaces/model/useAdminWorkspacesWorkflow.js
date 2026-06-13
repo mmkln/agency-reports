@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
 import { normalizeBackendClientsPayload } from '@/entities/client'
 import { WORKSPACE_CLIENT_ACCESS_POLICIES, normalizeBackendWorkspacesPayload } from '@/entities/workspace'
+import { listClients } from '@/features/clients'
+import { createWorkspace as createWorkspaceRecord, listWorkspaces } from '@/features/workspaces'
 
 function getPrimaryAgencyId(viewer) {
   return viewer?.activeAgencyId ?? viewer?.agencyMemberships?.[0]?.agencyId ?? ''
@@ -14,7 +16,6 @@ function createWorkspaceForm(clientId = '') {
     clientAccessPolicy: WORKSPACE_CLIENT_ACCESS_POLICIES.OWNERS_ADMINS,
     clientId,
     name: '',
-    type: 'clinic',
   }
 }
 
@@ -53,8 +54,8 @@ export function useAdminWorkspacesWorkflow({ routeParams = {}, runtime }) {
 
   function reloadPageData() {
     return Promise.all([
-      apiClient.get('/api/workspaces/'),
-      apiClient.get('/api/clients/'),
+      listWorkspaces(apiClient),
+      listClients(apiClient),
     ]).then(([workspacesPayload, clientsPayload]) => {
       applyPayloads(workspacesPayload, clientsPayload)
     }).catch((caughtError) => {
@@ -67,8 +68,8 @@ export function useAdminWorkspacesWorkflow({ routeParams = {}, runtime }) {
     let isActive = true
 
     Promise.all([
-      apiClient.get('/api/workspaces/'),
-      apiClient.get('/api/clients/'),
+      listWorkspaces(apiClient),
+      listClients(apiClient),
     ]).then(([workspacesPayload, clientsPayload]) => {
       if (!isActive) {
         return
@@ -113,12 +114,11 @@ export function useAdminWorkspacesWorkflow({ routeParams = {}, runtime }) {
 
     setCreateStatus('creating')
     setCreateError('')
-    apiClient.post('/api/workspaces/', {
+    createWorkspaceRecord(apiClient, {
       agency_id: agencyId,
       client_access_policy: form.clientAccessPolicy,
       client_id: clientId,
       name,
-      type: form.type,
     }).then(() => {
       setForm(createWorkspaceForm(selectedClientAccountId))
       setCreateStatus('idle')

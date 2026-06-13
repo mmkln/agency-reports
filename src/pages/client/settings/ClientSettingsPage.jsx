@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
+import { getWorkspaceSettings, updateWorkspaceSettings } from '@/features/workspaces'
 import { normalizeResourceError } from '@/shared/data/resourceError'
 import {
   Button,
@@ -63,7 +64,7 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
     setError('')
     setErrorInfo(null)
 
-    return apiClient.get(`/api/workspaces/${workspaceId}/settings/`)
+    return getWorkspaceSettings(apiClient, workspaceId)
       .then((payload) => {
         setWorkspace(payload.workspace)
         setForm(createWorkspaceForm(payload.workspace))
@@ -98,13 +99,10 @@ export function ClientSettingsPage({ routeParams = {}, runtime }) {
     setStatus('saving')
     setError('')
     setErrorInfo(null)
-    apiClient.request(`/api/workspaces/${workspaceId}/settings/`, {
-      body: {
-        name: form.name.trim(),
-        slug: form.slug.trim(),
-        timezone: form.timezone,
-      },
-      method: 'PATCH',
+    updateWorkspaceSettings(apiClient, workspaceId, {
+      name: form.name.trim(),
+      slug: form.slug.trim(),
+      timezone: form.timezone,
     }).then((payload) => {
       setWorkspace(payload.workspace)
       setForm(createWorkspaceForm(payload.workspace))

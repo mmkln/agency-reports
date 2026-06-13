@@ -33,7 +33,6 @@ export function normalizeBackendWorkspace(source = {}) {
     name: normalizeText(source.name),
     slug: normalizeText(source.slug),
     status: normalizeText(source.status) || 'active',
-    type: normalizeText(source.type) || 'generic',
     updatedAt: normalizeNullableText(source.updated_at ?? source.updatedAt),
     updated_at: normalizeNullableText(source.updated_at ?? source.updatedAt),
   }

@@ -2,14 +2,6 @@ import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 
 export const REDIRECT_DELAY_MS = 1000
 
-export function getInvitationPath(token) {
-  return `/api/invitations/${encodeURIComponent(token)}/`
-}
-
-export function getAcceptPath(token) {
-  return `/api/invitations/${encodeURIComponent(token)}/accept/`
-}
-
 export function getLoginHref(token) {
   return `/login?next=${encodeURIComponent(`/accept-invite?token=${token}`)}`
 }

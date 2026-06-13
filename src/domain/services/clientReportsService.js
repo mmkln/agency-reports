@@ -1,4 +1,4 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
 import { REPORT_STATUS_META } from '../../entities/report'
 import { canAccessWorkspaceResource } from '../policies/accessPolicy'
@@ -68,7 +68,7 @@ function mapClinicReportSections(report) {
 }
 
 function mapReport(report, { client }) {
-  const clinicSections = client?.type === CLIENT_TYPES.CLINIC ? mapClinicReportSections(report) : null
+  const clinicSections = isClinicClient(client) ? mapClinicReportSections(report) : null
 
   return {
     clientDecisionsNeeded: report.client_decisions_needed,
@@ -88,7 +88,7 @@ function mapReport(report, { client }) {
       tone: 'neutral',
     },
     summary: report.summary,
-    template: clinicSections ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC,
+    template: CLIENT_TYPES.CLINIC,
     title: report.title,
     whatWeDid: report.what_we_did,
     results: report.results,
@@ -123,7 +123,7 @@ export function getClientReportsPage({ clientId, reportId, repositories, viewer 
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
-      type: client.type ?? CLIENT_TYPES.GENERIC,
+      type: CLIENT_TYPES.CLINIC,
     },
     latestReport: latestClientVisibleReport,
     reason: reportId && !selectedReport ? 'report_not_found' : null,

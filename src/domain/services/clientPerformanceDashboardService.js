@@ -3,7 +3,7 @@ import {
   PERFORMANCE_DATA_CONFIDENCE_META,
   PERFORMANCE_DATA_MODE_META,
 } from '../../entities/performance-dashboard'
-import { CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
@@ -259,14 +259,14 @@ export function getClientPerformanceDashboardPage({
       name: client.name,
       portalSlug: client.portal_slug,
       status: client.status,
-      type: client.type ?? CLIENT_TYPES.GENERIC,
+      type: CLIENT_TYPES.CLINIC,
     },
     latestReport: latestReport ? mapReport(latestReport) : null,
     neededFromClient,
     performanceDashboard: selectedPeriod ? mapPerformanceDashboardPeriod(selectedPeriod, { now: resolvedNow }) : null,
     periods: periods.map((period) => mapPerformanceDashboardPeriod(period, { now: resolvedNow })),
     reason: periodId && !selectedPeriod ? 'performance_dashboard_not_found' : null,
-    redirectTo: client.type === CLIENT_TYPES.CLINIC
+    redirectTo: isClinicClient(client)
       ? buildClinicResultsRedirect({ clientId, periodId, selectedPeriod })
       : null,
     sourceLinks,

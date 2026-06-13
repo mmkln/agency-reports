@@ -23,7 +23,6 @@ describe('viewerHomeService', () => {
       workspaceMemberships: [{
         capabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
         workspaceId: 'workspace_1',
-        workspaceType: 'clinic',
       }],
     })).toBe('/portal/growth-review?clientId=workspace_1')
   })
@@ -34,7 +33,6 @@ describe('viewerHomeService', () => {
       workspaceMemberships: [{
         capabilities: [],
         workspaceId: 'workspace_1',
-        workspaceType: 'clinic',
       }],
     })).toBe('/portal/settings?clientId=workspace_1')
   })

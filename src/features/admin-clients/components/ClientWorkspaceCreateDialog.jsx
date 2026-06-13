@@ -7,7 +7,6 @@ import {
   DialogTitle,
   ErrorBlock,
   Input,
-  Select,
 } from '@/shared/ui'
 
 export function ClientWorkspaceCreateDialog({
@@ -47,13 +46,6 @@ export function ClientWorkspaceCreateDialog({
               required
               value={form.name}
             />
-          </label>
-          <label className="grid gap-item">
-            <span className="text-label text-text-secondary">Type</span>
-            <Select onChange={(event) => onUpdateForm({ type: event.target.value })} value={form.type}>
-              <option value="clinic">Clinic</option>
-              <option value="generic">Generic</option>
-            </Select>
           </label>
           {error ? (
             <ErrorBlock title="Workspace could not be created">

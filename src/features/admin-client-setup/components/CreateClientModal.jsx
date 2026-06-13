@@ -14,13 +14,11 @@ import {
   OverlayHeader,
 } from '@/shared/ui'
 
-import { CLIENT_TYPES } from '../../../entities/client'
 import {
   getEmailIssue,
   getShortTextIssue,
 } from '../model'
 import {
-  ClientTypeSelect,
   FormField,
   LogoInput,
   ModalSection,
@@ -88,7 +86,6 @@ export function CreateClientModal({
                   value={form.portalSlug}
                 />
                 <LogoInput form={form} onFieldChange={onUpdateField} />
-                <ClientTypeSelect onFieldChange={onUpdateField} value={form.type} />
               </ModalSection>
 
               <ModalSection iconName="users" title="Primary Contact">
@@ -137,16 +134,6 @@ export function CreateClientModal({
                   {lastCreatedClient.invitation.email}; email delivery is still simulated.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {lastCreatedClient.client.type === CLIENT_TYPES.CLINIC ? (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, {
-                        clientId: lastCreatedClient.client.id,
-                      })}
-                      >
-                        Setup
-                      </Link>
-                    </Button>
-                  ) : null}
                   <Button asChild size="sm" variant="outline">
                     <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, {
                       clientId: lastCreatedClient.client.id,

@@ -6,9 +6,8 @@ import { CLIENT_INVITATION_STATUSES } from '../../entities/client-invitation'
 import { BackendApiError } from '../../shared/api/backendApiClient'
 import { useToast } from '../../shared/notifications'
 import { ErrorBlock } from '../../shared/ui'
+import { acceptInvitation as submitInvitationAcceptance, getInvitationByToken } from '../invitations'
 import {
-  getAcceptPath,
-  getInvitationPath,
   getLoginHref,
   getPostAcceptLoginHref,
   REDIRECT_DELAY_MS,
@@ -31,6 +30,8 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
   const [error, setError] = useState('')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [passwordConfirmationError, setPasswordConfirmationError] = useState('')
   const [acceptStatus, setAcceptStatus] = useState('idle')
   const loginHref = useMemo(() => (token ? getLoginHref(token) : '/login'), [token])
   const signedInEmail = auth.viewer?.email ?? auth.viewer?.user?.email ?? ''
@@ -57,7 +58,7 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
 
         setStatus('loading')
         setError('')
-        return auth.runtime.apiClient.get(getInvitationPath(token), { skipAuth: !auth.viewer })
+        return getInvitationByToken(auth.runtime.apiClient, token, { skipAuth: !auth.viewer })
       })
       .then((payload) => {
         if (ignore || !payload) {
@@ -104,16 +105,21 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
       return
     }
 
-    setAcceptStatus('accepting')
     setError('')
+    setPasswordConfirmationError('')
+
+    if (shouldCreateUser && password !== passwordConfirmation) {
+      setPasswordConfirmationError('Passwords do not match.')
+      return
+    }
+
+    setAcceptStatus('accepting')
 
     const body = shouldCreateUser
       ? { email: invitation.email, name, password }
       : { email: invitation.email }
 
-    void auth.runtime.apiClient.post(getAcceptPath(token), body, {
-      skipAuth: !auth.viewer,
-    }).then((payload) => {
+    void submitInvitationAcceptance(auth.runtime.apiClient, token, body, { skipAuth: !auth.viewer }).then((payload) => {
       setAcceptStatus('accepted')
       setInvitation((current) => ({
         ...current,
@@ -188,9 +194,18 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
         invitation={invitation}
         name={name}
         onNameChange={(event) => setName(event.target.value)}
-        onPasswordChange={(event) => setPassword(event.target.value)}
+        onPasswordChange={(event) => {
+          setPassword(event.target.value)
+          setPasswordConfirmationError('')
+        }}
+        onPasswordConfirmationChange={(event) => {
+          setPasswordConfirmation(event.target.value)
+          setPasswordConfirmationError('')
+        }}
         onSubmit={acceptInvitation}
         password={password}
+        passwordConfirmation={passwordConfirmation}
+        passwordConfirmationError={passwordConfirmationError}
         shouldCreateUser={shouldCreateUser}
       />
     )

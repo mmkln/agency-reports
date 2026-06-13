@@ -16,18 +16,24 @@ const removedLocalDataClient = Object.freeze({
 })
 
 const authTokenStorage = createBrowserAuthTokenStorage()
-const backendApiClient = createTokenAuthenticatedApiClient({
-  tokenStorage: authTokenStorage,
-})
-const portalAuthClient = createBackendAuthClient({
-  apiClient: createAuthApiClient({ apiClient: backendApiClient }),
-  tokenStorage: authTokenStorage,
-})
 
 export function AuthProvider({ children }) {
   const [authRevision, setAuthRevision] = useState(0)
   const [viewer, setViewer] = useState(null)
   const [authStatus, setAuthStatus] = useState('loading')
+  const handleSessionExpired = useCallback(() => {
+    setViewer(null)
+    setAuthStatus('ready')
+    setAuthRevision((current) => current + 1)
+  }, [])
+  const backendApiClient = useMemo(() => createTokenAuthenticatedApiClient({
+    onSessionExpired: handleSessionExpired,
+    tokenStorage: authTokenStorage,
+  }), [handleSessionExpired])
+  const portalAuthClient = useMemo(() => createBackendAuthClient({
+    apiClient: createAuthApiClient({ apiClient: backendApiClient }),
+    tokenStorage: authTokenStorage,
+  }), [backendApiClient])
 
   const refreshAuth = useCallback(() => {
     setAuthStatus('loading')
@@ -43,7 +49,7 @@ export function AuthProvider({ children }) {
         setAuthStatus('error')
         throw error
       })
-  }, [])
+  }, [portalAuthClient])
 
   useEffect(() => {
     void Promise.resolve().then(() => refreshAuth()).catch(() => {})
@@ -54,7 +60,7 @@ export function AuthProvider({ children }) {
     dataClient: removedLocalDataClient,
     skipRepositoryRouteContext: true,
     viewer,
-  }), [viewer])
+  }), [backendApiClient, viewer])
 
   const handleAuthChange = useCallback(() => {
     setAuthRevision((current) => current + 1)
@@ -62,21 +68,21 @@ export function AuthProvider({ children }) {
   }, [refreshAuth])
 
   const handleSignIn = useCallback((credentials) => (
-    portalAuthClient.signInWithUsername(credentials)
+    portalAuthClient.signInWithEmail(credentials)
       .then((nextViewer) => {
         setViewer(nextViewer)
         setAuthStatus('ready')
         handleAuthChange()
         return nextViewer
       })
-  ), [handleAuthChange])
+  ), [handleAuthChange, portalAuthClient])
 
   const handleSignOut = useCallback(() => {
     void portalAuthClient.signOut().finally(() => {
       setViewer(null)
       handleAuthChange()
     })
-  }, [handleAuthChange])
+  }, [handleAuthChange, portalAuthClient])
 
   const value = {
     viewer,

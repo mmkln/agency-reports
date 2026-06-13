@@ -16,7 +16,6 @@ function createViewer() {
       role: 'owner',
       status: 'active',
       workspaceId: 'workspace_1',
-      workspaceType: 'clinic',
     }],
   }
 }
