@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   DataTable,
@@ -6,6 +7,7 @@ import {
   StatusBadge,
 } from '@/shared/ui'
 import { CLIENT_STATUS_META } from '@/entities/client'
+import { getAgencyClientDetailPath } from '@/domain/navigation/routePaths'
 
 import { getClientActionPermissions } from '../model/clientActionPermissions'
 import { ClientMoreMenu } from './ClientMoreMenu'
@@ -22,7 +24,23 @@ export function ClientsTable({
   const columns = useMemo(() => [
     {
       accessorKey: 'name',
-      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      cell: ({ row }) => {
+        const client = row.original
+        const permissions = getClientActionPermissions(viewer, client)
+
+        if (!permissions.canOpenClient) {
+          return <span className="font-medium">{client.name}</span>
+        }
+
+        return (
+          <Link
+            className="rounded-sm font-medium text-text-primary no-underline transition-colors duration-motion-fast ease-motion-standard hover:text-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+            to={getAgencyClientDetailPath(client.id)}
+          >
+            {client.name}
+          </Link>
+        )
+      },
       header: 'Name',
     },
     {

@@ -1,29 +1,31 @@
 import { Link } from 'react-router-dom'
 import { useMemo } from 'react'
 
-import { ROUTE_PATHS } from '@/domain/navigation/routePaths'
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
 import { WORKSPACE_STATUS_META } from '@/entities/workspace'
 import {
-  Button,
   DataTable,
+  DataTableSurface,
   ErrorBlock,
-  Panel,
-  PanelBody,
-  PanelHeader,
   StatusBadge,
 } from '@/shared/ui'
 
 export function WorkspacesTable({
   error,
-  selectedClient,
   status,
   workspaces,
 }) {
   const columns = useMemo(() => [
     {
       accessorKey: 'name',
-      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      cell: ({ row }) => (
+        <Link
+          className="rounded-sm font-medium text-text-primary no-underline transition-colors duration-motion-fast ease-motion-standard hover:text-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+          to={getDefaultWorkspaceAdminPath(row.original)}
+        >
+          {row.original.name}
+        </Link>
+      ),
       header: 'Name',
     },
     {
@@ -47,52 +49,26 @@ export function WorkspacesTable({
       ),
       header: 'Status',
     },
-    {
-      cell: ({ row }) => (
-        <Button asChild size="sm" variant="outline">
-          <Link to={getDefaultWorkspaceAdminPath(row.original)}>Open</Link>
-        </Button>
-      ),
-      enableSorting: false,
-      header: 'Actions',
-      id: 'actions',
-      meta: {
-        isAction: true,
-        label: 'Actions',
-        nowrap: true,
-      },
-    },
   ], [])
 
   return (
-    <Panel>
-      <PanelHeader
-        action={selectedClient ? (
-          <Button asChild size="sm" variant="ghost">
-            <Link to={ROUTE_PATHS.agencyWorkspaces}>Show all</Link>
-          </Button>
-        ) : null}
-        divided
-        title={selectedClient ? `${selectedClient.name} workspaces` : 'Workspaces'}
-      />
-      <PanelBody className="overflow-x-auto p-0">
-        {status === 'loading' ? (
-          <div className="min-h-[220px] animate-pulse" />
-        ) : status === 'error' ? (
-          <div className="p-card">
-            <ErrorBlock title="Workspaces could not be loaded">
-              {error}
-            </ErrorBlock>
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={workspaces}
-            emptyMessage="No workspaces yet."
-            getRowId={(workspace) => workspace.id}
-          />
-        )}
-      </PanelBody>
-    </Panel>
+    <DataTableSurface>
+      {status === 'loading' ? (
+        <div className="min-h-[220px] animate-pulse" />
+      ) : status === 'error' ? (
+        <div className="p-card">
+          <ErrorBlock title="Workspaces could not be loaded">
+            {error}
+          </ErrorBlock>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={workspaces}
+          emptyMessage="No workspaces yet."
+          getRowId={(workspace) => workspace.id}
+        />
+      )}
+    </DataTableSurface>
   )
 }

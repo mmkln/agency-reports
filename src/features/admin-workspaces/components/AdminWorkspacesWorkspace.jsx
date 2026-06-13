@@ -34,7 +34,6 @@ export function AdminWorkspacesWorkspace({ routeParams = {}, runtime }) {
 
       <WorkspacesTable
         error={workflow.error}
-        selectedClient={workflow.selectedClient}
         status={workflow.status}
         workspaces={workflow.filteredWorkspaces}
       />

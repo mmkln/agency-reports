@@ -118,7 +118,6 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
 
       <AdminClientDetailHeader
         client={workflow.client}
-        onAddWorkspace={workflow.openWorkspaceDialog}
         onEditClient={workflow.openEditDialog}
       />
       <div className="grid gap-card">

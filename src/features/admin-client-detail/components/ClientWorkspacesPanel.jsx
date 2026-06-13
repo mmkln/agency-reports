@@ -4,25 +4,41 @@ import { WORKSPACE_TYPE_META } from '@/entities/workspace'
 import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
 import { Icon } from '@/shared/icons'
 import {
-  Badge,
   Button,
-  StatusBadge,
 } from '@/shared/ui'
 
 import { getWorkspaceStatusMeta } from '../model/clientDetailPresentation'
 
+function formatLabel(value) {
+  if (!value) {
+    return 'Unknown'
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
 function WorkspaceListItem({ workspace }) {
   const typeMeta = WORKSPACE_TYPE_META[workspace.type]
+  const statusMeta = getWorkspaceStatusMeta(workspace)
+  const isActive = workspace.status === 'active'
+  const statusClassName = 'text-text-secondary'
+  const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
 
   return (
-    <div className="flex flex-col gap-control rounded-control border border-control-border px-card py-component sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-control rounded-control border border-control-border px-component py-control sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 sm:flex sm:items-center sm:gap-card">
         <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{workspace.name}</h3>
-        <div className="flex flex-wrap items-center gap-tag">
-          <Badge tone={typeMeta?.tone ?? 'neutral'}>
-            {typeMeta?.label ?? workspace.type}
-          </Badge>
-          <StatusBadge meta={getWorkspaceStatusMeta(workspace)} />
+        <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+          <span>{typeMeta?.label ?? formatLabel(workspace.type)}</span>
+          <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+          <span className={`inline-flex items-center gap-tag ${statusClassName}`}>
+            <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
+            {statusMeta.label}
+          </span>
         </div>
       </div>
       <Link
@@ -40,11 +56,16 @@ export function ClientWorkspacesPanel({ onAddWorkspace, workspaces }) {
   const hasWorkspaces = workspaces.length > 0
 
   return (
-    <section className="grid gap-component rounded-block bg-block p-card">
+    <section className="grid gap-control rounded-block bg-block p-component">
       <div className="flex items-center justify-between gap-control">
         <h2 className="m-0 text-ui font-semibold text-text-primary">
           {workspaces.length > 1 ? 'Workspaces' : 'Workspace'}
         </h2>
+        {hasWorkspaces ? (
+          <Button icon={<Icon name="plus" size={16} />} onClick={onAddWorkspace} size="sm" type="button" variant="outline">
+            Add workspace
+          </Button>
+        ) : null}
       </div>
       <div className="grid gap-item">
         {hasWorkspaces ? (
