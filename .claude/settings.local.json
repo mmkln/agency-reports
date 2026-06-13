@@ -4,7 +4,9 @@
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "Bash(npx tsc *)",
       "Bash(npm run *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(sed -i '868,1069d' src/widgets/dental-growth-review/DentalGrowthReviewBlocks.jsx)",
+      "Bash(sed -n '864,874p' src/widgets/dental-growth-review/DentalGrowthReviewBlocks.jsx)"
     ]
   }
 }

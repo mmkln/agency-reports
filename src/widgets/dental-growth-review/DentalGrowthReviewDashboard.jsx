@@ -1,10 +1,11 @@
 import {
+  // BookingsByTrackPanel,
   DentalGrowthReviewState,
   FunnelView,
 } from './DentalGrowthReviewBlocks'
+import { BookingsByTrackComparisonPanel } from './BookingsByTrackComparisonPanel'
 import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
-import { ReactivationTrackPerformanceCard } from './ReactivationTrackPerformanceCard'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
 
 export function DentalGrowthReviewDashboard({
@@ -34,13 +35,14 @@ export function DentalGrowthReviewDashboard({
       />
 
       {trackPerformance ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-4">
           <ReactivationActivityChart chart={reactivationActivity} />
-          <ReactivationTrackPerformanceCard model={trackPerformance} />
+          {/* <BookingsByTrackPanel funnelChart={funnelChart} /> */}
         </div>
       ) : (
         <ReactivationActivityChart chart={reactivationActivity} />
       )}
+      {trackPerformance ? <BookingsByTrackComparisonPanel funnelChart={funnelChart} /> : null}
 
       <FunnelView
         emptyAction={funnelEmptyAction}

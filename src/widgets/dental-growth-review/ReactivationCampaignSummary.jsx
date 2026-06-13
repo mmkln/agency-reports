@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 
+import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
 import { reactivationText } from './reactivationTypography'
 
 const cardToneClass = {
@@ -253,31 +254,8 @@ function formatCohortPercent(value) {
   return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
 }
 
-function createRepliedCard(funnelChart) {
-  const stages = Array.isArray(funnelChart?.stages) ? funnelChart.stages : []
-  const stage = stages.find((item) => (
-    normalizeStageKey(item.id ?? item.stage_id).includes('replied')
-    || normalizeStageKey(item.stage_name ?? item.name).includes('replied')
-  ))
-
-  if (!stage) {
-    return null
-  }
-
-  const repliedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
-
-  return {
-    caption: 'Patient replies',
-    displayValue: repliedCount.toLocaleString('en-US'),
-    key: 'replied_positive',
-    label: 'Replied',
-    value: repliedCount,
-  }
-}
-
 function buildActivityCards({ cards, funnelChart }) {
   const derivedCards = [
-    createRepliedCard(funnelChart),
     createTreatmentAcceptedCard(funnelChart),
   ].filter(Boolean)
   const sourceCards = (Array.isArray(cards) ? cards : [])
@@ -311,7 +289,7 @@ function ActivityCard({ card }) {
   const captionClass = reactivationText.metricCaption
 
   return (
-    <article className={`flex min-h-[76px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
+    <article className={`flex min-h-[92px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
       <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
         <Icon name={getCardIconName(card)} size={15} />
       </span>
@@ -435,7 +413,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
   ].filter(Boolean).join(' · ')
 
   return (
-    <article className="flex min-h-[76px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
+    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
         <Icon name="calendar" size={19} />
       </span>
@@ -507,8 +485,9 @@ export function ReactivationCampaignSummary({
           {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
         </div>
       </header>
-      <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-control md:grid-cols-3 xl:grid-cols-7">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
+        <ReactivationCampaignKpiCards funnelChart={funnelChart} />
         {secondaryCards.map((card) => (
           <ActivityCard card={card} key={card.key || card.label} />
         ))}

@@ -47,7 +47,6 @@ import { reactivationText } from './reactivationTypography'
 import {
   FunnelSegmentSwitcher,
   HorizontalFunnelFlowChart,
-  StackedFunnelFlowChart,
 } from './StackedFunnelFlowChart'
 
 export function DentalGrowthReviewState({ onRetry, page }) {
@@ -866,7 +865,168 @@ export function NarrativeColumns({ items }) {
   )
 }
 
-export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
+function getTrackStageCount(track, matcher) {
+  const matchingStage = track.stages?.find((stage) => {
+    const values = [
+      stage?.id,
+      stage?.stage_id,
+      stage?.stage_name,
+      stage?.name,
+      stage?.key,
+    ].map((value) => String(value ?? '').trim().toLowerCase())
+
+    return values.some(matcher)
+  })
+
+  return Math.max(Number(matchingStage?.stage_count ?? matchingStage?.count ?? 0) || 0, 0)
+}
+
+function getTrackCohortCount(track) {
+  const firstStage = track.stages?.[0]
+
+  return Math.max(Number(firstStage?.stage_count ?? firstStage?.count ?? 0) || 0, 0)
+}
+
+function formatTablePercent(numerator, denominator) {
+  if (!denominator || numerator <= 0) {
+    return '0%'
+  }
+
+  return `${((numerator / denominator) * 100).toFixed(1)}%`
+}
+
+function createBookingsByTrackRows(trackBreakdowns, segmentOptions) {
+  const optionsById = new Map(segmentOptions.map((option) => [option.id, option]))
+
+  return trackBreakdowns.map((track, index) => {
+    const id = String(track.id ?? track.key ?? `track-${index}`)
+    const option = optionsById.get(id)
+    const cohort = getTrackCohortCount(track)
+    const replies = getTrackStageCount(track, (value) => value.includes('replied'))
+    const booked = getTrackStageCount(track, (value) => value.includes('booked'))
+
+    return {
+      booked,
+      bookingRate: formatTablePercent(booked, replies),
+      bookingRatePositive: booked > 0 && replies > 0,
+      cohort,
+      color: option?.color ?? 'var(--text-quaternary)',
+      id,
+      label: option?.label ?? track.label ?? track.key ?? `Track ${index + 1}`,
+      replies,
+      replyRate: formatTablePercent(replies, cohort),
+    }
+  })
+}
+
+function BookingsByTrackTable({ rows }) {
+  const total = rows.reduce((acc, row) => ({
+    booked: acc.booked + row.booked,
+    cohort: acc.cohort + row.cohort,
+    replies: acc.replies + row.replies,
+  }), {
+    booked: 0,
+    cohort: 0,
+    replies: 0,
+  })
+  const totalReplyRate = formatTablePercent(total.replies, total.cohort)
+  const totalBookingRate = formatTablePercent(total.booked, total.replies)
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] border-separate border-spacing-0 text-left">
+        <thead>
+          <tr className="text-label font-medium text-text-muted">
+            <th className="pb-control pr-control font-medium">Track</th>
+            <th className="px-control pb-control text-right font-medium">Cohort</th>
+            <th className="px-control pb-control text-right font-medium">Replies</th>
+            <th className="px-control pb-control text-right font-medium">Booked</th>
+            <th className="px-control pb-control text-right font-medium">Reply rate</th>
+            <th className="pb-control pl-control text-right font-medium">Booking rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className="text-label text-text-primary" key={row.id}>
+              <th className="border-t border-separator py-control pr-control font-medium">
+                <span className="inline-flex items-center gap-tag">
+                  <span
+                    aria-hidden="true"
+                    className="size-2.5 rounded-full"
+                    style={{ backgroundColor: row.color }}
+                  />
+                  {row.label}
+                </span>
+              </th>
+              <td className="border-t border-separator px-control py-control text-right tabular-nums">
+                {row.cohort.toLocaleString()}
+              </td>
+              <td className="border-t border-separator px-control py-control text-right tabular-nums">
+                {row.replies.toLocaleString()}
+              </td>
+              <td className="border-t border-separator px-control py-control text-right tabular-nums">
+                {row.booked.toLocaleString()}
+              </td>
+              <td className="border-t border-separator px-control py-control text-right tabular-nums">
+                {row.replyRate}
+              </td>
+              <td className={`border-t border-separator py-control pl-control text-right tabular-nums ${
+                row.bookingRatePositive ? 'text-success' : 'text-destructive'
+              }`}>
+                {row.bookingRate}
+              </td>
+            </tr>
+          ))}
+          <tr className="text-label font-semibold text-text-primary">
+            <th className="border-t border-separator py-control pr-control font-semibold">
+              Total
+            </th>
+            <td className="border-t border-separator px-control py-control text-right tabular-nums">
+              {total.cohort.toLocaleString()}
+            </td>
+            <td className="border-t border-separator px-control py-control text-right tabular-nums">
+              {total.replies.toLocaleString()}
+            </td>
+            <td className="border-t border-separator px-control py-control text-right tabular-nums">
+              {total.booked.toLocaleString()}
+            </td>
+            <td className="border-t border-separator px-control py-control text-right tabular-nums">
+              {totalReplyRate}
+            </td>
+            <td className={`border-t border-separator py-control pl-control text-right tabular-nums ${
+              total.booked > 0 && total.replies > 0 ? 'text-success' : 'text-destructive'
+            }`}>
+              {totalBookingRate}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export function BookingsByTrackPanel({ funnelChart = null }) {
+  const trackBreakdowns = funnelChart?.breakdowns?.by_track ?? []
+  const segmentOptions = createFunnelSegmentOptions(trackBreakdowns)
+  const rows = createBookingsByTrackRows(trackBreakdowns, segmentOptions)
+
+  if (!rows.length) {
+    return null
+  }
+
+  return (
+    <ReactivationChartPanel title="Bookings by Track">
+      <BookingsByTrackTable rows={rows} />
+    </ReactivationChartPanel>
+  )
+}
+
+export function FunnelView({
+  emptyAction,
+  funnel,
+  funnelChart = null,
+  sidePanel = null,
+}) {
   const [activeSegmentKey, setActiveSegmentKey] = useState(ALL_SEGMENTS_KEY)
   const funnelType = funnelChart?.type ?? ''
   const isReactivationLifecycle = funnelType === 'reactivation_lifecycle'
@@ -893,8 +1053,12 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
     && ['low', 'unavailable'].includes(stage.confidence)
   ))
 
+  const hasSidePanel = rows.length && sidePanel
+
   return (
-    <div className="grid gap-component xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.72fr)]">
+    <div className={`grid gap-component ${
+      hasSidePanel ? 'xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.72fr)]' : ''
+    }`}>
       <ReactivationChartPanel
         rightSlot={hasSegmentControls ? (
           <FunnelSegmentSwitcher
@@ -906,7 +1070,7 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
         title="Reactivation Lifecycle"
       >
         {rows.length ? (
-          <StackedFunnelFlowChart
+          <HorizontalFunnelFlowChart
             activeSegmentKey={resolvedActiveSegmentKey}
             onSegmentChange={setActiveSegmentKey}
             series={trackBreakdowns}
@@ -932,17 +1096,7 @@ export function FunnelView({ emptyAction, funnel, funnelChart = null }) {
         ) : null}
       </ReactivationChartPanel>
 
-      {rows.length ? (
-        <ReactivationChartPanel title="Bookings by Track">
-          <HorizontalFunnelFlowChart
-            activeSegmentKey={resolvedActiveSegmentKey}
-            onSegmentChange={setActiveSegmentKey}
-            series={trackBreakdowns}
-            showCohortPercent
-            stages={rows}
-          />
-        </ReactivationChartPanel>
-      ) : null}
+      {hasSidePanel ? sidePanel : null}
     </div>
   )
 }

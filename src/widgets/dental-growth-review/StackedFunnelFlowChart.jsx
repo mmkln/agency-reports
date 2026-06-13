@@ -19,12 +19,15 @@ const CHART_CENTER_Y = 168
 const MAX_STACK_THICKNESS = 190
 const MIN_VISIBLE_THICKNESS = 6
 const MORPH_DURATION_MS = 450
-const VERTICAL_CHART_WIDTH = 540
+const VERTICAL_CHART_WIDTH = 620
 const VERTICAL_CHART_HEIGHT = 360
-const VERTICAL_CENTER_X = 190
+const VERTICAL_CENTER_X = 220
 const VERTICAL_Y_START = 42
 const VERTICAL_Y_END = 318
-const VERTICAL_LABEL_X = 330
+const VERTICAL_LABEL_X = 390
+const VERTICAL_GRID_X_START = 46
+const VERTICAL_GRID_X_END = 360
+const VERTICAL_THICKNESS_SCALE = 1.35
 
 const stageLabelDisplayName = {
   'sequence active': 'Sequence Progress',
@@ -63,7 +66,7 @@ export function StackedFunnelFlowChart({
 
   return (
     <div className="min-w-0 overflow-x-auto">
-      <div className="min-w-[540px]">
+      <div className="min-w-[620px]">
         <VerticalFunnelComparison
           layers={animatedLayers}
           onSelectSegment={handleSegmentSelect}
@@ -349,8 +352,8 @@ function VerticalFunnelComparison({
             key={`vertical-funnel-grid-${stage.id}`}
             stroke="var(--separator)"
             strokeWidth="1"
-            x1="46"
-            x2="302"
+            x1={VERTICAL_GRID_X_START}
+            x2={VERTICAL_GRID_X_END}
             y1={stage.y}
             y2={stage.y}
           />
@@ -869,8 +872,8 @@ function buildVerticalCurvePath(points, getX) {
 function toVerticalPoint(point) {
   return {
     ...point,
-    left: VERTICAL_CENTER_X + (point.top - CHART_CENTER_Y),
-    right: VERTICAL_CENTER_X + (point.bottom - CHART_CENTER_Y),
+    left: VERTICAL_CENTER_X + ((point.top - CHART_CENTER_Y) * VERTICAL_THICKNESS_SCALE),
+    right: VERTICAL_CENTER_X + ((point.bottom - CHART_CENTER_Y) * VERTICAL_THICKNESS_SCALE),
     y: mapStageXToVerticalY(point.x),
   }
 }
