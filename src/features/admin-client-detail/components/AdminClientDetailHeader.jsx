@@ -4,47 +4,23 @@ import { ROUTE_PATHS } from '@/domain/navigation/routePaths'
 import { Icon } from '@/shared/icons'
 import { Button, PageHeader, StatusBadge } from '@/shared/ui'
 
-import { getClientStatusMeta, getPreviewPortalHref } from '../model/clientDetailPresentation'
-
-function PreviewPortalAction({ client }) {
-  const href = getPreviewPortalHref(client)
-
-  if (!href) {
-    return (
-      <Button disabled icon={<Icon name="arrowUpRight" size={16} />} size="sm" type="button" variant="outline">
-        Preview portal
-      </Button>
-    )
-  }
-
-  return (
-    <Button asChild size="sm" variant="outline">
-      <Link to={href}>
-        <Icon name="arrowUpRight" size={16} />
-        Preview portal
-      </Link>
-    </Button>
-  )
-}
+import { getClientStatusMeta } from '../model/clientDetailPresentation'
 
 export function AdminClientDetailHeader({
   client,
   onAddWorkspace,
   onEditClient,
-  onInviteUser,
 }) {
+  const addWorkspaceVariant = client.workspaceCount === 0 ? 'primary' : 'outline'
+
   return (
     <PageHeader
       actions={(
         <>
           <StatusBadge meta={getClientStatusMeta(client)} />
-          <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button">
-            Invite user
-          </Button>
-          <Button icon={<Icon name="plus" size={16} />} onClick={onAddWorkspace} size="sm" type="button" variant="outline">
+          <Button icon={<Icon name="plus" size={16} />} onClick={onAddWorkspace} size="sm" type="button" variant={addWorkspaceVariant}>
             Add workspace
           </Button>
-          <PreviewPortalAction client={client} />
           <Button icon={<Icon name="pencil" size={16} />} onClick={onEditClient} size="sm" type="button" variant="outline">
             Edit client
           </Button>

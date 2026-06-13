@@ -38,7 +38,9 @@ export function ClientUsersPanel({
     },
     {
       accessorKey: 'email',
-      cell: ({ row }) => row.original.email || 'Missing email',
+      cell: ({ row }) => (
+        row.original.email || <span className="text-text-muted">Missing email</span>
+      ),
       header: 'Email',
     },
     {

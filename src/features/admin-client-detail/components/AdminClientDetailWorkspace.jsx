@@ -12,7 +12,6 @@ import { AdminClientDetailHeader } from './AdminClientDetailHeader'
 import { ClientOverviewPanel } from './ClientOverviewPanel'
 import { ClientUsersPanel } from './ClientUsersPanel'
 import { ClientWorkspacesPanel } from './ClientWorkspacesPanel'
-import { PortalReadinessPanel } from './PortalReadinessPanel'
 import {
   ClientInviteUserDialog,
   ClientQuickEditDialog,
@@ -122,10 +121,8 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
         client={workflow.client}
         onAddWorkspace={workflow.openWorkspaceDialog}
         onEditClient={workflow.openEditDialog}
-        onInviteUser={workflow.openInviteDialog}
       />
-      <ClientOverviewPanel client={workflow.client} memberships={workflow.memberships} />
-      <PortalReadinessPanel client={workflow.client} memberships={workflow.memberships} />
+      <ClientOverviewPanel client={workflow.client} />
       <ClientWorkspacesPanel workspaces={workflow.client.workspaces} />
       <ClientUsersPanel
         memberships={workflow.memberships}
