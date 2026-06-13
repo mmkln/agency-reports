@@ -11,12 +11,12 @@ import {
 
 import { getWorkspaceStatusMeta } from '../model/clientDetailPresentation'
 
-function WorkspaceListItem({ showOpenAction, workspace }) {
+function WorkspaceListItem({ workspace }) {
   const typeMeta = WORKSPACE_TYPE_META[workspace.type]
 
   return (
-    <div className="flex flex-col gap-control rounded-control px-control py-control sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0 space-y-tag">
+    <div className="flex flex-col gap-control rounded-control border border-control-border px-card py-component sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 sm:flex sm:items-center sm:gap-card">
         <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{workspace.name}</h3>
         <div className="flex flex-wrap items-center gap-tag">
           <Badge tone={typeMeta?.tone ?? 'neutral'}>
@@ -25,14 +25,13 @@ function WorkspaceListItem({ showOpenAction, workspace }) {
           <StatusBadge meta={getWorkspaceStatusMeta(workspace)} />
         </div>
       </div>
-      {showOpenAction ? (
-        <Button asChild size="sm" variant="outline">
-          <Link to={getDefaultWorkspaceAdminPath(workspace)}>
-            <Icon name="arrowUpRight" size={16} />
-            Open workspace
-          </Link>
-        </Button>
-      ) : null}
+      <Link
+        className="inline-flex items-center gap-tag text-ui font-medium text-link no-underline hover:text-link-hover"
+        to={getDefaultWorkspaceAdminPath(workspace)}
+      >
+        Open
+        <Icon name="arrowRight" size={16} />
+      </Link>
     </div>
   )
 }
@@ -52,7 +51,6 @@ export function ClientWorkspacesPanel({ onAddWorkspace, workspaces }) {
           workspaces.map((workspace) => (
             <WorkspaceListItem
               key={workspace.id}
-              showOpenAction={workspaces.length > 1}
               workspace={workspace}
             />
           ))

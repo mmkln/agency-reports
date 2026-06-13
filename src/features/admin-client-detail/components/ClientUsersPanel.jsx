@@ -1,64 +1,64 @@
 import { CLIENT_ROLE_META } from '@/entities/client-membership'
 import { Icon } from '@/shared/icons'
 import {
-  Badge,
   Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   ErrorBlock,
-  StatusBadge,
 } from '@/shared/ui'
 
 import { formatDetailDate } from '../model/clientDetailPresentation'
 
-function getMembershipStatusMeta(membership) {
-  return {
-    icon: membership.status === 'active' ? 'checkCircle2' : 'circleX',
-    label: membership.status || 'Unknown',
-    tone: membership.status === 'active' ? 'green' : 'neutral',
-  }
+function getMemberInitial(membership) {
+  return (membership.name || membership.email || 'C').trim().charAt(0).toUpperCase()
 }
 
 function ClientAccessListItem({ membership, onRevokeAccess }) {
   const roleMeta = CLIENT_ROLE_META[membership.role]
   const canRevoke = membership.status === 'active'
+  const initial = getMemberInitial(membership)
+  const statusClassName = membership.status === 'active'
+    ? 'text-success-foreground'
+    : 'text-text-muted'
+  const statusDotClassName = membership.status === 'active'
+    ? 'bg-success'
+    : 'bg-fill-secondary'
 
   return (
-    <div className="flex flex-col gap-control rounded-control px-control py-control lg:flex-row lg:items-center lg:justify-between">
-      <div className="min-w-0 space-y-tag">
-        <div className="flex flex-wrap items-center gap-tag">
-          <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{membership.name || 'Unnamed user'}</h3>
-          <Badge tone={roleMeta?.tone ?? 'neutral'}>
-            {roleMeta?.label ?? membership.role}
-          </Badge>
-          <StatusBadge meta={getMembershipStatusMeta(membership)} />
-        </div>
-        <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
-          {membership.email ? (
-            <span>{membership.email}</span>
-          ) : (
-            <span className="text-text-quaternary">Missing email</span>
-          )}
-          <span className="text-text-quaternary" aria-hidden="true">/</span>
-          <span>Added {formatDetailDate(membership.createdAt)}</span>
+    <div className="flex flex-col gap-control rounded-control border border-control-border px-card py-component lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-center gap-control">
+        <span className="flex size-target shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
+          {initial}
+        </span>
+        <div className="min-w-0 space-y-tag">
+          <div className="flex flex-wrap items-center gap-item">
+            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{membership.name || 'Unnamed user'}</h3>
+            <span className="text-ui font-medium text-link">{roleMeta?.label ?? membership.role}</span>
+            <span className="text-text-quaternary" aria-hidden="true">•</span>
+            <span className={`inline-flex items-center gap-tag text-ui ${statusClassName}`}>
+              <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
+              {membership.status || 'Unknown'}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+            {membership.email ? (
+              <span>{membership.email}</span>
+            ) : (
+              <span className="text-text-quaternary">Missing email</span>
+            )}
+            <span className="text-text-quaternary" aria-hidden="true">•</span>
+            <span>Added {formatDetailDate(membership.createdAt)}</span>
+          </div>
         </div>
       </div>
       {canRevoke ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button aria-label="Client access actions" size="icon-sm" type="button" variant="ghost">
-              <Icon name="ellipsis" size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => onRevokeAccess(membership)} variant="destructive">
-              <Icon name="circleX" size={16} />
-              Revoke access
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          className="justify-start px-0 text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
+          onClick={() => onRevokeAccess(membership)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Revoke access
+        </Button>
       ) : null}
     </div>
   )

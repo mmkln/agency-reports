@@ -5,7 +5,7 @@ import { getDefaultWorkspaceAdminPath } from '@/features/admin-client-workspace'
 import { Icon } from '@/shared/icons'
 import { Button, PageHeader, StatusBadge } from '@/shared/ui'
 
-import { getClientStatusMeta } from '../model/clientDetailPresentation'
+import { formatDetailDate, getClientStatusMeta } from '../model/clientDetailPresentation'
 
 function pluralize(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`
@@ -16,7 +16,6 @@ function HeaderPrimaryAction({ client, onAddWorkspace }) {
     return (
       <Button asChild size="sm">
         <Link to={getDefaultWorkspaceAdminPath(client.workspaces[0])}>
-          <Icon name="arrowUpRight" size={16} />
           Open workspace
         </Link>
       </Button>
@@ -42,14 +41,15 @@ export function AdminClientDetailHeader({
   const summaryItems = [
     pluralize(client.workspaceCount, 'workspace'),
     pluralize(client.membershipCount, 'client user'),
+    `Created ${formatDetailDate(client.createdAt)}`,
+    `Updated ${formatDetailDate(client.updatedAt)}`,
   ]
 
   return (
-    <div className="grid gap-item">
+    <div className="grid gap-control">
       <PageHeader
         actions={(
           <>
-            <StatusBadge meta={getClientStatusMeta(client)} />
             <HeaderPrimaryAction client={client} onAddWorkspace={onAddWorkspace} />
             {client.workspaceCount > 0 ? (
               <Button icon={<Icon name="plus" size={16} />} onClick={onAddWorkspace} size="sm" type="button" variant="outline">
@@ -68,13 +68,19 @@ export function AdminClientDetailHeader({
             <span>{client.name}</span>
           </span>
         )}
-        title={client.name}
+        title={(
+          <span className="inline-flex min-w-0 flex-wrap items-center gap-control">
+            <span className="min-w-0 truncate">{client.name}</span>
+            <StatusBadge meta={getClientStatusMeta(client)} />
+          </span>
+        )}
+        titleScale="display"
         variant="inline"
       />
       <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
         {summaryItems.map((item, index) => (
           <span className="inline-flex items-center gap-item" key={item}>
-            {index > 0 ? <span className="text-text-quaternary" aria-hidden="true">/</span> : null}
+            {index > 0 ? <span className="text-text-quaternary" aria-hidden="true">•</span> : null}
             <span>{item}</span>
           </span>
         ))}
