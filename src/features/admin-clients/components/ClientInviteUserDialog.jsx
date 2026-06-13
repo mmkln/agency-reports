@@ -1,4 +1,4 @@
-import { CLIENT_ROLE_META, CLIENT_ROLES } from '@/entities/client-membership'
+import { WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '@/entities/workspace-membership'
 import {
   Button,
   Dialog,
@@ -10,12 +10,29 @@ import {
   Input,
   Select,
 } from '@/shared/ui'
+import { EMAIL_VALIDATION_ERROR, getEmailValidationIssue } from '@/shared/validation/email'
 
-const CLIENT_ROLE_OPTIONS = [
-  CLIENT_ROLES.OWNER,
-  CLIENT_ROLES.ADMIN,
-  CLIENT_ROLES.TEAM,
+const CLIENT_SAFE_WORKSPACE_ROLE_OPTIONS = [
+  WORKSPACE_ROLES.VIEWER,
+  WORKSPACE_ROLES.CLINIC_OWNER,
+  WORKSPACE_ROLES.PRACTICE_MANAGER,
+  WORKSPACE_ROLES.DOCTOR_REVIEWER,
 ]
+function FieldError({ children }) {
+  if (!children) {
+    return null
+  }
+
+  return <p className="text-label text-destructive" role="alert">{children}</p>
+}
+
+function getInviteEmailIssue({ email, error }) {
+  if (email) {
+    return getEmailValidationIssue(email)
+  }
+
+  return error === EMAIL_VALIDATION_ERROR ? error : ''
+}
 
 export function ClientInviteUserDialog({
   client,
@@ -27,6 +44,9 @@ export function ClientInviteUserDialog({
   onUpdateForm,
   status,
 }) {
+  const emailIssue = getInviteEmailIssue({ email: form.email, error })
+  const formError = emailIssue === error ? '' : error
+
   return (
     <Dialog
       onOpenChange={(nextOpen) => {
@@ -42,8 +62,17 @@ export function ClientInviteUserDialog({
         </DialogHeader>
         <form className="grid gap-component" id="invite-client-user-form" onSubmit={onSubmit}>
           <label className="grid gap-item">
+            <span className="text-label text-text-secondary">Name</span>
+            <Input
+              onChange={(event) => onUpdateForm({ name: event.target.value })}
+              placeholder="Sarah Johnson"
+              value={form.name}
+            />
+          </label>
+          <label className="grid gap-item">
             <span className="text-label text-text-secondary">Email</span>
             <Input
+              aria-invalid={Boolean(emailIssue)}
               autoFocus
               onChange={(event) => onUpdateForm({ email: event.target.value })}
               placeholder="owner@example.com"
@@ -51,18 +80,19 @@ export function ClientInviteUserDialog({
               type="email"
               value={form.email}
             />
+            <FieldError>{emailIssue}</FieldError>
           </label>
           <label className="grid gap-item">
             <span className="text-label text-text-secondary">Role</span>
             <Select onChange={(event) => onUpdateForm({ role: event.target.value })} value={form.role}>
-              {CLIENT_ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>{CLIENT_ROLE_META[role]?.label ?? role}</option>
+              {CLIENT_SAFE_WORKSPACE_ROLE_OPTIONS.map((role) => (
+                <option key={role} value={role}>{WORKSPACE_ROLE_META[role]?.label ?? role}</option>
               ))}
             </Select>
           </label>
-          {error ? (
+          {formError ? (
             <ErrorBlock title="Client user could not be invited">
-              {error}
+              {formError}
             </ErrorBlock>
           ) : null}
         </form>
@@ -70,7 +100,7 @@ export function ClientInviteUserDialog({
           <Button disabled={status === 'inviting'} onClick={onClose} type="button" variant="outline">
             Cancel
           </Button>
-          <Button disabled={!client || status === 'inviting'} form="invite-client-user-form" type="submit">
+          <Button disabled={!client || Boolean(emailIssue) || status === 'inviting'} form="invite-client-user-form" type="submit">
             {status === 'inviting' ? 'Inviting...' : 'Invite user'}
           </Button>
         </DialogFooter>

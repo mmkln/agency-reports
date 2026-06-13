@@ -1,4 +1,4 @@
-import { CLIENT_ROLE_META } from '@/entities/client-membership'
+import { WORKSPACE_ROLE_META } from '@/entities/workspace-membership'
 import { Icon } from '@/shared/icons'
 import {
   Button,
@@ -24,8 +24,7 @@ function getMemberInitial(membership) {
 }
 
 function ClientAccessListItem({ membership, onRevokeAccess }) {
-  const roleMeta = CLIENT_ROLE_META[membership.role]
-  const canRevoke = membership.status === 'active'
+  const roleMeta = WORKSPACE_ROLE_META[membership.role]
   const initial = getMemberInitial(membership)
   const isActive = membership.status === 'active'
   const statusClassName = 'text-text-secondary'
@@ -58,34 +57,75 @@ function ClientAccessListItem({ membership, onRevokeAccess }) {
           </div>
         </div>
       </div>
-      {canRevoke ? (
-        <Button
-          className="justify-start px-0 text-label font-normal text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
-          onClick={() => onRevokeAccess(membership)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          Revoke access
-        </Button>
-      ) : null}
+      <Button
+        className="justify-start px-0 text-label font-normal text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
+        onClick={() => onRevokeAccess(membership)}
+        size="sm"
+        type="button"
+        variant="ghost"
+      >
+        Revoke access
+      </Button>
+    </div>
+  )
+}
+
+function InvitationListItem({ invitation, onCancelInvitation }) {
+  const roleMeta = WORKSPACE_ROLE_META[invitation.role]
+  const initial = getMemberInitial(invitation)
+
+  return (
+    <div className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-center gap-control">
+        <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
+          {initial}
+        </span>
+        <div className="min-w-0 space-y-tag">
+          <div className="flex flex-wrap items-center gap-item">
+            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{invitation.name || 'Pending invite'}</h3>
+            <span className="text-ui text-text-muted">{roleMeta?.label ?? invitation.role}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
+              <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+              Pending invite
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+            <span>{invitation.email}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <span>Sent {formatDetailDate(invitation.createdAt)}</span>
+          </div>
+        </div>
+      </div>
+      <Button
+        className="justify-start px-0 text-label font-normal text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
+        onClick={() => onCancelInvitation(invitation)}
+        size="sm"
+        type="button"
+        variant="ghost"
+      >
+        Cancel invite
+      </Button>
     </div>
   )
 }
 
 export function ClientUsersPanel({
+  cancelInviteError,
+  invitations = [],
   memberships,
+  onCancelInvitation,
   onInviteUser,
   onRevokeAccess,
   revokeError,
 }) {
-  const hasMemberships = memberships.length > 0
+  const hasAccessRecords = memberships.length > 0 || invitations.length > 0
 
   return (
     <section className="grid gap-control rounded-block bg-block p-component">
       <div className="flex items-center justify-between gap-control">
         <h2 className="m-0 text-ui font-semibold text-text-primary">Client access</h2>
-        {hasMemberships ? (
+        {hasAccessRecords ? (
           <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button" variant="outline">
             Invite user
           </Button>
@@ -97,14 +137,28 @@ export function ClientUsersPanel({
             {revokeError}
           </ErrorBlock>
         ) : null}
-        {hasMemberships ? (
-          memberships.map((membership) => (
-            <ClientAccessListItem
-              key={membership.id}
-              membership={membership}
-              onRevokeAccess={onRevokeAccess}
-            />
-          ))
+        {cancelInviteError ? (
+          <ErrorBlock title="Invitation could not be cancelled">
+            {cancelInviteError}
+          </ErrorBlock>
+        ) : null}
+        {hasAccessRecords ? (
+          <>
+            {memberships.map((membership) => (
+              <ClientAccessListItem
+                key={membership.id}
+                membership={membership}
+                onRevokeAccess={onRevokeAccess}
+              />
+            ))}
+            {invitations.map((invitation) => (
+              <InvitationListItem
+                invitation={invitation}
+                key={invitation.id}
+                onCancelInvitation={onCancelInvitation}
+              />
+            ))}
+          </>
         ) : (
           <div className="flex flex-col gap-control rounded-control bg-block-subtle px-card py-component sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-tag">

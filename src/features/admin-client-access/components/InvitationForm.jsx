@@ -11,6 +11,13 @@ import {
 import { WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '../../../entities/workspace-membership'
 import { FieldError } from '../../admin-client-workspace'
 
+const CLIENT_SAFE_WORKSPACE_ROLES = [
+  WORKSPACE_ROLES.VIEWER,
+  WORKSPACE_ROLES.CLINIC_OWNER,
+  WORKSPACE_ROLES.PRACTICE_MANAGER,
+  WORKSPACE_ROLES.DOCTOR_REVIEWER,
+]
+
 export function InvitationForm({
   error,
   form,
@@ -20,7 +27,7 @@ export function InvitationForm({
 }) {
   return (
     <form className="grid grid-cols-1 gap-3 border-t border-separator pt-4" noValidate onSubmit={onSubmit}>
-      <p className="text-label text-text-secondary uppercase">Create invitation</p>
+      <p className="text-label text-text-secondary">Invite workspace user</p>
       <label className="grid gap-1.5">
         <span className="text-label text-text-secondary">Name</span>
         <Input
@@ -40,26 +47,22 @@ export function InvitationForm({
           type="email"
           value={form.email}
         />
-        <FieldError>{invitationEmailIssue}</FieldError>
+          <FieldError>{invitationEmailIssue}</FieldError>
       </label>
-      <div className="grid gap-2 sm:grid-cols-[1fr_150px]">
+      <label className="grid gap-1.5">
+        <span className="text-label text-text-secondary">Role</span>
         <Select onValueChange={(role) => onUpdateForm('role', role)} value={form.role}>
           <SelectTrigger className="bg-block">
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            {Object.values(WORKSPACE_ROLES).map((role) => (
+            {CLIENT_SAFE_WORKSPACE_ROLES.map((role) => (
               <SelectItem key={role} value={role}>{WORKSPACE_ROLE_META[role]?.label ?? role}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Input
-          onChange={(event) => onUpdateForm('expiresAt', event.target.value)}
-          type="date"
-          value={form.expiresAt}
-        />
-      </div>
-      <Button disabled={Boolean(invitationEmailIssue)} type="submit">Create invitation</Button>
+      </label>
+      <Button disabled={Boolean(invitationEmailIssue) || !form.email.trim()} type="submit">Send invite</Button>
       <FieldError>{error}</FieldError>
     </form>
   )

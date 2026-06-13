@@ -7,12 +7,12 @@ import { useInvitationsPanel } from '../useInvitationsPanel'
 import { InvitationCard } from './InvitationCard'
 import { InvitationForm } from './InvitationForm'
 
-export function InvitationsPanel({ clientId, runtime }) {
-  const invitationsPanel = useInvitationsPanel({ clientId, runtime })
+export function InvitationsPanel({ runtime, workspaceId }) {
+  const invitationsPanel = useInvitationsPanel({ runtime, workspaceId })
 
   return (
     <WorkspaceCard
-      description="Create and track local workspace invitations."
+      description="Pending portal access requests. Access starts only after acceptance."
       iconName="mail"
       title="Invitations"
     >
@@ -28,14 +28,13 @@ export function InvitationsPanel({ clientId, runtime }) {
                 invitation={invitation}
                 key={invitation.id}
                 onCancel={invitationsPanel.setInvitationPendingCancel}
-                onCopy={invitationsPanel.copyInviteLink}
-                onResend={invitationsPanel.resendPlaceholder}
+                onResend={invitationsPanel.resendInvitation}
               />
             ))}
           </div>
         ) : (
           <InlineEmptyState iconName="mail" title="No invitations yet">
-            Create an invitation to generate a local acceptance link. Email delivery remains simulated.
+            Send an invite when a client user should receive portal access after accepting.
           </InlineEmptyState>
         )}
 

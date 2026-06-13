@@ -1,0 +1,1 @@
+export { AcceptWorkspaceInvitation } from './AcceptWorkspaceInvitation'

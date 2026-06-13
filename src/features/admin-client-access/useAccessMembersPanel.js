@@ -9,8 +9,9 @@ import {
 import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
+import { getEmailValidationIssue } from '../../shared/validation/email'
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_VALIDATION_ERROR = 'Enter a valid email address.'
 
 const initialMemberForm = Object.freeze({
   email: '',
@@ -45,8 +46,8 @@ export function useAccessMembersPanel({ clientId, runtime }) {
   const memberNameIssue = form.name && trimmedMemberName.length < 2
     ? 'Enter at least 2 characters.'
     : ''
-  const memberEmailIssue = form.email && !EMAIL_PATTERN.test(trimmedMemberEmail)
-    ? 'Enter a valid email address.'
+  const memberEmailIssue = form.email
+    ? getEmailValidationIssue(trimmedMemberEmail, EMAIL_VALIDATION_ERROR)
     : ''
 
   function refreshMembers() {

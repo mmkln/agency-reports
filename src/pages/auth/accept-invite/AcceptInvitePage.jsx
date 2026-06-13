@@ -1,3 +1,13 @@
+import { useSearchParams } from 'react-router-dom'
+
+import { AcceptWorkspaceInvitation } from '@/features/accept-workspace-invitation'
+
+import { useAuth } from '../../../app/providers/auth/useAuth'
+
 export function AcceptInvitePage() {
-  throw new Error('accept-invite route is registered without a product implementation.')
+  const auth = useAuth()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token')?.trim() ?? ''
+
+  return <AcceptWorkspaceInvitation auth={auth} token={token} />
 }

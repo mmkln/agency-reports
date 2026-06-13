@@ -115,6 +115,20 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
         title="Revoke client access?"
         tone="destructive"
       />
+      <ConfirmationDialog
+        confirmLabel={workflow.cancelInviteStatus === 'cancelling' ? 'Cancelling...' : 'Cancel invite'}
+        description={`This will cancel the pending invite for ${workflow.invitationPendingCancel?.email || 'this user'}.`}
+        isConfirming={workflow.cancelInviteStatus === 'cancelling'}
+        onConfirm={workflow.cancelInvitation}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            workflow.closeDialog()
+          }
+        }}
+        open={workflow.isCancelInviteDialogOpen}
+        title="Cancel invitation?"
+        tone="destructive"
+      />
 
       <AdminClientDetailHeader
         client={workflow.client}
@@ -126,7 +140,10 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
           workspaces={workflow.client.workspaces}
         />
         <ClientUsersPanel
+          cancelInviteError={workflow.cancelInviteError}
+          invitations={workflow.invitations}
           memberships={workflow.memberships}
+          onCancelInvitation={workflow.openCancelInvitationDialog}
           onInviteUser={workflow.openInviteDialog}
           onRevokeAccess={workflow.openRevokeDialog}
           revokeError={workflow.revokeError}

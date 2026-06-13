@@ -1,12 +1,44 @@
 import { useState } from 'react'
 
 import { normalizeBackendClient } from '@/entities/client'
-import { normalizeBackendClientMembership } from '@/entities/client-membership'
 import { WORKSPACE_CLIENT_ACCESS_POLICIES } from '@/entities/workspace'
+import { WORKSPACE_ROLES } from '@/entities/workspace-membership'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 
-function normalizeMembershipsPayload(payload = {}) {
-  return (payload.memberships ?? []).map(normalizeBackendClientMembership)
+function normalizeWorkspaceMembership(source = {}) {
+  return {
+    createdAt: source.created_at ?? source.createdAt ?? '',
+    email: source.email ?? '',
+    id: String(source.id ?? ''),
+    name: source.name ?? '',
+    role: source.role ?? '',
+    status: source.status ?? 'active',
+    userId: String(source.user_id ?? source.userId ?? ''),
+    workspaceId: String(source.workspace_id ?? source.workspaceId ?? ''),
+  }
+}
+
+function normalizeWorkspaceMembershipsPayload(payload = {}) {
+  return (payload.memberships ?? []).map(normalizeWorkspaceMembership)
+}
+
+function normalizeWorkspaceInvitation(source = {}) {
+  return {
+    createdAt: source.created_at ?? source.createdAt ?? '',
+    email: source.email ?? '',
+    expiresAt: source.expires_at ?? source.expiresAt ?? '',
+    id: String(source.id ?? ''),
+    makeDeliveryError: source.make_delivery_error ?? source.makeDeliveryError ?? '',
+    makeDeliveryStatus: source.make_delivery_status ?? source.makeDeliveryStatus ?? 'pending',
+    name: source.name ?? '',
+    role: source.role ?? '',
+    sentCount: Number(source.sent_count ?? source.sentCount ?? 0),
+    status: source.status ?? 'pending',
+  }
+}
+
+function normalizeWorkspaceInvitationsPayload(payload = {}) {
+  return (payload.invitations ?? []).map(normalizeWorkspaceInvitation)
 }
 
 function getPrimaryAgencyId(viewer) {
@@ -16,7 +48,8 @@ function getPrimaryAgencyId(viewer) {
 function createInviteClientUserForm() {
   return {
     email: '',
-    role: 'client_team',
+    name: '',
+    role: WORKSPACE_ROLES.VIEWER,
   }
 }
 
@@ -36,6 +69,12 @@ function createEditClientForm(client) {
   }
 }
 
+function getPrimaryWorkspace(client) {
+  return (client?.workspaces ?? []).find((workspace) => workspace.status === 'active')
+    ?? client?.workspaces?.[0]
+    ?? null
+}
+
 export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
   const clientId = routeParams.clientId ?? ''
@@ -46,41 +85,60 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [isWorkspaceDialogOpen, setIsWorkspaceDialogOpen] = useState(false)
   const [membershipPendingRevoke, setMembershipPendingRevoke] = useState(null)
+  const [invitationPendingCancel, setInvitationPendingCancel] = useState(null)
   const [editError, setEditError] = useState('')
   const [inviteError, setInviteError] = useState('')
   const [workspaceError, setWorkspaceError] = useState('')
   const [revokeError, setRevokeError] = useState('')
+  const [cancelInviteError, setCancelInviteError] = useState('')
   const [editStatus, setEditStatus] = useState('idle')
   const [inviteStatus, setInviteStatus] = useState('idle')
   const [workspaceStatus, setWorkspaceStatus] = useState('idle')
   const [revokeStatus, setRevokeStatus] = useState('idle')
+  const [cancelInviteStatus, setCancelInviteStatus] = useState('idle')
   const { data, error, reload, status } = useAsyncResource({
     dependencyKey: `admin-client-detail:${clientId}`,
     initialData: {
       client: null,
+      invitations: [],
       memberships: [],
     },
     load: async () => {
       if (!clientId) {
         return {
           client: null,
+          invitations: [],
           memberships: [],
         }
       }
 
-      const [clientPayload, membershipsPayload] = await Promise.all([
-        apiClient.get(`/api/clients/${clientId}/`),
-        apiClient.get(`/api/clients/${clientId}/memberships/`),
+      const clientPayload = await apiClient.get(`/api/clients/${clientId}/`)
+      const nextClient = normalizeBackendClient(clientPayload.client)
+      const primaryWorkspace = getPrimaryWorkspace(nextClient)
+
+      if (!primaryWorkspace?.id) {
+        return {
+          client: nextClient,
+          invitations: [],
+          memberships: [],
+        }
+      }
+
+      const [membershipsPayload, invitationsPayload] = await Promise.all([
+        apiClient.get(`/api/workspaces/${primaryWorkspace.id}/memberships/`),
+        apiClient.get(`/api/workspaces/${primaryWorkspace.id}/invitations/`),
       ])
 
       return {
-        client: normalizeBackendClient(clientPayload.client),
-        memberships: normalizeMembershipsPayload(membershipsPayload),
+        client: nextClient,
+        invitations: normalizeWorkspaceInvitationsPayload(invitationsPayload),
+        memberships: normalizeWorkspaceMembershipsPayload(membershipsPayload),
       }
     },
   })
   const client = data?.client ?? null
-  const memberships = data?.memberships ?? []
+  const memberships = (data?.memberships ?? []).filter((membership) => membership.status === 'active')
+  const invitations = (data?.invitations ?? []).filter((invitation) => invitation.status === 'pending')
   const resolvedEditForm = client && editForm.clientId !== client.id
     ? createEditClientForm(client)
     : editForm
@@ -91,6 +149,7 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
       || inviteStatus === 'inviting'
       || workspaceStatus === 'creating'
       || revokeStatus === 'revoking'
+      || cancelInviteStatus === 'cancelling'
     ) {
       return
     }
@@ -99,10 +158,12 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     setIsInviteDialogOpen(false)
     setIsWorkspaceDialogOpen(false)
     setMembershipPendingRevoke(null)
+    setInvitationPendingCancel(null)
     setEditError('')
     setInviteError('')
     setWorkspaceError('')
     setRevokeError('')
+    setCancelInviteError('')
   }
 
   function openEditDialog() {
@@ -126,6 +187,11 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   function openRevokeDialog(membership) {
     setMembershipPendingRevoke(membership)
     setRevokeError('')
+  }
+
+  function openCancelInvitationDialog(invitation) {
+    setInvitationPendingCancel(invitation)
+    setCancelInviteError('')
   }
 
   function saveClientEdit(event) {
@@ -168,16 +234,23 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     }
 
     const email = inviteForm.email.trim().toLowerCase()
+    const workspace = getPrimaryWorkspace(client)
 
     if (!email) {
       setInviteError('Email is required.')
       return
     }
 
+    if (!workspace?.id) {
+      setInviteError('Create a workspace before inviting client users.')
+      return
+    }
+
     setInviteStatus('inviting')
     setInviteError('')
-    apiClient.post(`/api/clients/${client.id}/memberships/`, {
+    apiClient.post(`/api/workspaces/${workspace.id}/invitations/`, {
       email,
+      name: inviteForm.name.trim(),
       role: inviteForm.role,
     }).then(() => {
       setInviteStatus('idle')
@@ -227,9 +300,15 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
       return
     }
 
+    const workspace = getPrimaryWorkspace(client)
+    if (!workspace?.id) {
+      setRevokeError('Workspace is required to revoke portal access.')
+      return
+    }
+
     setRevokeStatus('revoking')
     setRevokeError('')
-    apiClient.request(`/api/clients/${client.id}/memberships/${membershipPendingRevoke.id}/`, {
+    apiClient.request(`/api/workspaces/${workspace.id}/memberships/${membershipPendingRevoke.id}/`, {
       method: 'DELETE',
     }).then(() => {
       setRevokeStatus('idle')
@@ -241,7 +320,35 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     })
   }
 
+  function cancelInvitation() {
+    if (!client || !invitationPendingCancel) {
+      return
+    }
+
+    const workspace = getPrimaryWorkspace(client)
+    if (!workspace?.id) {
+      setCancelInviteError('Workspace is required to cancel this invitation.')
+      return
+    }
+
+    setCancelInviteStatus('cancelling')
+    setCancelInviteError('')
+    apiClient.post(`/api/workspaces/${workspace.id}/invitations/${invitationPendingCancel.id}/cancel/`, {})
+      .then(() => {
+        setCancelInviteStatus('idle')
+        setInvitationPendingCancel(null)
+        void reload()
+      })
+      .catch((caughtError) => {
+        setCancelInviteError(caughtError.message)
+        setCancelInviteStatus('idle')
+      })
+  }
+
   return {
+    cancelInvitation,
+    cancelInviteError,
+    cancelInviteStatus,
     client,
     clientId,
     closeDialog,
@@ -254,12 +361,16 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     inviteError,
     inviteForm,
     inviteStatus,
+    invitationPendingCancel,
+    invitations,
+    isCancelInviteDialogOpen: Boolean(invitationPendingCancel),
     isEditDialogOpen,
     isInviteDialogOpen,
     isRevokeDialogOpen: Boolean(membershipPendingRevoke),
     isWorkspaceDialogOpen,
     membershipPendingRevoke,
     memberships,
+    openCancelInvitationDialog,
     openEditDialog,
     openInviteDialog,
     openRevokeDialog,
@@ -273,6 +384,7 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     setEditForm,
     setInviteError,
     setInviteForm,
+    setInvitationPendingCancel,
     setRevokeError,
     setWorkspaceError,
     setWorkspaceForm,

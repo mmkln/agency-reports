@@ -13,8 +13,9 @@ import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
 import { getAbsoluteAppHref, getAppHref } from '../../shared/routing'
+import { getEmailValidationIssue } from '../../shared/validation/email'
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_VALIDATION_ERROR = 'Enter a valid email address.'
 
 const initialInviteForm = Object.freeze({
   email: '',
@@ -57,8 +58,8 @@ export function useClientTeamManagement({ canManage, clientId, onInvitationCreat
   const invitations = invitationsResource.data ?? []
   const trimmedEmail = form.email.trim()
   const trimmedName = form.name.trim()
-  const emailIssue = form.email && !EMAIL_PATTERN.test(trimmedEmail)
-    ? 'Enter a valid email address.'
+  const emailIssue = form.email
+    ? getEmailValidationIssue(trimmedEmail, EMAIL_VALIDATION_ERROR)
     : ''
   const nameIssue = form.name && trimmedName.length < 2
     ? 'Enter at least 2 characters.'

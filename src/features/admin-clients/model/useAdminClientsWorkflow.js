@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { normalizeBackendClient, normalizeBackendClientsPayload } from '@/entities/client'
 import { WORKSPACE_CLIENT_ACCESS_POLICIES } from '@/entities/workspace'
+import { WORKSPACE_ROLES } from '@/entities/workspace-membership'
 
 import { getAdminClientsPath } from './adminClientPaths'
 
@@ -27,8 +28,15 @@ function createEditClientForm(client) {
 function createInviteClientUserForm() {
   return {
     email: '',
-    role: 'client_team',
+    name: '',
+    role: WORKSPACE_ROLES.VIEWER,
   }
+}
+
+function getPrimaryClientWorkspace(client) {
+  return (client?.workspaces ?? []).find((workspace) => workspace.status === 'active')
+    ?? client?.workspaces?.[0]
+    ?? null
 }
 
 function createWorkspaceForm() {
@@ -249,19 +257,28 @@ export function useAdminClientsWorkflow({ routeParams = {}, runtime }) {
     }
 
     const email = inviteForm.email.trim().toLowerCase()
+    const workspace = getPrimaryClientWorkspace(clientPendingInvite)
+
     if (!email) {
       setInviteError('Email is required.')
       return
     }
 
+    if (!workspace?.id) {
+      setInviteError('Create a workspace before inviting client users.')
+      return
+    }
+
     setInviteStatus('inviting')
     setInviteError('')
-    apiClient.post(`/api/clients/${clientPendingInvite.id}/memberships/`, {
+    apiClient.post(`/api/workspaces/${workspace.id}/invitations/`, {
       email,
+      name: inviteForm.name.trim(),
       role: inviteForm.role,
     }).then(() => {
       setInviteForm(createInviteClientUserForm())
       setInviteStatus('idle')
+      setInviteClientUserId('')
       void reloadClients()
     }).catch((caughtError) => {
       setInviteError(caughtError.message)

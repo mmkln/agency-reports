@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import {
-  Button,
   ErrorBlock,
-  Input,
   Panel,
   PanelBody,
   PanelHeader,
@@ -15,15 +13,14 @@ import {
   TableRow,
   UnavailableState,
 } from '@/shared/ui'
+import { InvitationsPanel } from '@/features/admin-client-access'
 
 export function AdminClientAccessPage({ routeParams = {}, runtime }) {
   const apiClient = runtime.apiClient
   const workspaceId = routeParams.clientId ?? runtime.defaultClientId
   const [memberships, setMemberships] = useState([])
-  const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [status, setStatus] = useState('loading')
-  const [createStatus, setCreateStatus] = useState('idle')
 
   const loadMemberships = useCallback(() => {
     if (!workspaceId) {
@@ -48,27 +45,6 @@ export function AdminClientAccessPage({ routeParams = {}, runtime }) {
     void Promise.resolve().then(loadMemberships)
   }, [loadMemberships])
 
-  function addMember(event) {
-    event.preventDefault()
-
-    if (!email.trim()) {
-      return
-    }
-
-    setCreateStatus('creating')
-    setError('')
-    apiClient.post(`/api/workspaces/${workspaceId}/memberships/`, {
-      email: email.trim(),
-    }).then(() => {
-      setEmail('')
-      setCreateStatus('idle')
-      void loadMemberships()
-    }).catch((caughtError) => {
-      setError(caughtError.message)
-      setCreateStatus('idle')
-    })
-  }
-
   if (!workspaceId) {
     return (
       <UnavailableState
@@ -81,26 +57,7 @@ export function AdminClientAccessPage({ routeParams = {}, runtime }) {
 
   return (
     <div className="grid gap-card">
-      <Panel>
-        <PanelHeader divided title="Add workspace member" />
-        <PanelBody>
-          <form className="flex flex-col gap-control sm:flex-row" onSubmit={addMember}>
-            <Input
-              aria-label="Member email"
-              className="min-w-0 flex-1"
-              inputMode="email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="owner@clinic.com"
-              required
-              type="email"
-              value={email}
-            />
-            <Button disabled={createStatus === 'creating'} type="submit">
-              {createStatus === 'creating' ? 'Adding...' : 'Add member'}
-            </Button>
-          </form>
-        </PanelBody>
-      </Panel>
+      <InvitationsPanel runtime={runtime} workspaceId={workspaceId} />
 
       {error ? (
         <ErrorBlock title="Workspace access request failed">

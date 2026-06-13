@@ -1,46 +1,40 @@
 import { useState } from 'react'
 
-import {
-  cancelClientInvitation,
-  createClientInvitation,
-  listClientInvitations,
-} from '../../domain/services/clientInviteService'
 import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
 import { useAsyncResource } from '../../shared/data/useAsyncResource'
 import { useToast } from '../../shared/notifications'
-import { buildInviteLink } from './invitationLinks'
+import { getEmailValidationIssue } from '../../shared/validation/email'
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_VALIDATION_ERROR = 'Enter a valid email address.'
 
 const initialInvitationForm = Object.freeze({
   email: '',
-  expiresAt: '',
   name: '',
   role: WORKSPACE_ROLES.VIEWER,
 })
 
-function createUuid() {
-  return crypto.randomUUID()
-}
-
-export function useInvitationsPanel({ clientId, runtime }) {
+export function useInvitationsPanel({ runtime, workspaceId }) {
   const toast = useToast()
   const [invitationPendingCancel, setInvitationPendingCancel] = useState(null)
   const [form, setForm] = useState(initialInvitationForm)
   const [error, setError] = useState('')
   const invitationsResource = useAsyncResource({
-    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-invitations:${clientId ?? ''}`,
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:workspace-invitations:${workspaceId ?? ''}`,
     initialData: [],
-    load: () => runtime.dataClient.read((repositories) => listClientInvitations({
-      clientId,
-      repositories,
-      viewer: runtime.viewer,
-    })),
+    load: () => {
+      if (!workspaceId) {
+        return Promise.resolve([])
+      }
+
+      return runtime.apiClient
+        .get(`/api/workspaces/${workspaceId}/invitations/`)
+        .then((payload) => payload.invitations ?? [])
+    },
   })
   const invitations = invitationsResource.data ?? []
   const trimmedInvitationEmail = form.email.trim()
-  const invitationEmailIssue = form.email && !EMAIL_PATTERN.test(trimmedInvitationEmail)
-    ? 'Enter a valid email address.'
+  const invitationEmailIssue = form.email
+    ? getEmailValidationIssue(trimmedInvitationEmail, EMAIL_VALIDATION_ERROR)
     : ''
 
   function refreshInvitations() {
@@ -55,74 +49,71 @@ export function useInvitationsPanel({ clientId, runtime }) {
     }))
   }
 
-  async function copyInviteLink(invitation) {
-    const inviteLink = buildInviteLink(invitation.token)
-
-    try {
-      await navigator.clipboard.writeText(inviteLink)
-      toast.success('Invite link copied', invitation.email)
-    } catch {
-      toast.error('Invite link was not copied', inviteLink)
-    }
-  }
-
   function createInvitation(event) {
     event.preventDefault()
 
-    void runtime.dataClient.write((repositories) => createClientInvitation({
-      activityIdGenerator: createUuid,
-      clientId,
-      email: form.email,
-      expiresAt: form.expiresAt ? `${form.expiresAt}T23:59:59.999Z` : null,
-      idGenerator: createUuid,
-      name: form.name,
-      repositories,
+    if (!workspaceId || invitationEmailIssue) {
+      return
+    }
+
+    void runtime.apiClient.post(`/api/workspaces/${workspaceId}/invitations/`, {
+      email: form.email.trim(),
+      name: form.name.trim(),
       role: form.role,
-      viewer: runtime.viewer,
-    })).then((invitation) => {
+    }).then((payload) => {
+      const invitation = payload.invitation
       setForm(initialInvitationForm)
       refreshInvitations()
-      toast.success('Invitation created', `${invitation.email} can accept the portal invite.`)
+      toast.success('Invitation sent', `${invitation.email} will receive a portal invite.`)
     }).catch((caughtError) => {
       setError(caughtError.message)
-      toast.error('Invitation was not created', caughtError.message)
+      toast.error('Invitation was not sent', caughtError.message)
     })
   }
 
   function cancelInvitation() {
-    if (!invitationPendingCancel) {
+    if (!workspaceId || !invitationPendingCancel) {
       return
     }
 
-    void runtime.dataClient.write((repositories) => cancelClientInvitation({
-      activityIdGenerator: createUuid,
-      invitationId: invitationPendingCancel.id,
-      repositories,
-      viewer: runtime.viewer,
-    })).then(() => {
-      const cancelledEmail = invitationPendingCancel.email
-      setInvitationPendingCancel(null)
-      refreshInvitations()
-      toast.success('Invitation cancelled', cancelledEmail)
-    }).catch((caughtError) => {
-      toast.error('Invitation was not cancelled', caughtError.message)
-    })
+    void runtime.apiClient
+      .post(`/api/workspaces/${workspaceId}/invitations/${invitationPendingCancel.id}/cancel/`, {})
+      .then(() => {
+        const cancelledEmail = invitationPendingCancel.email
+        setInvitationPendingCancel(null)
+        refreshInvitations()
+        toast.success('Invitation cancelled', cancelledEmail)
+      })
+      .catch((caughtError) => {
+        toast.error('Invitation was not cancelled', caughtError.message)
+      })
   }
 
-  function resendPlaceholder(invitation) {
-    toast.info('Email delivery is not connected yet', `Copy the invite link for ${invitation.email}.`)
+  function resendInvitation(invitation) {
+    if (!workspaceId) {
+      return
+    }
+
+    void runtime.apiClient
+      .post(`/api/workspaces/${workspaceId}/invitations/${invitation.id}/resend/`, {})
+      .then((payload) => {
+        refreshInvitations()
+        toast.success('Invitation resent', `${payload.invitation?.email ?? invitation.email} will receive a new link.`)
+      })
+      .catch((caughtError) => {
+        toast.error('Invitation was not resent', caughtError.message)
+      })
   }
 
   return {
     cancelInvitation,
-    copyInviteLink,
     createInvitation,
     error,
     form,
     invitationEmailIssue,
     invitationPendingCancel,
     invitations,
-    resendPlaceholder,
+    resendInvitation,
     setInvitationPendingCancel,
     status: invitationsResource.status,
     updateForm,
