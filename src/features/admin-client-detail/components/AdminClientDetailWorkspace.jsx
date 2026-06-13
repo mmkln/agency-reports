@@ -9,7 +9,7 @@ import {
 
 import { useAdminClientDetailWorkflow } from '../model/useAdminClientDetailWorkflow'
 import { AdminClientDetailHeader } from './AdminClientDetailHeader'
-import { ClientOverviewPanel } from './ClientOverviewPanel'
+import { ClientDetailsPanel } from './ClientDetailsPanel'
 import { ClientUsersPanel } from './ClientUsersPanel'
 import { ClientWorkspacesPanel } from './ClientWorkspacesPanel'
 import {
@@ -122,14 +122,21 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
         onAddWorkspace={workflow.openWorkspaceDialog}
         onEditClient={workflow.openEditDialog}
       />
-      <ClientOverviewPanel client={workflow.client} />
-      <ClientWorkspacesPanel workspaces={workflow.client.workspaces} />
-      <ClientUsersPanel
-        memberships={workflow.memberships}
-        onInviteUser={workflow.openInviteDialog}
-        onRevokeAccess={workflow.openRevokeDialog}
-        revokeError={workflow.revokeError}
-      />
+      <div className="grid gap-card lg:grid-cols-inspector lg:items-start">
+        <div className="grid gap-card">
+          <ClientWorkspacesPanel
+            onAddWorkspace={workflow.openWorkspaceDialog}
+            workspaces={workflow.client.workspaces}
+          />
+          <ClientUsersPanel
+            memberships={workflow.memberships}
+            onInviteUser={workflow.openInviteDialog}
+            onRevokeAccess={workflow.openRevokeDialog}
+            revokeError={workflow.revokeError}
+          />
+        </div>
+        <ClientDetailsPanel client={workflow.client} />
+      </div>
     </div>
   )
 }

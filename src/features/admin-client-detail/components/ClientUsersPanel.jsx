@@ -1,15 +1,13 @@
-import { useMemo } from 'react'
-
 import { CLIENT_ROLE_META } from '@/entities/client-membership'
 import { Icon } from '@/shared/icons'
 import {
   Badge,
   Button,
-  DataTable,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   ErrorBlock,
-  Panel,
-  PanelBody,
-  PanelHeader,
   StatusBadge,
 } from '@/shared/ui'
 
@@ -23,97 +21,95 @@ function getMembershipStatusMeta(membership) {
   }
 }
 
+function ClientAccessListItem({ membership, onRevokeAccess }) {
+  const roleMeta = CLIENT_ROLE_META[membership.role]
+  const canRevoke = membership.status === 'active'
+
+  return (
+    <div className="flex flex-col gap-control rounded-control px-control py-control lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0 space-y-tag">
+        <div className="flex flex-wrap items-center gap-tag">
+          <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{membership.name || 'Unnamed user'}</h3>
+          <Badge tone={roleMeta?.tone ?? 'neutral'}>
+            {roleMeta?.label ?? membership.role}
+          </Badge>
+          <StatusBadge meta={getMembershipStatusMeta(membership)} />
+        </div>
+        <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+          {membership.email ? (
+            <span>{membership.email}</span>
+          ) : (
+            <span className="text-text-quaternary">Missing email</span>
+          )}
+          <span className="text-text-quaternary" aria-hidden="true">/</span>
+          <span>Added {formatDetailDate(membership.createdAt)}</span>
+        </div>
+      </div>
+      {canRevoke ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button aria-label="Client access actions" size="icon-sm" type="button" variant="ghost">
+              <Icon name="ellipsis" size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => onRevokeAccess(membership)} variant="destructive">
+              <Icon name="circleX" size={16} />
+              Revoke access
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+    </div>
+  )
+}
+
 export function ClientUsersPanel({
   memberships,
   onInviteUser,
   onRevokeAccess,
   revokeError,
 }) {
-  const inviteVariant = memberships.length === 0 ? 'primary' : 'outline'
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'name',
-      cell: ({ row }) => <span className="font-medium">{row.original.name || 'Unnamed user'}</span>,
-      header: 'Name',
-    },
-    {
-      accessorKey: 'email',
-      cell: ({ row }) => (
-        row.original.email || <span className="text-text-muted">Missing email</span>
-      ),
-      header: 'Email',
-    },
-    {
-      accessorKey: 'role',
-      cell: ({ row }) => {
-        const roleMeta = CLIENT_ROLE_META[row.original.role]
-
-        return (
-          <Badge tone={roleMeta?.tone ?? 'neutral'}>
-            {roleMeta?.label ?? row.original.role}
-          </Badge>
-        )
-      },
-      header: 'Role',
-    },
-    {
-      accessorKey: 'status',
-      cell: ({ row }) => <StatusBadge meta={getMembershipStatusMeta(row.original)} />,
-      header: 'Access status',
-    },
-    {
-      accessorKey: 'createdAt',
-      cell: ({ row }) => formatDetailDate(row.original.createdAt),
-      header: 'Added',
-    },
-    {
-      cell: ({ row }) => (
-        row.original.status === 'active' ? (
-          <Button icon={<Icon name="circleX" size={16} />} onClick={() => onRevokeAccess(row.original)} size="sm" type="button" variant="outline">
-            Revoke access
-          </Button>
-        ) : (
-          <span className="text-text-muted">No actions</span>
-        )
-      ),
-      enableSorting: false,
-      header: 'Actions',
-      id: 'actions',
-      meta: {
-        isAction: true,
-        label: 'Actions',
-        nowrap: true,
-      },
-    },
-  ], [onRevokeAccess])
+  const hasMemberships = memberships.length > 0
 
   return (
-    <Panel>
-      <PanelHeader
-        action={(
-          <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button" variant={inviteVariant}>
+    <section className="grid gap-component rounded-block bg-block p-card">
+      <div className="flex items-center justify-between gap-control">
+        <h2 className="m-0 text-ui font-semibold text-text-primary">Client access</h2>
+        {hasMemberships ? (
+          <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button" variant="outline">
             Invite user
           </Button>
-        )}
-        divided
-        iconName="shieldCheck"
-        title="Client access"
-      />
-      <PanelBody className="p-0">
-        {revokeError ? (
-          <div className="p-card">
-            <ErrorBlock title="Client access could not be updated">
-              {revokeError}
-            </ErrorBlock>
-          </div>
         ) : null}
-        <DataTable
-          columns={columns}
-          data={memberships}
-          emptyMessage="No client users yet. Invite a user to give this client access."
-          getRowId={(membership) => membership.id}
-        />
-      </PanelBody>
-    </Panel>
+      </div>
+      <div className="grid gap-item">
+        {revokeError ? (
+          <ErrorBlock title="Client access could not be updated">
+            {revokeError}
+          </ErrorBlock>
+        ) : null}
+        {hasMemberships ? (
+          memberships.map((membership) => (
+            <ClientAccessListItem
+              key={membership.id}
+              membership={membership}
+              onRevokeAccess={onRevokeAccess}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col gap-control rounded-control bg-block-subtle px-card py-component sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 space-y-tag">
+              <h3 className="m-0 text-ui font-semibold text-text-primary">No client users yet</h3>
+              <p className="m-0 text-ui text-text-muted">
+                Invite a client user when you are ready to give access.
+              </p>
+            </div>
+            <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button">
+              Invite user
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
