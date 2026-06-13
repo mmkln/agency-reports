@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
-import { WORKSPACE_CAPABILITIES, WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  getWorkspaceMembershipCapabilities,
+  WORKSPACE_ROLES,
+} from '../../entities/workspace-membership'
 import { getPostLoginHref } from './postLoginRedirect'
 import { canAccessRouteWithContext } from './roleAccess'
 import { findRouteAccessMetadataByPath } from './routeAccessMetadata'
@@ -95,9 +98,9 @@ describe('getPostLoginHref', () => {
     })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
-  it('localizes invited workspace viewer access denied after login', () => {
+  it('routes invited workspace viewers to Growth Review after login', () => {
     const viewer = createViewer({
-      capabilities: [WORKSPACE_CAPABILITIES.VIEW_PORTAL],
+      capabilities: getWorkspaceMembershipCapabilities({ role: WORKSPACE_ROLES.VIEWER }),
       role: WORKSPACE_ROLES.VIEWER,
     })
     const href = getPostLoginHref({
@@ -105,7 +108,7 @@ describe('getPostLoginHref', () => {
       viewer,
     })
 
-    expect(href).toBe('/portal/settings?clientId=workspace_1')
-    expect(canViewerAccessHref(href, viewer)).toBe(false)
+    expect(href).toBe('/portal/growth-review?clientId=workspace_1')
+    expect(canViewerAccessHref(href, viewer)).toBe(true)
   })
 })
