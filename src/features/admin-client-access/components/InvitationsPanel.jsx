@@ -1,19 +1,31 @@
 import {
+  Button,
   ConfirmationDialog,
 } from '@/shared/ui'
+import { Icon } from '@/shared/icons'
 
 import { FieldError, InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
 import { useInvitationsPanel } from '../useInvitationsPanel'
 import { InvitationCard } from './InvitationCard'
-import { InvitationForm } from './InvitationForm'
+import { InvitationDialog } from './InvitationForm'
 
 export function InvitationsPanel({ runtime, workspaceId }) {
   const invitationsPanel = useInvitationsPanel({ runtime, workspaceId })
 
   return (
     <WorkspaceCard
+      action={(
+        <Button
+          icon={<Icon name="mail" size={14} />}
+          onClick={invitationsPanel.openInviteDialog}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Invite user
+        </Button>
+      )}
       description="Pending portal access requests. Access starts only after acceptance."
-      iconName="mail"
       title="Invitations"
     >
       <div className="grid grid-cols-1 gap-4">
@@ -38,15 +50,18 @@ export function InvitationsPanel({ runtime, workspaceId }) {
           </InlineEmptyState>
         )}
 
-        <InvitationForm
-          error={invitationsPanel.error}
-          form={invitationsPanel.form}
-          invitationEmailIssue={invitationsPanel.invitationEmailIssue}
-          invitationNameIssue={invitationsPanel.invitationNameIssue}
-          onSubmit={invitationsPanel.createInvitation}
-          onUpdateForm={invitationsPanel.updateForm}
-        />
       </div>
+      <InvitationDialog
+        error={invitationsPanel.error}
+        form={invitationsPanel.form}
+        invitationEmailIssue={invitationsPanel.invitationEmailIssue}
+        invitationNameIssue={invitationsPanel.invitationNameIssue}
+        isOpen={invitationsPanel.isInviteDialogOpen}
+        onClose={invitationsPanel.closeInviteDialog}
+        onSubmit={invitationsPanel.createInvitation}
+        onUpdateForm={invitationsPanel.updateForm}
+        status={invitationsPanel.inviteStatus}
+      />
       <ConfirmationDialog
         confirmLabel="Revoke invitation"
         description={

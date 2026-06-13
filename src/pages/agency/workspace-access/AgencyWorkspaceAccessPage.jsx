@@ -7,7 +7,7 @@ export function AgencyWorkspaceAccessPage({ routeParams = {}, runtime }) {
       currentPage="access"
       routeParams={routeParams}
       runtime={runtime}
-      width="full"
+      width="content"
     >
       {({ workspaceId }) => (
         <div className="grid gap-card">

@@ -34,6 +34,10 @@ function formatSentCount(count) {
   return normalizedCount === 1 ? 'Sent once' : `Sent ${normalizedCount} times`
 }
 
+function getInviteInitial(invitation) {
+  return (invitation.name || invitation.email || 'I').trim().charAt(0).toUpperCase()
+}
+
 export function InvitationCard({
   invitation,
   onCancel,
@@ -44,26 +48,35 @@ export function InvitationCard({
   const roleLabel = WORKSPACE_ROLE_META[invitation.role]?.label ?? invitation.role
 
   return (
-    <article className="rounded-control bg-block-subtle p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-ui text-text-primary">{invitation.email}</p>
-          <p className="mt-0.5 truncate text-label font-normal text-text-muted">
-            {invitation.name || 'Unnamed invite'} | {roleLabel} | expires {formatInvitationDate(invitation.expires_at)}
-          </p>
+    <article className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-center gap-control">
+        <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
+          {getInviteInitial(invitation)}
+        </span>
+        <div className="min-w-0 space-y-tag">
+          <div className="flex flex-wrap items-center gap-item">
+            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">
+              {invitation.name || 'Unnamed invite'}
+            </h3>
+            <span className="text-ui text-text-muted">{roleLabel}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <StatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
+          </div>
+          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+            <span>{invitation.email}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <span>Expires {formatInvitationDate(invitation.expires_at)}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <StatusBadge meta={deliveryMeta} />
+            <span>{formatSentCount(invitation.sent_count)}</span>
+            {invitation.make_delivery_error ? (
+              <span className="min-w-0 truncate text-destructive">{invitation.make_delivery_error}</span>
+            ) : null}
+          </div>
         </div>
-        <StatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-label font-normal text-text-muted">
-        <StatusBadge meta={deliveryMeta} />
-        <span>{formatSentCount(invitation.sent_count)}</span>
-        {invitation.make_delivery_error ? (
-          <span className="min-w-0 truncate text-destructive">{invitation.make_delivery_error}</span>
-        ) : null}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 lg:justify-end">
         {isPending ? (
           <>
             <Button onClick={() => onResend(invitation)} size="sm" type="button" variant="outline">

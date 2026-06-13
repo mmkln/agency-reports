@@ -9,12 +9,13 @@ import {
   Panel,
   PanelBody,
   PanelHeader,
+  EmptyState,
 } from '@/shared/ui'
-import { WorkspaceMemberList } from '@/entities/workspace-membership/ui'
 import { Icon } from '@/shared/icons'
 
 import { FieldError } from '../../admin-client-workspace'
 import { useAccessMembersPanel } from '../useAccessMembersPanel'
+import { AccessMemberCard } from './AccessMemberCard'
 import { AccessMemberEditDialog } from './AccessMemberEditDialog'
 import { AccessMemberForm } from './AccessMemberForm'
 
@@ -51,16 +52,24 @@ export function AccessMembersPanel({ clientId, runtime }) {
           <div className="m-card">
             <FieldError>Members could not be loaded.</FieldError>
           </div>
-        ) : (
-          <WorkspaceMemberList
-            canEdit
-            canRemove
-            emptyDescription="No members are currently attached to this workspace."
-            emptyTitle="No members"
-            members={membersPanel.members}
-            onEditMember={membersPanel.startEditingMember}
-            onRemoveMember={membersPanel.setMemberPendingRemoval}
+        ) : membersPanel.members.length === 0 ? (
+          <EmptyState
+            className="m-card"
+            description="No members are currently attached to this workspace."
+            iconName="users"
+            title="No members"
           />
+        ) : (
+          <div className="grid gap-item p-card">
+            {membersPanel.members.map((member) => (
+              <AccessMemberCard
+                key={member.id}
+                member={member}
+                onEdit={membersPanel.startEditingMember}
+                onRemove={membersPanel.setMemberPendingRemoval}
+              />
+            ))}
+          </div>
         )}
       </PanelBody>
       <Dialog onOpenChange={membersPanel.setIsMemberFormOpen} open={membersPanel.isMemberFormOpen}>

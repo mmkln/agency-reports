@@ -24,8 +24,10 @@ const initialInvitationForm = Object.freeze({
 export function useInvitationsPanel({ runtime, workspaceId }) {
   const toast = useToast()
   const [invitationPendingCancel, setInvitationPendingCancel] = useState(null)
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
   const [form, setForm] = useState(initialInvitationForm)
   const [error, setError] = useState('')
+  const [inviteStatus, setInviteStatus] = useState('idle')
   const invitationsResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:workspace-invitations:${workspaceId ?? ''}`,
     initialData: [],
@@ -58,6 +60,22 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
     }))
   }
 
+  function openInviteDialog() {
+    setError('')
+    setForm(initialInvitationForm)
+    setIsInviteDialogOpen(true)
+  }
+
+  function closeInviteDialog() {
+    if (inviteStatus === 'inviting') {
+      return
+    }
+
+    setError('')
+    setForm(initialInvitationForm)
+    setIsInviteDialogOpen(false)
+  }
+
   function createInvitation(event) {
     event.preventDefault()
 
@@ -79,6 +97,7 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
       return
     }
 
+    setInviteStatus('inviting')
     void createWorkspaceInvitation(runtime.apiClient, workspaceId, {
       email: trimmedInvitationEmail,
       name: trimmedInvitationName,
@@ -86,10 +105,13 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
     }).then((payload) => {
       const invitation = payload.invitation
       setForm(initialInvitationForm)
+      setInviteStatus('idle')
+      setIsInviteDialogOpen(false)
       refreshInvitations()
       toast.success('Invitation sent', `${invitation.email} will receive a portal invite.`)
     }).catch((caughtError) => {
       setError(caughtError.message)
+      setInviteStatus('idle')
       toast.error('Invitation was not sent', caughtError.message)
     })
   }
@@ -128,13 +150,17 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
 
   return {
     cancelInvitation,
+    closeInviteDialog,
     createInvitation,
     error,
     form,
+    inviteStatus,
     invitationEmailIssue,
     invitationNameIssue,
     invitationPendingCancel,
     invitations,
+    isInviteDialogOpen,
+    openInviteDialog,
     resendInvitation,
     setInvitationPendingCancel,
     status: invitationsResource.status,

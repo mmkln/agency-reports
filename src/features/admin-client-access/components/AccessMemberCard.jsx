@@ -1,58 +1,81 @@
 import {
   Button,
-  ListRow,
-  RadixSelect as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@/shared/ui'
 
-import { WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '../../../entities/workspace-membership'
+import { WORKSPACE_ROLE_META } from '../../../entities/workspace-membership'
 import { Icon } from '../../../shared/icons'
+
+function formatStatusLabel(value) {
+  if (!value) {
+    return 'Unknown'
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function getMemberInitial(member) {
+  return (member.name || member.email || 'U').trim().charAt(0).toUpperCase()
+}
 
 export function AccessMemberCard({
   member,
+  onEdit,
   onRemove,
-  onRoleChange,
 }) {
+  const roleMeta = WORKSPACE_ROLE_META[member.role]
+  const isActive = member.status === 'active'
+  const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
+
   return (
-    <ListRow
-      className="min-h-[72px] max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-3"
-      description={member.email}
-      leading={(
-        <span className="flex size-9 items-center justify-center rounded-full bg-action-muted text-ui text-action">
-          {member.name.slice(0, 1).toUpperCase()}
+    <article className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 items-center gap-control">
+        <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
+          {getMemberInitial(member)}
         </span>
-      )}
-      title={member.name}
-      trailing={(
-        <div className="flex items-center gap-2">
-          <Select
-            onValueChange={(role) => onRoleChange(member, role)}
-            value={member.role}
-          >
-            <SelectTrigger className="h-control-small w-[124px] bg-block text-label">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(WORKSPACE_ROLES).map((role) => (
-                <SelectItem key={role} value={role}>{WORKSPACE_ROLE_META[role]?.label ?? role}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            className="text-text-quaternary hover:text-destructive"
-            onClick={() => onRemove(member)}
-            size="icon-sm"
-            title="Remove member"
-            type="button"
-            variant="ghost"
-          >
-            <Icon name="close" size={14} />
-          </Button>
+        <div className="min-w-0 space-y-tag">
+          <div className="flex flex-wrap items-center gap-item">
+            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{member.name || 'Unnamed user'}</h3>
+            <span className="text-ui text-text-muted">{member.roleLabel ?? roleMeta?.label ?? member.role}</span>
+            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
+            <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
+              <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
+              {formatStatusLabel(member.status)}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
+            {member.email ? (
+              <span>{member.email}</span>
+            ) : (
+              <span className="text-text-quaternary">Missing email</span>
+            )}
+          </div>
         </div>
-      )}
-    />
+      </div>
+
+      <div className="flex flex-wrap gap-2 lg:justify-end">
+        <Button
+          icon={<Icon name="pencil" size={14} />}
+          onClick={() => onEdit(member)}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Edit
+        </Button>
+        <Button
+          className="text-destructive hover:text-destructive"
+          onClick={() => onRemove(member)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Revoke access
+        </Button>
+      </div>
+    </article>
   )
 }
