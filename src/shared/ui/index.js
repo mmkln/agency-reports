@@ -32,6 +32,7 @@ export { ConfirmationDialog } from './ConfirmationDialog'
 export { ContentToolbar } from './ContentToolbar'
 export { DashboardSectionGrid } from './DashboardSectionGrid'
 export { DetailRow } from './DetailRow'
+export { DataTable } from './DataTable'
 export { DataTableSurface } from './DataTableSurface'
 export {
   Dialog,
@@ -138,8 +139,6 @@ export { Switch } from '@/components/ui/switch'
 export { TableBadge, TablePanel } from './TablePanel'
 export {
   Table,
-  TableActionCell,
-  TableActionHead,
   TableBody,
   TableCaption,
   TableCell,

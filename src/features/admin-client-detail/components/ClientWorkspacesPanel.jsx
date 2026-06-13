@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
 import { WORKSPACE_TYPE_META } from '@/entities/workspace'
@@ -6,71 +7,70 @@ import { Icon } from '@/shared/icons'
 import {
   Badge,
   Button,
+  DataTable,
   Panel,
   PanelBody,
   PanelHeader,
   StatusBadge,
-  Table,
-  TableActionCell,
-  TableActionHead,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
 
 import { getWorkspaceStatusMeta } from '../model/clientDetailPresentation'
 
 export function ClientWorkspacesPanel({ workspaces }) {
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'name',
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      header: 'Name',
+    },
+    {
+      accessorKey: 'type',
+      cell: ({ row }) => {
+        const typeMeta = WORKSPACE_TYPE_META[row.original.type]
+
+        return (
+          <Badge tone={typeMeta?.tone ?? 'neutral'}>
+            {typeMeta?.label ?? row.original.type}
+          </Badge>
+        )
+      },
+      header: 'Type',
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => <StatusBadge meta={getWorkspaceStatusMeta(row.original)} />,
+      header: 'Status',
+    },
+    {
+      cell: ({ row }) => (
+        <Button asChild size="sm" variant="outline">
+          <Link to={getDefaultWorkspaceAdminPath(row.original)}>
+            <Icon name="arrowUpRight" size={16} />
+            Open workspace
+          </Link>
+        </Button>
+      ),
+      enableSorting: false,
+      header: 'Actions',
+      id: 'actions',
+      meta: {
+        isAction: true,
+        label: 'Actions',
+        nowrap: true,
+      },
+    },
+  ], [])
+
   return (
     <Panel>
       <PanelHeader divided iconName="grid" title="Workspaces" />
-      <PanelBody className="overflow-x-auto p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableActionHead>Actions</TableActionHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workspaces.map((workspace) => {
-              const typeMeta = WORKSPACE_TYPE_META[workspace.type]
-
-              return (
-                <TableRow key={workspace.id}>
-                  <TableCell className="font-medium">{workspace.name}</TableCell>
-                  <TableCell>
-                    <Badge tone={typeMeta?.tone ?? 'neutral'}>
-                      {typeMeta?.label ?? workspace.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge meta={getWorkspaceStatusMeta(workspace)} />
-                  </TableCell>
-                  <TableActionCell>
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={getDefaultWorkspaceAdminPath(workspace)}>
-                        <Icon name="arrowUpRight" size={16} />
-                        Open workspace
-                      </Link>
-                    </Button>
-                  </TableActionCell>
-                </TableRow>
-              )
-            })}
-            {workspaces.length === 0 ? (
-              <TableRow>
-                <TableCell className="text-text-muted" colSpan={4}>
-                  No workspaces yet.
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
+      <PanelBody className="p-0">
+        <DataTable
+          columns={columns}
+          data={workspaces}
+          emptyMessage="No workspaces yet. Add a workspace to start organizing this client."
+          getRowId={(workspace) => workspace.id}
+        />
       </PanelBody>
     </Panel>
   )

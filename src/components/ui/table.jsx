@@ -90,35 +90,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "px-component py-control align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
-        className
-      )}
-      {...props} />
-  );
-}
-
-function TableActionHead({
-  className,
-  ...props
-}) {
-  return (
-    <TableHead
-      className={cn(
-        "sticky right-0 z-30 bg-block text-right",
-        className
-      )}
-      {...props} />
-  );
-}
-
-function TableActionCell({
-  className,
-  ...props
-}) {
-  return (
-    <TableCell
-      className={cn(
-        "sticky right-0 z-20 bg-block text-right group-hover/table-row:bg-control-hover",
+        "px-component py-control align-middle [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -145,7 +117,5 @@ export {
   TableHead,
   TableRow,
   TableCell,
-  TableActionHead,
-  TableActionCell,
   TableCaption,
 }

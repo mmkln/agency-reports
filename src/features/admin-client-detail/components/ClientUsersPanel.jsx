@@ -1,21 +1,16 @@
+import { useMemo } from 'react'
+
 import { CLIENT_ROLE_META } from '@/entities/client-membership'
 import { Icon } from '@/shared/icons'
 import {
   Badge,
   Button,
+  DataTable,
   ErrorBlock,
   Panel,
   PanelBody,
   PanelHeader,
   StatusBadge,
-  Table,
-  TableActionCell,
-  TableActionHead,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
 
 import { formatDetailDate } from '../model/clientDetailPresentation'
@@ -34,19 +29,75 @@ export function ClientUsersPanel({
   onRevokeAccess,
   revokeError,
 }) {
+  const inviteVariant = memberships.length === 0 ? 'primary' : 'outline'
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'name',
+      cell: ({ row }) => <span className="font-medium">{row.original.name || 'Unnamed user'}</span>,
+      header: 'Name',
+    },
+    {
+      accessorKey: 'email',
+      cell: ({ row }) => row.original.email || 'Missing email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'role',
+      cell: ({ row }) => {
+        const roleMeta = CLIENT_ROLE_META[row.original.role]
+
+        return (
+          <Badge tone={roleMeta?.tone ?? 'neutral'}>
+            {roleMeta?.label ?? row.original.role}
+          </Badge>
+        )
+      },
+      header: 'Role',
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => <StatusBadge meta={getMembershipStatusMeta(row.original)} />,
+      header: 'Access status',
+    },
+    {
+      accessorKey: 'createdAt',
+      cell: ({ row }) => formatDetailDate(row.original.createdAt),
+      header: 'Added',
+    },
+    {
+      cell: ({ row }) => (
+        row.original.status === 'active' ? (
+          <Button icon={<Icon name="circleX" size={16} />} onClick={() => onRevokeAccess(row.original)} size="sm" type="button" variant="outline">
+            Revoke access
+          </Button>
+        ) : (
+          <span className="text-text-muted">No actions</span>
+        )
+      ),
+      enableSorting: false,
+      header: 'Actions',
+      id: 'actions',
+      meta: {
+        isAction: true,
+        label: 'Actions',
+        nowrap: true,
+      },
+    },
+  ], [onRevokeAccess])
+
   return (
     <Panel>
       <PanelHeader
         action={(
-          <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button" variant="outline">
+          <Button icon={<Icon name="mail" size={16} />} onClick={onInviteUser} size="sm" type="button" variant={inviteVariant}>
             Invite user
           </Button>
         )}
         divided
         iconName="shieldCheck"
-        title="Client users"
+        title="Client access"
       />
-      <PanelBody className="overflow-x-auto p-0">
+      <PanelBody className="p-0">
         {revokeError ? (
           <div className="p-card">
             <ErrorBlock title="Client access could not be updated">
@@ -54,56 +105,12 @@ export function ClientUsersPanel({
             </ErrorBlock>
           </div>
         ) : null}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Invite status</TableHead>
-              <TableHead>Accepted</TableHead>
-              <TableActionHead>Actions</TableActionHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {memberships.map((membership) => {
-              const roleMeta = CLIENT_ROLE_META[membership.role]
-              const canRevoke = membership.status === 'active'
-
-              return (
-                <TableRow key={membership.id}>
-                  <TableCell className="font-medium">{membership.name || 'Unnamed user'}</TableCell>
-                  <TableCell>{membership.email || 'Not set'}</TableCell>
-                  <TableCell>
-                    <Badge tone={roleMeta?.tone ?? 'neutral'}>
-                      {roleMeta?.label ?? membership.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge meta={getMembershipStatusMeta(membership)} />
-                  </TableCell>
-                  <TableCell>{formatDetailDate(membership.createdAt)}</TableCell>
-                  <TableActionCell>
-                    {canRevoke ? (
-                      <Button icon={<Icon name="circleX" size={16} />} onClick={() => onRevokeAccess(membership)} size="sm" type="button" variant="outline">
-                        Revoke access
-                      </Button>
-                    ) : (
-                      <span className="text-text-muted">No actions</span>
-                    )}
-                  </TableActionCell>
-                </TableRow>
-              )
-            })}
-            {memberships.length === 0 ? (
-              <TableRow>
-                <TableCell className="text-text-muted" colSpan={6}>
-                  No client users yet.
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={columns}
+          data={memberships}
+          emptyMessage="No client users yet. Invite a user to give this client access."
+          getRowId={(membership) => membership.id}
+        />
       </PanelBody>
     </Panel>
   )

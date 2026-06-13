@@ -1,24 +1,17 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ROUTE_PATHS, withSearchParams } from '@/domain/navigation/routePaths'
 import {
   Button,
   ConfirmationDialog,
+  DataTable,
   DataTableSurface,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Table,
-  TableActionCell,
-  TableActionHead,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
@@ -37,6 +30,88 @@ function formatDate(date) {
   }).format(new Date(date))
 }
 
+function ClientCell({ client }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <ClientAvatar client={client} />
+      <div className="min-w-0">
+        <p className="truncate font-semibold text-text-primary">{client.name}</p>
+        <p className="mt-1 flex items-center gap-1 text-label font-normal text-text-muted">
+          <Icon name="arrowUpRight" size={13} />
+          <span className="truncate">/{client.portal_slug}</span>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function PrimaryContactCell({ client }) {
+  return (
+    <div>
+      <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
+      <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
+    </div>
+  )
+}
+
+function ClientActions({
+  client,
+  onDelete,
+  onEditClient,
+  pendingInvite,
+}) {
+  return (
+    <div className="flex justify-end gap-1.5">
+      <Button asChild size="sm" variant="outline">
+        <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, { clientId: client.id })}>
+          Open
+        </Link>
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button aria-label={`${client.name} actions`} size="icon-sm" type="button" variant="ghost">
+            <Icon name="ellipsis" size={16} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-56">
+          <DropdownMenuItem onClick={() => onEditClient(client)}>
+            <Icon name="wrench" size={15} />
+            Edit client
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to={withSearchParams(ROUTE_PATHS.portalGrowthReview, { clientId: client.id })}>
+              <Icon name="arrowUpRight" size={15} />
+              Preview Growth Review
+            </Link>
+          </DropdownMenuItem>
+          {pendingInvite ? (
+            <DropdownMenuItem asChild>
+              <Link to={`/accept-invite?token=${pendingInvite.token}`}>
+                <Icon name="mail" size={15} />
+                Open pending invitation
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem asChild>
+            <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, { clientId: client.id })}>
+              <Icon name="users" size={15} />
+              Access
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => onDelete(client)}
+            variant="destructive"
+          >
+            <Icon name="close" size={15} />
+            Delete client
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export function ClientsTable({
   clients,
   onDeleteClient,
@@ -44,6 +119,58 @@ export function ClientsTable({
   pendingInvitationsByClientId = {},
 }) {
   const [clientPendingDelete, setClientPendingDelete] = useState(null)
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'name',
+      cell: ({ row }) => <ClientCell client={row.original} />,
+      header: 'Client',
+      meta: {
+        label: 'Client',
+        minWidthClassName: 'min-w-[280px]',
+      },
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => <ClientStatusBadge status={row.original.status} />,
+      header: 'Project Status',
+    },
+    {
+      accessorKey: 'primary_contact_name',
+      cell: ({ row }) => <PrimaryContactCell client={row.original} />,
+      header: 'Primary Contact',
+      sortingFn: (left, right) => (
+        String(left.original.primary_contact_name ?? '').localeCompare(
+          String(right.original.primary_contact_name ?? ''),
+        )
+      ),
+    },
+    {
+      accessorKey: 'created_at',
+      cell: ({ row }) => formatDate(row.original.created_at),
+      header: 'Created',
+      meta: {
+        cellClassName: 'text-text-muted',
+      },
+    },
+    {
+      cell: ({ row }) => (
+        <ClientActions
+          client={row.original}
+          onDelete={setClientPendingDelete}
+          onEditClient={onEditClient}
+          pendingInvite={pendingInvitationsByClientId[row.original.id] ?? null}
+        />
+      ),
+      enableSorting: false,
+      header: 'Actions',
+      id: 'actions',
+      meta: {
+        isAction: true,
+        label: 'Actions',
+        nowrap: true,
+      },
+    },
+  ], [onEditClient, pendingInvitationsByClientId])
 
   function confirmDeleteClient() {
     if (!clientPendingDelete) {
@@ -57,97 +184,12 @@ export function ClientsTable({
   return (
     <>
       <DataTableSurface>
-        <Table className="min-w-[980px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client</TableHead>
-              <TableHead>Project Status</TableHead>
-              <TableHead>Primary Contact</TableHead>
-              <TableHead>Created</TableHead>
-              <TableActionHead>Actions</TableActionHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.map((client) => {
-              const pendingInvite = pendingInvitationsByClientId[client.id] ?? null
-
-              return (
-                <TableRow key={client.id}>
-                  <TableCell>
-                    <div className="flex min-w-0 items-center gap-3">
-                      <ClientAvatar client={client} />
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-text-primary">{client.name}</p>
-                        <p className="mt-1 flex items-center gap-1 text-label font-normal text-text-muted">
-                          <Icon name="arrowUpRight" size={13} />
-                          <span className="truncate">/{client.portal_slug}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <ClientStatusBadge status={client.status} />
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium text-text-secondary">{client.primary_contact_name}</p>
-                    <p className="mt-0.5 text-label font-normal text-text-muted">{client.primary_contact_email}</p>
-                  </TableCell>
-                  <TableCell className="text-text-muted">{formatDate(client.created_at)}</TableCell>
-                  <TableActionCell>
-                    <div className="flex justify-end gap-1.5">
-                      <Button asChild size="sm" variant="outline">
-                        <Link to={withSearchParams(ROUTE_PATHS.agencyClinicSetup, { clientId: client.id })}>
-                          Open
-                        </Link>
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-label={`${client.name} actions`} size="icon-sm" type="button" variant="ghost">
-                            <Icon name="ellipsis" size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-56">
-                          <DropdownMenuItem onClick={() => onEditClient(client)}>
-                            <Icon name="wrench" size={15} />
-                            Edit client
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={withSearchParams(ROUTE_PATHS.portalGrowthReview, { clientId: client.id })}>
-                              <Icon name="arrowUpRight" size={15} />
-                              Preview Growth Review
-                            </Link>
-                          </DropdownMenuItem>
-                          {pendingInvite ? (
-                            <DropdownMenuItem asChild>
-                              <Link to={`/accept-invite?token=${pendingInvite.token}`}>
-                                <Icon name="mail" size={15} />
-                                Open pending invitation
-                              </Link>
-                            </DropdownMenuItem>
-                          ) : null}
-                          <DropdownMenuItem asChild>
-                            <Link to={withSearchParams(ROUTE_PATHS.agencyClientAccess, { clientId: client.id })}>
-                              <Icon name="users" size={15} />
-                              Access
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setClientPendingDelete(client)}
-                            variant="destructive"
-                          >
-                            <Icon name="close" size={15} />
-                            Delete client
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableActionCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={columns}
+          data={clients}
+          emptyMessage="No clients yet."
+          getRowId={(client) => client.id}
+        />
       </DataTableSurface>
 
       <ConfirmationDialog
