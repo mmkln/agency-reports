@@ -43,9 +43,9 @@ export function InvitationsPanel({ runtime, workspaceId }) {
       description="Pending portal access requests. Access starts only after acceptance."
       title="Invitations"
     >
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid gap-item">
         {invitationsPanel.status === 'loading' ? (
-          <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading invitations...</div>
+          <div className="rounded-control bg-block-subtle px-card py-component text-ui text-text-muted">Loading invitations...</div>
         ) : invitationsPanel.status === 'error' ? (
           <FieldError>Invitations could not be loaded.</FieldError>
         ) : invitationsPanel.pendingInvitations.length > 0 ? (

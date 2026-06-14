@@ -3,9 +3,6 @@ import { useState } from 'react'
 import {
   Button,
   ConfirmationDialog,
-  Panel,
-  PanelBody,
-  PanelHeader,
   EmptyState,
 } from '@/shared/ui'
 
@@ -19,9 +16,13 @@ export function AccessMembersPanel({ workspaceId, runtime }) {
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false)
 
   return (
-    <Panel>
-      <PanelHeader
-        action={(
+    <section className="grid gap-control rounded-block bg-block p-component">
+      <div className="flex items-center justify-between gap-control">
+        <div className="min-w-0">
+          <h2 className="m-0 truncate text-ui font-semibold text-text-primary">Members</h2>
+          <p className="mt-tag text-ui text-text-muted">People with access to this workspace.</p>
+        </div>
+        <div>
           <Button
             disabled={membersPanel.memberHistory.length === 0}
             onClick={() => setIsHistoryDialogOpen(true)}
@@ -31,47 +32,39 @@ export function AccessMembersPanel({ workspaceId, runtime }) {
           >
             History
           </Button>
-        )}
-        divided
-        subtitle="People with access to this workspace."
-        title="Members"
-      />
-      <PanelBody className="p-0">
+        </div>
+      </div>
+      <div className="grid gap-item">
         {membersPanel.status === 'loading' ? (
-          <div className="m-card rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading members...</div>
+          <div className="rounded-control bg-block-subtle px-card py-component text-ui text-text-muted">Loading members...</div>
         ) : membersPanel.status === 'error' ? (
-          <div className="m-card">
-            <FieldError>{membersPanel.error || 'Members could not be loaded.'}</FieldError>
-          </div>
+          <FieldError>{membersPanel.error || 'Members could not be loaded.'}</FieldError>
         ) : membersPanel.activeMembers.length === 0 ? (
           <EmptyState
-            className="m-card"
             description="No active members are currently attached to this workspace."
             iconName="users"
             title="No active members"
           />
         ) : (
-          <div className="p-card">
-            <div className="overflow-hidden rounded-control border border-control-border">
-              <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(240px,1.4fr)_160px_120px_44px]">
-                <span>Person</span>
-                <span>Role</span>
-                <span>Status</span>
-                <span aria-hidden="true" />
-              </div>
-              <div className="divide-y divide-separator">
-                {membersPanel.activeMembers.map((member) => (
-                  <AccessMemberCard
-                    key={member.id}
-                    member={member}
-                    onRemove={membersPanel.setMemberPendingRemoval}
-                  />
-                ))}
-              </div>
+          <div className="overflow-hidden rounded-control border border-control-border">
+            <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(240px,1.4fr)_160px_120px_44px]">
+              <span>Person</span>
+              <span>Role</span>
+              <span>Status</span>
+              <span aria-hidden="true" />
+            </div>
+            <div className="divide-y divide-separator">
+              {membersPanel.activeMembers.map((member) => (
+                <AccessMemberCard
+                  key={member.id}
+                  member={member}
+                  onRemove={membersPanel.setMemberPendingRemoval}
+                />
+              ))}
             </div>
           </div>
         )}
-      </PanelBody>
+      </div>
       <AccessMemberHistoryDialog
         isOpen={isHistoryDialogOpen}
         members={membersPanel.memberHistory}
@@ -94,6 +87,6 @@ export function AccessMembersPanel({ workspaceId, runtime }) {
         title="Remove member access?"
         tone="destructive"
       />
-    </Panel>
+    </section>
   )
 }

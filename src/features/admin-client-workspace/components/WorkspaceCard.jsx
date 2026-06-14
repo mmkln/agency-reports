@@ -2,7 +2,6 @@ import {
   EmptyState,
   Panel,
   PanelBody,
-  PanelHeader,
   Skeleton,
 } from '@/shared/ui'
 
@@ -36,16 +35,23 @@ export function InlineEmptyState({ children, iconName = 'helpCircle', title }) {
 
 export function WorkspaceCard({ action, children, description, iconName, title }) {
   return (
-    <Panel>
-      <PanelHeader
-        action={action}
-        divided
-        iconName={iconName}
-        subtitle={description}
-        title={title}
-      />
-      <PanelBody>{children}</PanelBody>
-    </Panel>
+    <section className="grid gap-control rounded-block bg-block p-component">
+      <div className="flex items-center justify-between gap-control">
+        <div className="flex min-w-0 items-start gap-control">
+          {iconName ? (
+            <span className="mt-micro flex shrink-0 text-text-quaternary">
+              <Icon name={iconName} size={17} />
+            </span>
+          ) : null}
+          <div className="min-w-0">
+            <h2 className="m-0 truncate text-ui font-semibold text-text-primary">{title}</h2>
+            {description ? <p className="mt-tag text-ui text-text-muted">{description}</p> : null}
+          </div>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
   )
 }
 
