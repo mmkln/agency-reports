@@ -1,4 +1,9 @@
 export {
+  listWorkspaceMemberships,
+  removeWorkspaceMembership,
+} from './api'
+
+export {
   getWorkspaceMembershipCapabilities,
   getWorkspaceRoleDefaultCapabilities,
   isActiveWorkspaceMembership,

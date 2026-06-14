@@ -1,11 +1,11 @@
 import { useState } from 'react'
 
 import { updateClient } from '@/features/clients'
+import { removeWorkspaceMembership } from '@/entities/workspace-membership'
 import {
   cancelWorkspaceInvitation,
   createWorkspaceInvitation,
 } from '@/features/invitations'
-import { removeWorkspaceMembership } from '@/features/workspace-access'
 import { createWorkspace as createWorkspaceRecord } from '@/features/workspaces'
 import {
   createClientEditPayload,

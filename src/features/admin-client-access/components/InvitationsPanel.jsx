@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
   Button,
   ConfirmationDialog,
@@ -8,22 +10,35 @@ import { FieldError, InlineEmptyState, WorkspaceCard } from '../../admin-client-
 import { useInvitationsPanel } from '../useInvitationsPanel'
 import { InvitationCard } from './InvitationCard'
 import { InvitationDialog } from './InvitationForm'
+import { InvitationHistoryDialog } from './InvitationHistoryDialog'
 
 export function InvitationsPanel({ runtime, workspaceId }) {
   const invitationsPanel = useInvitationsPanel({ runtime, workspaceId })
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false)
 
   return (
     <WorkspaceCard
       action={(
-        <Button
-          icon={<Icon name="mail" size={14} />}
-          onClick={invitationsPanel.openInviteDialog}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Invite user
-        </Button>
+        <div className="flex items-center gap-control">
+          <Button
+            disabled={invitationsPanel.invitationHistory.length === 0}
+            onClick={() => setIsHistoryDialogOpen(true)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            History
+          </Button>
+          <Button
+            icon={<Icon name="mail" size={14} />}
+            onClick={invitationsPanel.openInviteDialog}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Invite user
+          </Button>
+        </div>
       )}
       description="Pending portal access requests. Access starts only after acceptance."
       title="Invitations"
@@ -33,9 +48,9 @@ export function InvitationsPanel({ runtime, workspaceId }) {
           <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading invitations...</div>
         ) : invitationsPanel.status === 'error' ? (
           <FieldError>Invitations could not be loaded.</FieldError>
-        ) : invitationsPanel.invitations.length > 0 ? (
+        ) : invitationsPanel.pendingInvitations.length > 0 ? (
           <div className="grid grid-cols-1 gap-2">
-            {invitationsPanel.invitations.map((invitation) => (
+            {invitationsPanel.pendingInvitations.map((invitation) => (
               <InvitationCard
                 invitation={invitation}
                 key={invitation.id}
@@ -45,12 +60,17 @@ export function InvitationsPanel({ runtime, workspaceId }) {
             ))}
           </div>
         ) : (
-          <InlineEmptyState iconName="mail" title="No invitations yet">
+          <InlineEmptyState iconName="mail" title="No pending invitations">
             Send an invite when a client user should receive portal access after accepting.
           </InlineEmptyState>
         )}
 
       </div>
+      <InvitationHistoryDialog
+        invitations={invitationsPanel.invitationHistory}
+        isOpen={isHistoryDialogOpen}
+        onOpenChange={setIsHistoryDialogOpen}
+      />
       <InvitationDialog
         error={invitationsPanel.error}
         form={invitationsPanel.form}

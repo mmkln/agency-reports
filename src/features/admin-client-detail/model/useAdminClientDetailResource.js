@@ -1,6 +1,6 @@
 import { getClient } from '@/features/clients'
 import { listWorkspaceInvitations } from '@/features/invitations'
-import { listWorkspaceMemberships } from '@/features/workspace-access'
+import { listWorkspaceMemberships } from '@/entities/workspace-membership'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 
 import {

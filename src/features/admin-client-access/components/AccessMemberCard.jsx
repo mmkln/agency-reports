@@ -3,7 +3,6 @@ import {
 } from '@/shared/ui'
 
 import { WORKSPACE_ROLE_META } from '../../../entities/workspace-membership'
-import { Icon } from '../../../shared/icons'
 
 function formatStatusLabel(value) {
   if (!value) {
@@ -23,11 +22,12 @@ function getMemberInitial(member) {
 
 export function AccessMemberCard({
   member,
-  onEdit,
   onRemove,
+  readOnly = false,
 }) {
   const roleMeta = WORKSPACE_ROLE_META[member.role]
-  const isActive = member.status === 'active'
+  const status = member.status ?? 'active'
+  const isActive = status === 'active'
   const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
 
   return (
@@ -43,7 +43,7 @@ export function AccessMemberCard({
             <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
             <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
               <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
-              {formatStatusLabel(member.status)}
+              {formatStatusLabel(status)}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
@@ -56,26 +56,19 @@ export function AccessMemberCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 lg:justify-end">
-        <Button
-          icon={<Icon name="pencil" size={14} />}
-          onClick={() => onEdit(member)}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Edit
-        </Button>
-        <Button
-          className="text-destructive hover:text-destructive"
-          onClick={() => onRemove(member)}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          Revoke access
-        </Button>
-      </div>
+      {!readOnly && isActive ? (
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          <Button
+            className="text-destructive hover:text-destructive"
+            onClick={() => onRemove(member)}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            Revoke access
+          </Button>
+        </div>
+      ) : null}
     </article>
   )
 }

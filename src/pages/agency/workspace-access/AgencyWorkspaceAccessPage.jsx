@@ -12,7 +12,7 @@ export function AgencyWorkspaceAccessPage({ routeParams = {}, runtime }) {
       {({ workspaceId }) => (
         <div className="grid gap-card">
           <InvitationsPanel runtime={runtime} workspaceId={workspaceId} />
-          <AccessMembersPanel clientId={workspaceId} runtime={runtime} />
+          <AccessMembersPanel runtime={runtime} workspaceId={workspaceId} />
         </div>
       )}
     </AdminClientWorkspaceFrame>

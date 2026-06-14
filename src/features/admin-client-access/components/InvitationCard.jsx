@@ -44,6 +44,7 @@ export function InvitationCard({
   onResend,
 }) {
   const isPending = invitation.status === CLIENT_INVITATION_STATUSES.PENDING
+  const canManageInvitation = isPending && onCancel && onResend
   const deliveryMeta = DELIVERY_STATUS_META[invitation.make_delivery_status] ?? DELIVERY_STATUS_META.pending
   const roleLabel = WORKSPACE_ROLE_META[invitation.role]?.label ?? invitation.role
 
@@ -77,7 +78,7 @@ export function InvitationCard({
       </div>
 
       <div className="flex flex-wrap gap-2 lg:justify-end">
-        {isPending ? (
+        {canManageInvitation ? (
           <>
             <Button onClick={() => onResend(invitation)} size="sm" type="button" variant="outline">
               Resend

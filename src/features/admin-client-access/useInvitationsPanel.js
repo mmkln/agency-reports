@@ -41,6 +41,8 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
     },
   })
   const invitations = invitationsResource.data ?? []
+  const pendingInvitations = invitations.filter((invitation) => invitation.status === 'pending')
+  const invitationHistory = invitations.filter((invitation) => invitation.status !== 'pending')
   const trimmedInvitationName = form.name.trim()
   const trimmedInvitationEmail = form.email.trim()
   const invitationNameIssue = error === NAME_REQUIRED_ERROR ? error : ''
@@ -156,11 +158,13 @@ export function useInvitationsPanel({ runtime, workspaceId }) {
     form,
     inviteStatus,
     invitationEmailIssue,
+    invitationHistory,
     invitationNameIssue,
     invitationPendingCancel,
     invitations,
     isInviteDialogOpen,
     openInviteDialog,
+    pendingInvitations,
     resendInvitation,
     setInvitationPendingCancel,
     status: invitationsResource.status,
