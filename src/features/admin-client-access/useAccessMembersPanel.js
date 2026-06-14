@@ -14,8 +14,10 @@ function normalizeWorkspaceMembership(source = {}) {
     email: source.email ?? '',
     id: String(source.id ?? ''),
     name: source.name ?? '',
+    removedAt: source.removed_at ?? source.removedAt ?? '',
     role: source.role ?? '',
     status: source.status ?? 'active',
+    updatedAt: source.updated_at ?? source.updatedAt ?? '',
     userId: String(source.user_id ?? source.userId ?? ''),
     workspaceId: String(source.workspace_id ?? source.workspaceId ?? ''),
   }

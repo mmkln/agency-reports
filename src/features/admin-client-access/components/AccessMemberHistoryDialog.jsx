@@ -6,8 +6,40 @@ import {
   DialogTitle,
   EmptyState,
 } from '@/shared/ui'
+import { WORKSPACE_ROLE_META } from '@/entities/workspace-membership'
 
-import { AccessMemberCard } from './AccessMemberCard'
+import { AccessHistoryRow } from './AccessHistoryRow'
+
+function formatStatusLabel(value) {
+  if (!value) {
+    return 'Unknown'
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function formatHistoryDate(date) {
+  if (!date) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(date))
+}
+
+function getMembershipStatusMeta(status) {
+  return {
+    label: formatStatusLabel(status),
+    tone: status === 'removed' ? 'neutral' : 'amber',
+  }
+}
 
 export function AccessMemberHistoryDialog({
   isOpen,
@@ -24,14 +56,20 @@ export function AccessMemberHistoryDialog({
           </DialogDescription>
         </DialogHeader>
         {members.length > 0 ? (
-          <div className="grid max-h-overlay-body gap-item overflow-y-auto pr-1">
-            {members.map((member) => (
-              <AccessMemberCard
-                key={member.id}
-                member={member}
-                readOnly
-              />
-            ))}
+          <div className="max-h-overlay-body overflow-y-auto rounded-control border border-control-border bg-surface-elevated">
+            <div className="divide-y divide-separator">
+              {members.map((member) => (
+                <AccessHistoryRow
+                  dateLabel={formatHistoryDate(member.removedAt || member.updatedAt)}
+                  email={member.email}
+                  key={member.id}
+                  name={member.name}
+                  role={WORKSPACE_ROLE_META[member.role]?.label ?? member.role}
+                  statusMeta={getMembershipStatusMeta(member.status)}
+                  typeLabel="Membership"
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <EmptyState

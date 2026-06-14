@@ -31,7 +31,7 @@ export function AccessMemberCard({
   const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
 
   return (
-    <article className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
+    <article className="flex flex-col gap-control rounded-control border border-control-border bg-surface-elevated px-component py-control lg:flex-row lg:items-center lg:justify-between">
       <div className="flex min-w-0 items-center gap-control">
         <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
           {getMemberInitial(member)}
