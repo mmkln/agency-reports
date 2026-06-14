@@ -2,6 +2,10 @@ import { WORKSPACE_ROLE_META } from '@/entities/workspace-membership'
 import { Icon } from '@/shared/icons'
 import {
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   ErrorBlock,
 } from '@/shared/ui'
 
@@ -19,107 +23,130 @@ function formatStatusLabel(value) {
     .join(' ')
 }
 
-function getMemberInitial(membership) {
-  return (membership.name || membership.email || 'C').trim().charAt(0).toUpperCase()
+function getPrincipalName(principal) {
+  return principal.name || principal.email || (principal.kind === 'invitation' ? 'Pending invite' : 'Unnamed user')
 }
 
-function ClientAccessListItem({ membership, onRevokeAccess }) {
-  const roleMeta = WORKSPACE_ROLE_META[membership.role]
-  const initial = getMemberInitial(membership)
-  const isActive = membership.status === 'active'
-  const statusClassName = 'text-text-secondary'
-  const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
+function getGrantStatusTone(grant) {
+  if (grant.kind === 'workspace_invitation') {
+    return 'bg-warning'
+  }
+
+  return grant.status === 'active' ? 'bg-success' : 'bg-fill-secondary'
+}
+
+function getGrantActionLabel(grant) {
+  return grant.kind === 'workspace_invitation' ? 'Cancel invite' : 'Revoke access'
+}
+
+function getGrantStatusLabel(grant) {
+  return grant.kind === 'workspace_invitation' ? 'Pending' : formatStatusLabel(grant.status)
+}
+
+function buildAccessRows(principals = []) {
+  return principals.flatMap((principal) => (
+    (principal.access ?? []).map((grant) => ({
+      grant,
+      id: `${grant.kind}:${grant.id}`,
+      principal,
+    }))
+  ))
+}
+
+function AccessActionsMenu({
+  grant,
+  onCancelInvitation,
+  onRevokeAccess,
+  payload,
+}) {
+  const isInvitation = grant.kind === 'workspace_invitation'
 
   return (
-    <div className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex min-w-0 items-center gap-control">
-        <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
-          {initial}
-        </span>
-        <div className="min-w-0 space-y-tag">
-          <div className="flex flex-wrap items-center gap-item">
-            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{membership.name || 'Unnamed user'}</h3>
-            <span className="text-ui text-text-muted">{roleMeta?.label ?? membership.role}</span>
-            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
-            <span className={`inline-flex items-center gap-tag text-ui ${statusClassName}`}>
-              <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
-              {formatStatusLabel(membership.status)}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
-            {membership.email ? (
-              <span>{membership.email}</span>
-            ) : (
-              <span className="text-text-quaternary">Missing email</span>
-            )}
-            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
-            <span>Added {formatDetailDate(membership.createdAt)}</span>
-          </div>
-        </div>
-      </div>
-      <Button
-        className="justify-start px-0 text-label font-normal text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
-        onClick={() => onRevokeAccess(membership)}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        Revoke access
-      </Button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          aria-label="Access actions"
+          icon={<Icon name="ellipsis" size={16} />}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive"
+          onClick={() => {
+            if (isInvitation) {
+              onCancelInvitation(payload)
+              return
+            }
+
+            onRevokeAccess(payload)
+          }}
+        >
+          {getGrantActionLabel(grant)}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
-function InvitationListItem({ invitation, onCancelInvitation }) {
-  const roleMeta = WORKSPACE_ROLE_META[invitation.role]
-  const initial = getMemberInitial(invitation)
+function AccessRow({
+  onCancelInvitation,
+  onRevokeAccess,
+  row,
+}) {
+  const { grant, principal } = row
+  const roleMeta = WORKSPACE_ROLE_META[grant.role]
+  const actionPayload = {
+    ...grant,
+    email: principal.email,
+    name: principal.name,
+    userId: principal.userId,
+  }
 
   return (
-    <div className="flex flex-col gap-control rounded-control border border-control-border px-component py-control lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex min-w-0 items-center gap-control">
-        <span className="flex size-control-large shrink-0 items-center justify-center rounded-full bg-block-subtle text-ui font-medium text-text-primary">
-          {initial}
-        </span>
-        <div className="min-w-0 space-y-tag">
-          <div className="flex flex-wrap items-center gap-item">
-            <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{invitation.name || 'Pending invite'}</h3>
-            <span className="text-ui text-text-muted">{roleMeta?.label ?? invitation.role}</span>
-            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
-            <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
-              <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-              Pending invite
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-item text-ui text-text-muted">
-            <span>{invitation.email}</span>
-            <span className="text-text-quaternary" aria-hidden="true">{'\u2022'}</span>
-            <span>Sent {formatDetailDate(invitation.createdAt)}</span>
-          </div>
-        </div>
+    <div className="grid gap-control px-component py-control md:grid-cols-[minmax(220px,1.4fr)_minmax(220px,1.2fr)_140px_120px_120px_44px] md:items-center">
+      <div className="min-w-0">
+        <p className="m-0 truncate text-ui font-semibold text-text-primary">{getPrincipalName(principal)}</p>
+        {principal.email ? (
+          <p className="m-0 truncate text-ui text-text-muted">{principal.email}</p>
+        ) : null}
       </div>
-      <Button
-        className="justify-start px-0 text-label font-normal text-destructive hover:bg-transparent hover:text-destructive lg:justify-center"
-        onClick={() => onCancelInvitation(invitation)}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        Cancel invite
-      </Button>
+      <div className="min-w-0">
+        <p className="m-0 truncate text-ui font-semibold text-text-primary">{grant.workspaceName || 'Workspace'}</p>
+        <p className="m-0 text-label text-text-muted md:hidden">{roleMeta?.label ?? grant.role}</p>
+      </div>
+      <span className="hidden truncate text-ui text-text-muted md:block">{roleMeta?.label ?? grant.role}</span>
+      <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
+        <span className={`size-1.5 rounded-full ${getGrantStatusTone(grant)}`} aria-hidden="true" />
+        {getGrantStatusLabel(grant)}
+      </span>
+      <span className="text-ui text-text-muted">
+        {formatDetailDate(grant.createdAt)}
+      </span>
+      <div className="flex justify-start md:justify-end">
+        <AccessActionsMenu
+          grant={grant}
+          onCancelInvitation={onCancelInvitation}
+          onRevokeAccess={onRevokeAccess}
+          payload={actionPayload}
+        />
+      </div>
     </div>
   )
 }
 
 export function ClientUsersPanel({
+  accessPrincipals = [],
   cancelInviteError,
-  invitations = [],
-  memberships,
   onCancelInvitation,
   onInviteUser,
   onRevokeAccess,
   revokeError,
 }) {
-  const hasAccessRecords = memberships.length > 0 || invitations.length > 0
+  const accessRows = buildAccessRows(accessPrincipals)
+  const hasAccessRecords = accessRows.length > 0
 
   return (
     <section className="grid gap-control rounded-block bg-block p-component">
@@ -143,22 +170,26 @@ export function ClientUsersPanel({
           </ErrorBlock>
         ) : null}
         {hasAccessRecords ? (
-          <>
-            {memberships.map((membership) => (
-              <ClientAccessListItem
-                key={membership.id}
-                membership={membership}
-                onRevokeAccess={onRevokeAccess}
-              />
-            ))}
-            {invitations.map((invitation) => (
-              <InvitationListItem
-                invitation={invitation}
-                key={invitation.id}
-                onCancelInvitation={onCancelInvitation}
-              />
-            ))}
-          </>
+          <div className="overflow-hidden rounded-control border border-control-border">
+            <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(220px,1.4fr)_minmax(220px,1.2fr)_140px_120px_120px_44px]">
+              <span>Person</span>
+              <span>Workspace</span>
+              <span>Role</span>
+              <span>Status</span>
+              <span>Added</span>
+              <span aria-hidden="true" />
+            </div>
+            <div className="divide-y divide-separator">
+              {accessRows.map((row) => (
+                <AccessRow
+                  key={row.id}
+                  onCancelInvitation={onCancelInvitation}
+                  onRevokeAccess={onRevokeAccess}
+                  row={row}
+                />
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col gap-control rounded-control bg-block-subtle px-card py-component sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-tag">

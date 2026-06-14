@@ -1,11 +1,12 @@
 import { WORKSPACE_CLIENT_ACCESS_POLICIES } from '@/entities/workspace'
 import { WORKSPACE_ROLES } from '@/entities/workspace-membership'
 
-export function createInviteClientUserForm() {
+export function createInviteClientUserForm(workspaceId = '') {
   return {
     email: '',
     name: '',
     role: WORKSPACE_ROLES.VIEWER,
+    workspaceId,
   }
 }
 

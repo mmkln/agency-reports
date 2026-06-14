@@ -40,10 +40,10 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   const [revokeStatus, setRevokeStatus] = useState('idle')
   const [cancelInviteStatus, setCancelInviteStatus] = useState('idle')
   const {
+    accessPrincipals,
+    accessWorkspaces,
     client,
     error,
-    invitations,
-    memberships,
     reload,
     status,
     workspace,
@@ -82,9 +82,13 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   }
 
   function openInviteDialog() {
-    setInviteForm(createInviteClientUserForm())
+    setInviteForm(createInviteClientUserForm(getDefaultInviteWorkspaceId()))
     setInviteError('')
     setIsInviteDialogOpen(true)
+  }
+
+  function getDefaultInviteWorkspaceId() {
+    return accessWorkspaces[0]?.id ?? workspace?.id ?? ''
   }
 
   function openWorkspaceDialog() {
@@ -152,14 +156,16 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
       return
     }
 
-    if (!workspace?.id) {
+    const workspaceId = inviteForm.workspaceId || getDefaultInviteWorkspaceId()
+
+    if (!workspaceId) {
       setInviteError('Create a workspace before inviting client users.')
       return
     }
 
     setInviteStatus('inviting')
     setInviteError('')
-    createWorkspaceInvitation(apiClient, workspace.id, createWorkspaceInvitationPayload({
+    createWorkspaceInvitation(apiClient, workspaceId, createWorkspaceInvitationPayload({
       email,
       name,
       role: inviteForm.role,
@@ -210,14 +216,16 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
       return
     }
 
-    if (!workspace?.id) {
+    const workspaceId = membershipPendingRevoke.workspaceId
+
+    if (!workspaceId) {
       setRevokeError('Workspace is required to revoke portal access.')
       return
     }
 
     setRevokeStatus('revoking')
     setRevokeError('')
-    removeWorkspaceMembership(apiClient, workspace.id, membershipPendingRevoke.id).then(() => {
+    removeWorkspaceMembership(apiClient, workspaceId, membershipPendingRevoke.id).then(() => {
       setRevokeStatus('idle')
       setMembershipPendingRevoke(null)
       void reload()
@@ -232,14 +240,16 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
       return
     }
 
-    if (!workspace?.id) {
+    const workspaceId = invitationPendingCancel.workspaceId
+
+    if (!workspaceId) {
       setCancelInviteError('Workspace is required to cancel this invitation.')
       return
     }
 
     setCancelInviteStatus('cancelling')
     setCancelInviteError('')
-    cancelWorkspaceInvitation(apiClient, workspace.id, invitationPendingCancel.id)
+    cancelWorkspaceInvitation(apiClient, workspaceId, invitationPendingCancel.id)
       .then(() => {
         setCancelInviteStatus('idle')
         setInvitationPendingCancel(null)
@@ -252,6 +262,8 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
   }
 
   return {
+    accessPrincipals,
+    accessWorkspaces,
     cancelInvitation,
     cancelInviteError,
     cancelInviteStatus,
@@ -268,14 +280,12 @@ export function useAdminClientDetailWorkflow({ routeParams = {}, runtime }) {
     inviteForm,
     inviteStatus,
     invitationPendingCancel,
-    invitations,
     isCancelInviteDialogOpen: Boolean(invitationPendingCancel),
     isEditDialogOpen,
     isInviteDialogOpen,
     isRevokeDialogOpen: Boolean(membershipPendingRevoke),
     isWorkspaceDialogOpen,
     membershipPendingRevoke,
-    memberships,
     openCancelInvitationDialog,
     openEditDialog,
     openInviteDialog,

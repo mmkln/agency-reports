@@ -107,10 +107,13 @@ export function ClientInviteUserDialog({
   onSubmit,
   onUpdateForm,
   status,
+  workspaces = [],
 }) {
   const nameIssue = getInviteNameIssue({ error })
   const emailIssue = getInviteEmailIssue({ email: form.email, error })
   const formError = nameIssue === error || emailIssue === error ? '' : error
+  const shouldChooseWorkspace = workspaces.length > 1
+  const hasWorkspaceSelection = !shouldChooseWorkspace || Boolean(form.workspaceId)
 
   return (
     <Dialog
@@ -158,6 +161,20 @@ export function ClientInviteUserDialog({
               ))}
             </Select>
           </label>
+          {shouldChooseWorkspace ? (
+            <label className="grid gap-item">
+              <span className="text-label text-text-secondary">Workspace</span>
+              <Select
+                onChange={(event) => onUpdateForm({ workspaceId: event.target.value })}
+                required
+                value={form.workspaceId}
+              >
+                {workspaces.map((workspace) => (
+                  <option key={workspace.id} value={workspace.id}>{workspace.name}</option>
+                ))}
+              </Select>
+            </label>
+          ) : null}
           {formError ? (
             <ErrorBlock title="Client user could not be invited">
               {formError}
@@ -168,7 +185,7 @@ export function ClientInviteUserDialog({
           <Button disabled={status === 'inviting'} onClick={onClose} type="button" variant="outline">
             Cancel
           </Button>
-          <Button disabled={!client || Boolean(emailIssue) || status === 'inviting'} form="invite-client-detail-user-form" type="submit">
+          <Button disabled={!client || !hasWorkspaceSelection || Boolean(emailIssue) || status === 'inviting'} form="invite-client-detail-user-form" type="submit">
             {status === 'inviting' ? 'Inviting...' : 'Invite user'}
           </Button>
         </DialogFooter>

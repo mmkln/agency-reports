@@ -87,6 +87,7 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
           workflow.setInviteForm((current) => ({ ...current, ...patch }))
         }}
         status={workflow.inviteStatus}
+        workspaces={workflow.accessWorkspaces}
       />
       <ClientWorkspaceCreateDialog
         client={workflow.client}
@@ -103,7 +104,7 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
       />
       <ConfirmationDialog
         confirmLabel={workflow.revokeStatus === 'revoking' ? 'Revoking...' : 'Revoke access'}
-        description={`This will remove ${workflow.membershipPendingRevoke?.email || workflow.membershipPendingRevoke?.name || 'this user'} from this client.`}
+        description={`This will remove ${workflow.membershipPendingRevoke?.email || workflow.membershipPendingRevoke?.name || 'this user'} from ${workflow.membershipPendingRevoke?.workspaceName || 'this workspace'}.`}
         isConfirming={workflow.revokeStatus === 'revoking'}
         onConfirm={workflow.revokeClientUserAccess}
         onOpenChange={(nextOpen) => {
@@ -117,7 +118,7 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
       />
       <ConfirmationDialog
         confirmLabel={workflow.cancelInviteStatus === 'cancelling' ? 'Cancelling...' : 'Cancel invite'}
-        description={`This will cancel the pending invite for ${workflow.invitationPendingCancel?.email || 'this user'}.`}
+        description={`This will cancel the pending invite for ${workflow.invitationPendingCancel?.email || 'this user'} in ${workflow.invitationPendingCancel?.workspaceName || 'this workspace'}.`}
         isConfirming={workflow.cancelInviteStatus === 'cancelling'}
         onConfirm={workflow.cancelInvitation}
         onOpenChange={(nextOpen) => {
@@ -140,9 +141,8 @@ export function AdminClientDetailWorkspace({ routeParams = {}, runtime }) {
           workspaces={workflow.client.workspaces}
         />
         <ClientUsersPanel
+          accessPrincipals={workflow.accessPrincipals}
           cancelInviteError={workflow.cancelInviteError}
-          invitations={workflow.invitations}
-          memberships={workflow.memberships}
           onCancelInvitation={workflow.openCancelInvitationDialog}
           onInviteUser={workflow.openInviteDialog}
           onRevokeAccess={workflow.openRevokeDialog}
