@@ -51,14 +51,24 @@ export function AccessMembersPanel({ workspaceId, runtime }) {
             title="No active members"
           />
         ) : (
-          <div className="grid gap-item p-card">
-            {membersPanel.activeMembers.map((member) => (
-              <AccessMemberCard
-                key={member.id}
-                member={member}
-                onRemove={membersPanel.setMemberPendingRemoval}
-              />
-            ))}
+          <div className="p-card">
+            <div className="overflow-hidden rounded-control border border-control-border">
+              <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(240px,1.4fr)_160px_120px_44px]">
+                <span>Person</span>
+                <span>Role</span>
+                <span>Status</span>
+                <span aria-hidden="true" />
+              </div>
+              <div className="divide-y divide-separator">
+                {membersPanel.activeMembers.map((member) => (
+                  <AccessMemberCard
+                    key={member.id}
+                    member={member}
+                    onRemove={membersPanel.setMemberPendingRemoval}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </PanelBody>

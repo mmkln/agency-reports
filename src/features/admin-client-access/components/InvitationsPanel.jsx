@@ -49,15 +49,25 @@ export function InvitationsPanel({ runtime, workspaceId }) {
         ) : invitationsPanel.status === 'error' ? (
           <FieldError>Invitations could not be loaded.</FieldError>
         ) : invitationsPanel.pendingInvitations.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2">
-            {invitationsPanel.pendingInvitations.map((invitation) => (
-              <InvitationCard
-                invitation={invitation}
-                key={invitation.id}
-                onCancel={invitationsPanel.setInvitationPendingCancel}
-                onResend={invitationsPanel.resendInvitation}
-              />
-            ))}
+          <div className="overflow-hidden rounded-control border border-control-border">
+            <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(240px,1.4fr)_150px_120px_150px_120px_44px]">
+              <span>Invitee</span>
+              <span>Role</span>
+              <span>Status</span>
+              <span>Delivery</span>
+              <span>Expires</span>
+              <span aria-hidden="true" />
+            </div>
+            <div className="divide-y divide-separator">
+              {invitationsPanel.pendingInvitations.map((invitation) => (
+                <InvitationCard
+                  invitation={invitation}
+                  key={invitation.id}
+                  onCancel={invitationsPanel.setInvitationPendingCancel}
+                  onResend={invitationsPanel.resendInvitation}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <InlineEmptyState iconName="mail" title="No pending invitations">
