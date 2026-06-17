@@ -156,9 +156,8 @@ export function LoginPage({ onAuthChange }) {
                 <p className="mt-card text-center text-ui text-text-secondary">
                   Have an invitation?{' '}
                   <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
-                    Accept
+                    Accept it
                   </Link>
-                  {' '}it
                 </p>
               </div>
             </section>
