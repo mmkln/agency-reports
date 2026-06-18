@@ -52,6 +52,7 @@ export function useGrowthReviewRefresh({
         { key: 'opportunities', label: 'Opportunities', status: 'pending' },
         { key: 'appointments', label: 'Appointments', status: 'pending' },
         { key: 'conversation_messages', label: 'Messages', status: 'pending' },
+        { key: 'custom_fields', label: 'Custom fields', status: 'pending' },
         { key: 'reactivation_campaign_calculation', label: 'Dashboard calculation', status: 'pending' },
       ],
     })
