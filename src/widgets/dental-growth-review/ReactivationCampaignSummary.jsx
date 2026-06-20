@@ -92,20 +92,24 @@ const DURATION_CARD_KEY = 'duration'
 const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
 
 const refreshStatusLabel = {
+  already_running: 'Already running',
   completed: 'Updated',
   failed: 'Failed',
   idle: 'Ready',
   pending: 'Waiting',
   running: 'Updating',
   skipped: 'Skipped',
+  sync_already_running: 'Already running',
 }
 
 const refreshStatusClass = {
+  already_running: 'text-premium-blue',
   completed: 'text-success',
   failed: 'text-destructive',
   pending: 'text-text-quaternary',
   running: 'text-premium-blue',
   skipped: 'text-text-muted',
+  sync_already_running: 'text-premium-blue',
 }
 
 function formatPeriodDate(value) {
@@ -159,6 +163,10 @@ function formatUpdatedAt(value) {
 function getRefreshButtonLabel(refresh) {
   if (refresh?.isRefreshing) {
     return 'Updating'
+  }
+
+  if (refresh?.status === 'already_running') {
+    return 'Refresh'
   }
 
   if (refresh?.status === 'failed') {
@@ -310,11 +318,19 @@ function RefreshStepStatus({ step }) {
   const status = step.status || 'pending'
   const label = refreshStatusLabel[status] ?? status
   const toneClass = refreshStatusClass[status] ?? 'text-text-muted'
+  const detail = step.detail || step.errorMessage || ''
 
   return (
-    <li className="flex items-center justify-between gap-component">
-      <span className="min-w-0 truncate text-label font-medium text-text-secondary">
-        {step.label}
+    <li className="flex items-start justify-between gap-component">
+      <span className="min-w-0">
+        <span className="block truncate text-label font-medium text-text-secondary">
+          {step.label}
+        </span>
+        {detail ? (
+          <span className="mt-1 block text-caption font-normal leading-snug text-text-muted">
+            {detail}
+          </span>
+        ) : null}
       </span>
       <span className={`shrink-0 text-label font-semibold ${toneClass}`}>
         {label}
