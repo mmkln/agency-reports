@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+const REFRESH_POLL_INTERVAL_MS = 3000
 
 const NON_FAILURE_STEP_REASONS = new Set([
   'sync_already_running',
@@ -71,6 +73,10 @@ function resolveRefreshStatus(refreshRun) {
     return 'already_running'
   }
 
+  if (refreshRun.status === 'queued' || refreshRun.status === 'running') {
+    return refreshRun.status
+  }
+
   return refreshRun.status === 'failed' ? 'failed' : 'completed'
 }
 
@@ -82,24 +88,60 @@ export function useGrowthReviewRefresh({
   const [refreshRun, setRefreshRun] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const completedRefreshIdRef = useRef('')
 
-  const startRefresh = useCallback(() => {
-    if (!workspaceId || status === 'running') {
+  const notifyCompleted = useCallback((nextRefreshRun) => {
+    const refreshId = nextRefreshRun?.id ?? ''
+
+    if (refreshId && completedRefreshIdRef.current === refreshId) {
+      return Promise.resolve(nextRefreshRun)
+    }
+
+    completedRefreshIdRef.current = refreshId
+    return Promise.resolve(onCompleted?.()).then(() => nextRefreshRun)
+  }, [onCompleted])
+
+  const applyRefreshRun = useCallback((payload) => {
+    const nextRefreshRun = normalizeRefreshRun(payload)
+    const nextStatus = resolveRefreshStatus(nextRefreshRun)
+
+    setRefreshRun(nextRefreshRun)
+    setStatus(nextStatus)
+
+    return {
+      refreshRun: nextRefreshRun,
+      status: nextStatus,
+    }
+  }, [])
+
+  const loadLatestRefresh = useCallback(() => {
+    if (!workspaceId) {
       return Promise.resolve(null)
     }
 
-    setStatus('running')
+    return apiClient
+      .get(`/api/workspaces/${workspaceId}/growth-review/refresh/latest/`)
+      .then((payload) => applyRefreshRun(payload))
+  }, [apiClient, applyRefreshRun, workspaceId])
+
+  const startRefresh = useCallback(() => {
+    if (!workspaceId || status === 'queued' || status === 'running') {
+      return Promise.resolve(null)
+    }
+
+    setStatus('queued')
     setError('')
+    completedRefreshIdRef.current = ''
     setRefreshRun({
       errorMessage: '',
       id: '',
-      status: 'running',
+      status: 'queued',
       steps: [
-        { key: 'contacts', label: 'Contacts', status: 'running' },
+        { key: 'custom_fields', label: 'Custom fields', status: 'pending' },
         { key: 'opportunities', label: 'Opportunities', status: 'pending' },
+        { key: 'contacts', label: 'Contacts', status: 'pending' },
         { key: 'appointments', label: 'Appointments', status: 'pending' },
         { key: 'conversation_messages', label: 'Messages', status: 'pending' },
-        { key: 'custom_fields', label: 'Custom fields', status: 'pending' },
         { key: 'reactivation_campaign_calculation', label: 'Dashboard calculation', status: 'pending' },
       ],
     })
@@ -107,17 +149,13 @@ export function useGrowthReviewRefresh({
     return apiClient
       .post(`/api/workspaces/${workspaceId}/growth-review/refresh/`, {})
       .then((payload) => {
-        const nextRefreshRun = normalizeRefreshRun(payload)
-        const nextStatus = resolveRefreshStatus(nextRefreshRun)
+        const result = applyRefreshRun(payload)
 
-        setRefreshRun(nextRefreshRun)
-        setStatus(nextStatus)
-
-        if (nextStatus === 'completed') {
-          return Promise.resolve(onCompleted?.()).then(() => nextRefreshRun)
+        if (result.status === 'completed') {
+          return notifyCompleted(result.refreshRun)
         }
 
-        return nextRefreshRun
+        return result.refreshRun
       })
       .catch((caughtError) => {
         setStatus('failed')
@@ -129,11 +167,51 @@ export function useGrowthReviewRefresh({
         }))
         return null
       })
-  }, [apiClient, onCompleted, status, workspaceId])
+  }, [apiClient, applyRefreshRun, notifyCompleted, status, workspaceId])
+
+  const refreshRunId = refreshRun?.id ?? ''
+
+  useEffect(() => {
+    if (!workspaceId || !refreshRunId || (status !== 'queued' && status !== 'running')) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    const poll = () => {
+      loadLatestRefresh()
+        .then((result) => {
+          if (cancelled || !result) {
+            return
+          }
+
+          if (result.status === 'completed') {
+            notifyCompleted(result.refreshRun)
+          }
+        })
+        .catch((caughtError) => {
+          if (cancelled) {
+            return
+          }
+
+          setStatus('failed')
+          setError(caughtError.message)
+        })
+    }
+
+    const intervalId = window.setInterval(poll, REFRESH_POLL_INTERVAL_MS)
+    poll()
+
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+    }
+  }, [loadLatestRefresh, notifyCompleted, refreshRunId, status, workspaceId])
 
   return {
     error,
-    isRefreshing: status === 'running',
+    isRefreshing: status === 'queued' || status === 'running',
+    loadLatestRefresh,
     refreshRun,
     startRefresh,
     status,
