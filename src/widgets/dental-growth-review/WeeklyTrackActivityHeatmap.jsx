@@ -45,9 +45,6 @@ function WeekHeaderCell({ week }) {
   return (
     <div className="flex min-h-14 flex-col items-center justify-center border-l border-separator px-tag text-center">
       <span className="text-ui font-semibold text-text-primary">{week.label}</span>
-      {week.rangeLabel ? (
-        <span className="mt-0.5 whitespace-nowrap text-[11px] font-medium text-text-quaternary">{week.rangeLabel}</span>
-      ) : null}
     </div>
   )
 }
@@ -60,12 +57,27 @@ function TotalCell({ value }) {
   )
 }
 
-function ChannelHeatmapCard({ channel, tracks, weeks }) {
-  const gridTemplateColumns = `minmax(6rem, 0.9fr) repeat(${weeks.length}, minmax(4.25rem, 1fr))`
+function SharedTrackAxisColumn({ tracks }) {
+  return (
+    <div className="overflow-hidden rounded-l-block border border-separator bg-block">
+      <div className="min-h-[4.25rem]" />
+      <div className="min-h-14 border-t border-separator" />
+      {tracks.map((track) => (
+        <TrackLabel color={track.color} key={track.key} label={track.label} />
+      ))}
+      <div className="flex min-h-16 items-center px-control text-ui font-semibold text-text-primary">
+        Total
+      </div>
+    </div>
+  )
+}
+
+function ChannelMatrix({ channel, isLast = false, weeks }) {
+  const gridTemplateColumns = `repeat(${weeks.length}, minmax(3.5rem, 1fr))`
 
   return (
-    <section className="overflow-hidden rounded-block border border-separator bg-block">
-      <header className="flex items-center gap-control px-control py-4">
+    <section className={`overflow-hidden border-y border-r border-separator bg-block ${isLast ? 'rounded-r-block' : ''}`}>
+      <header className="flex min-h-[4.25rem] items-center gap-control px-control">
         <span
           className="flex size-9 items-center justify-center rounded-control text-white"
           style={{ backgroundColor: channel.color }}
@@ -75,32 +87,21 @@ function ChannelHeatmapCard({ channel, tracks, weeks }) {
         <h3 className="text-heading font-semibold text-text-primary">{channel.label}</h3>
       </header>
 
-      <div className="overflow-x-auto">
-        <div
-          className="grid min-w-[380px] border-t border-separator"
-          style={{ gridTemplateColumns }}
-        >
-          <div />
-          {weeks.map((week) => (
-            <WeekHeaderCell key={week.key} week={week} />
-          ))}
+      <div
+        className="grid border-t border-separator"
+        style={{ gridTemplateColumns }}
+      >
+        {weeks.map((week) => (
+          <WeekHeaderCell key={week.key} week={week} />
+        ))}
 
-          {channel.rows.map((row) => (
-            <div className="contents" key={row.id}>
-              <TrackLabel color={row.color} label={row.trackLabel} />
-              {row.cells.map((cell) => (
-                <HeatmapCell channel={channel} key={cell.id} value={cell} />
-              ))}
-            </div>
-          ))}
+        {channel.rows.map((row) => row.cells.map((cell) => (
+          <HeatmapCell channel={channel} key={cell.id} value={cell} />
+        )))}
 
-          <div className="flex min-h-16 items-center px-control text-right text-ui font-semibold text-text-primary">
-            Total
-          </div>
-          {channel.totals.map((total) => (
-            <TotalCell key={total.id} value={total.value} />
-          ))}
-        </div>
+        {channel.totals.map((total) => (
+          <TotalCell key={total.id} value={total.value} />
+        ))}
       </div>
     </section>
   )
@@ -141,15 +142,23 @@ export function WeeklyTrackActivityHeatmap({ section }) {
       subtitle={model.subtitle}
       title={model.title}
     >
-      <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-        {model.channels.map((channel) => (
-          <ChannelHeatmapCard
-            channel={channel}
-            key={channel.key}
-            tracks={model.tracks}
-            weeks={model.weeks}
-          />
-        ))}
+      <div className="overflow-x-auto">
+        <div
+          className="grid min-w-[760px]"
+          style={{
+            gridTemplateColumns: `7.5rem repeat(${model.channels.length}, minmax(12.5rem, 1fr))`,
+          }}
+        >
+          <SharedTrackAxisColumn tracks={model.tracks} />
+          {model.channels.map((channel, index) => (
+            <ChannelMatrix
+              channel={channel}
+              isLast={index === model.channels.length - 1}
+              key={channel.key}
+              weeks={model.weeks}
+            />
+          ))}
+        </div>
       </div>
       <IntensityLegend channels={model.channels} />
     </ReactivationChartPanel>
