@@ -144,6 +144,31 @@ function WeekBoundaryLines({ weekBoundaryLines }) {
   )
 }
 
+function createWeekTickLabel(weekTicks) {
+  const labelsByValue = new Map(weekTicks.map((tick) => [tick.value, tick.label]))
+
+  return function WeekTickLabel({ x, y, payload }) {
+    const label = labelsByValue.get(payload?.value)
+
+    if (!label || !Number.isFinite(x) || !Number.isFinite(y)) {
+      return null
+    }
+
+    return (
+      <text
+        fill={semanticColors.textMuted}
+        fontSize={12}
+        fontWeight={700}
+        textAnchor="middle"
+        x={x}
+        y={y}
+      >
+        {label}
+      </text>
+    )
+  }
+}
+
 export function ReactivationActivityChart({ chart }) {
   const model = buildActivityChartModel(chart)
 
@@ -159,6 +184,7 @@ export function ReactivationActivityChart({ chart }) {
       <LegendItem color={referenceColors.booking} label={bookingLine.label} line />
     </>
   )
+  const weekTickValues = model.weekTicks.map((tick) => tick.value)
 
   return (
     <ReactivationChartPanel
@@ -191,15 +217,11 @@ export function ReactivationActivityChart({ chart }) {
             <XAxis
               axisLine={false}
               dataKey="label"
-              interval={model.xTickInterval}
-              minTickGap={10}
-              tick={{
-                fill: semanticColors.textMuted,
-                fontSize: 12,
-                fontWeight: 600,
-              }}
+              interval={0}
+              tick={createWeekTickLabel(model.weekTicks)}
               tickLine={false}
               tickMargin={activityChartLayout.xTickMargin}
+              ticks={weekTickValues}
             />
             <YAxis
               axisLine={false}

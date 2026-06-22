@@ -119,6 +119,61 @@ function buildWeekBoundaryLines(series) {
   return boundaries
 }
 
+function appendWeekTick(ticks, series, weekIndex, startIndex, endIndex) {
+  const centerIndex = Math.floor((startIndex + endIndex) / 2)
+  const centerPoint = series[centerIndex]
+
+  if (!centerPoint?.label) {
+    return
+  }
+
+  ticks.push({
+    id: `campaign-week-${weekIndex + 1}`,
+    label: `W${weekIndex + 1}`,
+    value: centerPoint.label,
+  })
+}
+
+function buildWeekTicks(series) {
+  const campaignStartDate = parseUtcDate(series[0]?.date)
+
+  if (!campaignStartDate) {
+    return []
+  }
+
+  const ticks = []
+  let activeWeekIndex = null
+  let activeWeekStartIndex = 0
+
+  series.forEach((point, index) => {
+    const pointDate = parseUtcDate(point.date)
+
+    if (!pointDate) {
+      return
+    }
+
+    const weekIndex = getCampaignWeekIndex(campaignStartDate, pointDate)
+
+    if (activeWeekIndex === null) {
+      activeWeekIndex = weekIndex
+      activeWeekStartIndex = index
+      return
+    }
+
+    if (weekIndex !== activeWeekIndex) {
+      appendWeekTick(ticks, series, activeWeekIndex, activeWeekStartIndex, index - 1)
+      activeWeekIndex = weekIndex
+      activeWeekStartIndex = index
+    }
+  })
+
+  if (activeWeekIndex !== null) {
+    appendWeekTick(ticks, series, activeWeekIndex, activeWeekStartIndex, series.length - 1)
+  }
+
+  return ticks
+}
+
 function normalizeChartSeries(series = []) {
   return series.map((point) => ({
     ...point,
@@ -142,14 +197,6 @@ function muteUnfinishedTodayBars(series) {
       sms: null,
     },
   ]
-}
-
-function getXAxisTickInterval(pointCount) {
-  if (pointCount <= 14) {
-    return 0
-  }
-
-  return Math.max(1, Math.ceil(pointCount / 12) - 1)
 }
 
 function getStackedMaxValue(series, keys) {
@@ -205,6 +252,6 @@ export function buildActivityChartModel(chart) {
     series,
     title: chart.label || 'Reactivation Activity',
     weekBoundaryLines: buildWeekBoundaryLines(series),
-    xTickInterval: getXAxisTickInterval(series.length),
+    weekTicks: buildWeekTicks(series),
   }
 }

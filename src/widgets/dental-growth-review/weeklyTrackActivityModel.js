@@ -184,7 +184,7 @@ function buildPivotWeeks(section, tracks) {
     const week = row.week || String(row.weekIndex || '')
     const existing = weeksByKey.get(week) ?? {
       id: week,
-      label: formatWeekRange(row.weekStart, row.weekEnd) || week,
+      label: week,
       order: normalizeNumber(row.weekIndex),
       tracks: Object.fromEntries(tracks.map((track) => [track.key, {
         call: 0,

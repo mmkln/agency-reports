@@ -15,7 +15,7 @@ import {
 
 function NumericCell({ children, groupEnd = false, strong = false }) {
   return (
-    <TableCell className={`text-right tabular-nums ${
+    <TableCell className={`px-tag text-center tabular-nums ${
       strong ? 'font-semibold text-text-primary' : 'font-medium text-text-secondary'
     } ${groupEnd ? 'border-r border-separator' : ''}`}>
       {children}
@@ -38,10 +38,10 @@ function TrackGroupHeader({ color, label }) {
   )
 }
 
-function TrackMetricCells({ metrics, values }) {
+function TrackMetricCells({ isLastGroup = false, metrics, values }) {
   return metrics.map((metric, index) => (
     <NumericCell
-      groupEnd={index === metrics.length - 1}
+      groupEnd={!isLastGroup && index === metrics.length - 1}
       key={metric.key}
       strong={metric.key === 'total'}
     >
@@ -62,13 +62,13 @@ export function WeeklyTrackActivityTable({ section }) {
       subtitle={model.subtitle}
       title={model.title}
     >
-      <Table aria-label="Weekly reactivation activity by track" className="min-w-[1320px]">
+      <Table aria-label="Weekly reactivation activity by track" className="w-full min-w-[760px] table-fixed">
         <TableHeader>
           <TableRow>
-            <TableHead className="border-r border-separator" />
-            {model.tracks.map((track) => (
+            <TableHead className="w-16 border-r border-separator px-tag" />
+            {model.tracks.map((track, index) => (
               <TableHead
-                className="border-r border-separator text-center font-semibold text-text-primary"
+                className={`${index === model.tracks.length - 1 ? '' : 'border-r border-separator'} px-tag text-center font-semibold text-text-primary`}
                 colSpan={model.metrics.length}
                 key={track.id ?? track.key}
               >
@@ -77,12 +77,16 @@ export function WeeklyTrackActivityTable({ section }) {
             ))}
           </TableRow>
           <TableRow>
-            <TableHead className="border-r border-separator">
+            <TableHead className="w-16 border-r border-separator px-tag">
               Week
             </TableHead>
-            {model.tracks.flatMap((track) => model.metrics.map((metric, index) => (
+            {model.tracks.flatMap((track, trackIndex) => model.metrics.map((metric, metricIndex) => (
               <TableHead
-                className={`text-right ${index === model.metrics.length - 1 ? 'border-r border-separator' : ''}`}
+                className={`px-tag text-center ${
+                  trackIndex !== model.tracks.length - 1 && metricIndex === model.metrics.length - 1
+                    ? 'border-r border-separator'
+                    : ''
+                }`}
                 key={`${track.key}-${metric.key}`}
               >
                 {metric.label}
@@ -93,11 +97,12 @@ export function WeeklyTrackActivityTable({ section }) {
         <TableBody>
           {model.pivotWeeks.map((week) => (
             <TableRow key={week.id}>
-              <TableCell className="border-r border-separator font-medium text-text-primary">
+              <TableCell className="border-r border-separator px-tag font-semibold text-text-primary">
                 {week.label}
               </TableCell>
-              {model.tracks.map((track) => (
+              {model.tracks.map((track, index) => (
                 <TrackMetricCells
+                  isLastGroup={index === model.tracks.length - 1}
                   key={track.key}
                   metrics={model.metrics}
                   values={week.tracks[track.key]}
