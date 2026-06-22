@@ -6,7 +6,7 @@ import {
 import { BookingsByTrackComparisonPanel } from './BookingsByTrackComparisonPanel'
 import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
-import { WeeklyTrackActivityTable } from './WeeklyTrackActivityTable'
+import { WeeklyTrackActivityHeatmap } from './WeeklyTrackActivityHeatmap'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
 
 export function DentalGrowthReviewDashboard({
@@ -38,7 +38,7 @@ export function DentalGrowthReviewDashboard({
 
       <div className="grid gap-4">
         <ReactivationActivityChart chart={reactivationActivity} />
-        <WeeklyTrackActivityTable section={weeklyActivity} />
+        <WeeklyTrackActivityHeatmap section={weeklyActivity} />
         {/* <BookingsByTrackPanel funnelChart={funnelChart} /> */}
       </div>
       {trackPerformance ? <BookingsByTrackComparisonPanel funnelChart={funnelChart} /> : null}
