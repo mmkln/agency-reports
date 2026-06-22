@@ -351,6 +351,80 @@ function normalizeReactivationActivityChart(chart = {}) {
   }
 }
 
+function normalizeWeeklyActivityWeek(week = {}) {
+  const source = isPlainObject(week) ? week : {}
+
+  return {
+    end: normalizeText(source.end ?? source.week_end),
+    index: Number(source.index ?? source.week_index ?? 0) || 0,
+    key: normalizeText(source.key ?? source.week),
+    start: normalizeText(source.start ?? source.week_start),
+  }
+}
+
+function normalizeWeeklyActivityTrack(track = {}) {
+  const source = isPlainObject(track) ? track : {}
+
+  return {
+    key: normalizeText(source.key),
+    label: normalizeText(source.label ?? source.track_label ?? source.name),
+  }
+}
+
+function normalizeWeeklyActivityRow(row = {}) {
+  const source = isPlainObject(row) ? row : {}
+
+  return {
+    call: Number(source.call ?? 0) || 0,
+    email: Number(source.email ?? 0) || 0,
+    sms: Number(source.sms ?? 0) || 0,
+    total: Number(source.total ?? 0) || 0,
+    track: normalizeText(source.track),
+    trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+    week: normalizeText(source.week),
+    weekEnd: normalizeText(source.week_end ?? source.weekEnd),
+    weekIndex: Number(source.week_index ?? source.weekIndex ?? 0) || 0,
+    weekStart: normalizeText(source.week_start ?? source.weekStart),
+  }
+}
+
+function normalizeWeeklyActivitySection(section = {}) {
+  const source = isPlainObject(section) ? section : {}
+
+  return {
+    available: source.available === true,
+    calculationMethod: normalizeText(source.calculation_method ?? source.calculationMethod),
+    campaign: isPlainObject(source.campaign) ? source.campaign : {},
+    channels: normalizeArray(source.channels).map(normalizeText).filter(Boolean),
+    reason: normalizeText(source.reason),
+    rows: normalizeArray(source.rows).map(normalizeWeeklyActivityRow),
+    source: isPlainObject(source.source) ? source.source : {},
+    sourceCounts: isPlainObject(source.source_counts)
+      ? source.source_counts
+      : isPlainObject(source.sourceCounts)
+        ? source.sourceCounts
+        : {},
+    tracks: normalizeArray(source.tracks).map(normalizeWeeklyActivityTrack),
+    type: normalizeText(source.type),
+    weeks: normalizeArray(source.weeks).map(normalizeWeeklyActivityWeek),
+  }
+}
+
+export function normalizeGrowthReviewWeeklyReportingReadModel(payload = {}) {
+  const source = isPlainObject(payload) ? payload : {}
+  const weeklyReporting = isPlainObject(source.weekly_reporting)
+    ? source.weekly_reporting
+    : isPlainObject(source.weeklyReporting)
+      ? source.weeklyReporting
+      : {}
+
+  return {
+    section1Activity: normalizeWeeklyActivitySection(
+      weeklyReporting.section_1_activity ?? weeklyReporting.section1Activity,
+    ),
+  }
+}
+
 export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const charts = isPlainObject(source.charts) ? source.charts : source

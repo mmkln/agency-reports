@@ -4,6 +4,7 @@ import {
   getDentalGrowthReviewPresetForViewer,
   normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
+  normalizeGrowthReviewWeeklyReportingReadModel,
 } from '../../entities/dental-growth-review'
 
 function addDays(date, days) {
@@ -260,6 +261,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     workspace_id: payload?.workspace_id ?? workspaceId,
   })
   const charts = normalizeGrowthReviewChartsReadModel(payload)
+  const weeklyReporting = normalizeGrowthReviewWeeklyReportingReadModel(payload)
   const periodOptions = createGrowthReviewPeriodOptions(now)
   const preset = getDentalGrowthReviewPresetForViewer(viewer)
 
@@ -281,6 +283,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     selectedReviewPeriodOptionKey: '',
     source: 'published',
     status: 'ready',
+    weeklyReporting,
     zones: mapZoneState(preset),
   }
 }

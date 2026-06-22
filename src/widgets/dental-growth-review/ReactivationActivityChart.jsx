@@ -3,6 +3,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  Customized,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -107,6 +108,47 @@ function createLastPointLabel(lastIndex) {
   }
 }
 
+function getPrimaryXAxis(xAxisMap) {
+  return Object.values(xAxisMap ?? {})[0]
+}
+
+function WeekBoundaryLines({ weekBoundaryLines, xAxisMap, yAxisMap }) {
+  const xAxis = getPrimaryXAxis(xAxisMap)
+  const yAxis = yAxisMap?.touches
+
+  if (!xAxis?.scale || !yAxis || !weekBoundaryLines?.length) {
+    return null
+  }
+
+  return (
+    <g aria-hidden="true">
+      {weekBoundaryLines.map((boundary) => {
+        const beforeX = xAxis.scale(boundary.beforeLabel)
+        const afterX = xAxis.scale(boundary.afterLabel)
+
+        if (!Number.isFinite(beforeX) || !Number.isFinite(afterX)) {
+          return null
+        }
+
+        const x = beforeX + ((afterX - beforeX) / 2)
+
+        return (
+          <line
+            key={boundary.id}
+            stroke={semanticColors.separatorOpaque}
+            strokeDasharray="2 4"
+            strokeWidth={1.25}
+            x1={x}
+            x2={x}
+            y1={yAxis.y}
+            y2={yAxis.y + yAxis.height}
+          />
+        )
+      })}
+    </g>
+  )
+}
+
 export function ReactivationActivityChart({ chart }) {
   const model = buildActivityChartModel(chart)
 
@@ -150,6 +192,14 @@ export function ReactivationActivityChart({ chart }) {
               stroke={semanticColors.separator}
               strokeDasharray="4 5"
               vertical={false}
+            />
+            <Customized
+              component={(props) => (
+                <WeekBoundaryLines
+                  {...props}
+                  weekBoundaryLines={model.weekBoundaryLines}
+                />
+              )}
             />
             <XAxis
               axisLine={false}

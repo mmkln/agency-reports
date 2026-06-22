@@ -31,6 +31,8 @@ export const activityChartLayout = {
 
 const BAR_RADIUS = [7, 7, 0, 0]
 const SQUARE_RADIUS = [0, 0, 0, 0]
+const DAYS_IN_WEEK = 7
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
 function formatDateLabel(value) {
   if (!value) {
@@ -48,6 +50,63 @@ function formatDateLabel(value) {
     month: 'short',
     timeZone: 'UTC',
   })
+}
+
+function parseUtcDate(value) {
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`)
+
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return date
+}
+
+function daysBetween(startDate, currentDate) {
+  return Math.floor((currentDate.getTime() - startDate.getTime()) / MILLISECONDS_PER_DAY)
+}
+
+function getCampaignWeekIndex(startDate, currentDate) {
+  return Math.floor(daysBetween(startDate, currentDate) / DAYS_IN_WEEK)
+}
+
+function buildWeekBoundaryLines(series) {
+  const campaignStartDate = parseUtcDate(series[0]?.date)
+
+  if (!campaignStartDate) {
+    return []
+  }
+
+  const boundaries = []
+  let currentWeekIndex = 0
+  let previousPoint = null
+
+  series.forEach((point) => {
+    const pointDate = parseUtcDate(point.date)
+
+    if (!pointDate) {
+      return
+    }
+
+    const weekIndex = getCampaignWeekIndex(campaignStartDate, pointDate)
+
+    if (weekIndex > currentWeekIndex && previousPoint) {
+      boundaries.push({
+        afterLabel: point.label,
+        beforeLabel: previousPoint.label,
+        id: `campaign-week-boundary-${weekIndex}`,
+      })
+      currentWeekIndex = weekIndex
+    }
+
+    previousPoint = point
+  })
+
+  return boundaries
 }
 
 function normalizeChartSeries(series = []) {
@@ -135,6 +194,7 @@ export function buildActivityChartModel(chart) {
     rightAxisMax: getBookingAxisMax(series),
     series,
     title: chart.label || 'Reactivation Activity',
+    weekBoundaryLines: buildWeekBoundaryLines(series),
     xTickInterval: getXAxisTickInterval(series.length),
   }
 }
