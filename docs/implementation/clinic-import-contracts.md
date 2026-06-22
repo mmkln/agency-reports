@@ -18,11 +18,40 @@ The contract feeds:
 - Patient Acquisition
 - Calls & Bookings
 - Campaigns / Service Lines
+- Booking Pipeline
+- Location Performance
 - Reputation
 - Compliance & Approvals
 ```
 
 Imports must never publish records automatically. Normalized imported rows are draft-only until an agency admin explicitly publishes them from the owning admin workspace.
+
+Admin workspaces that currently expose JSON preview/apply flows:
+
+```text
+- Clinic Metrics
+- Clinic Reputation
+- Clinic Compliance
+```
+
+Preview rules:
+
+```text
+- empty payloads are blocked before apply-to-draft
+- payloads with only another workspace's records are blocked with a workspace-specific message
+- mixed payloads can be previewed, but records outside the current workspace are warned as ignored
+- prohibited patient-level fields are shown as blocking preview errors
+```
+
+Imported records still need publish readiness before they can become client-visible. Current readiness checks require:
+
+```text
+- complete reporting period for metric/reputation records
+- aggregate patient demand, booking, location, service-line, or reputation values
+- service-line and location records to have a reviewed compliance status
+- compliance reviews to have a title, reviewed status, and useful platform/risk/summary context
+- medical approvals to have a title and review instructions
+```
 
 ## Hard Safety Rule
 
@@ -67,10 +96,34 @@ The domain normalizer rejects these keys recursively before connector data can r
     "label": "May 2026"
   },
   "patient_acquisition_metrics": [],
+  "booking_pipeline_snapshots": [],
   "calls_bookings_metrics": [],
+  "location_performance": [],
   "service_line_performance": [],
   "reputation_snapshots": [],
   "compliance_reviews": []
+}
+```
+
+The normalizer also accepts connector-style grouped sections. Use this shape when source adapters export one grouped object instead of separate top-level arrays:
+
+```json
+{
+  "contract_version": "clinic-import-v1",
+  "client_id": "33333333-3333-4333-8333-333333333333",
+  "metrics": {
+    "patient_acquisition": [],
+    "booking_pipeline": [],
+    "calls_bookings": [],
+    "location_performance": [],
+    "service_lines": []
+  },
+  "reputation": {
+    "reputation_snapshots": []
+  },
+  "compliance": {
+    "compliance_reviews": []
+  }
 }
 ```
 
@@ -124,6 +177,34 @@ other
 
 Normalized output maps to `saveAdminClinicMetrics().input.patientAcquisitionSnapshots`.
 
+## Booking Pipeline Snapshots
+
+Use this for whole-funnel patient acquisition and booking leakage rollups. This is the aggregate bridge between marketing demand and booked or attended appointments.
+
+```json
+{
+  "id": "optional-stable-row-id",
+  "period_start": "2026-05-01",
+  "period_end": "2026-05-31",
+  "period_label": "May 2026",
+  "service_line_id": "service-line-id",
+  "location_id": "location-id",
+  "impressions": 12800,
+  "clicks": 310,
+  "landing_page_visits": 250,
+  "inquiries": 33,
+  "qualified_inquiries": 19,
+  "booked_appointments": 14,
+  "attended_appointments": 11,
+  "leakage_note": "Five high-intent callers did not book during peak hours.",
+  "summary": "Demand is healthy, but front-desk leakage is limiting booked appointments.",
+  "insight": "The largest loss is between first inquiry and booked appointment.",
+  "data_source": "Ads, site, call tracking, and booking aggregate export"
+}
+```
+
+Normalized output maps to `saveAdminClinicMetrics().input.bookingPipelineSnapshots`.
+
 ## Calls & Bookings Metrics
 
 Use this for call handling, front-desk leakage, and booking conversion.
@@ -166,6 +247,44 @@ Use this for call handling, front-desk leakage, and booking conversion.
 ```
 
 Normalized output maps to `saveAdminClinicMetrics().input.callBookingMetrics`.
+
+## Location Performance
+
+Use this for multi-location clinic rollups. It is aggregate-only and helps practice managers see which locations generate demand, lose bookings, or carry compliance risk.
+
+```json
+{
+  "id": "optional-stable-row-id",
+  "period_start": "2026-05-01",
+  "period_end": "2026-05-31",
+  "period_label": "May 2026",
+  "location_id": "location-id",
+  "spend": 3200,
+  "inquiries": 42,
+  "booked_appointments": 27,
+  "cost_per_booked_appointment": 118.52,
+  "missed_calls": 6,
+  "reviews_gained": 9,
+  "google_rating": 4.7,
+  "compliance_status": "approved",
+  "capacity_note": "Two providers have open consult slots on Thursdays.",
+  "summary": "Downtown leads booked efficiently, but missed calls remain elevated.",
+  "data_source": "Ads, call tracking, booking, and GBP rollup"
+}
+```
+
+Supported compliance statuses:
+
+```text
+not_reviewed
+in_review
+approved
+risk_flagged
+blocked
+limited_by_policy
+```
+
+Normalized output maps to `saveAdminClinicMetrics().input.locationPerformance`.
 
 ## Service Line Performance
 
@@ -277,16 +396,20 @@ Normalized output maps to `saveAdminClinicCompliance().input.complianceReviews`.
 ```text
 Google Ads:
 - patient_acquisition_metrics: spend, impressions, clicks, channel, campaign/service line mapping
+- booking_pipeline_snapshots: campaign demand through booked appointment rollup after offline import
 - service_line_performance: campaign status, spend, inquiries/bookings after offline import
+- location_performance: location-level spend, inquiries, booked appointments, and policy context after mapping
 - compliance_reviews: limited ads, disapproved ads, policy risk summaries
 
 Meta Ads:
 - patient_acquisition_metrics: spend, impressions, clicks, inquiries where compliant
+- booking_pipeline_snapshots: compliant aggregate inquiry and booking rollups where source mapping is available
 - service_line_performance: campaign status and creative/service-line rollup
 - compliance_reviews: health/wellness policy risk and limited delivery summaries
 
 GA4:
 - patient_acquisition_metrics: landing page visits, forms/chats, source/channel context
+- booking_pipeline_snapshots: landing page visit to inquiry conversion context
 - service_line_performance: landing page status and service-line conversion context
 
 Google Search Console:
@@ -297,13 +420,18 @@ CallRail / Nimbata / WhatConverts:
 - calls_bookings_metrics: total calls, first-time calls, answered/missed calls, booked-from-call rollup
 - calls_bookings_metrics: peak call windows when the call platform provides aggregate time buckets
 - patient_acquisition_metrics: calls and qualified inquiries after aggregate source mapping
+- booking_pipeline_snapshots: inquiry to booking leakage summaries
+- location_performance: missed calls and booked appointments by location when available
 
 Booking / scheduling source:
 - patient_acquisition_metrics: booked appointments and attended appointments
+- booking_pipeline_snapshots: qualified inquiries, booked appointments, attended appointments, and leakage notes
 - calls_bookings_metrics: booked-from-call and no-response/follow-up rollups
+- location_performance: booked appointments and capacity notes by location
 
 Google Business Profile / reviews:
 - reputation_snapshots: rating, review count, new reviews, unanswered/negative reviews, GBP updates
+- location_performance: rating and review gains by location
 
 CRM / practice management:
 - aggregate booked appointments, attended appointments, show rates, and treatment revenue only when a compliant aggregate export is available
@@ -334,5 +462,6 @@ The domain normalizer:
 - normalizes numbers and enums before data reaches admin save workflows
 - forces imported rows to draft publish state
 - produces admin workflow input shapes for metrics, reputation, and compliance
+- normalizes booking pipeline and location performance records for the clinic metrics workspace
 - normalizes service-line performance for the `service_line_performance` repository
 ```

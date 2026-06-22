@@ -1,18 +1,20 @@
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { getPageShellWidthClass, PageHeader } from '@/shared/ui'
-import { AppSidebar } from './AppSidebar'
+import { AppTopHeader } from './AppTopHeader'
 
 export function AppShell({
   activeRoute,
+  activeSidebarNavigationId,
   children,
   hasUnsavedChanges = false,
+  sidebarNavigationItems,
   onAuthChange,
+  onSignOut,
   routeParams = {},
   runtime,
   showRouteHeader = true,
   routes,
+  sidebarViewerMeta,
 }) {
-  const navRoutes = routes.filter((route) => route.showInNav !== false)
   const RouteHeader = activeRoute.header
   const routeKey = activeRoute.remountOnParamsChange
     ? `${activeRoute.id}:${JSON.stringify(routeParams)}`
@@ -20,16 +22,19 @@ export function AppShell({
   const contentWidth = activeRoute.contentWidth ?? 'full'
 
   return (
-    <SidebarProvider className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
-      <AppSidebar
+    <div className="min-h-screen bg-background font-sans text-foreground selection:bg-action-muted selection:text-action">
+      <AppTopHeader
+        activeNavigationId={activeSidebarNavigationId ?? activeRoute.activeNavigationId}
         activeRoute={activeRoute}
         hasUnsavedChanges={hasUnsavedChanges}
+        navigationItems={sidebarNavigationItems}
         onAuthChange={onAuthChange}
+        onSignOut={onSignOut}
         runtime={runtime}
-        routes={navRoutes}
+        routes={routes}
+        viewerMeta={sidebarViewerMeta}
       />
-      <SidebarInset className="min-h-screen overflow-x-hidden">
-        <SidebarTrigger className="fixed left-control top-control z-40 md:hidden" />
+      <main className="min-h-[calc(100vh-var(--spacing-control-xl))] overflow-x-hidden">
         {!showRouteHeader || activeRoute.hidePageHeader ? null : (
           RouteHeader ? (
             <RouteHeader activeRoute={activeRoute} routeParams={routeParams} runtime={runtime} />
@@ -50,7 +55,7 @@ export function AppShell({
             {children}
           </div>
         )}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   )
 }

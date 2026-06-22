@@ -2,7 +2,7 @@
 
 ```text
 Product: Agency Client Portal Aggregator
-Status date: 2026-05-17
+Status date: 2026-05-18
 Current storage mode: frontend/localStorage MVP
 ```
 
@@ -24,11 +24,12 @@ It should help each client understand:
 
 It is not intended to become a full analytics platform, CRM, project management tool, chat system, or file manager during the MVP stage.
 
-Clinic vertical planning update:
+Clinic vertical product direction:
 
 ```text
-If clinics are the primary ICP, the next product direction is a clinic-specific control center:
-patient acquisition, calls/bookings, service lines, reputation, compliance, approvals, and reports.
+Clinics are now treated as the primary ICP for the client-facing experience.
+The client portal prioritizes patient acquisition, calls/bookings, service lines,
+reputation, compliance, approvals, and reports over generic project/task status.
 ```
 
 Primary clinic planning references:
@@ -36,6 +37,7 @@ Primary clinic planning references:
 ```text
 docs/research/clinic-client-portal-information-architecture.md
 docs/implementation/clinic-client-portal-refactor-checklist.md
+docs/domain-ownership-model.md
 ```
 
 ## Implemented Use Cases
@@ -50,7 +52,7 @@ docs/implementation/clinic-client-portal-refactor-checklist.md
 
 ## Current Verification Baseline
 
-Latest full verification recorded after the Client Control Center refactor:
+Latest full verification recorded after the backend-readiness data-client boundary refactor:
 
 ```text
 npm run lint
@@ -62,12 +64,13 @@ npm run build
 Current baseline from the latest verification run:
 
 ```text
-Unit tests: 229 passed
-Full e2e: 32 passed with `npx playwright test --workers=1`
+Lint: passed
+Unit tests: 420 passed
+Full e2e: 46 passed with `npx playwright test --workers=1`
 Build: passed
 ```
 
-Note: the default parallel `npm run e2e` run hit timing flakes in older admin import/report/performance specs; each failed spec passed when rerun individually, and the full serial run passed.
+Note: the full serial Playwright run is the current baseline for mature client visibility, clinic vertical routes, reports, imports, and role boundaries.
 
 ## Current Client IA Status
 
@@ -86,6 +89,19 @@ The client-facing portal has been refactored from separate use-case routes into 
 
 Legacy client Dashboard, Performance, and Reports routes remain hidden/deep-link compatible, while top-level client navigation points to the mature destinations.
 
+For clinic clients, the mature navigation emphasizes:
+
+```text
+- Overview as the clinic control center
+- Patient Acquisition
+- Calls & Bookings
+- Service Lines
+- Reputation
+- Compliance & Approvals
+- Action Needed
+- Reports
+```
+
 ## Architecture Baseline
 
 The current frontend architecture expects:
@@ -96,8 +112,13 @@ The current frontend architecture expects:
 - route pages using runtime data clients
 - localStorage as a replaceable adapter
 - string UUIDs for entity IDs
+- `User`, `Agency`, and `Company Workspace` to be treated as separate business entities
+- user access to be derived from agency/workspace memberships rather than profile fallback fields
 - client-facing visibility enforced in domain services
 - internal notes/drafts hidden from client read models
+- internal `Task` records are not the client-facing active-work contract
+- published `ClientWorkItem` records own client-visible active work
+- `NeededFromClient` owns client actions and client responses
 ```
 
 ## Next Recommended Work
@@ -105,19 +126,21 @@ The current frontend architecture expects:
 Recommended next step:
 
 ```text
-Start the clinic vertical refactor if clinics are confirmed as the primary ICP; otherwise continue backend/integration readiness or e2e hardening.
+Continue backend/integration readiness and harden the clinic growth-operations workflows.
 ```
 
 Reason:
 
 ```text
-The UC-001 through UC-005 frontend/localStorage MVP path is implemented, the mature Client Control Center checklist is closed, and the client/admin surfaces now use the mature destination model.
-The next major product move is either pivoting the product surface to the clinic vertical, replacing localStorage with backend-ready adapters, or reducing parallel e2e flake in legacy admin flows.
+The UC-001 through UC-005 frontend/localStorage MVP path is implemented, the mature Client Control Center model is in place, clinic client routes are implemented, and task-to-client visibility has been refactored around explicit `ClientWorkItem` publishing.
+The next major product move is replacing localStorage with backend-ready persistence/access enforcement, adding real integrations for clinic acquisition data, or expanding clinic operational workflows such as call handling and compliance approvals.
 ```
 
 Primary planning tracker:
 
 ```text
+docs/implementation/entity-access-architecture-refactor-plan.md
+docs/implementation/backend-integration-readiness.md
 docs/implementation/clinic-client-portal-refactor-checklist.md
 docs/implementation/client-control-center-refactor-checklist.md
 docs/implementation/task-client-visibility-refactor-checklist.md

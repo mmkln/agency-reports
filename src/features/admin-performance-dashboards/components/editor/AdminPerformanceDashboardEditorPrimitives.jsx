@@ -107,7 +107,7 @@ export function MetricEditor({ metric, onRemove, onUpdate, title }) {
           <Input onChange={(event) => onUpdate('source', event.target.value)} placeholder="GA4, Meta Ads, Manual..." value={metric.source ?? ''} />
         </FormField>
         <div className="md:col-span-2">
-          <FormField label="Client-facing definition">
+          <FormField label="Portal definition">
             <Textarea
               onChange={(event) => onUpdate('definition', event.target.value)}
               placeholder="Explain what this metric means in plain language."

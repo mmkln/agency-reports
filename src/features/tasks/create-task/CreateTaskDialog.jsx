@@ -18,8 +18,8 @@ import {
   Textarea,
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
-import { USER_ROLES } from '@/entities/profile'
 import { getTaskStatusMeta, TASK_STATUSES } from '@/entities/task'
+import { isAgencyTeamTaskCreator } from './taskCreateAccess'
 
 const createTaskTextareaClass = 'resize-none border-transparent bg-control px-component py-control text-body shadow-none hover:bg-control-hover focus-visible:border-ring focus-visible:bg-block focus-visible:ring-2 focus-visible:ring-ring/25'
 
@@ -44,6 +44,7 @@ export function CreateTaskDialog({
 }) {
   const selectedClientProjects = taskData.projects
     .filter((project) => project.client_id === taskDraft.clientId)
+  const isTeamTaskCreator = isAgencyTeamTaskCreator(viewer)
 
   return (
     <Dialog onOpenChange={(open) => {
@@ -87,7 +88,7 @@ export function CreateTaskDialog({
                     value={taskDraft.clientId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select client" />
+                      <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>
                       {taskData.clients.map((client) => (
@@ -123,7 +124,7 @@ export function CreateTaskDialog({
                 <label className="grid gap-2">
                   <Label>Assignee</Label>
                   <Input
-                    disabled={viewer.role === USER_ROLES.AGENCY_TEAM}
+                    disabled={isTeamTaskCreator}
                     onChange={(event) => onChange({ ...taskDraft, assigneeName: event.target.value })}
                     placeholder="Unassigned"
                     value={taskDraft.assigneeName}
@@ -180,7 +181,7 @@ export function CreateTaskDialog({
                   className={`${createTaskTextareaClass} min-h-24`}
                   id="task-internal-note"
                   onChange={(event) => onChange({ ...taskDraft, internalNote: event.target.value })}
-                  placeholder="Private agency context."
+                  placeholder="Private team context."
                   value={taskDraft.internalNote}
                 />
               </label>

@@ -6,12 +6,18 @@ import {
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   NumberField,
   SelectField,
   SelectItem,
   TextField,
 } from './ReputationFields'
+import { ReputationSuggestedActionButtons } from './ReputationSuggestedActionButtons'
 
 function createBlankSnapshot() {
   return {
@@ -41,16 +47,13 @@ function getPublishLabel(record) {
   ].label
 }
 
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
-}
-
 export function ReputationSnapshotsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
 }) {
@@ -109,10 +112,14 @@ export function ReputationSnapshotsCard({
                   {getPublishLabel(snapshot)}
                   {snapshot.published_at ? ` at ${snapshot.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={snapshot.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={snapshot.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(snapshot, isDirty)}
+                  disabled={!canPublishClinicRecord(snapshot, isDirty)}
                   onClick={() => onPublish({ id: snapshot.id })}
                   size="sm"
                   type="button"
@@ -125,6 +132,13 @@ export function ReputationSnapshotsCard({
                 </Button>
               </div>
             </div>
+            <ReputationSuggestedActionButtons
+              createdActionKeys={createdActionKeys}
+              creatingActionKey={creatingActionKey}
+              isDirty={isDirty}
+              onCreateSuggestedAction={onCreateSuggestedAction}
+              snapshot={snapshot}
+            />
 
             <div className="grid gap-component md:grid-cols-3">
               <TextField
@@ -186,6 +200,7 @@ export function ReputationSnapshotsCard({
                 label="Profile completeness"
                 max="100"
                 onChange={(value) => updateSnapshot(index, 'provider_profile_completeness', value)}
+                step="0.01"
                 value={snapshot.provider_profile_completeness}
               />
             </div>

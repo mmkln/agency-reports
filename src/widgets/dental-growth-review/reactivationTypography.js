@@ -1,0 +1,17 @@
+export const reactivationText = {
+  chartHelper: 'text-label font-medium text-text-muted',
+  chartLegend: 'text-label font-medium text-text-secondary',
+  metricCaption: 'text-ui font-normal leading-5 text-text-secondary',
+  metricCaptionEmphasized: 'text-ui font-normal leading-5 text-white/80',
+  metricLabel: 'text-label font-medium leading-4 text-text-muted',
+  metricLabelEmphasized: 'text-label font-medium leading-4 text-white/75',
+  metricValue: 'text-[22px] font-semibold leading-[26px] tracking-normal tabular-nums text-text-primary',
+  metricValueEmphasized: 'text-[22px] font-semibold leading-[26px] tracking-normal tabular-nums text-white',
+  metricValuePositive: 'text-[22px] font-semibold leading-[26px] tracking-normal tabular-nums text-success',
+  sectionSubtitle: 'text-ui font-normal text-text-muted',
+  sectionTitle: 'text-body font-semibold text-text-primary',
+  stageHelper: 'text-label font-normal text-text-muted',
+  stageLabel: 'text-label font-medium leading-4 text-text-muted',
+  stageValue: 'text-[24px] font-semibold leading-[29px] tracking-normal tabular-nums text-text-primary',
+  updatedMeta: 'text-label font-medium text-text-muted',
+}

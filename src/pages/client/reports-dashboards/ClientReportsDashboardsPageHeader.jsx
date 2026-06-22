@@ -1,8 +1,10 @@
 import { PageHeader, StatusBadge } from '@/shared/ui'
 
-import { getClientReportsDashboardsPage } from '../../../domain/services/clientReportsDashboardsService'
-import { USER_ROLES } from '../../../entities/profile'
+import {
+  getClientReportsDashboardsPage,
+} from '../../../domain/services/clientReportsDashboardsService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
+import { getClientPageMode } from '../clientPageAccess'
 
 function HeaderActions({ page }) {
   const dashboard = page.performancePage.performanceDashboard
@@ -17,7 +19,7 @@ function HeaderActions({ page }) {
 
 export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {}, runtime }) {
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
+  const mode = getClientPageMode(runtime.viewer)
   const performancePeriodId = routeParams.performancePeriodId ?? routeParams.periodId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:reports-dashboards-header:${clientId}:${routeParams.dashboardId ?? ''}:${performancePeriodId ?? ''}:${routeParams.reportId ?? ''}`,
@@ -44,7 +46,7 @@ export function ClientReportsDashboardsPageHeader({ activeRoute, routeParams = {
   return (
     <PageHeader
       actions={<HeaderActions page={page} />}
-      title="Reports & Dashboards"
+      title={page.copy.pageTitle}
       width={activeRoute?.contentWidth}
     />
   )

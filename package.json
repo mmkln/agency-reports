@@ -4,17 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite",
+    "start": "vite --mode remote",
+    "start:local": "vite",
     "build": "vite build",
-    "go": "npm run build && gh-pages -d dist",
+    "build:github-pages": "vite build --mode github-pages",
+    "go": "npm run build:github-pages && gh-pages -d dist",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "e2e": "playwright test"
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
     "@tailwindcss/vite": "^4.2.4",
+    "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
@@ -30,7 +32,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.60.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

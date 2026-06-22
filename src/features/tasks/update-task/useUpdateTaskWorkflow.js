@@ -88,82 +88,89 @@ export function useUpdateTaskWorkflow({
   }
 
   function save() {
-    try {
-      if (!selectedTask || !draft) {
-        return
-      }
-
-      const validationError = validateTaskUpdateDraft(draft)
-
-      if (validationError) {
-        setError(validationError)
-        setSaveState('')
-        if (validationError === TASK_UPDATE_VALIDATION_MESSAGES.blockerReasonRequired) {
-          toast.warning('Blocker reason required', 'Add a short note before marking this task as blocked.')
-        }
-        return
-      }
-
-      updateWorkspaceTask({
-        input: draft,
-        repositories: runtime.repositories,
-        taskId: selectedTask.id,
-        viewer: runtime.viewer,
-      })
-      setError('')
-      setSaveState('Task update saved.')
-      toast.success('Task updated', `${selectedTask.title} was saved.`)
-      onUpdated(selectedTask)
-    } catch (caughtError) {
-      setError(caughtError.message)
-      setSaveState('')
-      toast.error('Task update failed', caughtError.message)
+    if (!selectedTask || !draft) {
+      return
     }
+
+    const validationError = validateTaskUpdateDraft(draft)
+
+    if (validationError) {
+      setError(validationError)
+      setSaveState('')
+      if (validationError === TASK_UPDATE_VALIDATION_MESSAGES.blockerReasonRequired) {
+        toast.warning('Blocker reason required', 'Add a short note before marking this task as blocked.')
+      }
+      return
+    }
+
+    setSaveState('Saving...')
+    void runtime.dataClient.write((repositories) => updateWorkspaceTask({
+      input: draft,
+      repositories,
+      taskId: selectedTask.id,
+      viewer: runtime.viewer,
+    }))
+      .then((updatedTask) => {
+        setError('')
+        setSaveState('Task update saved.')
+        toast.success('Task updated', `${selectedTask.title} was saved.`)
+        onUpdated(updatedTask)
+      })
+      .catch((caughtError) => {
+        setError(caughtError.message)
+        setSaveState('')
+        toast.error('Task update failed', caughtError.message)
+      })
   }
 
   function sendToClientReview() {
-    try {
-      if (!selectedTask) {
-        return
-      }
+    if (!selectedTask) {
+      return
+    }
 
-      if (isDirty) {
-        setError('')
-        setSaveState('Save task changes before sending this work to admin review.')
-        return
-      }
+    if (isDirty) {
+      setError('')
+      setSaveState('Save task changes before sending this work to admin review.')
+      return
+    }
 
-      if (!selectedTask.clientSafeSummary?.trim()) {
-        setError('Client-safe update is required before sending this work to admin review.')
-        setSaveState('')
-        toast.warning('Client-safe update required', 'Add a short client-safe summary, save it, then send it for review.')
-        return
-      }
+    if (!selectedTask.clientSafeSummary?.trim()) {
+      setError('Portal-ready update is required before sending this work to admin review.')
+      setSaveState('')
+      toast.warning('Portal-ready update required', 'Add a short portal-ready summary, save it, then send it for review.')
+      return
+    }
 
+    setSaveState('Sending to review...')
+    void runtime.dataClient.write((repositories) => {
       if (selectedTask.clientWorkItem?.id) {
-        markClientWorkItemReadyForReview({
-          repositories: runtime.repositories,
+        return markClientWorkItemReadyForReview({
+          activityIdGenerator: createUuid,
+          repositories,
           viewer: runtime.viewer,
           workItemId: selectedTask.clientWorkItem.id,
         })
-      } else {
-        suggestClientWorkItemFromTask({
-          idGenerator: createUuid,
-          repositories: runtime.repositories,
-          taskId: selectedTask.id,
-          viewer: runtime.viewer,
-        })
       }
 
-      setError('')
-      setSaveState('Sent to admin review.')
-      toast.success('Sent to review', `${selectedTask.title} is queued for client-facing review.`)
-      onUpdated(selectedTask)
-    } catch (caughtError) {
-      setError(caughtError.message)
-      setSaveState('')
-      toast.error('Review action failed', caughtError.message)
-    }
+      return suggestClientWorkItemFromTask({
+        activityIdGenerator: createUuid,
+        idGenerator: createUuid,
+        repositories,
+        taskId: selectedTask.id,
+        viewer: runtime.viewer,
+      })
+    })
+      .then((workItem) => {
+        setError('')
+        setSaveState('Sent to admin review.')
+        toast.success('Sent to review', `${selectedTask.title} is queued for published work review.`)
+        onUpdated(workItem)
+      })
+      .catch((caughtError) => {
+        setError(caughtError.message)
+        setSaveState('')
+        toast.error('Review action failed', caughtError.message)
+      })
   }
 
   return {

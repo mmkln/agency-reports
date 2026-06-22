@@ -1,15 +1,21 @@
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyMembership } from '../policies/routeAccessPolicy'
 
 export const ACTIVITY_EVENT_TYPES = Object.freeze({
   CLIENT_REQUEST_ANSWERED: 'client_request_answered',
   CLIENT_REQUEST_CANCELLED: 'client_request_cancelled',
   CLIENT_REQUEST_CREATED: 'client_request_created',
   CLIENT_REQUEST_RESOLVED: 'client_request_resolved',
+  CLIENT_INVITATION_ACCEPTED: 'client_invitation_accepted',
+  CLIENT_INVITATION_CANCELLED: 'client_invitation_cancelled',
+  CLIENT_INVITATION_CREATED: 'client_invitation_created',
   CLIENT_WORK_ITEM_ARCHIVED: 'client_work_item_archived',
   CLIENT_WORK_ITEM_CREATED: 'client_work_item_created',
   CLIENT_WORK_ITEM_PUBLISHED: 'client_work_item_published',
   CLIENT_WORK_ITEM_READY_FOR_REVIEW: 'client_work_item_ready_for_review',
+  CLINIC_COMPLIANCE_RECORD_PUBLISHED: 'clinic_compliance_record_published',
+  CLINIC_COMPLIANCE_STATUS_CHANGED: 'clinic_compliance_status_changed',
+  CLINIC_MEDICAL_APPROVAL_DECIDED: 'clinic_medical_approval_decided',
   DASHBOARD_OPENED: 'dashboard_opened',
   NEEDED_ACTION_ANSWERED: 'needed_action_answered',
   OVERVIEW_OPENED: 'overview_opened',
@@ -68,13 +74,9 @@ export function isActivityEventVisibleToClient(eventOrType) {
 }
 
 function assertCanRecordActivity({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
-    throw new Error('Client activity is not available.')
-  }
-
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN && client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Client activity is not available.')
   }
 
@@ -84,8 +86,8 @@ function assertCanRecordActivity({ clientId, repositories, viewer }) {
 function assertCanReadActivity({ clientId, repositories, viewer }) {
   const client = assertCanRecordActivity({ clientId, repositories, viewer })
 
-  if (![USER_ROLES.AGENCY_ADMIN, USER_ROLES.AGENCY_TEAM].includes(viewer?.role)) {
-    throw new Error('Only agency users can read client activity.')
+  if (!hasAgencyMembership(viewer)) {
+    throw new Error('Only team users can read workspace activity.')
   }
 
   return client
@@ -171,7 +173,7 @@ export function listClientVisibleActivityEvents({
   assertCanRecordActivity({ clientId, repositories, viewer })
 
   return repositories.activityEvents
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isActivityEventVisibleToClient)
     .sort(sortActivityDesc)
     .slice(0, limit)
@@ -188,7 +190,7 @@ export function listClientActivityEvents({
   assertCanReadActivity({ clientId, repositories, viewer })
 
   return repositories.activityEvents
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .sort(sortActivityDesc)
     .slice(0, limit)
     .map((event) => mapActivityEvent({ event, repositories }))

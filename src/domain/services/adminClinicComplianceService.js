@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import {
   CLINIC_APPROVAL_STATUSES,
   CLINIC_APPROVAL_STATUS_META,
@@ -16,7 +16,22 @@ import {
   normalizeComplianceReview,
   normalizeMedicalApproval,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import {
+  assertClinicPublishReady,
+  getComplianceReviewPublishReadiness,
+  getMedicalApprovalPublishReadiness,
+} from '../policies/clinicPublishReadinessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 
 const VALID_COMPLIANCE_STATUSES = new Set(Object.values(CLINIC_COMPLIANCE_STATUSES))
 const VALID_APPROVAL_TYPES = new Set(Object.values(CLINIC_APPROVAL_TYPES))
@@ -76,23 +91,68 @@ const COMPLIANCE_REVIEW_TRANSITIONS = Object.freeze({
     CLINIC_COMPLIANCE_STATUSES.APPROVED,
   ]),
 })
+const COMPLIANCE_RECORD_READINESS = Object.freeze({
+  approval: getMedicalApprovalPublishReadiness,
+  review: getComplianceReviewPublishReadiness,
+})
+
+function recordClinicComplianceActivity({
+  activityIdGenerator,
+  clientId,
+  eventType,
+  metadata,
+  now,
+  repositories,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId,
+    eventType,
+    idGenerator: activityIdGenerator,
+    metadata,
+    now,
+    repositories,
+    viewer,
+  })
+}
+const OPEN_NEEDED_ACTION_STATUSES = new Set([
+  NEEDED_ACTION_STATUSES.ANSWERED,
+  NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+  NEEDED_ACTION_STATUSES.PENDING,
+])
+const MEDICAL_APPROVAL_ACTION_TYPES = Object.freeze({
+  [CLINIC_APPROVAL_TYPES.AD_COPY]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+  [CLINIC_APPROVAL_TYPES.BEFORE_AFTER_IMAGE]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+  [CLINIC_APPROVAL_TYPES.CONSENT_LANGUAGE]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+  [CLINIC_APPROVAL_TYPES.DOCTOR_BIO]: CLINIC_NEEDED_ACTION_TYPES.SEND_DOCTOR_BIO,
+  [CLINIC_APPROVAL_TYPES.LANDING_PAGE]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+  [CLINIC_APPROVAL_TYPES.MEDICAL_CLAIM]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+  [CLINIC_APPROVAL_TYPES.PRIVACY_TRACKING]: CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING,
+  [CLINIC_APPROVAL_TYPES.SERVICE_DESCRIPTION]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+  [CLINIC_APPROVAL_TYPES.TESTIMONIAL]: CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+  [CLINIC_APPROVAL_TYPES.TREATMENT_PRICING]: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_SERVICE_PRICING,
+})
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage clinic compliance.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage clinic compliance.')
   }
 }
 
 function getEditableClinicClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic compliance is not available for this admin.')
   }
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic compliance is only available for clinic clients.')
   }
 
@@ -184,8 +244,8 @@ function mapClient(client) {
     primaryContactEmail: client.primary_contact_email,
     primaryContactName: client.primary_contact_name,
     status: client.status,
-    type: client.type,
-    typeMeta: CLIENT_TYPE_META[client.type],
+    type: CLIENT_TYPES.CLINIC,
+    typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     updatedAt: client.updated_at,
   }
 }
@@ -216,11 +276,11 @@ function preservePublishState(existingRecord) {
 
 function getClinicFoundation({ clientId, repositories }) {
   const locations = repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
   const serviceLines = repositories.clinicServiceLines
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicServiceLine)
     .sort(sortByDisplayOrder)
 
@@ -241,11 +301,119 @@ function validateReference(value, validIds, fieldName) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
   })
+}
+
+function isOpenNeededAction(action) {
+  return OPEN_NEEDED_ACTION_STATUSES.has(action?.status)
+}
+
+function createComplianceActionKey(recordId, suggestionType) {
+  return `${recordId}:${suggestionType}`
+}
+
+function getOpenComplianceActionsBySuggestionKey({ clientId, repositories }) {
+  const actions = repositories.neededFromClient?.listByWorkspaceId?.(clientId) ?? []
+  const entries = []
+
+  for (const action of actions.filter(isOpenNeededAction)) {
+    if (action.related_compliance_review_id && action.clinic_action_type) {
+      entries.push([
+        createComplianceActionKey(action.related_compliance_review_id, action.clinic_action_type),
+        action,
+      ])
+    }
+
+    if (action.related_medical_approval_id && action.clinic_action_type) {
+      entries.push([
+        createComplianceActionKey(action.related_medical_approval_id, action.clinic_action_type),
+        action,
+      ])
+    }
+  }
+
+  return new Map(entries)
+}
+
+function createComplianceActionSuggestion({
+  actionLabel,
+  actionType,
+  defaultActionType = NEEDED_ACTION_TYPES.DECISION,
+  openComplianceActionsBySuggestionKey,
+  recordId,
+}) {
+  const openAction = openComplianceActionsBySuggestionKey.get(createComplianceActionKey(recordId, actionType))
+
+  return {
+    actionLabel,
+    defaultActionType,
+    hasOpenAction: Boolean(openAction),
+    openAction: openAction
+      ? {
+          id: openAction.id,
+          status: openAction.status,
+          title: openAction.title,
+        }
+      : null,
+    type: actionType,
+  }
+}
+
+function getComplianceReviewActionType(review) {
+  const policyIssues = Array.isArray(review.policy_issues) ? review.policy_issues : []
+  const hasPrivacyIssue = policyIssues.some((issue) => issue.type === CLINIC_POLICY_ISSUE_TYPES.PRIVACY_TRACKING)
+    || /privacy|tracking|consent|cookie|hipaa|gdpr/i.test(`${review.platform} ${review.title} ${review.risk_note}`)
+
+  if (hasPrivacyIssue) {
+    return CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING
+  }
+
+  return CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY
+}
+
+function getComplianceReviewActionSuggestions({ openComplianceActionsBySuggestionKey, review }) {
+  const issueCount = review.open_issues + review.blocked_items + review.limited_ads + review.pending_approvals
+
+  if (
+    issueCount <= 0
+    && ![
+      CLINIC_COMPLIANCE_STATUSES.BLOCKED,
+      CLINIC_COMPLIANCE_STATUSES.LIMITED_BY_POLICY,
+      CLINIC_COMPLIANCE_STATUSES.RISK_FLAGGED,
+    ].includes(review.status)
+  ) {
+    return []
+  }
+
+  return [
+    createComplianceActionSuggestion({
+      actionLabel: 'Create compliance action',
+      actionType: getComplianceReviewActionType(review),
+      openComplianceActionsBySuggestionKey,
+      recordId: review.id,
+    }),
+  ]
+}
+
+function getMedicalApprovalActionSuggestions({ approval, openComplianceActionsBySuggestionKey }) {
+  if (approval.status !== CLINIC_APPROVAL_STATUSES.PENDING_MEDICAL_REVIEW) {
+    return []
+  }
+
+  return [
+    createComplianceActionSuggestion({
+      actionLabel: 'Create approval action',
+      actionType: MEDICAL_APPROVAL_ACTION_TYPES[approval.approval_type]
+        ?? CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+      defaultActionType: NEEDED_ACTION_TYPES.APPROVAL,
+      openComplianceActionsBySuggestionKey,
+      recordId: approval.id,
+    }),
+  ]
 }
 
 function filterMeaningfulReviews(records = []) {
@@ -429,10 +597,12 @@ function getEditableComplianceReview({ clientId, repositories, reviewId, viewer 
 }
 
 function publishClinicComplianceRecord({
+  activityIdGenerator,
   clientId,
   id,
   normalize,
   now = () => new Date().toISOString(),
+  readiness,
   repository,
   repositories,
   viewer,
@@ -447,10 +617,8 @@ function publishClinicComplianceRecord({
 
   const timestamp = now()
   const normalizedRecord = normalize(existingRecord)
-
-  if (normalizedRecord.status === CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED) {
-    throw new Error('Compliance review must be reviewed before publishing.')
-  }
+  assertClinicPublishReady(readiness(normalizedRecord))
+  const recordType = repository === repositories.medicalApprovals ? 'medical_approval' : 'compliance_review'
 
   repository.upsert(normalize({
     ...normalizedRecord,
@@ -459,6 +627,20 @@ function publishClinicComplianceRecord({
     published_by: normalizedRecord.published_by ?? viewer.userId ?? null,
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_RECORD_PUBLISHED,
+    metadata: {
+      recordId: normalizedRecord.id,
+      recordType,
+      status: normalizedRecord.status,
+      title: normalizedRecord.title,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
@@ -530,6 +712,7 @@ export function getComplianceReviewTransitionCapabilities(review) {
 }
 
 export function transitionComplianceReviewStatus({
+  activityIdGenerator,
   clientId,
   input = {},
   nextStatus,
@@ -565,11 +748,27 @@ export function transitionComplianceReviewStatus({
     ],
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_COMPLIANCE_STATUS_CHANGED,
+    metadata: {
+      fromStatus: review.status,
+      recordId: review.id,
+      recordType: 'compliance_review',
+      status: nextStatus,
+      title: review.title,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
 
 function transitionMedicalApproval({
+  activityIdGenerator,
   approvalId,
   clientId,
   input,
@@ -614,6 +813,23 @@ function transitionMedicalApproval({
     status: nextStatus,
     updated_at: timestamp,
   }))
+  recordClinicComplianceActivity({
+    activityIdGenerator,
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLINIC_MEDICAL_APPROVAL_DECIDED,
+    metadata: {
+      approvalType: approval.approval_type,
+      fromStatus: approval.status,
+      recordId: approval.id,
+      recordType: 'medical_approval',
+      status: nextStatus,
+      title: approval.title,
+      version,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 
   return getAdminClinicCompliancePage({ clientId, repositories, viewer })
 }
@@ -633,20 +849,40 @@ export function getMedicalApprovalDecisionCapabilities(approval) {
 export function getAdminClinicCompliancePage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const foundation = getClinicFoundation({ clientId, repositories })
+  const openComplianceActionsBySuggestionKey = getOpenComplianceActionsBySuggestionKey({
+    clientId,
+    repositories,
+  })
 
   return {
     approvalStatusMeta: CLINIC_APPROVAL_STATUS_META,
     approvalTypeMeta: CLINIC_APPROVAL_TYPE_META,
     client: mapClient(client),
     complianceReviews: repositories.complianceReviews
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeComplianceReview)
+      .map((record) => ({
+        ...record,
+        compliance_action_suggestions: getComplianceReviewActionSuggestions({
+          openComplianceActionsBySuggestionKey,
+          review: record,
+        }),
+        publish_readiness: getComplianceReviewPublishReadiness(record),
+      }))
       .sort(sortReviews),
     complianceStatusMeta: CLINIC_COMPLIANCE_STATUS_META,
     locations: foundation.locations,
     medicalApprovals: repositories.medicalApprovals
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeMedicalApproval)
+      .map((record) => ({
+        ...record,
+        medical_approval_action_suggestions: getMedicalApprovalActionSuggestions({
+          approval: record,
+          openComplianceActionsBySuggestionKey,
+        }),
+        publish_readiness: getMedicalApprovalPublishReadiness(record),
+      }))
       .sort(sortApprovals),
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     serviceLines: foundation.serviceLines,
@@ -670,10 +906,10 @@ export function saveAdminClinicCompliance({
   const complianceReviews = filterMeaningfulReviews(input?.complianceReviews)
   const medicalApprovals = filterMeaningfulApprovals(input?.medicalApprovals)
   const existingReviewsById = new Map(
-    repositories.complianceReviews.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.complianceReviews.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const existingApprovalsById = new Map(
-    repositories.medicalApprovals.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.medicalApprovals.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
 
   deleteRemovedRecords({
@@ -751,6 +987,7 @@ export function publishComplianceReview(args) {
     ...args,
     id: args.reviewId ?? args.id,
     normalize: normalizeComplianceReview,
+    readiness: COMPLIANCE_RECORD_READINESS.review,
     repository: args.repositories.complianceReviews,
   })
 }
@@ -760,6 +997,7 @@ export function publishMedicalApproval(args) {
     ...args,
     id: args.approvalId ?? args.id,
     normalize: normalizeMedicalApproval,
+    readiness: COMPLIANCE_RECORD_READINESS.approval,
     repository: args.repositories.medicalApprovals,
   })
 }

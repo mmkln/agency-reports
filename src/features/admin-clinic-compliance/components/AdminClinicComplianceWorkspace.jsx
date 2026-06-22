@@ -1,35 +1,30 @@
 import {
   Button,
   PageShell,
-  Skeleton,
 } from '@/shared/ui'
 
 import {
   AdminClientWorkspaceHeader,
   ClinicClientPreviewLinks,
+  WorkspaceState,
 } from '../../admin-client-workspace'
 import { useAdminClinicComplianceWorkflow } from '../useAdminClinicComplianceWorkflow'
+import { ClinicComplianceImportDialog } from './ClinicComplianceImportDialog'
 import { ComplianceReviewsCard } from './ComplianceReviewsCard'
 import { MedicalApprovalsCard } from './MedicalApprovalsCard'
 
 function ClinicComplianceLoadingState() {
   return (
-    <PageShell className="py-section" width="full">
-      <div className="grid gap-card">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-80" />
-        <Skeleton className="h-80" />
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState />
     </PageShell>
   )
 }
 
 function ClinicComplianceErrorState({ message }) {
   return (
-    <PageShell className="py-section" width="content">
-      <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-        {message || 'Clinic compliance could not be loaded.'}
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState message={message || 'Clinic compliance could not be loaded.'} status="error" />
     </PageShell>
   )
 }
@@ -39,14 +34,26 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
   const {
     applyApprovalDecision,
     applyReviewStatus,
+    createdComplianceActionKeys,
+    createComplianceSuggestionAction,
+    creatingComplianceActionKey,
     draft,
     error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson,
     status,
     updateDraft,
   } = useAdminClinicComplianceWorkflow({ clientId, runtime })
@@ -82,6 +89,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>
+            <Button onClick={openImportDialog} size="sm" type="button" variant="outline">
+              Import JSON
+            </Button>
             <Button disabled={!isDirty} form="admin-clinic-compliance-form" size="sm" type="submit">
               Save compliance
             </Button>
@@ -92,11 +102,9 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
         eyebrow="Clinic compliance"
       />
 
-      <PageShell className="py-section" width="full">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         {status === 'error' && error ? (
-          <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-            {error}
-          </div>
+          <WorkspaceState message={error} status="error" />
         ) : null}
 
         <form
@@ -110,30 +118,48 @@ export function AdminClinicComplianceWorkspace({ routeParams = {}, runtime }) {
           }}
         >
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
-            These records feed the client Compliance & Approvals page. Keep them client-safe and aggregate:
-            policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI.
+            These records feed the Compliance & Approvals page. Keep them portal-ready and aggregate:
+            policy issues, medical claims, ad restrictions, and privacy/tracking status without PHI. Use Import JSON
+            for reviewed aggregate exports from policy checklists, privacy reviews, or ad-platform sources.
           </div>
 
           <ComplianceReviewsCard
+            createdActionKeys={createdComplianceActionKeys}
+            creatingActionKey={creatingComplianceActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
             onApplyStatus={applyReviewStatus}
+            onCreateSuggestedAction={createComplianceSuggestionAction}
             onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
           <MedicalApprovalsCard
+            createdActionKeys={createdComplianceActionKeys}
+            creatingActionKey={creatingComplianceActionKey}
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
             onApplyDecision={applyApprovalDecision}
+            onCreateSuggestedAction={createComplianceSuggestionAction}
             onPublish={publishComplianceRecord}
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
         </form>
       </PageShell>
+
+      <ClinicComplianceImportDialog
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportOpen}
+        onApply={applyImport}
+        onClose={closeImportDialog}
+        onPreview={previewImport}
+        onRawJsonChange={setImportRawJson}
+        rawJson={importRawJson}
+      />
     </>
   )
 }

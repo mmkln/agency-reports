@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+
 import {
   Bar,
   CartesianGrid,
@@ -12,6 +14,42 @@ import {
 
 function defaultTickFormatter(value) {
   return value
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function useElementWidth() {
+  const ref = useRef(null)
+  const [width, setWidth] = useState(0)
+
+  useEffect(() => {
+    if (!ref.current) {
+      return undefined
+    }
+
+    const observer = new ResizeObserver(([entry]) => {
+      setWidth(entry.contentRect.width)
+    })
+
+    observer.observe(ref.current)
+
+    return () => observer.disconnect()
+  }, [])
+
+  return [ref, width]
+}
+
+function getResponsiveBarSize({ pointCount, width }) {
+  if (!pointCount || !width) {
+    return 10
+  }
+
+  const plotWidth = Math.max(0, width - 96)
+  const slotWidth = plotWidth / pointCount
+
+  return clamp(slotWidth * 0.58, 3, 42)
 }
 
 function DefaultTooltip({ active, bars, label, line, payload }) {
@@ -50,7 +88,7 @@ function DefaultTooltip({ active, bars, label, line, payload }) {
 
 export function ComposedStackedBarLineChart({
   ariaLabel,
-  barSize = 10,
+  barSize,
   bars,
   data,
   height = 480,
@@ -72,9 +110,14 @@ export function ComposedStackedBarLineChart({
   xTickInterval = 4,
 }) {
   const normalizedData = Array.isArray(data) ? data : []
+  const [containerRef, containerWidth] = useElementWidth()
+  const resolvedBarSize = barSize ?? getResponsiveBarSize({
+    pointCount: normalizedData.length,
+    width: containerWidth,
+  })
 
   return (
-    <div aria-label={ariaLabel} className="h-full min-h-[30rem] w-full" role="img">
+    <div ref={containerRef} aria-label={ariaLabel} className="h-full min-h-[30rem] w-full" role="img">
       <ResponsiveContainer height={height} width="100%">
         <ComposedChart
           barCategoryGap={1}
@@ -167,13 +210,15 @@ export function ComposedStackedBarLineChart({
           />
           {bars.map((bar) => (
             <Bar
-              barSize={bar.barSize ?? barSize}
+              barSize={bar.barSize ?? resolvedBarSize}
               dataKey={bar.key}
               fill={bar.color}
               isAnimationActive={false}
               key={bar.key}
               name={bar.label}
               radius={0}
+              stroke={bar.stroke}
+              strokeWidth={bar.stroke ? 1.5 : 0}
               stackId="touches"
               yAxisId="left"
             />
@@ -186,9 +231,9 @@ export function ComposedStackedBarLineChart({
               isAnimationActive={false}
               name={line.label}
               stroke={line.color}
-              strokeDasharray="6 5"
+              strokeDasharray={line.strokeDasharray ?? '6 5'}
               strokeLinecap="round"
-              strokeWidth={2.5}
+              strokeWidth={line.strokeWidth ?? 2.5}
               type="monotone"
               yAxisId="right"
             />

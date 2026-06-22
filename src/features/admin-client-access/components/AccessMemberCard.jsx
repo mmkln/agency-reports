@@ -1,56 +1,75 @@
 import {
   Button,
-  RadixSelect as Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/shared/ui'
+import { Icon } from '@/shared/icons'
 
-import { CLIENT_MEMBERSHIP_ROLES } from '../../../entities/client-membership'
-import { Icon } from '../../../shared/icons'
+import { WORKSPACE_ROLE_META } from '../../../entities/workspace-membership'
+
+function formatStatusLabel(value) {
+  if (!value) {
+    return 'Unknown'
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
 
 export function AccessMemberCard({
   member,
   onRemove,
-  onRoleChange,
+  readOnly = false,
 }) {
+  const roleMeta = WORKSPACE_ROLE_META[member.role]
+  const status = member.status ?? 'active'
+  const isActive = status === 'active'
+  const statusDotClassName = isActive ? 'bg-success' : 'bg-fill-secondary'
+
   return (
-    <article className="rounded-control bg-block-subtle p-3">
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action-muted text-ui text-action">
-          {member.name.slice(0, 1).toUpperCase()}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-ui text-text-primary">{member.name}</p>
-          <p className="truncate text-label font-normal text-text-muted">{member.email}</p>
-          <div className="mt-3 flex items-center gap-2">
-            <Select
-              onValueChange={(role) => onRoleChange(member, role)}
-              value={member.role}
-            >
-              <SelectTrigger className="h-8 w-[130px] bg-block text-label">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(CLIENT_MEMBERSHIP_ROLES).map((role) => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              className="text-text-quaternary hover:text-destructive"
-              onClick={() => onRemove(member)}
-              size="icon-sm"
-              title="Remove member"
-              type="button"
-              variant="ghost"
-            >
-              <Icon name="close" size={14} />
-            </Button>
-          </div>
-        </div>
+    <article className="grid gap-control px-component py-control md:grid-cols-[minmax(240px,1.4fr)_160px_120px_44px] md:items-center">
+      <div className="min-w-0">
+        <h3 className="m-0 truncate text-ui font-semibold text-text-primary">{member.name || 'Unnamed user'}</h3>
+        <p className="m-0 truncate text-ui text-text-muted">
+          {member.email || 'Missing email'}
+        </p>
       </div>
+
+      <span className="truncate text-ui text-text-muted">{member.roleLabel ?? roleMeta?.label ?? member.role}</span>
+      <span className="inline-flex items-center gap-tag text-ui text-text-secondary">
+        <span className={`size-1.5 rounded-full ${statusDotClassName}`} aria-hidden="true" />
+        {formatStatusLabel(status)}
+      </span>
+      {!readOnly && isActive ? (
+        <div className="flex justify-start md:justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                aria-label="Member actions"
+                icon={<Icon name="ellipsis" size={16} />}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onRemove(member)}
+              >
+                Revoke access
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <span aria-hidden="true" />
+      )}
     </article>
   )
 }

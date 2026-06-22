@@ -1,69 +1,60 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
 
-import {
-  authenticateWithEmail,
-  DEMO_AUTH_PASSWORD,
-  getHomeHrefForViewer,
-  listLoginProfiles,
-} from '../../../domain/services/authService'
+import { getPostLoginHref } from '../../../app/routing/postLoginRedirect'
+import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
 import { useAuth } from '../../../app/providers/auth/useAuth'
 
-const DEFAULT_EMAIL = 'admin@growthlab.example'
+const DEFAULT_EMAIL = ''
 
-function getRoleLabel(role) {
-  return role
-    .split('_')
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function SignInButton({ onClick, profile }) {
+function AuthInput({ iconName, label, ...props }) {
   return (
-    <button
-      className="rounded-control bg-control px-control py-item text-left text-ui transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover"
-      onClick={() => onClick(profile.email, DEMO_AUTH_PASSWORD)}
-      type="button"
-    >
-      <span className="block font-semibold text-text-primary">{profile.name}</span>
-      <span className="block text-label font-normal text-text-secondary">{getRoleLabel(profile.role)}</span>
-    </button>
+    <label className="grid gap-item">
+      <span className="text-label text-text-secondary">{label}</span>
+      <span className="relative block">
+        <Icon
+          aria-hidden="true"
+          className="pointer-events-none absolute left-control top-1/2 -translate-y-1/2 text-text-muted"
+          name={iconName}
+          size={18}
+        />
+        <Input className="pl-layout" {...props} />
+      </span>
+    </label>
   )
 }
 
-export function LoginPage({ onAuthChange, runtime }) {
+export function LoginPage({ onAuthChange }) {
   const auth = useAuth()
-  const resolvedRuntime = runtime ?? auth.runtime
+  const authClient = auth.authClient
   const resolvedOnAuthChange = onAuthChange ?? auth.onAuthChange
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const toast = useToast()
   const [email, setEmail] = useState(DEFAULT_EMAIL)
-  const [password, setPassword] = useState(DEMO_AUTH_PASSWORD)
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const loginProfiles = useMemo(
-    () => listLoginProfiles({ repositories: resolvedRuntime.repositories }),
-    [resolvedRuntime.repositories],
-  )
 
   function signIn(nextEmail, nextPassword) {
-    try {
-      const viewer = authenticateWithEmail({
-        email: nextEmail,
-        password: nextPassword,
-        repositories: resolvedRuntime.repositories,
-      })
-
+    void (auth.onSignIn ?? authClient.signInWithEmail)({
+      email: nextEmail,
+      password: nextPassword,
+    }).then((viewer) => {
       resolvedOnAuthChange?.()
       toast.success('Signed in', `Welcome back, ${viewer.name}.`)
-      navigate(getHomeHrefForViewer(viewer), { replace: true })
-    } catch (caughtError) {
+
+      navigate(getPostLoginHref({
+        nextHref: searchParams.get('next'),
+        viewer,
+      }), { replace: true })
+    }).catch((caughtError) => {
       setError(caughtError.message)
       toast.error('Sign in failed', caughtError.message)
-    }
+    })
   }
 
   function handleSubmit(event) {
@@ -72,79 +63,104 @@ export function LoginPage({ onAuthChange, runtime }) {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-text-primary sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
-        <Card className="w-full max-w-form bg-material-vibrant shadow-premium backdrop-blur-2xl">
-          <CardContent className="p-8">
-            <BrandLogo href="/" variant="static" />
+    <main className="grid min-h-screen place-items-center bg-background-grouped-tertiary px-app-gutter py-page text-text-primary">
+      <div className="mx-auto w-full max-w-modal-lg">
+        <Card className="w-full overflow-hidden border border-block-border bg-block p-0 py-0">
+          <CardContent className="grid gap-0 p-0 lg:min-h-[560px] lg:grid-cols-2">
+            <section className="flex min-w-0 flex-col justify-between gap-panel border-separator bg-surface-raised p-panel lg:border-r lg:p-page">
+              <div className="grid gap-layout">
+                <BrandLogo href="/" size="sm" variant="static" />
 
-            <div className="mt-10">
-              <p className="text-ui text-brand">Welcome back</p>
-              <h1 className="mt-2 text-display text-text-primary">Sign in to your account</h1>
-              <p className="mt-2 text-body text-text-secondary">
-                Use your agency email to continue to the client portal workspace.
-              </p>
-            </div>
-
-            <form className="mt-8 grid gap-5" onSubmit={handleSubmit}>
-              <label className="grid gap-2">
-                <span className="text-ui text-text-secondary">Email address</span>
-                <Input
-                  autoComplete="email"
-                  name="email"
-                  onChange={(event) => {
-                    setEmail(event.target.value)
-                    setError('')
-                  }}
-                  required
-                  type="email"
-                  value={email}
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-ui text-text-secondary">Password</span>
-                <Input
-                  autoComplete="current-password"
-                  minLength={6}
-                  name="password"
-                  onChange={(event) => {
-                    setPassword(event.target.value)
-                    setError('')
-                  }}
-                  required
-                  type="password"
-                  value={password}
-                />
-                <span className="text-label font-normal text-text-muted">Demo password: {DEMO_AUTH_PASSWORD}</span>
-              </label>
-
-              <Button className="w-full" size="lg" type="submit">
-                Sign in
-              </Button>
-            </form>
-
-            {error ? (
-              <p className="mt-4 rounded-control bg-destructive/10 px-control py-item text-ui text-destructive">
-                {error}
-              </p>
-            ) : null}
-
-            <div className="mt-6 grid gap-2">
-              <p className="text-label uppercase text-text-muted">Demo users</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {loginProfiles.map((profile) => (
-                  <SignInButton key={profile.id} onClick={signIn} profile={profile} />
-                ))}
+                <div className="max-w-inspector">
+                  <p className="text-ui font-semibold text-brand">CLIENT DASHBOARD</p>
+                  <h1 className="mt-component text-display text-text-primary">
+                    <span className="block">Your dashboard</span>
+                    <span className="block">is ready.</span>
+                  </h1>
+                  <p className="mt-component text-body text-text-secondary">
+                    Sign in to see the latest results we've shared with you.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <p className="mt-6 text-center text-ui text-text-secondary">
-              Have an invitation?{' '}
-              <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
-                Accept invite
-              </Link>
-            </p>
+              <div className="grid gap-component">
+                <div className="w-full max-w-inspector rounded-block bg-block p-card shadow-block">
+                  <div className="flex items-center gap-component">
+                    <span className="flex size-control-large shrink-0 items-center justify-center rounded-control bg-success-muted text-success-foreground">
+                      <Icon name="shieldCheck" size={22} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-ui font-semibold text-text-primary">Private by invite</p>
+                      <p className="text-ui text-text-secondary">Only people with access can view this dashboard.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="flex items-center p-panel lg:p-page">
+              <div className="mx-auto w-full max-w-form">
+                <div>
+                  <p className="text-ui text-brand">Welcome back</p>
+                  <h2 className="mt-item text-display text-text-primary">Sign in</h2>
+                  <p className="mt-item text-body text-text-secondary">
+                    Use your email and password to continue.
+                  </p>
+                </div>
+
+                <form className="mt-panel grid gap-component" onSubmit={handleSubmit}>
+                  <AuthInput
+                    autoComplete="email"
+                    iconName="mail"
+                    inputMode="email"
+                    label="Email"
+                    name="email"
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      setError('')
+                    }}
+                    placeholder="owner@example.com"
+                    required
+                    type="email"
+                    value={email}
+                  />
+
+                  <div className="grid gap-item">
+                    <AuthInput
+                      autoComplete="current-password"
+                      iconName="lock"
+                      label="Password"
+                      name="password"
+                      onChange={(event) => {
+                        setPassword(event.target.value)
+                        setError('')
+                      }}
+                      placeholder="Password"
+                      required
+                      type="password"
+                      value={password}
+                    />
+                  </div>
+
+                  <Button className="w-full" size="lg" type="submit">
+                    Sign in
+                  </Button>
+                </form>
+
+                {error ? (
+                  <p className="mt-component rounded-control bg-destructive/10 px-control py-item text-ui text-destructive">
+                    {error}
+                  </p>
+                ) : null}
+
+                <p className="mt-card text-center text-ui text-text-secondary">
+                  Have an invitation?{' '}
+                  <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
+                    Accept it
+                  </Link>
+                </p>
+              </div>
+            </section>
           </CardContent>
         </Card>
       </div>

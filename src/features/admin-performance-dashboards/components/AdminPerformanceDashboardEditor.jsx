@@ -80,7 +80,7 @@ export function AdminPerformanceDashboardEditor({
                 Performance Dashboards
               </Link>
               <span>/</span>
-              <span>{selectedClient?.name ?? 'Client'}</span>
+              <span>{selectedClient?.name ?? 'Account'}</span>
             </div>
             <h1 className="mt-2 truncate text-heading text-text-primary">{form.title}</h1>
             <p className="mt-1 text-ui text-text-muted">{formatPeriod(form)}</p>

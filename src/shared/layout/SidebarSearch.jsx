@@ -26,7 +26,7 @@ export function SidebarSearch({ placeholder }) {
     <SidebarMenuItem>
       <label
         className={cn(
-          'grid h-target min-w-0 grid-cols-[var(--spacing-layout)_minmax(0,1fr)] items-center rounded-control text-ui text-text-muted transition-colors duration-motion-fast ease-motion-standard focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring/35 hover:bg-fill-secondary hover:text-text-secondary',
+          'grid h-target min-w-0 grid-cols-[var(--spacing-layout)_minmax(0,1fr)] items-center rounded-control bg-transparent text-ui text-text-muted transition-colors duration-motion-fast ease-motion-standard focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring/35 hover:bg-transparent hover:text-text-secondary',
         )}
       >
         <Icon className="mx-auto shrink-0 text-current" name="search" size={17} />

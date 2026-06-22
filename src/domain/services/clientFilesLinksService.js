@@ -5,9 +5,10 @@ import {
   CLIENT_FILE_LINK_TYPES,
   normalizeClientFileLink,
 } from '../../entities/client-file-link'
-import { USER_ROLES } from '../../entities/profile'
 import { VISIBILITY } from '../../entities/update'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 import {
   isClientFileLinkArchivedVisibleToClient,
   isClientFileLinkVisibleToClient,
@@ -105,17 +106,21 @@ function normalizeVisibility(visibility) {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
-    throw new Error('Only agency admins can manage files and links.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage files and links.')
   }
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
+    throw new Error('Client was not found.')
+  }
+
+  if (!canAccessWorkspaceResource(viewer, clientId)) {
     throw new Error('Client was not found.')
   }
 
@@ -229,9 +234,9 @@ export function listClientVisibleFileLinks({
   viewer,
 }) {
   const normalizedClientId = String(clientId || viewer?.clientId || '').trim()
-  const client = repositories.clients.findById(normalizedClientId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -240,7 +245,7 @@ export function listClientVisibleFileLinks({
 
   const projectsById = getProjectMap(repositories)
   const reportsById = getReportMap(repositories)
-  const fileLinks = (repositories.clientFileLinks?.listByClientId(normalizedClientId) ?? [])
+  const fileLinks = (repositories.clientFileLinks?.listByWorkspaceId(normalizedClientId) ?? [])
     .filter((fileLink) => isClientFileLinkVisibleToClient(fileLink)
       || (includeArchived && isClientFileLinkArchivedVisibleToClient(fileLink)))
     .map((fileLink) => mapClientFileLink({
@@ -298,7 +303,8 @@ export function listAdminClientFileLinksWorkspace({
   assertAgencyAdmin(viewer)
 
   const normalizedClientId = normalizeText(clientId)
-  const clients = repositories.clients.list()
+  const managedWorkspaceIds = new Set(listManagedWorkspaceIds(viewer))
+  const clients = repositories.workspaces.list().filter((client) => managedWorkspaceIds.has(client.id))
   const client = normalizedClientId
     ? getAdminClient({ clientId: normalizedClientId, repositories, viewer })
     : clients[0] ?? null
@@ -306,7 +312,7 @@ export function listAdminClientFileLinksWorkspace({
   const projectsById = getProjectMap(repositories)
   const reportsById = getReportMap(repositories)
   const fileLinks = (selectedClientId
-    ? repositories.clientFileLinks?.listByClientId(selectedClientId) ?? []
+    ? repositories.clientFileLinks?.listByWorkspaceId(selectedClientId) ?? []
     : repositories.clientFileLinks?.list() ?? [])
     .map((fileLink) => mapClientFileLink({
       fileLink,

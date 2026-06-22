@@ -1,17 +1,21 @@
 import { CLIENT_WORK_ITEM_PUBLISH_STATES } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from './accessPolicy'
+import { canAccessWorkspaceResource } from './accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+  hasWorkspaceMembership,
+} from './routeAccessPolicy'
 
 export function isClientWorkItemPublished(item) {
   return item?.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED
 }
 
 export function canClientViewClientWorkItem({ item, viewer }) {
-  if (!item || viewer?.role !== USER_ROLES.CLIENT_USER) {
+  if (!item || !hasWorkspaceMembership(viewer)) {
     return false
   }
 
-  return isClientWorkItemPublished(item) && canAccessClient(viewer, item.client_id)
+  return isClientWorkItemPublished(item) && canAccessWorkspaceResource(viewer, item.client_id)
 }
 
 export function canAgencyViewClientWorkItem({ item, viewer }) {
@@ -19,27 +23,19 @@ export function canAgencyViewClientWorkItem({ item, viewer }) {
     return false
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && canAccessClient(viewer, item.client_id)
-  }
-
-  if (viewer.role === USER_ROLES.AGENCY_TEAM) {
-    return canAccessClient(viewer, item.client_id)
-  }
-
-  return false
+  return hasAgencyMembership(viewer) && canAccessWorkspaceResource(viewer, item.client_id)
 }
 
 export function canManageClientWorkItem({ client, item, viewer }) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
+  if (!hasAgencyAdminMembership(viewer)) {
     return false
   }
 
   if (client) {
-    return client.id === item?.client_id && client.agency_id === viewer.agencyId
+    return client.id === item?.client_id && canAccessWorkspaceResource(viewer, client.id)
   }
 
-  return canAccessClient(viewer, item?.client_id)
+  return canAccessWorkspaceResource(viewer, item?.client_id)
 }
 
 export function canPublishClientWorkItem({ client, item, viewer }) {
@@ -47,7 +43,9 @@ export function canPublishClientWorkItem({ client, item, viewer }) {
 }
 
 export function canTeamPrepareClientWorkItem({ item, viewer }) {
-  return viewer?.role === USER_ROLES.AGENCY_TEAM && canAccessClient(viewer, item?.client_id)
+  return hasAgencyMembership(viewer)
+    && !hasAgencyAdminMembership(viewer)
+    && canAccessWorkspaceResource(viewer, item?.client_id)
 }
 
 const allowedPublishTransitions = Object.freeze({

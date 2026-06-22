@@ -1,6 +1,6 @@
 import { CLIENT_WORK_ITEM_STATUSES } from '../../entities/client-work-item'
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { getClientDashboardPage } from './clientDashboardService'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import { getClientReportsPage } from './clientReportsService'
@@ -182,8 +182,34 @@ function groupActionsByProject({ actions, workItemProjectIds }) {
   return actionsByProjectId
 }
 
+function groupPendingActionsByWorkItem(actions) {
+  const actionsByWorkItemId = new Map()
+
+  actions
+    .filter((action) => (
+      action.relatedWorkItemId
+      && action.status === NEEDED_ACTION_STATUSES.PENDING
+    ))
+    .forEach((action) => {
+      actionsByWorkItemId.set(action.relatedWorkItemId, [
+        ...(actionsByWorkItemId.get(action.relatedWorkItemId) ?? []),
+        action,
+      ])
+    })
+
+  return actionsByWorkItemId
+}
+
+function attachWorkItemActions({ actionsByWorkItemId, workItems }) {
+  return workItems.map((item) => ({
+    ...item,
+    clientActions: actionsByWorkItemId.get(item.id) ?? [],
+  }))
+}
+
 function createProjectViewModel({
   actionsByProjectId,
+  actionsByWorkItemId,
   clientId,
   dashboardPage,
   fileLinksByProjectId,
@@ -193,6 +219,10 @@ function createProjectViewModel({
   workItems,
 }) {
   const openActions = actionsByProjectId.get(project.id) ?? []
+  const workItemsWithActions = attachWorkItemActions({
+    actionsByWorkItemId,
+    workItems,
+  })
   const status = getProjectStatus(workItems)
   const clientState = getProjectClientState({
     clientActions: openActions,
@@ -201,7 +231,7 @@ function createProjectViewModel({
   })
 
   return {
-    activeWorkItems: workItems.filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED),
+    activeWorkItems: workItemsWithActions.filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED),
     blockers: createClientRelevantBlockers(openActions),
     clientActions: openActions,
     clientState,
@@ -224,7 +254,7 @@ function createProjectViewModel({
       workItems,
     }),
     updates: projectUpdatesByProjectId.get(project.id) ?? [],
-    workItems,
+    workItems: workItemsWithActions,
   }
 }
 
@@ -263,10 +293,10 @@ export function getClientProjectsPage({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -310,7 +340,7 @@ export function getClientProjectsPage({
 
   const projectsById = new Map(
     repositories.projects
-      .listByClientId(normalizedClientId)
+      .listByWorkspaceId(normalizedClientId)
       .map((project) => [project.id, project]),
   )
   const workItemProjectIds = new Map(
@@ -320,6 +350,9 @@ export function getClientProjectsPage({
     actions: actionsResult.status === 'ready' ? actionsResult.actions : [],
     workItemProjectIds,
   })
+  const actionsByWorkItemId = groupPendingActionsByWorkItem(
+    actionsResult.status === 'ready' ? actionsResult.actions : [],
+  )
   const updatesResult = listClientVisibleUpdates({
     clientId: normalizedClientId,
     repositories,
@@ -363,13 +396,14 @@ export function getClientProjectsPage({
   const projects = [...workItemsByProjectId.entries()]
     .map(([resolvedProjectId, workItems]) => {
       const project = projectsById.get(resolvedProjectId) ?? {
-        description: 'General client-visible work.',
+        description: 'General published work.',
         id: resolvedProjectId,
         name: 'General Work',
       }
 
       return createProjectViewModel({
         actionsByProjectId,
+        actionsByWorkItemId,
         clientId: normalizedClientId,
         dashboardPage: dashboardPage.status === 'ready' ? dashboardPage : null,
         fileLinksByProjectId,

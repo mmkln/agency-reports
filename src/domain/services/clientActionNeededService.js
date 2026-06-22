@@ -1,4 +1,4 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { isClinicClient } from '../../entities/client'
 import {
   CLINIC_NEEDED_ACTION_TYPE_META,
   NEEDED_ACTION_STATUSES,
@@ -124,7 +124,7 @@ function getClinicActionContext({ action, repositories }) {
 }
 
 function enrichClinicActions({ actions, client, repositories }) {
-  if (client?.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     return actions
   }
 

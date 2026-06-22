@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import {
+  createNeededActionFromClinicComplianceSuggestion,
+  createNeededActionFromClinicMedicalApprovalSuggestion,
+} from '../../domain/services/neededFromClientService'
+import {
   approveMedicalApproval,
   getAdminClinicCompliancePage,
   publishComplianceReview,
@@ -11,6 +15,10 @@ import {
   transitionComplianceReviewStatus,
 } from '../../domain/services/adminClinicComplianceService'
 import { useToast } from '../../shared/notifications'
+import {
+  applyClinicComplianceImportToDraft,
+  previewClinicComplianceImport,
+} from './model/clinicComplianceImportDraft'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -45,6 +53,12 @@ const PUBLISH_SERVICES = Object.freeze({
 export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [createdComplianceActionKeys, setCreatedComplianceActionKeys] = useState(() => new Set())
+  const [creatingComplianceActionKey, setCreatingComplianceActionKey] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importRawJson, setImportRawJson] = useState('')
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -58,6 +72,12 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setCreatedComplianceActionKeys(new Set())
+        setCreatingComplianceActionKey('')
+        setImportError('')
+        setImportPlan(null)
+        setImportRawJson('')
+        setIsImportOpen(false)
         setIsDirty(false)
         setSaveState('')
 
@@ -104,6 +124,65 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     }))
     setIsDirty(true)
     setSaveState('')
+  }
+
+  function openImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(true)
+  }
+
+  function updateImportRawJson(rawJson) {
+    setImportRawJson(rawJson)
+    setImportError('')
+    setImportPlan(null)
+  }
+
+  function closeImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(false)
+  }
+
+  function previewImport(rawJson = importRawJson) {
+    try {
+      const nextImportPlan = previewClinicComplianceImport({
+        clientId,
+        rawJson,
+      })
+
+      setImportError('')
+      setImportPlan(nextImportPlan)
+      setImportRawJson(rawJson)
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      setImportPlan(null)
+    }
+  }
+
+  function applyImport() {
+    try {
+      const nextDraft = applyClinicComplianceImportToDraft({
+        draft: state.draft,
+        importPlan,
+      })
+
+      setState((currentState) => ({
+        ...currentState,
+        draft: nextDraft,
+        error: '',
+        status: 'ready',
+      }))
+      setIsDirty(true)
+      setSaveState('Import ready to save')
+      closeImportDialog()
+      toast.success('Clinic compliance imported', 'Review the imported aggregate records, then save compliance.')
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      toast.error('Clinic compliance import failed', caughtError.message)
+    }
   }
 
   function saveDraft() {
@@ -167,6 +246,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Recording decision...')
 
     runtime.dataClient.write((repositories) => service({
+      activityIdGenerator: createUuid,
       approvalId,
       clientId,
       input: {
@@ -202,6 +282,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Updating status...')
 
     runtime.dataClient.write((repositories) => transitionComplianceReviewStatus({
+      activityIdGenerator: createUuid,
       clientId,
       nextStatus,
       repositories,
@@ -240,6 +321,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
     setSaveState('Publishing...')
 
     runtime.dataClient.write((repositories) => service({
+      activityIdGenerator: createUuid,
       clientId,
       id,
       repositories,
@@ -254,7 +336,7 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now client-visible.`)
+        toast.success('Clinic compliance record published', `${page.client.name}'s compliance record is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({
@@ -267,17 +349,65 @@ export function useAdminClinicComplianceWorkflow({ clientId, runtime }) {
       })
   }
 
+  function createComplianceSuggestionAction({ recordId, recordType, suggestionType }) {
+    const actionKey = `${recordId}:${suggestionType}`
+    const service = recordType === 'approval'
+      ? createNeededActionFromClinicMedicalApprovalSuggestion
+      : createNeededActionFromClinicComplianceSuggestion
+    const idKey = recordType === 'approval'
+      ? 'medicalApprovalId'
+      : 'complianceReviewId'
+
+    setCreatingComplianceActionKey(actionKey)
+    setSaveState('Creating action...')
+
+    runtime.dataClient.write((repositories) => service({
+      idGenerator: createUuid,
+      [idKey]: recordId,
+      repositories,
+      suggestionType,
+      viewer: runtime.viewer,
+    }))
+      .then((action) => {
+        setCreatedComplianceActionKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(actionKey)
+          return nextKeys
+        })
+        setCreatingComplianceActionKey('')
+        setSaveState('Action created')
+        toast.success('Clinic action created', action.title)
+      })
+      .catch((caughtError) => {
+        setCreatingComplianceActionKey('')
+        setSaveState('')
+        toast.error('Clinic action was not created', caughtError.message)
+      })
+  }
+
   return {
+    applyImport,
     applyApprovalDecision,
     applyReviewStatus,
+    closeImportDialog,
+    createdComplianceActionKeys,
+    createComplianceSuggestionAction,
+    creatingComplianceActionKey,
     draft: state.draft,
     error: state.error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page: state.page,
+    previewImport,
     publishComplianceRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson: updateImportRawJson,
     status: state.status,
     updateDraft,
   }

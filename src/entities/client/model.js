@@ -1,4 +1,6 @@
 export const CLIENT_STATUSES = Object.freeze({
+  ACTIVE: 'active',
+  ARCHIVED: 'archived',
   BLOCKED: 'blocked',
   NEEDS_ATTENTION: 'needs_attention',
   ON_TRACK: 'on_track',
@@ -9,23 +11,35 @@ export const CLIENT_STATUSES = Object.freeze({
 
 export const CLIENT_TYPES = Object.freeze({
   CLINIC: 'clinic',
-  GENERIC: 'generic',
 })
 
 export const CLIENT_TYPE_META = Object.freeze({
-  [CLIENT_TYPES.GENERIC]: {
-    icon: 'users',
-    label: 'Generic client',
-    tone: 'neutral',
-  },
   [CLIENT_TYPES.CLINIC]: {
-    icon: 'barChart',
+    icon: 'stethoscope',
     label: 'Clinic',
     tone: 'blue',
   },
 })
 
+export function getClientType(client) {
+  return client?.type || CLIENT_TYPES.CLINIC
+}
+
+export function isClinicClient(client) {
+  return getClientType(client) === CLIENT_TYPES.CLINIC
+}
+
 export const CLIENT_STATUS_META = Object.freeze({
+  [CLIENT_STATUSES.ACTIVE]: {
+    icon: 'checkCircle2',
+    label: 'Active',
+    tone: 'green',
+  },
+  [CLIENT_STATUSES.ARCHIVED]: {
+    icon: 'archive',
+    label: 'Archived',
+    tone: 'neutral',
+  },
   [CLIENT_STATUSES.SETUP]: {
     icon: 'wrench',
     label: 'Setup',

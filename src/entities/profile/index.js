@@ -1,1 +1,1 @@
-export { USER_ROLES } from './model'
+export * from './model'

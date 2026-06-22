@@ -35,7 +35,7 @@ function formatRating(value) {
 
 function ClinicMetricCard({ helper, href, iconName, label, value }) {
   return (
-    <Link className="rounded-block bg-block p-block shadow-block transition-colors hover:bg-block-subtle" to={href}>
+    <Link className="rounded-block bg-block p-block transition-colors hover:bg-block-subtle" to={href}>
       <div className="flex items-start justify-between gap-component">
         <div>
           <p className="text-label text-text-muted">{label}</p>
@@ -59,11 +59,25 @@ function ClinicSnapshot({ clinicOverview }) {
   return (
     <section className="grid gap-card md:grid-cols-2 xl:grid-cols-4" aria-label="Clinic control center summary">
       <ClinicMetricCard
-        helper={`${formatNumber(acquisition?.inquiries)} inquiries`}
+        helper="Calls, forms, and chats"
+        href={acquisition?.href ?? clinicOverview.serviceLinesHref}
+        iconName="target"
+        label="New inquiries"
+        value={formatNumber(acquisition?.inquiries)}
+      />
+      <ClinicMetricCard
+        helper="Confirmed appointments"
         href={acquisition?.href ?? clinicOverview.serviceLinesHref}
         iconName="target"
         label="Booked appointments"
         value={formatNumber(acquisition?.bookedAppointments)}
+      />
+      <ClinicMetricCard
+        helper="Spend divided by bookings"
+        href={acquisition?.href ?? clinicOverview.serviceLinesHref}
+        iconName="target"
+        label="Cost / booked"
+        value={formatCurrency(acquisition?.costPerBookedAppointment)}
       />
       <ClinicMetricCard
         helper={`${formatPercent(booking?.missedRate)} missed call rate`}
@@ -86,12 +100,20 @@ function ClinicSnapshot({ clinicOverview }) {
         label="Compliance issues"
         value={formatNumber(compliance?.openIssues)}
       />
+      <ClinicMetricCard
+        helper="Approvals, access, and operations"
+        href={`/client/action-needed?clientId=${clinicOverview.clientId}`}
+        iconName="circleAlert"
+        label="Action Needed"
+        value={formatNumber(clinicOverview.actionNeededCount)}
+      />
     </section>
   )
 }
 
 function ClinicAcquisitionBlock({ clinicOverview }) {
   const acquisition = clinicOverview.patientAcquisition
+  const bookingRate = acquisition?.inquiries ? acquisition.bookedAppointments / acquisition.inquiries : 0
 
   return (
     <SectionCard
@@ -124,9 +146,37 @@ function ClinicAcquisitionBlock({ clinicOverview }) {
           <p className="mt-micro text-title text-text-primary">{acquisition?.topLocation ?? 'Not enough data'}</p>
         </div>
         <div>
-          <p className="text-label text-text-muted">Clinic actions needed</p>
-          <p className="mt-micro text-title text-text-primary">{formatNumber(clinicOverview.actionNeededCount)}</p>
+          <p className="text-label text-text-muted">Booking conversion</p>
+          <p className="mt-micro text-title text-text-primary">{formatPercent(bookingRate)}</p>
         </div>
+      </div>
+    </SectionCard>
+  )
+}
+
+function GrowthReviewBlock({ clinicOverview }) {
+  if (!clinicOverview.dentalGrowthReviewHref) {
+    return null
+  }
+
+  return (
+    <SectionCard
+      action={clinicOverview.dentalGrowthReviewHref ? (
+        <Button asChild size="sm" variant="ghost">
+          <Link to={clinicOverview.dentalGrowthReviewHref}>
+            Open Growth Review
+            <Icon name="arrowUpRight" size={13} />
+          </Link>
+        </Button>
+      ) : null}
+      description="Weekly and bi-weekly operating review with decisions, funnel leakage, and source freshness."
+      iconName="barChart"
+      title="Dental Growth Review"
+    >
+      <div className="grid gap-control">
+        <Link className="rounded-control bg-block-subtle px-control py-item text-ui text-link no-underline hover:text-link-hover" to={clinicOverview.dentalGrowthReviewHref}>
+          Dental growth operating review
+        </Link>
       </div>
     </SectionCard>
   )
@@ -168,6 +218,7 @@ export function ClientClinicOverviewView({ overview }) {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_350px]">
         <div className="grid gap-6">
           <ClinicAcquisitionBlock clinicOverview={overview.clinicOverview} />
+          <GrowthReviewBlock clinicOverview={overview.clinicOverview} />
           <ClinicRiskBlocks clinicOverview={overview.clinicOverview} />
           <NeededFromClientBlock
             actions={overview.neededActions}
@@ -178,8 +229,8 @@ export function ClientClinicOverviewView({ overview }) {
           <ReportsDashboardsOverviewBlock
             clientId={overview.client.id}
             dashboard={overview.dashboard}
-            performancePreview={overview.performancePreview}
             report={overview.latestReport}
+            variant="clinic"
           />
           <FilesLinksOverviewBlock
             clientId={overview.client.id}

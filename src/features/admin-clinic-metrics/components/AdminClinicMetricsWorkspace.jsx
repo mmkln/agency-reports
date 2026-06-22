@@ -1,36 +1,33 @@
 import {
   Button,
   PageShell,
-  Skeleton,
 } from '@/shared/ui'
 
 import {
   AdminClientWorkspaceHeader,
   ClinicClientPreviewLinks,
+  WorkspaceState,
 } from '../../admin-client-workspace'
 import { useAdminClinicMetricsWorkflow } from '../useAdminClinicMetricsWorkflow'
+import { BookingPipelineSnapshotsCard } from './BookingPipelineSnapshotsCard'
 import { CallBookingMetricsCard } from './CallBookingMetricsCard'
+import { ClinicMetricsImportDialog } from './ClinicMetricsImportDialog'
+import { LocationPerformanceCard } from './LocationPerformanceCard'
 import { PatientAcquisitionMetricsCard } from './PatientAcquisitionMetricsCard'
 import { ServiceLinePerformanceCard } from './ServiceLinePerformanceCard'
 
 function ClinicMetricsLoadingState() {
   return (
-    <PageShell className="py-section" width="full">
-      <div className="grid gap-card">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-80" />
-        <Skeleton className="h-80" />
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState />
     </PageShell>
   )
 }
 
 function ClinicMetricsErrorState({ message }) {
   return (
-    <PageShell className="py-section" width="content">
-      <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-        {message || 'Clinic metrics could not be loaded.'}
-      </div>
+    <PageShell className="px-app-gutter py-content-gutter" width="content">
+      <WorkspaceState message={message || 'Clinic metrics could not be loaded.'} status="error" />
     </PageShell>
   )
 }
@@ -43,12 +40,21 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
     creatingBookingActionKey,
     draft,
     error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishMetricRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson,
     status,
     updateDraft,
   } = useAdminClinicMetricsWorkflow({ clientId, runtime })
@@ -102,6 +108,9 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             <Button disabled={!isDirty} onClick={resetDraft} size="sm" type="button" variant="outline">
               Reset
             </Button>
+            <Button onClick={openImportDialog} size="sm" type="button" variant="outline">
+              Import JSON
+            </Button>
             <Button disabled={!isDirty} form="admin-clinic-metrics-form" size="sm" type="submit">
               Save metrics
             </Button>
@@ -112,11 +121,9 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
         eyebrow="Clinic metrics"
       />
 
-      <PageShell className="py-section" width="full">
+      <PageShell className="px-app-gutter py-content-gutter" width="content">
         {status === 'error' && error ? (
-          <div className="rounded-control bg-destructive/10 px-4 py-3 text-ui text-destructive">
-            {error}
-          </div>
+          <WorkspaceState message={error} status="error" />
         ) : null}
 
         <form
@@ -132,10 +139,19 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
           <div className="rounded-control bg-surface-subtle px-4 py-3 text-ui text-text-secondary">
             These records are the aggregate source for the client Patient Acquisition and Calls & Bookings pages.
             They should describe patient demand, booked appointments, service-line performance, and front desk leakage
-            without storing PHI.
+            without storing PHI. Use Import JSON for reviewed aggregate exports from call tracking, spreadsheets, or
+            connector prototypes.
           </div>
 
           <PatientAcquisitionMetricsCard
+            draft={draft}
+            isDirty={isDirty}
+            locations={page.locations}
+            onPublish={publishMetricRecord}
+            onUpdate={updateDraft}
+            serviceLines={page.serviceLines}
+          />
+          <BookingPipelineSnapshotsCard
             draft={draft}
             isDirty={isDirty}
             locations={page.locations}
@@ -154,6 +170,13 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
             onUpdate={updateDraft}
             serviceLines={page.serviceLines}
           />
+          <LocationPerformanceCard
+            draft={draft}
+            isDirty={isDirty}
+            locations={page.locations}
+            onPublish={publishMetricRecord}
+            onUpdate={updateDraft}
+          />
           <ServiceLinePerformanceCard
             draft={draft}
             isDirty={isDirty}
@@ -164,6 +187,17 @@ export function AdminClinicMetricsWorkspace({ routeParams = {}, runtime }) {
           />
         </form>
       </PageShell>
+
+      <ClinicMetricsImportDialog
+        importError={importError}
+        importPlan={importPlan}
+        isOpen={isImportOpen}
+        onApply={applyImport}
+        onClose={closeImportDialog}
+        onPreview={previewImport}
+        onRawJsonChange={setImportRawJson}
+        rawJson={importRawJson}
+      />
     </>
   )
 }

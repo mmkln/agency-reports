@@ -1,21 +1,14 @@
-import { USER_ROLES } from '../../entities/profile'
+import { canManageAgencyWorkspace } from './agencyAccessPolicy'
+import { canAccessWorkspace } from './workspaceAccessPolicy'
 
-export function canAccessClient(viewer, clientId) {
-  if (!viewer || !clientId) {
+export function canAccessWorkspaceResource(viewer, workspaceId) {
+  if (!viewer || !workspaceId) {
     return false
   }
 
-  if (viewer.role === USER_ROLES.AGENCY_ADMIN) {
-    return viewer.agencyId ? true : false
-  }
+  return canAccessWorkspace(viewer, workspaceId) || canManageAgencyWorkspace(viewer, workspaceId)
+}
 
-  if (viewer.role === USER_ROLES.AGENCY_TEAM) {
-    return viewer.clientIds?.includes(clientId) ?? false
-  }
-
-  if (viewer.role === USER_ROLES.CLIENT_USER) {
-    return viewer.clientIds?.includes(clientId) ?? false
-  }
-
-  return false
+export function canAccessClient(viewer, clientId) {
+  return canAccessWorkspaceResource(viewer, clientId)
 }

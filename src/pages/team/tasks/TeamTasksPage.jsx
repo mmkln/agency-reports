@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom'
 
 import {
   ContentToolbar,
+  ErrorBlock,
   PageShell,
 } from '@/shared/ui'
 
-import { USER_ROLES } from '../../../entities/profile'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../../../domain/policies/routeAccessPolicy'
 import {
   CreateTaskDialog,
   useCreateTaskWorkflow,
@@ -19,6 +23,7 @@ import {
   useTaskMarkdownImportWorkflow,
 } from '../../../features/tasks/import-task-markdown'
 import { TaskMarkdownExportModal } from '../../../features/tasks/export-task-markdown'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import {
   EmptyTasksState,
@@ -29,7 +34,21 @@ import {
 import { getTeamTaskFilterPath, loadTeamTasks, normalizeTeamTaskFilters } from './teamTaskFilterState'
 
 function getTaskWorkspacePath(viewer) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN ? '/admin/tasks' : '/team/tasks'
+  return hasAgencyAdminMembership(viewer) ? '/admin/tasks' : '/team/tasks'
+}
+
+function createEmptyTaskData(filters, viewer) {
+  const hasAdminAccess = hasAgencyAdminMembership(viewer)
+
+  return {
+    canCreateClientWorkItems: hasAdminAccess,
+    canUseMineFilter: hasAgencyMembership(viewer) && !hasAdminAccess,
+    clients: [],
+    filters,
+    projects: [],
+    status: 'loading',
+    tasks: [],
+  }
 }
 
 export function TeamTasksPage({ routeParams = {}, runtime }) {
@@ -41,10 +60,15 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
   const isCreateTaskOpen = routeParams.create === '1'
   const isExportTaskOpen = routeParams.export === '1'
   const isImportTaskOpen = routeParams.import === '1'
-  const taskData = useMemo(() => {
-    void reloadTick
-    return loadTeamTasks(filters, runtime)
-  }, [filters, reloadTick, runtime])
+  const taskResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:tasks:${JSON.stringify(filters)}:${reloadTick}`,
+    initialData: createEmptyTaskData(filters, runtime.viewer),
+    load: () => runtime.dataClient.read((repositories) => loadTeamTasks(filters, {
+      repositories,
+      viewer: runtime.viewer,
+    })),
+  })
+  const taskData = taskResource.data ?? createEmptyTaskData(filters, runtime.viewer)
   const createTaskWorkflow = useCreateTaskWorkflow({
     clients: taskData.clients,
     onClose: () => navigate(getTeamTaskFilterPath(filters, basePath), { replace: true }),
@@ -90,7 +114,11 @@ export function TeamTasksPage({ routeParams = {}, runtime }) {
               taskData={taskData}
             />
           </ContentToolbar>
-          {taskData.tasks.length > 0 ? (
+          {taskResource.status === 'error' ? (
+            <ErrorBlock title="Tasks could not be loaded">
+              {taskResource.error}
+            </ErrorBlock>
+          ) : taskData.tasks.length > 0 ? (
             <TeamTaskInbox
               onOpenTask={updateTaskWorkflow.selectTask}
               selectedTaskId={selectedTask?.id}

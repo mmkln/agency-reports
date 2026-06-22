@@ -1,6 +1,7 @@
 import { Button, EmptyState } from '@/shared/ui'
 import { Link } from 'react-router-dom'
 
+import { ROUTE_PATHS, withSearchParams } from '../../../domain/navigation/routePaths'
 import { Icon } from '../../../shared/icons'
 
 export function EmptyClientsState() {
@@ -8,13 +9,13 @@ export function EmptyClientsState() {
     <EmptyState
       action={(
         <Button asChild>
-          <Link to="/admin/clients?newClient=true">
+          <Link to={withSearchParams(ROUTE_PATHS.agencyClients, { createClient: true })}>
             <Icon name="plus" size={16} />
             Create first client
           </Link>
         </Button>
       )}
-      description="Get started by creating your first client portal workspace."
+      description="Get started by creating your first client workspace."
       iconName="users"
       title="No clients yet"
     />

@@ -70,7 +70,7 @@ export function AdminClientOverviewEditor({ routeParams = {}, runtime }) {
 
       <ConfirmationDialog
         confirmLabel="Publish overview"
-        description={`This will save the current draft and publish ${editor.client.name}'s overview to the client portal.`}
+        description={`This will save the current draft and publish ${editor.client.name}'s overview to the portal.`}
         onConfirm={publishDraft}
         onOpenChange={setIsPublishConfirmationOpen}
         open={isPublishConfirmationOpen}

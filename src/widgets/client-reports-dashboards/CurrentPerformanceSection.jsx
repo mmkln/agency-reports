@@ -7,19 +7,27 @@ import {
 
 import { ClientPerformanceDashboard } from '../client-performance'
 
-export function CurrentPerformanceSection({ mode, performancePage }) {
+export function CurrentPerformanceSection({ copy, mode, performancePage }) {
+  const sectionCopy = {
+    emptyDescription: copy?.currentPerformanceEmptyDescription ?? 'Published outcome metrics, goals, trends, and interpretation will appear here after team review.',
+    emptyTitle: copy?.currentPerformanceEmptyTitle ?? 'Current performance is being prepared',
+    eyebrow: copy?.currentPerformanceEyebrow ?? 'Current Performance',
+    subtitle: copy?.currentPerformanceSubtitle ?? 'The team has not published interpreted analytics for this account yet.',
+    title: copy?.currentPerformanceTitle ?? 'Business-value analytics',
+  }
+
   if (!performancePage.performanceDashboard) {
     return (
       <Panel>
         <PanelHeader
-          subtitle="The agency has not published interpreted analytics for this client yet."
-          title="Current Performance"
+          subtitle={sectionCopy.subtitle}
+          title={sectionCopy.eyebrow}
         />
         <PanelBody>
           <EmptyState
-            description="Published outcome metrics, goals, trends, and interpretation will appear here after agency review."
+            description={sectionCopy.emptyDescription}
             iconName="barChart"
-            title="Current performance is being prepared"
+            title={sectionCopy.emptyTitle}
           />
         </PanelBody>
       </Panel>
@@ -29,8 +37,8 @@ export function CurrentPerformanceSection({ mode, performancePage }) {
   return (
     <section className="grid gap-4" id="current-performance">
       <div>
-        <p className="text-label text-text-muted">Current Performance</p>
-        <h2 className="mt-1 text-heading text-text-primary">Business-value analytics</h2>
+        <p className="text-label text-text-muted">{sectionCopy.eyebrow}</p>
+        <h2 className="mt-1 text-heading text-text-primary">{sectionCopy.title}</h2>
       </div>
       <ClientPerformanceDashboard
         mode={mode}

@@ -4,19 +4,19 @@ import {
 } from '../../../domain/services/activityTrackingService'
 import { getClientActionNeededPage } from '../../../domain/services/clientActionNeededService'
 import { answerNeededAction } from '../../../domain/services/neededFromClientService'
-import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { useToast } from '../../../shared/notifications'
 import { Panel, PanelBody } from '@/shared/ui'
 import { ActionNeededInbox } from '../../../widgets/client-action-needed'
 import { AccessDeniedState } from '../../../widgets/client-overview'
+import { canRecordClientPortalActivity } from '../clientPageAccess'
 
 function createUuid() {
   return crypto.randomUUID()
 }
 
 function recordClientActivity({ actionId, clientId, repositories, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER) {
+  if (!canRecordClientPortalActivity(runtime.viewer)) {
     return
   }
 

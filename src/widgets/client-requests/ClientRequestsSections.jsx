@@ -16,7 +16,7 @@ const filters = [
   { label: 'Open', value: 'open' },
   { label: 'Submitted', value: CLIENT_REQUEST_STATUSES.SUBMITTED },
   { label: 'Under review', value: CLIENT_REQUEST_STATUSES.UNDER_REVIEW },
-  { label: 'Waiting on agency', value: CLIENT_REQUEST_STATUSES.WAITING_ON_AGENCY },
+  { label: 'Waiting on team', value: CLIENT_REQUEST_STATUSES.WAITING_ON_AGENCY },
   { label: 'Waiting on me', value: CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT },
   { label: 'Completed', value: CLIENT_REQUEST_STATUSES.COMPLETED },
   { label: 'All', value: 'all' },
@@ -107,7 +107,7 @@ function ClientRequestCard({ request }) {
       </div>
 
       {request.agencyResponse ? (
-        <LabeledNote className="mt-component" label="Agency response">
+        <LabeledNote className="mt-component" label="Team response">
           <p>{request.agencyResponse}</p>
         </LabeledNote>
       ) : null}
@@ -158,7 +158,7 @@ export function ClientRequestsList({ counts, requests }) {
       ) : (
         <EmptyState
           className="bg-block-subtle"
-          description="No client-submitted requests match this view."
+          description="No submitted requests match this view."
           iconName="messageSquare"
           title="No requests here"
         />

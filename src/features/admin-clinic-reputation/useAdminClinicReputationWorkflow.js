@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 
 import {
+  createNeededActionFromClinicReputationSuggestion,
+} from '../../domain/services/neededFromClientService'
+import {
   getAdminClinicReputationPage,
   publishReputationSnapshot,
   saveAdminClinicReputation,
 } from '../../domain/services/adminClinicReputationService'
 import { useToast } from '../../shared/notifications'
+import {
+  applyClinicReputationImportToDraft,
+  previewClinicReputationImport,
+} from './model/clinicReputationImportDraft'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -29,6 +36,12 @@ function createInitialState() {
 export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
   const toast = useToast()
   const [state, setState] = useState(createInitialState)
+  const [createdReputationActionKeys, setCreatedReputationActionKeys] = useState(() => new Set())
+  const [creatingReputationActionKey, setCreatingReputationActionKey] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importRawJson, setImportRawJson] = useState('')
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -42,6 +55,12 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
         }
 
         setState(createInitialState())
+        setCreatedReputationActionKeys(new Set())
+        setCreatingReputationActionKey('')
+        setImportError('')
+        setImportPlan(null)
+        setImportRawJson('')
+        setIsImportOpen(false)
         setIsDirty(false)
         setSaveState('')
 
@@ -88,6 +107,65 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
     }))
     setIsDirty(true)
     setSaveState('')
+  }
+
+  function openImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(true)
+  }
+
+  function updateImportRawJson(rawJson) {
+    setImportRawJson(rawJson)
+    setImportError('')
+    setImportPlan(null)
+  }
+
+  function closeImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(false)
+  }
+
+  function previewImport(rawJson = importRawJson) {
+    try {
+      const nextImportPlan = previewClinicReputationImport({
+        clientId,
+        rawJson,
+      })
+
+      setImportError('')
+      setImportPlan(nextImportPlan)
+      setImportRawJson(rawJson)
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      setImportPlan(null)
+    }
+  }
+
+  function applyImport() {
+    try {
+      const nextDraft = applyClinicReputationImportToDraft({
+        draft: state.draft,
+        importPlan,
+      })
+
+      setState((currentState) => ({
+        ...currentState,
+        draft: nextDraft,
+        error: '',
+        status: 'ready',
+      }))
+      setIsDirty(true)
+      setSaveState('Import ready to save')
+      closeImportDialog()
+      toast.success('Clinic reputation imported', 'Review the imported aggregate records, then save reputation.')
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      toast.error('Clinic reputation import failed', caughtError.message)
+    }
   }
 
   function saveDraft() {
@@ -159,7 +237,7 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Reputation snapshot published', `${page.client.name}'s reputation snapshot is now client-visible.`)
+        toast.success('Reputation snapshot published', `${page.client.name}'s reputation snapshot is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({
@@ -172,15 +250,57 @@ export function useAdminClinicReputationWorkflow({ clientId, runtime }) {
       })
   }
 
+  function createReputationSuggestionAction({ snapshotId, suggestionType }) {
+    const actionKey = `${snapshotId}:${suggestionType}`
+
+    setCreatingReputationActionKey(actionKey)
+    setSaveState('Creating action...')
+
+    runtime.dataClient.write((repositories) => createNeededActionFromClinicReputationSuggestion({
+      idGenerator: createUuid,
+      repositories,
+      reputationSnapshotId: snapshotId,
+      suggestionType,
+      viewer: runtime.viewer,
+    }))
+      .then((action) => {
+        setCreatedReputationActionKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(actionKey)
+          return nextKeys
+        })
+        setCreatingReputationActionKey('')
+        setSaveState('Action created')
+        toast.success('Clinic action created', action.title)
+      })
+      .catch((caughtError) => {
+        setCreatingReputationActionKey('')
+        setSaveState('')
+        toast.error('Clinic action was not created', caughtError.message)
+      })
+  }
+
   return {
+    applyImport,
+    closeImportDialog,
+    createdReputationActionKeys,
+    createReputationSuggestionAction,
+    creatingReputationActionKey,
     draft: state.draft,
     error: state.error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page: state.page,
+    previewImport,
     publishReputationRecord,
     resetDraft,
     saveDraft,
     saveState,
+    setImportRawJson: updateImportRawJson,
     status: state.status,
     updateDraft,
   }

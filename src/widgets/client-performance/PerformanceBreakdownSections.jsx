@@ -112,7 +112,7 @@ export function ChannelBreakdownSection({ channels }) {
   return (
     <Panel>
       <PanelHeader
-        subtitle="Channel-level outcomes and efficiency, with client-facing context."
+        subtitle="Channel-level outcomes and efficiency, with portal-ready context."
         title="Channel Breakdown"
       />
       <PanelBody className="grid gap-component">

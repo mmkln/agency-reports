@@ -23,7 +23,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-block text-label text-text-muted [&_tr]:border-b", className)}
+      className={cn("bg-block text-label text-text-muted [&_tr]:border-b [&_tr:hover]:bg-block", className)}
       {...props} />
   );
 }
@@ -60,7 +60,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "group/table-row border-b border-separator transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover has-aria-expanded:bg-control-hover data-[state=selected]:bg-control-selected",
+        "border-b border-separator bg-block transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover data-[state=selected]:bg-control-selected",
         className
       )}
       {...props} />
@@ -90,35 +90,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "px-component py-control align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
-        className
-      )}
-      {...props} />
-  );
-}
-
-function TableActionHead({
-  className,
-  ...props
-}) {
-  return (
-    <TableHead
-      className={cn(
-        "sticky right-0 z-30 bg-block text-right",
-        className
-      )}
-      {...props} />
-  );
-}
-
-function TableActionCell({
-  className,
-  ...props
-}) {
-  return (
-    <TableCell
-      className={cn(
-        "sticky right-0 z-20 bg-block text-right group-hover/table-row:bg-control-hover",
+        "px-component py-control align-middle [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -145,7 +117,5 @@ export {
   TableHead,
   TableRow,
   TableCell,
-  TableActionHead,
-  TableActionCell,
   TableCaption,
 }

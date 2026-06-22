@@ -1,4 +1,4 @@
-import { CLIENT_STATUS_META, CLIENT_TYPES } from '../../entities/client'
+import { CLIENT_STATUS_META, CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_STATUSES,
 } from '../../entities/client-work-item'
@@ -8,8 +8,11 @@ import {
   NEEDED_ACTION_STATUS_META,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import {
+  CLINIC_REPORTING_CAPABILITIES,
+} from '../../entities/profile'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { listClientVisibleFileLinks } from './clientFilesLinksService'
 import {
   getClientCallsBookingsPage,
@@ -77,7 +80,7 @@ function getSnapshotOverviewCollections({ client, clientId, repositories, snapsh
     clientStatus: snapshot.client?.status ?? client.status,
     currentFocus: snapshot.currentFocus ?? [],
     dashboardLinks: snapshot.dashboardLinks ?? [],
-    neededActions: repositories.neededFromClient.listByClientId(clientId),
+    neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
     projects: snapshot.projects ?? [],
     reports: snapshot.reports ?? [],
     updates: snapshot.updates ?? [],
@@ -86,7 +89,7 @@ function getSnapshotOverviewCollections({ client, clientId, repositories, snapsh
 
 function getOverviewCollections({ client, clientId, repositories, source, viewer }) {
   if (source === 'draft') {
-    if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
+    if (!hasAgencyAdminMembership(viewer)) {
       return null
     }
 
@@ -96,7 +99,7 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
         clientStatus: client.overview_draft.client?.status ?? client.status,
         currentFocus: client.overview_draft.currentFocus ?? [],
         dashboardLinks: client.overview_draft.dashboardLinks ?? [],
-        neededActions: repositories.neededFromClient.listByClientId(clientId),
+        neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
         projects: client.overview_draft.projects ?? [],
         reports: client.overview_draft.reports ?? [],
         updates: client.overview_draft.updates ?? [],
@@ -118,11 +121,11 @@ function getOverviewCollections({ client, clientId, repositories, source, viewer
     activeWorkItems: getPublishedActiveWorkItems({ clientId, repositories, viewer }),
     clientStatus: client.status,
     currentFocus: client.current_focus ?? [],
-    dashboardLinks: repositories.dashboardLinks.listByClientId(clientId),
-    neededActions: repositories.neededFromClient.listByClientId(clientId),
-    projects: repositories.projects.listByClientId(clientId),
-    reports: repositories.reports.listByClientId(clientId),
-    updates: repositories.updates.listByClientId(clientId),
+    dashboardLinks: repositories.dashboardLinks.listByWorkspaceId(clientId),
+    neededActions: repositories.neededFromClient.listByWorkspaceId(clientId),
+    projects: repositories.projects.listByWorkspaceId(clientId),
+    reports: repositories.reports.listByWorkspaceId(clientId),
+    updates: repositories.updates.listByWorkspaceId(clientId),
   }
 }
 
@@ -230,14 +233,18 @@ function getClinicOverviewPreview({ clientId, neededActions, repositories, viewe
           unansweredReviews: reputation.totals.unansweredReviews,
         }
       : null,
+    clientId,
+    dentalGrowthReviewHref: (viewer?.capabilities ?? []).includes(CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW)
+      ? `/client/growth-review?clientId=${clientId}`
+      : null,
     serviceLinesHref: `/client/service-lines?clientId=${clientId}`,
   }
 }
 
 export function getClientOverviewPage({ clientId, repositories, source = 'published', viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || !canAccessClient(viewer, clientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, clientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -300,7 +307,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     repositories,
     viewer,
   })
-  const clinicOverview = client.type === CLIENT_TYPES.CLINIC
+  const clinicOverview = isClinicClient(client)
     ? getClinicOverviewPreview({
         clientId,
         neededActions,
@@ -329,7 +336,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
       primaryContactName: client.primary_contact_name,
       status: collections.clientStatus,
       statusMeta: getStatusMeta(collections.clientStatus, CLIENT_STATUS_META),
-      type: client.type ?? CLIENT_TYPES.GENERIC,
+      type: CLIENT_TYPES.CLINIC,
     },
     clinicOverview,
     currentFocus,
@@ -372,7 +379,7 @@ export function getClientOverviewPage({ clientId, repositories, source = 'publis
     performancePreview,
     progressSummary: projects,
     status: 'ready',
-    template: clinicOverview ? CLIENT_TYPES.CLINIC : CLIENT_TYPES.GENERIC,
+    template: CLIENT_TYPES.CLINIC,
   }
 }
 

@@ -8,15 +8,16 @@ import {
   NEEDED_ACTION_STATUS_META,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const DEFAULT_STALE_DAYS = 14
 const RECENT_DAYS = 7
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can review client-facing work.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can review published work.')
   }
 }
 
@@ -34,9 +35,9 @@ function getStatusMeta(status, registry) {
 function getAgencyClients({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  return repositories.clients
+  return repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
 }
 
 function getClientIds(clients) {

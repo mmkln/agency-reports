@@ -4,22 +4,29 @@ import {
   CLIENT_WORK_ITEM_STATUS_META,
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
+import { normalizeNeededAction } from '../../entities/needed-from-client'
 import { TASK_STATUS_META, TASK_STATUSES } from '../../entities/task'
 import { VISIBILITY } from '../../entities/update'
 import { canTransitionTaskStatus, getTaskStatusTransitionTargets } from '../policies/taskPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+} from '../policies/routeAccessPolicy'
+import { listManagedWorkspaceIds } from './viewerAccessContextService'
 
 const VALID_TASK_STATUSES = new Set(Object.values(TASK_STATUSES))
 const VALID_VISIBILITY = new Set(Object.values(VISIBILITY))
+const OPEN_NEEDED_ACTION_STATUSES = new Set(['answered', 'approved', 'changes_requested', 'pending'])
 
 function assertAgencyTeam(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_TEAM || !viewer.agencyId) {
-    throw new Error('Only agency team members can update assigned tasks.')
+  if (!hasAgencyMembership(viewer) || hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only team members can update assigned tasks.')
   }
 }
 
 function getAssignedClientIds(viewer) {
-  return viewer.clientIds ?? []
+  return listManagedWorkspaceIds(viewer)
 }
 
 function canTeamAccessTask(viewer, task) {
@@ -73,6 +80,26 @@ function getClientWorkItemsBySourceTaskId({ clientIds, repositories }) {
   return workItemsByTaskId
 }
 
+function getOpenNeededActionKeys({ clientIds, repositories }) {
+  if (!repositories.neededFromClient?.list) {
+    return new Set()
+  }
+
+  const clientIdSet = new Set(clientIds)
+
+  return new Set(
+    repositories.neededFromClient
+      .list()
+      .filter((action) => clientIdSet.has(action.client_id))
+      .map(normalizeNeededAction)
+      .filter((action) => OPEN_NEEDED_ACTION_STATUSES.has(action.status))
+      .flatMap((action) => [
+        action.related_task_id ? `task:${action.related_task_id}` : null,
+        action.related_work_item_id ? `work:${action.related_work_item_id}` : null,
+      ].filter(Boolean)),
+  )
+}
+
 function mapClientWorkItemState(workItem) {
   if (!workItem) {
     return {
@@ -108,9 +135,17 @@ function matchesFilter(value, filterValue) {
   return !filterValue || filterValue === 'all' || value === filterValue
 }
 
-function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, viewer }) {
+function mapTask({ clientWorkItemsByTaskId, clientsById, openNeededActionKeys, projectsById, task, viewer }) {
   const isAssignedToViewer = task.assignee_name === viewer.name
   const clientWorkItemState = mapClientWorkItemState(clientWorkItemsByTaskId.get(task.id))
+  const hasOpenNeededAction = openNeededActionKeys.has(`task:${task.id}`)
+    || (
+      clientWorkItemState.clientWorkItem?.id
+      && openNeededActionKeys.has(`work:${clientWorkItemState.clientWorkItem.id}`)
+    )
+  const isMissingClientSummary = clientWorkItemState.clientWorkItem
+    ? clientWorkItemState.isMissingClientSummary
+    : !normalizeText(task.client_safe_summary)
 
   return {
     assigneeName: task.assignee_name,
@@ -124,6 +159,7 @@ function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, vie
     id: task.id,
     internalNote: task.internal_note ?? '',
     isAssignedToViewer,
+    isWaitingOnClientWithoutRequest: task.status === TASK_STATUSES.WAITING_CLIENT && !hasOpenNeededAction,
     projectId: task.project_id,
     projectName: projectsById.get(task.project_id)?.name ?? 'General',
     status: task.status,
@@ -132,7 +168,24 @@ function mapTask({ clientWorkItemsByTaskId, clientsById, projectsById, task, vie
     updatedAt: task.updated_at,
     visibility: task.visibility,
     ...clientWorkItemState,
+    isMissingClientSummary,
   }
+}
+
+function matchesWorkState(task, workState) {
+  if (!workState || workState === 'all') {
+    return true
+  }
+
+  const predicates = {
+    has_work_item: () => task.hasClientWorkItem,
+    missing_summary: () => task.isMissingClientSummary,
+    published: () => task.isPublishedToClient,
+    ready_for_review: () => task.isReadyForClientReview,
+    waiting_without_request: () => task.isWaitingOnClientWithoutRequest,
+  }
+
+  return predicates[workState]?.() ?? true
 }
 
 export function listTeamTasks({
@@ -143,9 +196,9 @@ export function listTeamTasks({
   assertAgencyTeam(viewer)
 
   const clientIds = getAssignedClientIds(viewer)
-  const clients = repositories.clients
+  const clients = repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId && clientIds.includes(client.id))
+    .filter((client) => clientIds.includes(client.id) && canAccessWorkspaceResource(viewer, client.id))
   const clientsById = new Map(clients.map((client) => [client.id, client]))
   const projectsById = new Map(
     repositories.projects
@@ -154,6 +207,10 @@ export function listTeamTasks({
       .map((project) => [project.id, project]),
   )
   const clientWorkItemsByTaskId = getClientWorkItemsBySourceTaskId({
+    clientIds,
+    repositories,
+  })
+  const openNeededActionKeys = getOpenNeededActionKeys({
     clientIds,
     repositories,
   })
@@ -179,10 +236,12 @@ export function listTeamTasks({
     .map((task) => mapTask({
       clientWorkItemsByTaskId,
       clientsById,
+      openNeededActionKeys,
       projectsById,
       task,
       viewer,
     }))
+    .filter((task) => matchesWorkState(task, filters.workState))
 
   return {
     clients,
@@ -192,6 +251,7 @@ export function listTeamTasks({
       scope: filters.scope ?? 'all',
       status: filters.status ?? 'all',
       visibility: filters.visibility ?? 'all',
+      workState: filters.workState ?? 'all',
     },
     projects: [...projectsById.values()],
     status: 'ready',
@@ -220,7 +280,8 @@ export function updateAssignedTask({
 }) {
   const task = getEditableTask({ repositories, taskId, viewer })
   const nextStatus = input.status ?? task.status
-  const nextVisibility = input.visibility ?? task.visibility
+  const hasVisibilityInput = Object.hasOwn(input, 'visibility')
+  const nextVisibility = hasVisibilityInput ? input.visibility : VISIBILITY.INTERNAL
 
   if (!VALID_TASK_STATUSES.has(nextStatus)) {
     throw new Error('Task status is invalid.')
@@ -232,6 +293,10 @@ export function updateAssignedTask({
 
   if (!VALID_VISIBILITY.has(nextVisibility)) {
     throw new Error('Task visibility is invalid.')
+  }
+
+  if (hasVisibilityInput && nextVisibility !== VISIBILITY.INTERNAL) {
+    throw new Error('Task visibility no longer publishes portal work. Use the work review workflow.')
   }
 
   const updatedTask = {

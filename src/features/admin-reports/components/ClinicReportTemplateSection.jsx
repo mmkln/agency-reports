@@ -5,8 +5,6 @@ import {
   Textarea,
 } from '@/shared/ui'
 
-import { CLIENT_TYPES } from '../../../entities/client'
-
 function createEmptyClinicSections() {
   return {
     agencyWorkCompleted: [],
@@ -114,7 +112,7 @@ export function ClinicReportTemplateSection({
 }) {
   const selectedClient = clients.find((client) => client.id === form.clientId)
 
-  if (selectedClient?.type !== CLIENT_TYPES.CLINIC) {
+  if (!selectedClient) {
     return null
   }
 
@@ -220,7 +218,7 @@ export function ClinicReportTemplateSection({
 
         <div className="grid gap-component md:grid-cols-3">
           <SectionTextarea
-            label="Agency work completed"
+            label="Work completed"
             onChange={(value) => updateList('agencyWorkCompleted', value)}
             placeholder="- Work item"
             value={getListText(sections.agencyWorkCompleted)}

@@ -1,6 +1,6 @@
-import { USER_ROLES } from '@/entities/profile'
 import { TASK_STATUSES } from '@/entities/task'
 import { VISIBILITY } from '@/entities/update'
+import { isAgencyTeamTaskCreator } from './taskCreateAccess'
 
 export function createBlankTaskDraft({ clients, routeClientId, viewer }) {
   const clientId = clients.some((client) => client.id === routeClientId)
@@ -8,7 +8,7 @@ export function createBlankTaskDraft({ clients, routeClientId, viewer }) {
     : clients[0]?.id ?? ''
 
   return {
-    assigneeName: viewer.role === USER_ROLES.AGENCY_TEAM ? viewer.name : '',
+    assigneeName: isAgencyTeamTaskCreator(viewer) ? viewer.name : '',
     clientId,
     clientSafeSummary: '',
     description: '',

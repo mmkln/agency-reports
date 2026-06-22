@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui'
 
 import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
 
 function formatCurrency(value) {
   if (!value) {
@@ -28,10 +29,6 @@ function formatNumber(value) {
 
 function formatPercent(value) {
   return `${Math.round((value || 0) * 100)}%`
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleDateString() : 'Not updated'
 }
 
 function SummaryMetric({ helper, label, value }) {
@@ -118,60 +115,6 @@ function SnapshotCard({ snapshot }) {
   )
 }
 
-function SourceContext({ page }) {
-  const dataSources = [
-    ...page.snapshots,
-    ...(page.pipelineSnapshots ?? []),
-  ]
-    .map((snapshot) => snapshot.dataSource)
-    .filter(Boolean)
-  const uniqueDataSources = [...new Set(dataSources)]
-  const sourceLinks = (page.sourceLinks ?? []).filter((sourceLink) => sourceLink.publicUrl || sourceLink.embedUrl)
-
-  return (
-    <Panel>
-      <PanelHeader title="Data Freshness" />
-      <PanelBody className="grid gap-component">
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Last updated',
-              value: formatDate(page.latestUpdatedAt),
-            },
-            {
-              label: 'Data mode',
-              value: uniqueDataSources.join(', ') || 'Manual aggregate import',
-            },
-            {
-              label: 'Privacy boundary',
-              value: 'Aggregate clinic metrics only',
-            },
-          ]}
-        />
-        {sourceLinks.length ? (
-          <div className="grid gap-item">
-            <p className="text-label font-semibold text-text-primary">Source dashboards</p>
-            <div className="grid gap-2">
-              {sourceLinks.map((sourceLink) => (
-                <a
-                  className="text-ui text-accent hover:underline"
-                  href={sourceLink.publicUrl || sourceLink.embedUrl}
-                  key={sourceLink.id}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {sourceLink.name}
-                </a>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function ClientPatientAcquisitionView({ page }) {
   if (page.isEmpty) {
     return (
@@ -212,7 +155,7 @@ export function ClientPatientAcquisitionView({ page }) {
           filters={page.filters}
         />
         <EmptyState
-          description="Aggregate acquisition metrics will appear after the agency publishes clinic-safe reporting data or the current filters are cleared."
+          description="Aggregate acquisition metrics will appear after the team publishes clinic-safe reporting data or the current filters are cleared."
           iconName="target"
           title="No patient acquisition data found"
         />
@@ -292,7 +235,7 @@ export function ClientPatientAcquisitionView({ page }) {
         </PanelBody>
       </Panel>
 
-      <SourceContext page={page} />
+      <ClientClinicDataTrust dataTrust={page.dataTrust} sourceLinks={page.sourceLinks} />
     </div>
   )
 }

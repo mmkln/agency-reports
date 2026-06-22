@@ -5,12 +5,18 @@ import {
 } from '../../domain/services/neededFromClientService'
 import {
   getAdminClinicMetricsPage,
+  publishBookingPipelineSnapshot,
   publishCallBookingMetric,
+  publishLocationPerformance,
   publishPatientAcquisitionSnapshot,
   publishServiceLinePerformance,
   saveAdminClinicMetrics,
 } from '../../domain/services/adminClinicMetricsService'
 import { useToast } from '../../shared/notifications'
+import {
+  applyClinicMetricsImportToDraft,
+  previewClinicMetricsImport,
+} from './model/clinicMetricsImportDraft'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -18,7 +24,9 @@ function createUuid() {
 
 function createDraft(page) {
   return {
+    bookingPipelineSnapshots: page.bookingPipelineSnapshots.map((snapshot) => ({ ...snapshot })),
     callBookingMetrics: page.callBookingMetrics.map((metric) => ({ ...metric })),
+    locationPerformance: page.locationPerformance.map((performance) => ({ ...performance })),
     patientAcquisitionSnapshots: page.patientAcquisitionSnapshots.map((snapshot) => ({ ...snapshot })),
     serviceLinePerformance: page.serviceLinePerformance.map((performance) => ({ ...performance })),
   }
@@ -34,7 +42,9 @@ function createInitialState() {
 }
 
 const PUBLISH_SERVICES = Object.freeze({
+  booking_pipeline: publishBookingPipelineSnapshot,
   call_booking: publishCallBookingMetric,
+  location_performance: publishLocationPerformance,
   patient_acquisition: publishPatientAcquisitionSnapshot,
   service_line_performance: publishServiceLinePerformance,
 })
@@ -44,6 +54,10 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
   const [state, setState] = useState(createInitialState)
   const [createdBookingActionKeys, setCreatedBookingActionKeys] = useState(() => new Set())
   const [creatingBookingActionKey, setCreatingBookingActionKey] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importPlan, setImportPlan] = useState(null)
+  const [importRawJson, setImportRawJson] = useState('')
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [saveState, setSaveState] = useState('')
 
@@ -59,6 +73,10 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
         setState(createInitialState())
         setCreatedBookingActionKeys(new Set())
         setCreatingBookingActionKey('')
+        setImportError('')
+        setImportPlan(null)
+        setImportRawJson('')
+        setIsImportOpen(false)
         setIsDirty(false)
         setSaveState('')
 
@@ -105,6 +123,65 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
     }))
     setIsDirty(true)
     setSaveState('')
+  }
+
+  function openImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(true)
+  }
+
+  function updateImportRawJson(rawJson) {
+    setImportRawJson(rawJson)
+    setImportError('')
+    setImportPlan(null)
+  }
+
+  function closeImportDialog() {
+    setImportError('')
+    setImportPlan(null)
+    setImportRawJson('')
+    setIsImportOpen(false)
+  }
+
+  function previewImport(rawJson = importRawJson) {
+    try {
+      const nextImportPlan = previewClinicMetricsImport({
+        clientId,
+        rawJson,
+      })
+
+      setImportError('')
+      setImportPlan(nextImportPlan)
+      setImportRawJson(rawJson)
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      setImportPlan(null)
+    }
+  }
+
+  function applyImport() {
+    try {
+      const nextDraft = applyClinicMetricsImportToDraft({
+        draft: state.draft,
+        importPlan,
+      })
+
+      setState((currentState) => ({
+        ...currentState,
+        draft: nextDraft,
+        error: '',
+        status: 'ready',
+      }))
+      setIsDirty(true)
+      setSaveState('Import ready to save')
+      closeImportDialog()
+      toast.success('Clinic metrics imported', 'Review the imported aggregate records, then save metrics.')
+    } catch (caughtError) {
+      setImportError(caughtError.message)
+      toast.error('Clinic metrics import failed', caughtError.message)
+    }
   }
 
   function saveDraft() {
@@ -182,7 +259,7 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
         })
         setIsDirty(false)
         setSaveState('Published')
-        toast.success('Clinic metric published', `${page.client.name}'s metric record is now client-visible.`)
+        toast.success('Clinic metric published', `${page.client.name}'s metric record is now visible.`)
       })
       .catch((caughtError) => {
         setState((currentState) => ({
@@ -231,13 +308,22 @@ export function useAdminClinicMetricsWorkflow({ clientId, runtime }) {
     creatingBookingActionKey,
     draft: state.draft,
     error: state.error,
+    importError,
+    importPlan,
+    importRawJson,
     isDirty,
+    isImportOpen,
+    openImportDialog,
     page: state.page,
+    applyImport,
+    closeImportDialog,
+    previewImport,
     publishMetricRecord,
     resetDraft,
     saveDraft,
     saveState,
     status: state.status,
+    setImportRawJson: updateImportRawJson,
     updateDraft,
   }
 }

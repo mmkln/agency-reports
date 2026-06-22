@@ -6,6 +6,11 @@ import {
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   NumberField,
   SelectField,
@@ -44,12 +49,6 @@ function getPublishLabel(record) {
   return CLINIC_RECORD_PUBLISH_STATE_META[
     record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
   ].label
-}
-
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
 }
 
 export function CallBookingMetricsCard({
@@ -96,7 +95,7 @@ export function CallBookingMetricsCard({
           Add calls snapshot
         </Button>
       )}
-      description="Aggregate call handling and booking conversion. Keep front desk notes client-safe and non-identifying."
+      description="Aggregate call handling and booking conversion. Keep front desk notes portal-ready and non-identifying."
       iconName="phone"
       title="Calls & Bookings Snapshots"
     >
@@ -118,10 +117,14 @@ export function CallBookingMetricsCard({
                   {getPublishLabel(metric)}
                   {metric.published_at ? ` at ${metric.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={metric.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={metric.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(metric, isDirty)}
+                  disabled={!canPublishClinicRecord(metric, isDirty)}
                   onClick={() => onPublish({ id: metric.id, type: 'call_booking' })}
                   size="sm"
                   type="button"

@@ -1,6 +1,7 @@
-import { CLIENT_TYPES } from '../../entities/client'
+import { isClinicClient } from '../../entities/client'
 import { assertClinicAggregateRecord } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import {
   getClientCallsBookingsPage,
   getClientClinicServiceLinesPage,
@@ -11,8 +12,8 @@ import {
 import { listClientNeededActions } from './neededFromClientService'
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage reports.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage reports.')
   }
 }
 
@@ -119,10 +120,10 @@ export function mapClinicReportSections(sections) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
+    throw new Error('Account was not found.')
   }
 
   return client
@@ -232,7 +233,7 @@ export function buildClinicReportDraftFromClientData({
 
   const client = getAdminClient({ clientId, repositories, viewer })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic report templates are only available for clinic clients.')
   }
 

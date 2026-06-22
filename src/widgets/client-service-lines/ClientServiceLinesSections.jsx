@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui'
 
 import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
 
 function formatCurrency(value) {
   if (!value) {
@@ -220,13 +221,14 @@ export function ClientServiceLinesView({ page }) {
             ))
           ) : (
             <EmptyState
-              description="Clinic service lines will appear after the agency defines the patient acquisition focus."
+              description="Clinic service lines will appear after the team defines the patient acquisition focus."
               iconName="stethoscope"
               title="No service lines yet"
             />
           )}
         </PanelBody>
       </Panel>
+      <ClientClinicDataTrust dataTrust={page.dataTrust} />
     </div>
   )
 }

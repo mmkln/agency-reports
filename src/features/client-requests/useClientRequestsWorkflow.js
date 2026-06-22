@@ -26,7 +26,7 @@ export function useClientRequestsWorkflow({
   runtime,
 }) {
   const toast = useToast()
-  const [isCreateOpen, setIsCreateOpen] = useState(() => initiallyOpen)
+  const [isCreateOpenState, setIsCreateOpen] = useState(false)
   const [requestDraft, setRequestDraft] = useState(() => createInitialDraft(clientId))
   const [requestError, setRequestError] = useState('')
   const [requestSaveState, setRequestSaveState] = useState('')
@@ -40,6 +40,7 @@ export function useClientRequestsWorkflow({
 
   function closeCreateDialog() {
     setIsCreateOpen(false)
+    setRequestDraft(createInitialDraft(clientId))
     setRequestError('')
     setRequestSaveState('')
   }
@@ -63,7 +64,7 @@ export function useClientRequestsWorkflow({
         setIsCreateOpen(false)
         setRequestDraft(createInitialDraft(clientId))
         onCreated?.()
-        toast.success('Request submitted', `${createdRequest.title} was sent to the agency.`)
+        toast.success('Request submitted', `${createdRequest.title} was sent to the team.`)
       })
       .catch((caughtError) => {
         setRequestError(caughtError.message)
@@ -74,7 +75,7 @@ export function useClientRequestsWorkflow({
 
   return {
     closeCreateDialog,
-    isCreateOpen,
+    isCreateOpen: initiallyOpen || isCreateOpenState,
     openCreateDialog,
     requestDraft,
     requestError,

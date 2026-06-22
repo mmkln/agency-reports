@@ -1,0 +1,61 @@
+import { matchPath } from 'react-router-dom'
+
+import { getHomeHrefForViewer } from '../../domain/services/viewerHomeService'
+import { getCanonicalRoutePath } from '../../domain/navigation/routePaths'
+import { canAccessRouteWithContext } from './roleAccess'
+import { findRouteAccessMetadataByPath } from './routeAccessMetadata'
+
+function getSafeInternalHref(href) {
+  if (!href?.startsWith('/') || href.startsWith('//')) {
+    return null
+  }
+
+  try {
+    const parsedUrl = new URL(href, window.location.origin)
+
+    if (parsedUrl.origin !== window.location.origin) {
+      return null
+    }
+
+    return `${getCanonicalRoutePath(parsedUrl.pathname)}${parsedUrl.search}${parsedUrl.hash}`
+  } catch {
+    return null
+  }
+}
+
+function getRouteParamsFromHref(href, route) {
+  const parsedUrl = new URL(href, window.location.origin)
+  const pathMatch = route?.path
+    ? matchPath({ end: true, path: route.path }, parsedUrl.pathname)
+    : null
+
+  return {
+    ...(pathMatch?.params ?? {}),
+    ...Object.fromEntries(parsedUrl.searchParams.entries()),
+  }
+}
+
+export function getPostLoginHref({ nextHref, viewer }) {
+  const fallbackHref = getHomeHrefForViewer(viewer)
+  const safeNextHref = getSafeInternalHref(nextHref)
+
+  if (!safeNextHref) {
+    return fallbackHref
+  }
+
+  const parsedUrl = new URL(safeNextHref, window.location.origin)
+  const route = findRouteAccessMetadataByPath(parsedUrl.pathname)
+
+  if (!route || route.redirectAuthenticated) {
+    return fallbackHref
+  }
+
+  if (!canAccessRouteWithContext(viewer, route, {
+    defaultClientId: viewer?.activeWorkspaceId,
+    routeParams: getRouteParamsFromHref(safeNextHref, route),
+  })) {
+    return fallbackHref
+  }
+
+  return safeNextHref
+}

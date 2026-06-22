@@ -5,7 +5,6 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientReportsDashboardsPage } from '../../../domain/services/clientReportsDashboardsService'
-import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { Panel, PanelBody } from '@/shared/ui'
 import { AccessDeniedState } from '../../../widgets/client-overview'
@@ -17,13 +16,14 @@ import {
   SelectedReportSection,
   SourceDashboardSection,
 } from '../../../widgets/client-reports-dashboards'
+import { canRecordClientPortalActivity, getClientPageMode } from '../clientPageAccess'
 
 function createUuid() {
   return crypto.randomUUID()
 }
 
 function recordClientReportOpened({ clientId, reportId, repositories, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER || !reportId) {
+  if (!canRecordClientPortalActivity(runtime.viewer) || !reportId) {
     return
   }
 
@@ -43,7 +43,7 @@ function recordClientReportOpened({ clientId, reportId, repositories, runtime })
 export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
   const recordedReportOpenRef = useRef('')
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const mode = runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client'
+  const mode = getClientPageMode(runtime.viewer)
   const performancePeriodId = routeParams.performancePeriodId ?? routeParams.periodId
   const pageResource = useAsyncResource({
     dependencyKey: `${runtime.viewer?.userId ?? ''}:reports-dashboards:${clientId}:${routeParams.dashboardId ?? ''}:${performancePeriodId ?? ''}:${routeParams.reportId ?? ''}`,
@@ -94,10 +94,10 @@ export function ClientReportsDashboardsPage({ routeParams = {}, runtime }) {
   return (
     <div className="grid gap-6">
       <ResultsHeader page={page} />
-      <CurrentPerformanceSection mode={mode} performancePage={page.performancePage} />
+      <CurrentPerformanceSection copy={page.copy} mode={mode} performancePage={page.performancePage} />
       <ResultsTrustContext trustContext={page.trustContext} />
-      <SourceDashboardSection clientId={clientId} dashboardPage={page.dashboardPage} />
-      <SelectedReportSection clientId={clientId} reportsPage={page.reportsPage} />
+      <SourceDashboardSection clientId={clientId} copy={page.copy} dashboardPage={page.dashboardPage} />
+      <SelectedReportSection clientId={clientId} copy={page.copy} reportsPage={page.reportsPage} />
       <ReportArchiveSection clientId={clientId} reportsPage={page.reportsPage} />
     </div>
   )

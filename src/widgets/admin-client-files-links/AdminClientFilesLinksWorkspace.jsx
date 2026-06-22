@@ -31,7 +31,8 @@ function FileLinkCard({ fileLink, onArchive, onEdit }) {
   const isArchived = fileLink.status === 'archived'
 
   return (
-    <article className="rounded-block bg-block p-4 shadow-block">
+    <Panel>
+      <PanelBody>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -77,7 +78,8 @@ function FileLinkCard({ fileLink, onArchive, onEdit }) {
           ) : null}
         </div>
       </div>
-    </article>
+      </PanelBody>
+    </Panel>
   )
 }
 
@@ -128,7 +130,7 @@ export function AdminClientFilesLinksWorkspace({
         <Panel>
           <PanelBody>
             <EmptyState
-              description="Published deliverables, files, and shared links for the client portal will appear here."
+              description="Published deliverables, files, and shared links for the portal will appear here."
               iconName="fileText"
               title="No files or links"
             />

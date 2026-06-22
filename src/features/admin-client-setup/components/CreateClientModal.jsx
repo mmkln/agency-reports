@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { getAgencyWorkspaceAccessPath } from '@/domain/navigation/routePaths'
 import {
   Button,
   Dialog,
@@ -13,13 +14,11 @@ import {
   OverlayHeader,
 } from '@/shared/ui'
 
-import { CLIENT_TYPES } from '../../../entities/client'
 import {
   getEmailIssue,
   getShortTextIssue,
 } from '../model'
 import {
-  ClientTypeSelect,
   FormField,
   LogoInput,
   ModalSection,
@@ -80,14 +79,13 @@ export function CreateClientModal({
                 </FormField>
                 <PortalSlugInput
                   hint={isEditMode
-                    ? 'Used for the client portal URL. Changing it updates future portal links.'
+                    ? 'Used for the portal URL. Changing it updates future portal links.'
                     : undefined}
                   onChange={(value) => onUpdateField('portalSlug', value)}
                   slugIssue={slugIssue}
                   value={form.portalSlug}
                 />
                 <LogoInput form={form} onFieldChange={onUpdateField} />
-                <ClientTypeSelect onFieldChange={onUpdateField} value={form.type} />
               </ModalSection>
 
               <ModalSection iconName="users" title="Primary Contact">
@@ -132,20 +130,14 @@ export function CreateClientModal({
               <div className="mt-5 rounded-control border border-control-border bg-surface-subtle px-3 py-3 text-ui text-text-secondary">
                 <p className="font-semibold text-text-primary">{lastCreatedClient.client.name} was created.</p>
                 <p className="mt-1">
-                  Configure the client overview in the editor. The local invite is ready for{' '}
+                  Configure clinic setup and access. The local invite is ready for{' '}
                   {lastCreatedClient.invitation.email}; email delivery is still simulated.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link to={`/admin/client-overview?clientId=${lastCreatedClient.client.id}`}>Open editor</Link>
-                  </Button>
-                  {lastCreatedClient.client.type === CLIENT_TYPES.CLINIC ? (
-                    <Button asChild size="sm" variant="outline">
-                      <Link to={`/admin/clinic-setup?clientId=${lastCreatedClient.client.id}`}>Clinic setup</Link>
-                    </Button>
-                  ) : null}
-                  <Button asChild size="sm" variant="outline">
-                    <Link to={`/admin/client-access?clientId=${lastCreatedClient.client.id}`}>Manage access</Link>
+                    <Link to={getAgencyWorkspaceAccessPath(lastCreatedClient.client.id)}>
+                      Access
+                    </Link>
                   </Button>
                 </div>
               </div>

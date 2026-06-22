@@ -60,7 +60,7 @@ export function PerformanceDashboardCreateMethodDialog({
         <div className="grid gap-component">
           {!hasClients ? (
             <div className="rounded-control bg-warning/10 px-card py-item text-ui text-warning-foreground">
-              Create a client workspace before adding performance dashboards.
+              Create an account workspace before adding performance dashboards.
             </div>
           ) : null}
 

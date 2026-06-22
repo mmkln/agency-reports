@@ -3,6 +3,7 @@ import {
   PERFORMANCE_DATA_CONFIDENCE_META,
   PERFORMANCE_DATA_MODE_META,
 } from '../../entities/performance-dashboard'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import {
   CLIENT_WORK_ITEM_PUBLISH_STATES,
   CLIENT_WORK_ITEM_STATUSES,
@@ -14,8 +15,7 @@ import {
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
 import { REPORT_STATUS_META } from '../../entities/report'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   isDashboardVisibleToClient,
   isNeededActionVisibleToClient,
@@ -165,7 +165,7 @@ function mapClientVisibleUpdate(update) {
 }
 
 function createWorkSummary({ repositories, clientId }) {
-  const publishedWorkItems = (repositories.clientWorkItems?.listByClientId(clientId) ?? [])
+  const publishedWorkItems = (repositories.clientWorkItems?.listByWorkspaceId(clientId) ?? [])
     .filter((item) => item.publish_state === CLIENT_WORK_ITEM_PUBLISH_STATES.PUBLISHED)
     .sort(sortByUpdatedDesc)
   const completedWorkItems = publishedWorkItems
@@ -176,7 +176,7 @@ function createWorkSummary({ repositories, clientId }) {
     .filter((item) => item.status !== CLIENT_WORK_ITEM_STATUSES.DELIVERED)
     .slice(0, 5)
     .map(mapWorkItem)
-  const recentUpdates = (repositories.updates?.listByClientId(clientId) ?? [])
+  const recentUpdates = (repositories.updates?.listByWorkspaceId(clientId) ?? [])
     .filter(isUpdateVisibleToClient)
     .sort(sortByUpdatedDesc)
     .slice(0, 3)
@@ -192,11 +192,7 @@ function createWorkSummary({ repositories, clientId }) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  return canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessWorkspaceResource(viewer, clientId)
 }
 
 function isDashboardPeriodVisibleForMode(period, mode) {
@@ -207,6 +203,17 @@ function isDashboardPeriodVisibleForMode(period, mode) {
   return isPerformanceDashboardPeriodVisibleToClient(period)
 }
 
+function buildClinicResultsRedirect({ clientId, periodId, selectedPeriod }) {
+  const search = new URLSearchParams({ clientId })
+  const resolvedPeriodId = selectedPeriod?.id ?? periodId
+
+  if (resolvedPeriodId) {
+    search.set('legacyPerformancePeriodId', resolvedPeriodId)
+  }
+
+  return `/client/executive-performance?${search.toString()}`
+}
+
 export function getClientPerformanceDashboardPage({
   clientId,
   mode = 'client',
@@ -215,7 +222,7 @@ export function getClientPerformanceDashboardPage({
   viewer,
   now = () => new Date(),
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessDashboardClient({ client, clientId, viewer })) {
     return {
@@ -225,7 +232,7 @@ export function getClientPerformanceDashboardPage({
   }
 
   const periods = repositories.performanceDashboardPeriods
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter((period) => isDashboardPeriodVisibleForMode(period, mode))
     .sort(sortByPeriodDesc)
   const latestClientVisiblePeriod = periods.find(isPerformanceDashboardPeriodVisibleToClient) ?? null
@@ -233,15 +240,15 @@ export function getClientPerformanceDashboardPage({
     ? periods.find((period) => period.id === periodId) ?? null
     : latestClientVisiblePeriod ?? periods[0] ?? null
   const sourceLinks = repositories.dashboardLinks
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isDashboardVisibleToClient)
     .map(mapDashboardLink)
   const latestReport = repositories.reports
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isReportVisibleToClient)
     .sort(sortByPeriodDesc)[0] ?? null
   const neededFromClient = repositories.neededFromClient
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isNeededActionVisibleToClient)
     .map(mapNeededAction)
   const resolvedNow = now()
@@ -252,12 +259,16 @@ export function getClientPerformanceDashboardPage({
       name: client.name,
       portalSlug: client.portal_slug,
       status: client.status,
+      type: CLIENT_TYPES.CLINIC,
     },
     latestReport: latestReport ? mapReport(latestReport) : null,
     neededFromClient,
     performanceDashboard: selectedPeriod ? mapPerformanceDashboardPeriod(selectedPeriod, { now: resolvedNow }) : null,
     periods: periods.map((period) => mapPerformanceDashboardPeriod(period, { now: resolvedNow })),
     reason: periodId && !selectedPeriod ? 'performance_dashboard_not_found' : null,
+    redirectTo: isClinicClient(client)
+      ? buildClinicResultsRedirect({ clientId, periodId, selectedPeriod })
+      : null,
     sourceLinks,
     status: 'ready',
     workSummary: createWorkSummary({ clientId, repositories }),

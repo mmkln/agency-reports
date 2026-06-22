@@ -80,7 +80,7 @@ export function ClientRequestTriageDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="client-request-response">Agency response</Label>
+              <Label htmlFor="client-request-response">Team response</Label>
               <Textarea
                 className="resize-none"
                 id="client-request-response"

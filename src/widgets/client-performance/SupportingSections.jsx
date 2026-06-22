@@ -73,11 +73,11 @@ export function WhatWeDidSection({ agencyWork, workSummary }) {
     return (
       <Panel>
         <PanelHeader
-          subtitle="Client-visible agency execution will appear here once the team publishes updates or completed work."
+          subtitle="Published execution will appear here once the team shares updates or completed work."
           title="What We Did"
         />
         <PanelBody>
-          <p className="text-ui text-text-muted">No client-visible work summary has been published yet.</p>
+          <p className="text-ui text-text-muted">No published work summary is available yet.</p>
         </PanelBody>
       </Panel>
     )
@@ -86,13 +86,13 @@ export function WhatWeDidSection({ agencyWork, workSummary }) {
   return (
     <Panel>
       <PanelHeader
-        subtitle="Client-visible execution context from the status hub, shown beside performance outcomes."
+        subtitle="Published execution context from the status hub, shown beside performance outcomes."
         title="What We Did"
       />
       <PanelBody className="grid gap-6">
         {recentUpdates.length ? (
           <div className="grid gap-3">
-            <h3 className="text-label text-text-muted">Latest client-visible portal updates</h3>
+            <h3 className="text-label text-text-muted">Latest portal updates</h3>
             {recentUpdates.map((update) => (
               <UpdateSummaryRow key={update.id} update={update} />
             ))}
@@ -110,7 +110,7 @@ export function WhatWeDidSection({ agencyWork, workSummary }) {
             ))}
             {!manualCompleted.length && !completedTasks.length ? (
               <p className="rounded-control border border-control-border bg-block-subtle p-4 text-ui text-text-muted">
-                No completed client-visible tasks are available for this period.
+                No completed published tasks are available for this period.
               </p>
             ) : null}
           </div>
@@ -124,7 +124,7 @@ export function WhatWeDidSection({ agencyWork, workSummary }) {
             ))}
             {!manualActive.length && !activeTasks.length ? (
               <p className="rounded-control border border-control-border bg-block-subtle p-4 text-ui text-text-muted">
-                No active client-visible tasks are open right now.
+                No active published tasks are open right now.
               </p>
             ) : null}
           </div>

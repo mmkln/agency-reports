@@ -1,9 +1,56 @@
-import { USER_ROLES } from '../../entities/profile'
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { getClientDashboardPage } from './clientDashboardService'
 import { getClientPerformanceDashboardPage } from './clientPerformanceDashboardService'
 import { getClientReportsPage } from './clientReportsService'
 
-function createTrustContext({ dashboardPage, performancePage, reportsPage }) {
+const GENERIC_REPORT_TEMPLATE = 'generic'
+
+const RESULTS_PAGE_COPY = Object.freeze({
+  [CLIENT_TYPES.CLINIC]: {
+    currentPerformanceEmptyDescription: 'Published patient acquisition metrics, booking outcomes, trends, and interpretation will appear here after team review.',
+    currentPerformanceEmptyTitle: 'Clinic performance is being prepared',
+    currentPerformanceEyebrow: 'Clinic Performance',
+    currentPerformanceSubtitle: 'The team has not published interpreted clinic analytics for this account yet.',
+    currentPerformanceTitle: 'Patient acquisition analytics',
+    headerDescription: 'Patient acquisition reports, source dashboards, and published clinic growth summaries in one results area.',
+    headerEyebrow: 'Clinic results hub',
+    pageTitle: 'Clinic Results',
+    selectedReportTitle: 'Clinic growth report',
+    sourceDashboardEyebrow: 'Clinic Source Dashboard',
+    sourceDashboardTitle: 'Patient acquisition source detail',
+    trustSubtitle: 'Aggregate source status, freshness, and interpretation caveats before clinic results are used for decisions.',
+    trustTitle: 'Clinic Data Trust',
+  },
+  [GENERIC_REPORT_TEMPLATE]: {
+    currentPerformanceEmptyDescription: 'Published outcome metrics, goals, trends, and interpretation will appear here after team review.',
+    currentPerformanceEmptyTitle: 'Current performance is being prepared',
+    currentPerformanceEyebrow: 'Current Performance',
+    currentPerformanceSubtitle: 'The team has not published interpreted analytics for this account yet.',
+    currentPerformanceTitle: 'Business-value analytics',
+    headerDescription: 'Current performance, source dashboards, and published reports in one portal results area.',
+    headerEyebrow: 'Reports & Dashboards',
+    pageTitle: 'Reports & Dashboards',
+    selectedReportTitle: 'Narrative report',
+    sourceDashboardEyebrow: 'Source Dashboard',
+    sourceDashboardTitle: 'External dashboard detail',
+    trustSubtitle: 'Data freshness, source status, and interpretation caveats before the raw dashboard.',
+    trustTitle: 'Data Trust Context',
+  },
+})
+
+function getResultsPageCopy(template) {
+  return RESULTS_PAGE_COPY[template] ?? RESULTS_PAGE_COPY[CLIENT_TYPES.CLINIC]
+}
+
+export function getClientReportsDashboardsFallbackTitle({ clientId, repositories }) {
+  const client = clientId ? repositories.workspaces.findById(clientId) : null
+  const template = isClinicClient(client) ? CLIENT_TYPES.CLINIC : GENERIC_REPORT_TEMPLATE
+
+  return getResultsPageCopy(template).pageTitle
+}
+
+function createTrustContext({ copy, dashboardPage, performancePage, reportsPage }) {
   const performanceDashboard = performancePage.performanceDashboard
   const sourceDashboard = dashboardPage.dashboard
   const latestReport = reportsPage.latestReport
@@ -36,6 +83,10 @@ function createTrustContext({ dashboardPage, performancePage, reportsPage }) {
   return {
     attributionNote: performanceDashboard?.attributionNote ?? '',
     caveats,
+    copy: {
+      subtitle: copy.trustSubtitle,
+      title: copy.trustTitle,
+    },
     dataConfidence: performanceDashboard?.dataConfidence ?? null,
     dataConfidenceMeta: performanceDashboard?.dataConfidenceMeta ?? null,
     dataFreshness: performanceDashboard?.freshness ?? null,
@@ -87,7 +138,7 @@ export function getClientReportsDashboardsPage({
   repositories,
   viewer,
 }) {
-  const resolvedMode = mode ?? (viewer?.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client')
+  const resolvedMode = mode ?? (hasAgencyAdminMembership(viewer) ? 'admin_preview' : 'client')
   const performancePage = getClientPerformanceDashboardPage({
     clientId,
     mode: resolvedMode,
@@ -121,13 +172,20 @@ export function getClientReportsDashboardsPage({
     }
   }
 
+  const client = reportsPage.client ?? performancePage.client ?? dashboardPage.client
+  const template = isClinicClient(client) ? CLIENT_TYPES.CLINIC : GENERIC_REPORT_TEMPLATE
+  const copy = getResultsPageCopy(template)
+
   return {
-    client: performancePage.client ?? dashboardPage.client ?? reportsPage.client,
+    client,
+    copy,
     dashboardPage,
     performancePage,
     reportsPage,
     status: 'ready',
+    template,
     trustContext: createTrustContext({
+      copy,
       dashboardPage,
       performancePage,
       reportsPage,

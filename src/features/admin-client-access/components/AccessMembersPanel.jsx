@@ -1,59 +1,80 @@
+import { useState } from 'react'
+
 import {
+  Button,
   ConfirmationDialog,
+  EmptyState,
 } from '@/shared/ui'
 
-import { InlineEmptyState, WorkspaceCard } from '../../admin-client-workspace'
+import { FieldError } from '../../admin-client-workspace'
 import { useAccessMembersPanel } from '../useAccessMembersPanel'
 import { AccessMemberCard } from './AccessMemberCard'
-import { AccessMemberForm } from './AccessMemberForm'
+import { AccessMemberHistoryDialog } from './AccessMemberHistoryDialog'
 
-export function AccessMembersPanel({ clientId, runtime }) {
-  const membersPanel = useAccessMembersPanel({ clientId, runtime })
+export function AccessMembersPanel({ workspaceId, runtime }) {
+  const membersPanel = useAccessMembersPanel({ workspaceId, runtime })
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false)
 
   return (
-    <WorkspaceCard
-      description="Manage who can open this client portal."
-      iconName="users"
-      title="Members"
-    >
-      <div className="grid grid-cols-1 gap-4">
-        {membersPanel.status === 'loading' ? (
-          <div className="rounded-control bg-block-subtle px-3 py-2 text-ui text-text-muted">Loading members...</div>
-        ) : membersPanel.status === 'error' ? (
-          <div className="rounded-control border border-destructive/20 bg-destructive/10 px-3 py-2 text-ui text-destructive">
-            Members could not be loaded.
-          </div>
-        ) : membersPanel.members.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2">
-            {membersPanel.members.map((member) => (
-              <AccessMemberCard
-                key={member.id}
-                member={member}
-                onRemove={membersPanel.setMemberPendingRemoval}
-                onRoleChange={membersPanel.changeRole}
-              />
-            ))}
-          </div>
-        ) : (
-          <InlineEmptyState iconName="users" title="No client users yet">
-            Add a member or send an invitation before a client can open this portal.
-          </InlineEmptyState>
-        )}
-
-        <AccessMemberForm
-          error={membersPanel.error}
-          form={membersPanel.form}
-          memberEmailIssue={membersPanel.memberEmailIssue}
-          memberNameIssue={membersPanel.memberNameIssue}
-          onSubmit={membersPanel.addMember}
-          onUpdateForm={membersPanel.updateForm}
-        />
+    <section className="grid gap-control rounded-block bg-block p-component">
+      <div className="flex items-center justify-between gap-control">
+        <div className="min-w-0">
+          <h2 className="m-0 truncate text-ui font-semibold text-text-primary">Members</h2>
+          <p className="mt-tag text-ui text-text-muted">People with access to this workspace.</p>
+        </div>
+        <div>
+          <Button
+            disabled={membersPanel.memberHistory.length === 0}
+            onClick={() => setIsHistoryDialogOpen(true)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            History
+          </Button>
+        </div>
       </div>
+      <div className="grid gap-item">
+        {membersPanel.status === 'loading' ? (
+          <div className="rounded-control bg-block-subtle px-card py-component text-ui text-text-muted">Loading members...</div>
+        ) : membersPanel.status === 'error' ? (
+          <FieldError>{membersPanel.error || 'Members could not be loaded.'}</FieldError>
+        ) : membersPanel.activeMembers.length === 0 ? (
+          <EmptyState
+            description="No active members are currently attached to this workspace."
+            iconName="users"
+            title="No active members"
+          />
+        ) : (
+          <div className="overflow-hidden rounded-control border border-control-border">
+            <div className="hidden border-b border-separator px-component py-item text-label text-text-muted md:grid md:grid-cols-[minmax(240px,1.4fr)_160px_120px_44px]">
+              <span>Person</span>
+              <span>Role</span>
+              <span>Status</span>
+              <span aria-hidden="true" />
+            </div>
+            <div className="divide-y divide-separator">
+              {membersPanel.activeMembers.map((member) => (
+                <AccessMemberCard
+                  key={member.id}
+                  member={member}
+                  onRemove={membersPanel.setMemberPendingRemoval}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <AccessMemberHistoryDialog
+        isOpen={isHistoryDialogOpen}
+        members={membersPanel.memberHistory}
+        onOpenChange={setIsHistoryDialogOpen}
+      />
       <ConfirmationDialog
         confirmLabel="Remove access"
         description={
           membersPanel.memberPendingRemoval
-            ? `${membersPanel.memberPendingRemoval.name} will lose access to this client portal immediately.`
+            ? `${membersPanel.memberPendingRemoval.name} will lose access to this workspace immediately.`
             : ''
         }
         onConfirm={membersPanel.removeMember}
@@ -66,6 +87,6 @@ export function AccessMembersPanel({ clientId, runtime }) {
         title="Remove member access?"
         tone="destructive"
       />
-    </WorkspaceCard>
+    </section>
   )
 }

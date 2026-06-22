@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import {
   assertClinicAggregateRecord,
   CLINIC_RECORD_PUBLISH_STATE_META,
@@ -6,24 +6,34 @@ import {
   normalizeClinicLocation,
   normalizeReputationSnapshot,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import {
+  CLINIC_NEEDED_ACTION_TYPES,
+  NEEDED_ACTION_STATUSES,
+  NEEDED_ACTION_TYPES,
+} from '../../entities/needed-from-client'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import {
+  assertClinicPublishReady,
+  getReputationSnapshotPublishReadiness,
+} from '../policies/clinicPublishReadinessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage clinic reputation.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage clinic reputation.')
   }
 }
 
 function getEditableClinicClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic reputation is not available for this admin.')
   }
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic reputation is only available for clinic clients.')
   }
 
@@ -106,8 +116,8 @@ function mapClient(client) {
     primaryContactEmail: client.primary_contact_email,
     primaryContactName: client.primary_contact_name,
     status: client.status,
-    type: client.type,
-    typeMeta: CLIENT_TYPE_META[client.type],
+    type: CLIENT_TYPES.CLINIC,
+    typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     updatedAt: client.updated_at,
   }
 }
@@ -138,7 +148,7 @@ function preservePublishState(existingRecord) {
 
 function getLocations({ clientId, repositories }) {
   return repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
 }
@@ -161,11 +171,88 @@ function filterMeaningfulRecords(records = []) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
   })
+}
+
+const OPEN_NEEDED_ACTION_STATUSES = new Set([
+  NEEDED_ACTION_STATUSES.ANSWERED,
+  NEEDED_ACTION_STATUSES.CHANGES_REQUESTED,
+  NEEDED_ACTION_STATUSES.PENDING,
+])
+
+function isOpenNeededAction(action) {
+  return OPEN_NEEDED_ACTION_STATUSES.has(action?.status)
+}
+
+function createReputationActionKey(snapshotId, suggestionType) {
+  return `${snapshotId}:${suggestionType}`
+}
+
+function getOpenReputationActionsBySuggestionKey({ clientId, repositories }) {
+  const actions = repositories.neededFromClient?.listByWorkspaceId?.(clientId) ?? []
+
+  return new Map(
+    actions
+      .filter((action) => isOpenNeededAction(action))
+      .filter((action) => action.related_reputation_snapshot_id && action.clinic_action_type)
+      .map((action) => [
+        createReputationActionKey(action.related_reputation_snapshot_id, action.clinic_action_type),
+        action,
+      ]),
+  )
+}
+
+function createReputationActionSuggestion({
+  actionType,
+  label,
+  openReputationActionsBySuggestionKey,
+  snapshot,
+}) {
+  const openAction = openReputationActionsBySuggestionKey.get(createReputationActionKey(snapshot.id, actionType))
+
+  return {
+    actionLabel: label,
+    defaultActionType: actionType === CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE
+      ? NEEDED_ACTION_TYPES.APPROVAL
+      : NEEDED_ACTION_TYPES.FEEDBACK,
+    hasOpenAction: Boolean(openAction),
+    openAction: openAction
+      ? {
+          id: openAction.id,
+          status: openAction.status,
+          title: openAction.title,
+        }
+      : null,
+    type: actionType,
+  }
+}
+
+function getReputationActionSuggestions({ openReputationActionsBySuggestionKey, snapshot }) {
+  const suggestions = []
+
+  if (snapshot.negative_reviews > 0 || snapshot.unanswered_reviews > 0) {
+    suggestions.push(createReputationActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+      label: 'Create review response action',
+      openReputationActionsBySuggestionKey,
+      snapshot,
+    }))
+  }
+
+  if (snapshot.review_response_drafts > 0) {
+    suggestions.push(createReputationActionSuggestion({
+      actionType: CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+      label: 'Create review approval action',
+      openReputationActionsBySuggestionKey,
+      snapshot,
+    }))
+  }
+
+  return suggestions
 }
 
 function buildReputationSnapshotRecord({
@@ -237,6 +324,7 @@ function publishReputationRecord({
 
   const timestamp = now()
   const normalizedRecord = normalizeReputationSnapshot(existingRecord)
+  assertClinicPublishReady(getReputationSnapshotPublishReadiness(normalizedRecord))
 
   repositories.reputationSnapshots.upsert(normalizeReputationSnapshot({
     ...normalizedRecord,
@@ -252,14 +340,26 @@ function publishReputationRecord({
 export function getAdminClinicReputationPage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const locations = getLocations({ clientId, repositories })
+  const openReputationActionsBySuggestionKey = getOpenReputationActionsBySuggestionKey({
+    clientId,
+    repositories,
+  })
 
   return {
     client: mapClient(client),
     locations,
     publishStateMeta: CLINIC_RECORD_PUBLISH_STATE_META,
     reputationSnapshots: repositories.reputationSnapshots
-      .listByClientId(clientId)
+      .listByWorkspaceId(clientId)
       .map(normalizeReputationSnapshot)
+      .map((record) => ({
+        ...record,
+        publish_readiness: getReputationSnapshotPublishReadiness(record),
+        reputation_action_suggestions: getReputationActionSuggestions({
+          openReputationActionsBySuggestionKey,
+          snapshot: record,
+        }),
+      }))
       .sort(sortByPeriodDesc),
     status: 'ready',
   }
@@ -281,7 +381,7 @@ export function saveAdminClinicReputation({
   const validLocationIds = new Set(locations.map((location) => location.id))
   const snapshots = filterMeaningfulRecords(input?.reputationSnapshots)
   const existingSnapshotsById = new Map(
-    repositories.reputationSnapshots.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.reputationSnapshots.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
 
   deleteRemovedRecords({

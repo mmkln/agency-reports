@@ -2,16 +2,17 @@ import { Link } from 'react-router-dom'
 
 import {
   Button,
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import { listAdminClients } from '../../../domain/services/adminClientService'
 import { listAdminPerformanceDashboardPeriods } from '../../../domain/services/adminPerformanceDashboardService'
 import { listAdminReports } from '../../../domain/services/adminReportService'
 import { listAdminDashboardLinks } from '../../../domain/services/dashboardLinkService'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { AdminClientReportsDashboardsWorkspace } from '../../../widgets/admin-client-reports-dashboards'
@@ -19,9 +20,7 @@ import { AdminClientReportsDashboardsWorkspace } from '../../../widgets/admin-cl
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -29,11 +28,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }
@@ -73,13 +68,14 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
   const dashboardLinks = workspace?.dashboardLinks.filter((dashboardLink) => dashboardLink.clientId === selectedClientId) ?? []
   const periods = workspace?.periods.filter((period) => period.clientId === selectedClientId) ?? []
   const reports = workspace?.reports.filter((report) => report.clientId === selectedClientId) ?? []
+  const isClinic = Boolean(client)
 
   if (workspaceResource.status === 'loading') {
     return <WorkspaceLoadingState />
   }
 
   if (workspaceResource.status === 'error' || !client) {
-    return <WorkspaceErrorState message={workspaceResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workspaceResource.error || 'Account was not found.'} />
   }
 
   return (
@@ -103,9 +99,9 @@ export function AdminClientReportsDashboardsPage({ routeParams = {}, runtime }) 
         )}
         client={client}
         currentPage="reports-dashboards"
-        eyebrow="Reports & Dashboards"
+        eyebrow={isClinic ? 'Clinic results' : 'Reports & Dashboards'}
         primaryAction={{
-          children: 'New Performance',
+          children: isClinic ? 'New Clinic Performance' : 'New Performance',
           to: `/admin/performance-dashboards?clientId=${client.id}&createPerformanceDashboard=true`,
         }}
         width="content"

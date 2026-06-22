@@ -7,7 +7,13 @@ import {
   CLINIC_RECORD_PUBLISH_STATES,
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
+import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
 import { ComplianceReviewStatusActions } from './ComplianceReviewStatusActions'
+import { ComplianceSuggestedActionButtons } from './ComplianceSuggestedActionButtons'
 import { PolicyIssuesEditor } from './PolicyIssuesEditor'
 import {
   NotesField,
@@ -42,17 +48,14 @@ function getPublishLabel(record) {
   ].label
 }
 
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
-}
-
 export function ComplianceReviewsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
   onApplyStatus = () => {},
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -90,7 +93,7 @@ export function ComplianceReviewsCard({
           Add review
         </Button>
       )}
-      description="Policy, claims, privacy, and ad-platform review records visible in client-safe compliance summaries."
+      description="Policy, claims, privacy, and ad-platform review records visible in portal-ready compliance summaries."
       iconName="shieldCheck"
       title="Compliance Reviews"
     >
@@ -112,10 +115,14 @@ export function ComplianceReviewsCard({
                   {getPublishLabel(review)}
                   {review.published_at ? ` at ${review.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={review.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={review.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(review, isDirty)}
+                  disabled={!canPublishClinicRecord(review, isDirty)}
                   onClick={() => onPublish({ id: review.id, type: 'review' })}
                   size="sm"
                   type="button"
@@ -128,6 +135,16 @@ export function ComplianceReviewsCard({
                 </Button>
               </div>
             </div>
+
+            <ComplianceSuggestedActionButtons
+              createdActionKeys={createdActionKeys}
+              creatingActionKey={creatingActionKey}
+              isDirty={isDirty}
+              onCreateSuggestedAction={onCreateSuggestedAction}
+              record={review}
+              recordType="review"
+              suggestions={review.compliance_action_suggestions}
+            />
 
             <div className="grid gap-component md:grid-cols-3">
               <TextField
@@ -206,7 +223,7 @@ export function ComplianceReviewsCard({
               <NotesField
                 label="Summary"
                 onChange={(value) => updateReview(index, 'summary', value)}
-                placeholder="Client-safe summary of the compliance state"
+                placeholder="Portal-ready summary of the compliance state"
                 value={review.summary}
               />
               <NotesField

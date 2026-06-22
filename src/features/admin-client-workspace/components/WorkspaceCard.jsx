@@ -1,8 +1,8 @@
 import {
-  CardContent,
-  CardTitle,
-  PrimitiveCard as Card,
-  PrimitiveCardHeader as CardHeader,
+  EmptyState,
+  Panel,
+  PanelBody,
+  Skeleton,
 } from '@/shared/ui'
 
 import { Icon } from '../../../shared/icons'
@@ -35,22 +35,47 @@ export function InlineEmptyState({ children, iconName = 'helpCircle', title }) {
 
 export function WorkspaceCard({ action, children, description, iconName, title }) {
   return (
-    <Card className="gap-0 bg-block py-0 shadow-none">
-      <CardHeader className="border-b border-separator px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
+    <section className="grid gap-control rounded-block bg-block p-component">
+      <div className="flex items-center justify-between gap-control">
+        <div className="flex min-w-0 items-start gap-control">
+          {iconName ? (
+            <span className="mt-micro flex shrink-0 text-text-quaternary">
+              <Icon name={iconName} size={17} />
+            </span>
+          ) : null}
           <div className="min-w-0">
-            <CardTitle className="flex items-center gap-2 text-ui text-text-primary">
-              {iconName ? <Icon className="text-text-quaternary" name={iconName} size={15} /> : null}
-              {title}
-            </CardTitle>
-            {description ? <p className="mt-1 text-label font-normal text-text-muted">{description}</p> : null}
+            <h2 className="m-0 truncate text-ui font-semibold text-text-primary">{title}</h2>
+            {description ? <p className="mt-tag text-ui text-text-muted">{description}</p> : null}
           </div>
-          {action}
         </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        {children}
-      </CardContent>
-    </Card>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+export function WorkspaceState({ description, message, status = 'loading', title }) {
+  const isLoading = status === 'loading'
+
+  return (
+    <Panel>
+      <PanelBody className="flex min-h-[260px] items-center justify-center">
+        {isLoading ? (
+          <div className="grid w-full max-w-md gap-component">
+            <Skeleton className="h-6 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+        ) : (
+          <EmptyState
+            className={status === 'error' ? 'text-destructive' : ''}
+            description={description ?? message}
+            iconName={status === 'error' ? 'circleAlert' : 'helpCircle'}
+            title={title ?? (status === 'error' ? 'Unable to load workspace' : 'No data')}
+          />
+        )}
+      </PanelBody>
+    </Panel>
   )
 }

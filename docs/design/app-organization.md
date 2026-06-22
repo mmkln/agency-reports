@@ -54,6 +54,7 @@ AppShell
 ## Navigation
 
 - Sidebars expose stable top-level destinations and should remain shallow.
+- The sidebar should show stable destinations for the current container, not every route the user has permission to access.
 - Top navigation is appropriate for a small, flat set of primary destinations. Move to a sidebar only when the app has enough stable destinations, nested workspace areas, or high-frequency switching to justify persistent vertical navigation.
 - Do not split the app shell by role just because roles exist. Split shell structure only when the roles have materially different navigation models; otherwise keep one stable shell and vary allowed destinations/actions.
 - Keep navigation visually quieter than page content. Selected states should be clear but restrained, using neutral fills, contrast, and spacing before saturated color or decorative markers.

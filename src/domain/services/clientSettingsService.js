@@ -1,20 +1,29 @@
-import { CLIENT_MEMBERSHIP_ROLES } from '../../entities/client-membership'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
-
-const MEMBERSHIP_ROLE_LABELS = Object.freeze({
-  [CLIENT_MEMBERSHIP_ROLES.OWNER]: 'Owner',
-  [CLIENT_MEMBERSHIP_ROLES.VIEWER]: 'Viewer',
-})
-
-const USER_ROLE_LABELS = Object.freeze({
-  [USER_ROLES.AGENCY_ADMIN]: 'Agency admin',
-  [USER_ROLES.AGENCY_TEAM]: 'Agency team',
-  [USER_ROLES.CLIENT_USER]: 'Client user',
-})
+import { isActiveWorkspaceMembership, WORKSPACE_ROLE_META, WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import {
+  CLIENT_REQUEST_STATUSES,
+  CLIENT_REQUEST_TYPES,
+  normalizeClientRequest,
+} from '../../entities/client-request'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { canManageClientTeam } from '../policies/clientTeamPolicy'
+import { canRequestWorkspaceDeletion } from '../policies/workspaceAccessPolicy'
 
 function normalizeText(value = '') {
   return String(value ?? '').trim()
+}
+
+function requireWorkspaceAccess({ workspaceId, repositories, viewer }) {
+  const normalizedWorkspaceId = normalizeText(workspaceId || viewer?.activeWorkspaceId)
+  const workspace = repositories.workspaces.findById(normalizedWorkspaceId)
+
+  if (!workspace || !canAccessWorkspaceResource(viewer, normalizedWorkspaceId)) {
+    throw new Error('You do not have permission to view this workspace.')
+  }
+
+  return {
+    workspace,
+    workspaceId: normalizedWorkspaceId,
+  }
 }
 
 function mapMembership({ membership, profile }) {
@@ -23,19 +32,35 @@ function mapMembership({ membership, profile }) {
     id: membership.id,
     name: profile?.name ?? 'Unknown member',
     role: membership.role,
-    roleLabel: MEMBERSHIP_ROLE_LABELS[membership.role] ?? membership.role,
+    roleLabel: WORKSPACE_ROLE_META[membership.role]?.label ?? membership.role,
     userId: membership.user_id,
   }
 }
 
-function getCurrentMembership({ clientId, repositories, viewer }) {
+function getCurrentMembership({ repositories, viewer, workspaceId }) {
   if (!viewer?.userId) {
     return null
   }
 
-  return repositories.clientMemberships
-    .listByClientId(clientId)
+  return repositories.workspaceMemberships
+    .listByWorkspaceId(workspaceId)
+    .filter(isActiveWorkspaceMembership)
     .find((membership) => membership.user_id === viewer.userId) ?? null
+}
+
+function findOpenBusinessDeletionRequest({ repositories, workspaceId }) {
+  return repositories.clientRequests
+    ?.listByWorkspaceId(workspaceId)
+    .map(normalizeClientRequest)
+    .find((request) => (
+      request.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION
+      && ![
+        CLIENT_REQUEST_STATUSES.ARCHIVED,
+        CLIENT_REQUEST_STATUSES.COMPLETED,
+        CLIENT_REQUEST_STATUSES.DECLINED,
+      ].includes(request.status)
+    ))
+    ?? null
 }
 
 export function getClientSettingsPage({
@@ -43,23 +68,30 @@ export function getClientSettingsPage({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  let accessContext
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  try {
+    accessContext = requireWorkspaceAccess({ workspaceId: clientId, repositories, viewer })
+  } catch {
     return {
       reason: 'access_denied',
       status: 'error',
     }
   }
 
+  const { workspace, workspaceId } = accessContext
   const currentMembership = getCurrentMembership({
-    clientId: normalizedClientId,
     repositories,
     viewer,
+    workspaceId,
   })
-  const members = repositories.clientMemberships
-    .listByClientId(normalizedClientId)
+  const businessDeletionRequest = findOpenBusinessDeletionRequest({
+    repositories,
+    workspaceId,
+  })
+  const members = repositories.workspaceMemberships
+    .listByWorkspaceId(workspaceId)
+    .filter(isActiveWorkspaceMembership)
     .map((membership) => mapMembership({
       membership,
       profile: repositories.profiles.findByUserId(membership.user_id),
@@ -68,35 +100,39 @@ export function getClientSettingsPage({
 
   return {
     client: {
-      id: client.id,
-      name: client.name,
-      portalSlug: client.portal_slug,
-      primaryContactEmail: client.primary_contact_email,
-      primaryContactName: client.primary_contact_name,
+      id: workspace.id,
+      name: workspace.name,
+      portalSlug: workspace.portal_slug,
+      primaryContactEmail: workspace.primary_contact_email,
+      primaryContactName: workspace.primary_contact_name,
     },
     currentMembership: currentMembership
       ? {
           id: currentMembership.id,
           role: currentMembership.role,
-          roleLabel: MEMBERSHIP_ROLE_LABELS[currentMembership.role] ?? currentMembership.role,
+          roleLabel: WORKSPACE_ROLE_META[currentMembership.role]?.label ?? currentMembership.role,
         }
       : null,
     members,
-    profile: {
-      email: viewer.email ?? '',
-      name: viewer.name ?? '',
-      role: viewer.role,
-      roleLabel: USER_ROLE_LABELS[viewer.role] ?? viewer.role,
-      userId: viewer.userId,
-    },
     sections: {
-      notifications: {
-        isAvailable: false,
-        message: 'Notification preferences are managed by the agency until notification delivery is implemented.',
+      access: {
+        businessDeletionRequest: businessDeletionRequest
+          ? {
+              createdAt: businessDeletionRequest.created_at,
+              id: businessDeletionRequest.id,
+              status: businessDeletionRequest.status,
+              title: businessDeletionRequest.title,
+            }
+          : null,
+        canRequestBusinessDeletion: canRequestWorkspaceDeletion(viewer, workspaceId),
       },
-      security: {
-        isAvailable: false,
-        message: 'Password and session controls are not exposed in this client portal yet.',
+      team: {
+        allowedInviteRoles: [WORKSPACE_ROLES.VIEWER],
+        canManage: canManageClientTeam({
+          clientId: workspaceId,
+          repositories,
+          viewer,
+        }),
       },
     },
     status: 'ready',

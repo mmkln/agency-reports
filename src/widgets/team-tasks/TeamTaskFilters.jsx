@@ -13,7 +13,6 @@ import {
 } from '@/shared/ui'
 import { Icon } from '@/shared/icons'
 import { TASK_STATUSES, TASK_STATUS_META } from '@/entities/task'
-import { VISIBILITY } from '@/entities/update'
 
 function ScopeToggle({ filters, onChange }) {
   const isMine = filters.scope === 'mine'
@@ -50,7 +49,7 @@ export function TeamTaskFilters({ filters, onChange, taskData }) {
     filters.clientId !== 'all',
     filters.projectId !== 'all',
     filters.status !== 'all',
-    filters.visibility !== 'all',
+    filters.workState !== 'all',
   ].filter(Boolean).length
 
   function clearFilters() {
@@ -59,7 +58,7 @@ export function TeamTaskFilters({ filters, onChange, taskData }) {
       clientId: 'all',
       projectId: 'all',
       status: 'all',
-      visibility: 'all',
+      workState: 'all',
     })
   }
 
@@ -158,18 +157,21 @@ export function TeamTaskFilters({ filters, onChange, taskData }) {
                   </SelectContent>
                 </Select>
               </FilterField>
-              <FilterField label="Visibility">
+              <FilterField label="Client work">
                 <Select
-                  onValueChange={(value) => onChange({ ...filters, visibility: value })}
-                  value={filters.visibility}
+                  onValueChange={(value) => onChange({ ...filters, workState: value })}
+                  value={filters.workState}
                 >
                   <SelectTrigger className={filterSelectTriggerClass} size="sm">
-                    <SelectValue placeholder="All visibility" />
+                    <SelectValue placeholder="All client work" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All visibility</SelectItem>
-                    <SelectItem value={VISIBILITY.CLIENT_VISIBLE}>Client visible</SelectItem>
-                    <SelectItem value={VISIBILITY.INTERNAL}>Internal</SelectItem>
+                    <SelectItem value="all">All client work</SelectItem>
+                    <SelectItem value="has_work_item">Has work item</SelectItem>
+                    <SelectItem value="missing_summary">Missing summary</SelectItem>
+                    <SelectItem value="ready_for_review">Ready for review</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="waiting_without_request">Waiting without request</SelectItem>
                   </SelectContent>
                 </Select>
               </FilterField>

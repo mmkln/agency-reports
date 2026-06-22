@@ -683,7 +683,7 @@ V2
 ```text
 profiles
 clients
-client_memberships
+workspace_memberships
 projects
 tasks
 client_work_items
@@ -732,7 +732,7 @@ created_at
 updated_at
 ```
 
-### client_memberships
+### workspace_memberships
 
 ```text
 id

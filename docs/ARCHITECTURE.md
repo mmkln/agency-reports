@@ -4,13 +4,18 @@
 
 Agency Client Portal Aggregator follows a clean, layered architecture with clear separation of concerns. The application uses React Router v7 for client-side routing with role-based access control.
 
+Business-domain ownership is defined separately in `docs/domain-ownership-model.md`.
+Use that document as the source of truth before changing users, agencies, company
+workspaces, memberships, roles, profile semantics, access rules, or
+account/workspace deletion behavior.
+
 ## Directory Structure
 
 ```
 src/
 ├── app/                          # Application-level setup
 │   ├── App.jsx                  # Root component with providers
-│   ├── components/              # App-level components (DemoRoleSwitcher)
+│   ├── components/              # App-level components
 │   ├── layout/                  # Layout wrappers (RootLayout, AuthLayout)
 │   ├── providers/               # Context providers
 │   │   ├── auth/                # Authentication context and hooks
@@ -117,14 +122,12 @@ const { viewer, runtime, onAuthChange, repositories } = useAuth()
 Main application layout with:
 - AppShell wrapper for authenticated users
 - Role-filtered navigation
-- Demo role switcher
 - Outlet for nested routes
 
 ### AuthLayout (`src/app/layout/AuthLayout.jsx`)
 
 Auth page layout (login, accept invite):
 - Simple wrapper without AppShell
-- Demo role switcher visible
 - Used for pages in 'auth' layout type
 
 ## Data Management

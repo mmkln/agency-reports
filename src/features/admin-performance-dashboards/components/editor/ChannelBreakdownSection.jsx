@@ -76,7 +76,7 @@ export function ChannelBreakdownSection({
                 <FormField label="What changed / channel summary">
                   <Textarea
                     onChange={(event) => updateArrayItem('channel_breakdown', channel.id, 'summary', event.target.value)}
-                    placeholder="Explain the channel result in client-facing language."
+                    placeholder="Explain the channel result in portal-ready language."
                     rows={3}
                     value={channel.summary ?? ''}
                   />

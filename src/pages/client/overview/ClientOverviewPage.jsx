@@ -5,7 +5,6 @@ import {
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientOverviewPage } from '../../../domain/services/clientOverviewService'
-import { USER_ROLES } from '../../../entities/profile'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import {
   AccessDeniedState,
@@ -20,6 +19,7 @@ import {
   ProgressSummaryBlock,
   ReportsDashboardsOverviewBlock,
 } from '../../../widgets/client-overview'
+import { canRecordClientPortalActivity } from '../clientPageAccess'
 
 function createUuid() {
   return crypto.randomUUID()
@@ -32,7 +32,7 @@ function recordClientActivity({
   repositories,
   runtime,
 }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER) {
+  if (!canRecordClientPortalActivity(runtime.viewer)) {
     return
   }
 

@@ -1,5 +1,8 @@
+import { Link } from 'react-router-dom'
+
 import {
   Badge,
+  Button,
   EmptyState,
   Panel,
   PanelBody,
@@ -7,6 +10,8 @@ import {
   PropertyGrid,
   StatusBadge,
 } from '@/shared/ui'
+
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
 
 function formatNumber(value) {
   return new Intl.NumberFormat('en-US').format(Math.round(value || 0))
@@ -33,7 +38,33 @@ function SummaryMetric({ helper, label, value }) {
   )
 }
 
-function ComplianceReviewCard({ review }) {
+function RelatedActionList({ actions, clientId }) {
+  if (!actions?.length) {
+    return null
+  }
+
+  return (
+    <div className="mt-5 grid gap-tag">
+      {actions.map((action) => (
+        <div className="flex flex-col gap-3 rounded-control bg-surface-subtle p-3 sm:flex-row sm:items-center sm:justify-between" key={action.id}>
+          <div className="min-w-0">
+            <p className="text-ui text-text-primary">{action.title}</p>
+            <p className="text-label font-normal text-text-muted">
+              {action.dueDate ? `Due ${new Date(action.dueDate).toLocaleDateString()}` : 'No due date'}
+            </p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link to={`/client/action-needed?clientId=${clientId}`}>
+              Open action
+            </Link>
+          </Button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ComplianceReviewCard({ clientId, review }) {
   return (
     <article className="rounded-block bg-block p-block shadow-block">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -101,11 +132,13 @@ function ComplianceReviewCard({ review }) {
           ))}
         </div>
       ) : null}
+
+      <RelatedActionList actions={review.relatedActions} clientId={clientId} />
     </article>
   )
 }
 
-function ApprovalCard({ approval }) {
+function ApprovalCard({ approval, clientId }) {
   return (
     <article className="rounded-block bg-block p-block shadow-block">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -159,34 +192,9 @@ function ApprovalCard({ approval }) {
           ))}
         </div>
       ) : null}
-    </article>
-  )
-}
 
-function DataFreshness({ page }) {
-  return (
-    <Panel>
-      <PanelHeader title="Data Freshness" />
-      <PanelBody>
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Last updated',
-              value: formatDate(page.latestUpdatedAt),
-            },
-            {
-              label: 'Data mode',
-              value: 'Manual compliance records',
-            },
-            {
-              label: 'Privacy boundary',
-              value: 'No patient-level approval records',
-            },
-          ]}
-        />
-      </PanelBody>
-    </Panel>
+      <RelatedActionList actions={approval.relatedActions} clientId={clientId} />
+    </article>
   )
 }
 
@@ -194,7 +202,7 @@ export function ClientComplianceApprovalsView({ page }) {
   if (page.isEmpty) {
     return (
       <EmptyState
-        description="Compliance reviews and medical approvals will appear after the agency publishes clinic-safe review records."
+        description="Compliance reviews and medical approvals will appear after the team publishes clinic-safe review records."
         iconName="shieldCheck"
         title="No compliance records yet"
       />
@@ -230,7 +238,7 @@ export function ClientComplianceApprovalsView({ page }) {
         <PanelHeader title="Compliance Reviews" />
         <PanelBody className="grid gap-card">
           {page.reviews.map((review) => (
-            <ComplianceReviewCard key={review.id} review={review} />
+            <ComplianceReviewCard clientId={page.client.id} key={review.id} review={review} />
           ))}
         </PanelBody>
       </Panel>
@@ -239,12 +247,12 @@ export function ClientComplianceApprovalsView({ page }) {
         <PanelHeader title="Medical Approvals" />
         <PanelBody className="grid gap-card">
           {page.approvals.map((approval) => (
-            <ApprovalCard approval={approval} key={approval.id} />
+            <ApprovalCard approval={approval} clientId={page.client.id} key={approval.id} />
           ))}
         </PanelBody>
       </Panel>
 
-      <DataFreshness page={page} />
+      <ClientClinicDataTrust dataTrust={page.dataTrust} />
     </div>
   )
 }

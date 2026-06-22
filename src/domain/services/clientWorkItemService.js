@@ -6,7 +6,6 @@ import {
   mapTaskStatusToClientWorkStatus,
   normalizeClientWorkItem,
 } from '../../entities/client-work-item'
-import { USER_ROLES } from '../../entities/profile'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
@@ -20,7 +19,12 @@ import {
   canTransitionClientWorkItemPublishState,
   isClientWorkItemPublished,
 } from '../policies/clientWorkItemPolicy'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasAgencyMembership,
+  hasWorkspaceMembership,
+} from '../policies/routeAccessPolicy'
 
 const VALID_STATUSES = new Set(Object.values(CLIENT_WORK_ITEM_STATUSES))
 const VALID_PUBLISH_STATES = new Set(Object.values(CLIENT_WORK_ITEM_PUBLISH_STATES))
@@ -126,14 +130,14 @@ function getStatusMeta(status, registry) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage client-facing work.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage published work.')
   }
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
+    throw new Error('Account was not found.')
   }
 
   return client
@@ -151,7 +155,7 @@ function getClientWorkItem({ repositories, workItemId }) {
 
 function getEditableClientWorkItem({ repositories, viewer, workItemId }) {
   const item = getClientWorkItem({ repositories, workItemId })
-  const client = repositories.clients.findById(item.client_id)
+  const client = repositories.workspaces.findById(item.client_id)
 
   if (!canManageClientWorkItem({ client, item, viewer })) {
     throw new Error('Client work item was not found.')
@@ -168,15 +172,7 @@ function canPrepareClientWorkItemFromTask({ client, task, viewer }) {
     return false
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  if (viewer?.role === USER_ROLES.AGENCY_TEAM) {
-    return canAccessClient(viewer, task.client_id)
-  }
-
-  return false
+  return hasAgencyMembership(viewer) && canAccessWorkspaceResource(viewer, task.client_id)
 }
 
 function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
@@ -189,13 +185,53 @@ function findActiveClientWorkItemBySourceTaskId({ repositories, taskId }) {
     )) ?? null
 }
 
-function normalizeEditableFields(input = {}, fallback = {}) {
+function validateRelatedProject({ clientId, projectId, repositories }) {
+  const normalizedProjectId = normalizeText(projectId)
+
+  if (!normalizedProjectId) {
+    return ''
+  }
+
+  const project = repositories.projects.findById(normalizedProjectId)
+
+  if (!project || project.client_id !== clientId) {
+    throw new Error('Project is not available for this client.')
+  }
+
+  return normalizedProjectId
+}
+
+function validateSourceTask({ clientId, repositories, sourceTaskId }) {
+  const normalizedSourceTaskId = normalizeText(sourceTaskId)
+
+  if (!normalizedSourceTaskId) {
+    return ''
+  }
+
+  const task = repositories.tasks.findById(normalizedSourceTaskId)
+
+  if (!task || task.client_id !== clientId) {
+    throw new Error('Source task is not available for this client.')
+  }
+
+  return normalizedSourceTaskId
+}
+
+function normalizeEditableFields({
+  clientId,
+  fallback = {},
+  input = {},
+  repositories,
+}) {
+  const projectId = input.projectId ?? input.project_id ?? fallback.project_id
+  const sourceTaskId = input.sourceTaskId ?? input.source_task_id ?? fallback.source_task_id
+
   return {
-    project_id: normalizeText(input.projectId ?? input.project_id ?? fallback.project_id),
+    project_id: validateRelatedProject({ clientId, projectId, repositories }),
     sort_order: Number.isFinite(Number(input.sortOrder ?? input.sort_order ?? fallback.sort_order))
       ? Number(input.sortOrder ?? input.sort_order ?? fallback.sort_order)
       : 0,
-    source_task_id: normalizeText(input.sourceTaskId ?? input.source_task_id ?? fallback.source_task_id),
+    source_task_id: validateSourceTask({ clientId, repositories, sourceTaskId }),
     status: normalizeStatus(input.status, fallback.status),
     summary: normalizeText(input.summary ?? fallback.summary),
     target_date: normalizeOptionalDate(input.targetDate ?? input.target_date ?? fallback.target_date, 'Target date'),
@@ -286,7 +322,7 @@ export function listAdminClientWorkItems({
   const projectsById = getProjectMap(repositories)
   const tasksById = getTaskMap(repositories)
   const workItems = repositories.clientWorkItems
-    .listByClientId(client.id)
+    .listByWorkspaceId(client.id)
     .filter((item) => canAgencyViewClientWorkItem({ item, viewer }))
     .map((item) => mapAdminWorkItem({
       client,
@@ -303,15 +339,39 @@ export function listAdminClientWorkItems({
   }
 }
 
+export function getAdminClientWorkItemDetail({
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const item = getClientWorkItem({ repositories, workItemId })
+  const client = repositories.workspaces.findById(item.client_id)
+
+  if (!canAgencyViewClientWorkItem({ item, viewer })) {
+    throw new Error('Client work item was not found.')
+  }
+
+  return {
+    client,
+    status: 'ready',
+    workItem: mapAdminWorkItem({
+      client,
+      item,
+      project: item.project_id ? repositories.projects.findById(item.project_id) : null,
+      sourceTask: item.source_task_id ? repositories.tasks.findById(item.source_task_id) : null,
+    }),
+  }
+}
+
 export function listPublishedClientWorkItems({
   clientId,
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
@@ -320,13 +380,13 @@ export function listPublishedClientWorkItems({
 
   const projectsById = getProjectMap(repositories)
   const workItems = repositories.clientWorkItems
-    .listByClientId(normalizedClientId)
+    .listByWorkspaceId(normalizedClientId)
     .filter((item) => {
       if (!isClientWorkItemPublished(item)) {
         return false
       }
 
-      if (viewer?.role === USER_ROLES.CLIENT_USER) {
+      if (hasWorkspaceMembership(viewer)) {
         return canClientViewClientWorkItem({ item, viewer })
       }
 
@@ -346,6 +406,48 @@ export function listPublishedClientWorkItems({
     },
     status: 'ready',
     workItems,
+  }
+}
+
+export function getPublishedClientWorkItemDetail({
+  clientId,
+  repositories,
+  viewer,
+  workItemId,
+}) {
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
+  const item = repositories.clientWorkItems.findById(workItemId)
+
+  if (!client || !item || item.client_id !== normalizedClientId || !isClientWorkItemPublished(item)) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  const canView = hasWorkspaceMembership(viewer)
+    ? canClientViewClientWorkItem({ item, viewer })
+    : canAgencyViewClientWorkItem({ item, viewer })
+
+  if (!canView) {
+    return {
+      reason: 'access_denied',
+      status: 'error',
+    }
+  }
+
+  return {
+    client: {
+      id: client.id,
+      name: client.name,
+      portalSlug: client.portal_slug,
+    },
+    status: 'ready',
+    workItem: mapClientWorkItem({
+      item,
+      project: item.project_id ? repositories.projects.findById(item.project_id) : null,
+    }),
   }
 }
 
@@ -374,7 +476,11 @@ export function createClientWorkItem({
     published_at: null,
     published_by: null,
     updated_at: timestamp,
-    ...normalizeEditableFields(input),
+    ...normalizeEditableFields({
+      clientId: client.id,
+      input,
+      repositories,
+    }),
   }
 
   repositories.clientWorkItems.upsert(item)
@@ -448,7 +554,7 @@ export function suggestClientWorkItemFromTask({
     throw new Error('Source task was not found.')
   }
 
-  const client = repositories.clients.findById(task.client_id)
+  const client = repositories.workspaces.findById(task.client_id)
 
   if (!canPrepareClientWorkItemFromTask({ client, task, viewer })) {
     throw new Error('Source task was not found.')
@@ -466,7 +572,7 @@ export function suggestClientWorkItemFromTask({
   const summary = normalizeText(input.summary ?? task.client_safe_summary)
 
   if (!summary) {
-    throw new Error('Client-safe summary is required before sending work for review.')
+    throw new Error('Portal-ready summary is required before sending work for review.')
   }
 
   const timestamp = now()
@@ -480,13 +586,17 @@ export function suggestClientWorkItemFromTask({
     published_by: null,
     updated_at: timestamp,
     ...normalizeEditableFields({
-      clientId: task.client_id,
-      projectId: task.project_id,
-      sourceTaskId: task.id,
-      status: input.status ?? mapTaskStatusToClientWorkStatus(task.status),
-      summary,
-      targetDate: input.targetDate ?? task.due_date ?? '',
-      title: input.title ?? task.title,
+      clientId: client.id,
+      input: {
+        clientId: task.client_id,
+        projectId: task.project_id,
+        sourceTaskId: task.id,
+        status: input.status ?? mapTaskStatusToClientWorkStatus(task.status),
+        summary,
+        targetDate: input.targetDate ?? task.due_date ?? '',
+        title: input.title ?? task.title,
+      },
+      repositories,
     }),
   }
 
@@ -525,7 +635,12 @@ export function updateClientWorkItem({
 
   const updatedItem = {
     ...item,
-    ...normalizeEditableFields(input, item),
+    ...normalizeEditableFields({
+      clientId: client.id,
+      fallback: item,
+      input,
+      repositories,
+    }),
     last_reviewed_at: input.lastReviewedAt ?? input.last_reviewed_at ?? item.last_reviewed_at,
     publish_state: nextPublishState,
     updated_at: timestamp,
@@ -551,7 +666,7 @@ export function markClientWorkItemReadyForReview({
   const item = getClientWorkItem({ repositories, workItemId })
 
   if (!canManageClientWorkItem({
-    client: repositories.clients.findById(item.client_id),
+    client: repositories.workspaces.findById(item.client_id),
     item,
     viewer,
   }) && !canTeamPrepareClientWorkItem({ item, viewer })) {
@@ -597,7 +712,7 @@ export function publishClientWorkItem({
   const { client, item } = getEditableClientWorkItem({ repositories, viewer, workItemId })
 
   if (!canPublishClientWorkItem({ client, item, viewer })) {
-    throw new Error('Only agency admins can publish client work items.')
+    throw new Error('Only admins can publish work items.')
   }
 
   if (!normalizeText(item.summary)) {

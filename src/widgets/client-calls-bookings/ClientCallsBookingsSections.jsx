@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui'
 
 import { ClinicAnalyticsFilterBar } from '../client-clinic-filters'
+import { ClientClinicDataTrust } from '../client-clinic-data-trust'
 import {
   OperationalInsightsSection,
   PeakCallTimesSection,
@@ -32,10 +33,6 @@ function formatDuration(seconds) {
   }
 
   return `${Math.round(seconds / 60)} min`
-}
-
-function formatDate(value) {
-  return value ? new Date(value).toLocaleDateString() : 'Not updated'
 }
 
 function SummaryMetric({ helper, label, value }) {
@@ -147,33 +144,6 @@ function LeakageSection({ page }) {
   )
 }
 
-function SourceContext({ page }) {
-  return (
-    <Panel>
-      <PanelHeader title="Data Freshness" />
-      <PanelBody>
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Last updated',
-              value: formatDate(page.latestUpdatedAt),
-            },
-            {
-              label: 'Data mode',
-              value: 'Manual aggregate import',
-            },
-            {
-              label: 'Privacy boundary',
-              value: 'No patient-level call records',
-            },
-          ]}
-        />
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function ClientCallsBookingsView({ page }) {
   if (page.isEmpty) {
     return (
@@ -202,7 +172,7 @@ export function ClientCallsBookingsView({ page }) {
           filters={page.filters}
         />
         <EmptyState
-          description="Aggregate call and booking metrics will appear after the agency imports clinic-safe call tracking data or the current filters are cleared."
+          description="Aggregate call and booking metrics will appear after the team imports clinic-safe call tracking data or the current filters are cleared."
           iconName="phone"
           title="No calls and bookings data found"
         />
@@ -274,7 +244,7 @@ export function ClientCallsBookingsView({ page }) {
         </PanelBody>
       </Panel>
 
-      <SourceContext page={page} />
+      <ClientClinicDataTrust dataTrust={page.dataTrust} />
     </div>
   )
 }

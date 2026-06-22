@@ -1,20 +1,15 @@
-import { listAdminClients } from '../../../domain/services/adminClientService'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  useAdminRouteClient,
+} from '../../../features/admin-client-workspace'
 import { PageHeader } from '@/shared/ui'
 
-function getRouteClient(clientId, runtime) {
-  if (!clientId) {
-    return null
-  }
-
-  return listAdminClients({
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
-  }).find((client) => client.id === clientId) ?? null
-}
-
 export function AdminReportsPageHeader({ routeParams = {}, runtime }) {
-  const client = getRouteClient(routeParams.clientId, runtime)
+  const clientResource = useAdminRouteClient({
+    clientId: routeParams.clientId,
+    runtime,
+  })
+  const client = clientResource.data
   const createHref = client
     ? `/admin/reports?clientId=${client.id}&newReport=true`
     : '/admin/reports?newReport=true'
@@ -24,7 +19,7 @@ export function AdminReportsPageHeader({ routeParams = {}, runtime }) {
       <AdminClientWorkspaceHeader
         client={client}
         currentPage="reports-dashboards"
-        eyebrow="Client reports"
+        eyebrow="Account reports"
         primaryAction={{ children: 'New Report', to: createHref }}
       />
     )

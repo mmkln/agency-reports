@@ -67,7 +67,7 @@ export function AgencyWorkSection({
         />
         <TextListEditor
           addLabel="Add Planned"
-          emptyText="Add near-term planned agency work."
+          emptyText="Add near-term planned team work."
           emptyTitle="No planned work yet"
           items={form.content.agency_work.next}
           onAdd={() => addItem('next')}

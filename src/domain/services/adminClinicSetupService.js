@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import {
   CLINIC_ACQUISITION_CHANNELS,
   CLINIC_PROFILE_SPECIALTIES,
@@ -10,28 +10,29 @@ import {
   normalizeClinicProfile,
   normalizeClinicServiceLine,
 } from '../../entities/clinic'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 const VALID_SPECIALTIES = new Set(Object.values(CLINIC_PROFILE_SPECIALTIES))
 const VALID_SERVICE_LINE_STATUSES = new Set(Object.values(CLINIC_SERVICE_LINE_STATUSES))
 const VALID_CHANNELS = new Set(Object.values(CLINIC_ACQUISITION_CHANNELS))
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage clinic setup.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage clinic setup.')
   }
 }
 
 function getEditableClinicClient({ clientId, repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
     throw new Error('Clinic setup is not available for this admin.')
   }
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic setup is only available for clinic clients.')
   }
 
@@ -97,8 +98,8 @@ function mapClient(client) {
     primaryContactEmail: client.primary_contact_email,
     primaryContactName: client.primary_contact_name,
     status: client.status,
-    type: client.type,
-    typeMeta: CLIENT_TYPE_META[client.type],
+    type: CLIENT_TYPES.CLINIC,
+    typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     updatedAt: client.updated_at,
   }
 }
@@ -137,7 +138,7 @@ function updateTimestamped(existingRecord, record, timestamp) {
 function deleteRemovedRecords({ clientId, inputRecords, repository }) {
   const retainedIds = new Set(inputRecords.map((record) => record.id).filter(Boolean))
 
-  repository.listByClientId(clientId).forEach((record) => {
+  repository.listByWorkspaceId(clientId).forEach((record) => {
     if (!retainedIds.has(record.id)) {
       repository.deleteById(record.id)
     }
@@ -251,14 +252,14 @@ function buildServiceLineRecord({
 export function getAdminClinicSetupPage({ clientId, repositories, viewer }) {
   const client = getEditableClinicClient({ clientId, repositories, viewer })
   const locations = repositories.clinicLocations
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicLocation)
     .sort(sortByDisplayOrder)
   const serviceLines = repositories.clinicServiceLines
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .map(normalizeClinicServiceLine)
     .sort(sortByDisplayOrder)
-  const profile = mapProfile(repositories.clinicProfiles.listByClientId(clientId)[0] ?? null)
+  const profile = mapProfile(repositories.clinicProfiles.listByWorkspaceId(clientId)[0] ?? null)
 
   return {
     client: mapClient(client),
@@ -284,7 +285,7 @@ export function saveAdminClinicSetup({
   getEditableClinicClient({ clientId, repositories, viewer })
 
   const timestamp = now()
-  const existingProfile = repositories.clinicProfiles.listByClientId(clientId)[0] ?? null
+  const existingProfile = repositories.clinicProfiles.listByWorkspaceId(clientId)[0] ?? null
   const profileRecord = buildProfileRecord({
     clientId,
     existingProfile,
@@ -298,7 +299,7 @@ export function saveAdminClinicSetup({
   })
 
   const existingLocationsById = new Map(
-    repositories.clinicLocations.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.clinicLocations.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const locations = (input?.locations ?? []).filter((location) => normalizeText(location.name))
 
@@ -320,9 +321,9 @@ export function saveAdminClinicSetup({
     }))
   })
 
-  const savedLocationIds = new Set(repositories.clinicLocations.listByClientId(clientId).map((location) => location.id))
+  const savedLocationIds = new Set(repositories.clinicLocations.listByWorkspaceId(clientId).map((location) => location.id))
   const existingServiceLinesById = new Map(
-    repositories.clinicServiceLines.listByClientId(clientId).map((record) => [record.id, record]),
+    repositories.clinicServiceLines.listByWorkspaceId(clientId).map((record) => [record.id, record]),
   )
   const serviceLines = (input?.serviceLines ?? []).filter((serviceLine) => normalizeText(serviceLine.name))
 

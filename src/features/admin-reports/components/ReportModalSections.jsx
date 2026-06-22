@@ -14,7 +14,7 @@ import { Icon } from '../../../shared/icons'
 
 const REPORT_STATUS_DESCRIPTIONS = Object.freeze({
   [REPORT_STATUSES.DRAFT]: 'Internal draft. Hidden from client users.',
-  [REPORT_STATUSES.READY]: 'Ready for agency review. Still hidden from client users.',
+  [REPORT_STATUSES.READY]: 'Ready for team review. Still hidden from portal users.',
   [REPORT_STATUSES.PUBLISHED]: 'Visible to client users on the overview and report archive.',
   [REPORT_STATUSES.ARCHIVED]: 'Visible in the client archive, but no longer treated as the latest active report.',
 })
@@ -76,14 +76,14 @@ export function ReportSetupSection({
       title="Report setup"
     >
       <div className="grid gap-2">
-        <Label htmlFor="report-client">Client *</Label>
+        <Label htmlFor="report-client">Account *</Label>
         <Select
           disabled={mode === 'edit' || !hasClients}
           onValueChange={(value) => onUpdateField('clientId', value)}
           value={form.clientId}
         >
           <SelectTrigger id="report-client">
-            <SelectValue placeholder="Select client" />
+            <SelectValue placeholder="Select account" />
           </SelectTrigger>
           <SelectContent>
             {clients.map((client) => (
@@ -152,9 +152,9 @@ export function ReportSetupSection({
 export function ClientNarrativeSection({ form, onUpdateField }) {
   return (
     <ReportFormSection
-      description="This is the client-facing explanation. Keep it specific, plain-language, and decision-oriented."
+      description="This is the portal-ready explanation. Keep it specific, plain-language, and decision-oriented."
       iconName="messageSquare"
-      title="Client-facing narrative"
+      title="Portal narrative"
     >
       <div className="grid gap-2">
         <Label htmlFor="report-summary">Executive summary</Label>
@@ -205,7 +205,7 @@ export function ClientNarrativeSection({ form, onUpdateField }) {
         />
         <ReportTextarea
           id="report-client-decisions"
-          label="Needed from client"
+          label="Needed from account"
           onChange={(value) => onUpdateField('clientDecisionsNeeded', value)}
           placeholder="- Decision / approval / access needed"
           value={form.clientDecisionsNeeded}
@@ -266,7 +266,7 @@ export function SupportingLinksSection({ form, onUpdateField }) {
 export function InternalNotesSection({ form, onUpdateField }) {
   return (
     <ReportFormSection
-      description="Private agency context. These notes are never rendered in the client portal."
+      description="Private team context. These notes are never rendered in the portal."
       iconName="lock"
       title="Internal notes"
     >
@@ -275,7 +275,7 @@ export function InternalNotesSection({ form, onUpdateField }) {
         <Textarea
           id="report-internal-notes"
           onChange={(event) => onUpdateField('internalNotes', event.target.value)}
-          placeholder="Internal context for the agency. Never shown to the client."
+          placeholder="Internal context for the team. Never shown in the portal."
           rows={3}
           value={form.internalNotes}
         />

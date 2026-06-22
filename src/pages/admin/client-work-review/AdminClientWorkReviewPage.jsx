@@ -4,22 +4,21 @@ import {
   ClientWorkItemReviewDialog,
   useAdminClientWorkReviewWorkflow,
 } from '../../../features/admin-client-work-review'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { AdminClientWorkReviewWorkspace } from '../../../widgets/admin-client-work-review'
 import {
   Button,
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 import { Icon } from '../../../shared/icons'
 
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -27,11 +26,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }
@@ -47,7 +42,7 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
   }
 
   if (workflow.reviewResource.status === 'error' || !workflow.client) {
-    return <WorkspaceErrorState message={workflow.reviewResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workflow.reviewResource.error || 'Account was not found.'} />
   }
 
   return (
@@ -57,13 +52,13 @@ export function AdminClientWorkReviewPage({ routeParams = {}, runtime }) {
           <Button asChild size="sm" type="button" variant="outline">
             <Link to={`/admin/client-preview?clientId=${workflow.client.id}`}>
               <Icon name="eye" size={14} />
-              Preview published client version
+              Preview published portal version
             </Link>
           </Button>
         )}
         client={workflow.client}
         currentPage="projects"
-        eyebrow="Client projects"
+        eyebrow="Account projects"
         width="content"
       />
 

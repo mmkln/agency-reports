@@ -1,7 +1,5 @@
-import { Button } from '@/shared/ui'
-
-import { CLINIC_RECORD_PUBLISH_STATES } from '../../../entities/clinic'
 import { CLINIC_NEEDED_ACTION_TYPES } from '../../../entities/needed-from-client'
+import { ClinicSuggestedActionButtons } from '../../admin-clinic-actions'
 
 function getNumber(value) {
   const numberValue = Number(value)
@@ -9,10 +7,20 @@ function getNumber(value) {
 }
 
 function getSuggestedActions(metric) {
+  if (Array.isArray(metric.booking_action_suggestions)) {
+    return metric.booking_action_suggestions.map((suggestion) => ({
+      hasOpenAction: Boolean(suggestion.hasOpenAction),
+      label: suggestion.actionLabel,
+      openAction: suggestion.openAction ?? null,
+      type: suggestion.type,
+    }))
+  }
+
   const suggestions = []
 
   if (getNumber(metric.missed_calls) > 0) {
     suggestions.push({
+      hasOpenAction: false,
       label: 'Create missed-call action',
       type: CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
     })
@@ -20,6 +28,7 @@ function getSuggestedActions(metric) {
 
   if (getNumber(metric.average_response_seconds) >= 120) {
     suggestions.push({
+      hasOpenAction: false,
       label: 'Create call script action',
       type: CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
     })
@@ -27,22 +36,13 @@ function getSuggestedActions(metric) {
 
   if (getNumber(metric.no_response_leads) + getNumber(metric.follow_up_needed_count) > 0) {
     suggestions.push({
+      hasOpenAction: false,
       label: 'Create follow-up action',
       type: CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
     })
   }
 
   return suggestions
-}
-
-function canCreateSuggestedAction(metric, isDirty) {
-  return Boolean(metric.id)
-    && !isDirty
-    && metric.publish_state === CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
-}
-
-function getSuggestedActionKey(metric, suggestionType) {
-  return `${metric.id}:${suggestionType}`
 }
 
 export function CallBookingSuggestedActionButtons({
@@ -53,34 +53,23 @@ export function CallBookingSuggestedActionButtons({
   onCreateSuggestedAction,
 }) {
   const suggestions = getSuggestedActions(metric)
-  const canCreateActions = canCreateSuggestedAction(metric, isDirty)
 
   if (suggestions.length === 0) {
     return null
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {suggestions.map((suggestion) => {
-        const actionKey = getSuggestedActionKey(metric, suggestion.type)
-        const wasCreated = createdActionKeys.has(actionKey)
-
-        return (
-          <Button
-            disabled={!canCreateActions || wasCreated || creatingActionKey === actionKey}
-            key={suggestion.type}
-            onClick={() => onCreateSuggestedAction({
-              metricId: metric.id,
-              suggestionType: suggestion.type,
-            })}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {wasCreated ? 'Action created' : suggestion.label}
-          </Button>
-        )
+    <ClinicSuggestedActionButtons
+      createdActionKeys={createdActionKeys}
+      createPayload={({ record, suggestion }) => ({
+        metricId: record.id,
+        suggestionType: suggestion.type,
       })}
-    </div>
+      creatingActionKey={creatingActionKey}
+      isDirty={isDirty}
+      onCreateSuggestedAction={onCreateSuggestedAction}
+      record={metric}
+      suggestions={suggestions}
+    />
   )
 }

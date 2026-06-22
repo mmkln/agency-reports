@@ -6,11 +6,11 @@ import {
   Panel,
   PanelBody,
   PanelHeader,
-  PropertyGrid,
   StatusBadge,
 } from '@/shared/ui'
 
 import { Icon } from '../../shared/icons'
+import { ClinicReportReader } from './ClinicReportReader'
 import { formatPeriod } from './formatters'
 
 function ReportLinkActions({ report }) {
@@ -37,7 +37,7 @@ function ReportLinkActions({ report }) {
       <div className="rounded-control border border-control-border bg-block-subtle p-4">
         <p className="text-ui text-text-primary">Full report / PDF</p>
         <p className="mt-1 text-label font-normal text-text-muted">
-          Formal report file, when the agency provides one.
+          Formal report file, when the team provides one.
         </p>
         {report.pdfUrl ? (
           <Button asChild className="mt-4 w-full" variant="outline">
@@ -88,150 +88,6 @@ function ReportContentGroup({ children, description, title }) {
   )
 }
 
-function formatNumber(value) {
-  return new Intl.NumberFormat('en-US').format(Math.round(value || 0))
-}
-
-function formatCurrency(value) {
-  if (!value) {
-    return '$0'
-  }
-
-  return new Intl.NumberFormat('en-US', {
-    currency: 'USD',
-    maximumFractionDigits: 0,
-    style: 'currency',
-  }).format(value)
-}
-
-function formatRating(value) {
-  return `${Number(value || 0).toFixed(1)} / 5`
-}
-
-function ClinicListSection({ items, title }) {
-  if (!items?.length) {
-    return null
-  }
-
-  return (
-    <section className="rounded-control border border-control-border bg-block-subtle p-4">
-      <h3 className="text-ui text-text-primary">{title}</h3>
-      <ul className="mt-3 grid gap-2">
-        {items.map((item) => (
-          <li className="text-body text-text-secondary" key={item}>{item}</li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-function ClinicReportReader({ report }) {
-  const sections = report.clinicSections
-
-  return (
-    <div className="grid gap-4">
-      <section className="rounded-block bg-action-muted p-5">
-        <p className="text-label text-action">Clinic performance summary</p>
-        <h3 className="mt-1 text-heading text-text-primary">{report.title}</h3>
-        <p className="mt-1 text-ui text-text-muted">{formatPeriod(report)}</p>
-        {report.summary ? (
-          <p className="mt-4 max-w-readable whitespace-pre-line text-body text-text-secondary">
-            {report.summary}
-          </p>
-        ) : null}
-      </section>
-
-      <section className="rounded-block border border-control-border bg-block p-4">
-        <div className="mb-4">
-          <h3 className="text-ui text-text-primary">Patient Acquisition</h3>
-          <p className="mt-1 text-label font-normal text-text-muted">
-            Booked appointments, inquiry volume, and service/location winners.
-          </p>
-        </div>
-        <PropertyGrid
-          columns={4}
-          items={[
-            {
-              label: 'Inquiries',
-              value: formatNumber(sections.patientAcquisition.inquiries),
-            },
-            {
-              label: 'Booked appointments',
-              value: formatNumber(sections.patientAcquisition.bookedAppointments),
-            },
-            {
-              label: 'Cost per booked',
-              value: formatCurrency(sections.patientAcquisition.costPerBookedAppointment),
-            },
-            {
-              label: 'Top service lines',
-              value: sections.patientAcquisition.topServiceLines.join(', ') || 'Not set',
-            },
-          ]}
-        />
-        {sections.patientAcquisition.summary ? (
-          <p className="mt-4 text-body text-text-secondary">{sections.patientAcquisition.summary}</p>
-        ) : null}
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ReportContentGroup
-          description="Where demand leaked after the first inquiry."
-          title="Booking Leakage"
-        >
-          <PropertyGrid
-            columns={1}
-            items={[
-              { label: 'Missed calls', value: formatNumber(sections.bookingLeakage.missedCalls) },
-              { label: 'No-response leads', value: formatNumber(sections.bookingLeakage.noResponseLeads) },
-              { label: 'Follow-up needed', value: formatNumber(sections.bookingLeakage.followUpNeeded) },
-            ]}
-          />
-          <ReportTextSection title="Interpretation">{sections.bookingLeakage.summary}</ReportTextSection>
-        </ReportContentGroup>
-
-        <ReportContentGroup
-          description="Trust signals that affect new patient conversion."
-          title="Reputation"
-        >
-          <PropertyGrid
-            columns={1}
-            items={[
-              { label: 'Google rating', value: formatRating(sections.reputation.googleRating) },
-              { label: 'Reviews gained', value: formatNumber(sections.reputation.reviewsGained) },
-              { label: 'Unanswered reviews', value: formatNumber(sections.reputation.unansweredReviews) },
-            ]}
-          />
-          <ReportTextSection title="Interpretation">{sections.reputation.summary}</ReportTextSection>
-        </ReportContentGroup>
-
-        <ReportContentGroup
-          description="Medical approvals, policy limits, and tracking/privacy risks."
-          title="Compliance"
-        >
-          <PropertyGrid
-            columns={1}
-            items={[
-              { label: 'Open issues', value: formatNumber(sections.compliance.openIssues) },
-              { label: 'Pending approvals', value: formatNumber(sections.compliance.pendingApprovals) },
-              { label: 'Limited ads', value: formatNumber(sections.compliance.limitedAds) },
-            ]}
-          />
-          <ReportTextSection title="Interpretation">{sections.compliance.summary}</ReportTextSection>
-        </ReportContentGroup>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ClinicListSection items={sections.agencyWorkCompleted} title="Agency Work Completed" />
-        <ClinicListSection items={sections.clinicActionsNeeded} title="Clinic Actions Needed" />
-        <ClinicListSection items={sections.nextMonthPlan} title="Next Month Plan" />
-      </div>
-
-      <ReportLinkActions report={report} />
-    </div>
-  )
-}
-
 function ReportPreviewNotice({ report }) {
   if (report.isClientVisible) {
     return null
@@ -246,7 +102,7 @@ function ReportPreviewNotice({ report }) {
         <div>
           <h2 className="text-ui text-text-primary">Preview only</h2>
           <p className="mt-1 text-body text-text-secondary">
-            Preview only. This report is not visible to the client. Publish it when the client-facing narrative is ready.
+            Preview only. This report is not visible in the portal. Publish it when the narrative is ready.
           </p>
         </div>
       </PanelBody>
@@ -284,25 +140,25 @@ function ReportReader({ report }) {
 
             <div className="grid gap-4 xl:grid-cols-3">
           <ReportContentGroup
-            description="What the agency worked on and where the period gained traction."
+            description="What the team worked on and where the period gained traction."
             title="What happened"
           >
             <ReportTextSection title="What we did">{report.whatWeDid}</ReportTextSection>
             <ReportTextSection title="Wins">{report.wins}</ReportTextSection>
           </ReportContentGroup>
           <ReportContentGroup
-            description="Performance context and risks the client should understand."
+            description="Performance context and risks the account should understand."
             title="Performance context"
           >
             <ReportTextSection title="Results">{report.results}</ReportTextSection>
             <ReportTextSection title="Problems / blockers">{report.problems}</ReportTextSection>
           </ReportContentGroup>
           <ReportContentGroup
-            description="What happens next and what the agency needs from the client."
+            description="What happens next and what the team needs from the account."
             title="Next steps"
           >
             <ReportTextSection title="Next actions">{report.nextActions}</ReportTextSection>
-            <ReportTextSection title="Needed from client">{report.clientDecisionsNeeded}</ReportTextSection>
+            <ReportTextSection title="Needed from you">{report.clientDecisionsNeeded}</ReportTextSection>
           </ReportContentGroup>
             </div>
 
@@ -314,7 +170,7 @@ function ReportReader({ report }) {
   )
 }
 
-export function SelectedReportSection({ clientId, reportsPage }) {
+export function SelectedReportSection({ clientId, copy, reportsPage }) {
   if (reportsPage.reason === 'report_not_found') {
     return (
       <Panel>
@@ -342,14 +198,20 @@ export function SelectedReportSection({ clientId, reportsPage }) {
     return null
   }
 
+  const selectedReport = reportsPage.selectedReport
+  const selectedReportTitle = copy?.selectedReportTitle
+    ?? (selectedReport.template === 'clinic' && selectedReport.clinicSections ? 'Clinic growth report' : 'Narrative report')
+
   return (
     <section className="grid gap-4" id="selected-report">
       <div>
         <p className="text-label text-text-muted">Selected Report</p>
-        <h2 className="mt-1 text-heading text-text-primary">Narrative report</h2>
+        <h2 className="mt-1 text-heading text-text-primary">
+          {selectedReportTitle}
+        </h2>
       </div>
-      <ReportPreviewNotice report={reportsPage.selectedReport} />
-      <ReportReader report={reportsPage.selectedReport} />
+      <ReportPreviewNotice report={selectedReport} />
+      <ReportReader report={selectedReport} />
     </section>
   )
 }

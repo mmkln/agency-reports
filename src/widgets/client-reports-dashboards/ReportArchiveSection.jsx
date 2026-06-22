@@ -62,7 +62,7 @@ export function ReportArchiveSection({ clientId, reportsPage }) {
           ))
         ) : (
           <EmptyState
-            description="The first report will appear here after the agency publishes it."
+            description="The first report will appear here after the team publishes it."
             iconName="fileText"
             title="No published reports yet"
           />

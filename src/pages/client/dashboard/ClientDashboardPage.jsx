@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
+import { Navigate } from 'react-router-dom'
 
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
 } from '../../../domain/services/activityTrackingService'
 import { getClientDashboardPage } from '../../../domain/services/clientDashboardService'
-import { USER_ROLES } from '../../../entities/profile'
+import { useAsyncResource } from '../../../shared/data/useAsyncResource'
 import { AccessDeniedState } from '../../../widgets/client-overview'
 import {
   DashboardEmbedFrame,
@@ -14,42 +15,54 @@ import {
   LatestSummaryCallout,
   NoDashboardState,
 } from '../../../widgets/dashboard-embed'
+import { Skeleton } from '@/shared/ui'
+import { canRecordClientPortalActivity, getClientPageMode } from '../clientPageAccess'
 
 function createUuid() {
   return crypto.randomUUID()
 }
 
 function recordClientDashboardOpened({ clientId, dashboardId, runtime }) {
-  if (runtime.viewer.role !== USER_ROLES.CLIENT_USER || !dashboardId) {
+  if (!canRecordClientPortalActivity(runtime.viewer) || !dashboardId) {
     return
   }
 
-  recordActivityEvent({
+  void runtime.dataClient.write((repositories) => recordActivityEvent({
     clientId,
     eventType: ACTIVITY_EVENT_TYPES.DASHBOARD_OPENED,
     idGenerator: createUuid,
     metadata: {
       dashboardId,
     },
-    repositories: runtime.repositories,
+    repositories,
     viewer: runtime.viewer,
-  })
+  }))
 }
 
 export function ClientDashboardPage({ routeParams = {}, runtime }) {
   const recordedDashboardOpenRef = useRef('')
   const clientId = routeParams.clientId ?? runtime.defaultClientId
-  const page = getClientDashboardPage({
-    clientId,
-    dashboardId: routeParams.dashboardId,
-    mode: runtime.viewer.role === USER_ROLES.AGENCY_ADMIN ? 'admin_preview' : 'client',
-    repositories: runtime.repositories,
-    viewer: runtime.viewer,
+  const mode = getClientPageMode(runtime.viewer)
+  const pageResource = useAsyncResource({
+    dependencyKey: `${runtime.viewer?.userId ?? ''}:client-dashboard:${clientId ?? ''}:${routeParams.dashboardId ?? ''}:${mode}`,
+    load: () => runtime.dataClient.read((repositories) => getClientDashboardPage({
+      clientId,
+      dashboardId: routeParams.dashboardId,
+      mode,
+      repositories,
+      viewer: runtime.viewer,
+    })),
   })
-  const dashboardId = page.dashboard?.id ?? ''
+  const page = pageResource.data
+  const dashboardId = page?.dashboard?.id ?? ''
 
   useEffect(() => {
-    if (page.status !== 'ready' || !dashboardId || recordedDashboardOpenRef.current === dashboardId) {
+    if (
+      page?.status !== 'ready'
+      || page?.redirectTo
+      || !dashboardId
+      || recordedDashboardOpenRef.current === dashboardId
+    ) {
       return
     }
 
@@ -59,10 +72,18 @@ export function ClientDashboardPage({ routeParams = {}, runtime }) {
       dashboardId,
       runtime,
     })
-  }, [clientId, dashboardId, page.status, runtime])
+  }, [clientId, dashboardId, page?.redirectTo, page?.status, runtime])
+
+  if (pageResource.status === 'loading' || !page) {
+    return <Skeleton className="h-[420px] w-full" />
+  }
 
   if (page.status === 'error') {
     return <AccessDeniedState />
+  }
+
+  if (page.redirectTo) {
+    return <Navigate replace to={page.redirectTo} />
   }
 
   if (!page.dashboard) {

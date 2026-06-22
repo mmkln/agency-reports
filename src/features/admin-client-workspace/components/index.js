@@ -1,4 +1,6 @@
 export { AdminClientWorkspaceHeader } from './AdminClientWorkspaceHeader'
+export { AdminClientWorkspaceFrame } from './AdminClientWorkspaceFrame'
+export { ClientWorkspaceSwitcher } from './ClientWorkspaceSwitcher'
 export { ClientStatusSelector } from './ClientStatusSelector'
 export { ClinicClientPreviewLinks } from './ClinicClientPreviewLinks'
-export { FieldError, InlineEmptyState, WorkspaceCard } from './WorkspaceCard'
+export { FieldError, InlineEmptyState, WorkspaceCard, WorkspaceState } from './WorkspaceCard'

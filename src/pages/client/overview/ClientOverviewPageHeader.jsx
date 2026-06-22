@@ -1,32 +1,12 @@
 import { getClientOverviewPage } from '../../../domain/services/clientOverviewService'
 import { useAsyncResource } from '../../../shared/data/useAsyncResource'
-import { PageHeader } from '@/shared/ui'
-import { Icon } from '../../../shared/icons'
-
-const statusToneClasses = {
-  amber: 'bg-warning text-warning-foreground',
-  blue: 'bg-action text-action',
-  green: 'bg-success text-success-foreground',
-  neutral: 'bg-text-muted text-text-secondary',
-  purple: 'bg-premium-purple text-premium-purple',
-  rose: 'bg-destructive text-destructive',
-}
+import { PageHeader, StatusBadge } from '@/shared/ui'
 
 function ProjectStatusAction({ client }) {
-  const toneClass = statusToneClasses[client.statusMeta.tone] ?? statusToneClasses.neutral
-  const [dotClass, textClass] = toneClass.split(' ')
-
   return (
     <div className="flex items-center gap-2">
       <span className="text-ui text-text-muted">Project status:</span>
-      {client.statusMeta.icon ? (
-        <Icon className={textClass} name={client.statusMeta.icon} size={14} />
-      ) : (
-        <span className={`h-2 w-2 rounded-full ${dotClass}`} />
-      )}
-      <span className={`text-ui ${textClass}`}>
-        {client.statusMeta.label}
-      </span>
+      <StatusBadge meta={client.statusMeta} />
     </div>
   )
 }

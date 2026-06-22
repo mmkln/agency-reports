@@ -10,9 +10,11 @@
 ## Sources Of Truth
 
 - Read the relevant use-case document before changing product flow, permissions, data shape, or screen behavior.
+- Before changing users, agencies, company/workspace ownership, memberships, roles, profile semantics, access rules, or account/workspace deletion behavior, read `docs/domain-ownership-model.md`.
 - Read the frontend architecture guide before changing structure, ownership boundaries, or cross-layer responsibilities.
 - Read the design system before UI or styling work, and treat it as the baseline unless the user provides newer visual evidence.
 - Before designing or implementing client-facing analytics dashboards, read `docs/research/client-analytics-dashboard-ui-recommendations.md` and use only research-backed dashboard UI patterns unless the user explicitly changes the product direction.
+- Before changing Dental Growth Dashboard chart metrics, chart calculation logic, metric API payloads, or metric data semantics, read `docs/charts/Dental_Growth_Dashboard_Metrics_Spec.md`.
 - For design, UX, page structure, or similar experience work, first check the design documentation and ask how Apple would implement the interaction, hierarchy, spacing, and visual restraint.
 - Before changing shared UI primitives, app shell, overlays, motion, tokens, or Apple-inspired layout decisions, read `docs/design/README.md` and the relevant linked topic docs.
 - When source materials conflict, prioritize explicit user direction, then product rules, then architecture, then visual examples.
@@ -67,8 +69,10 @@
 
 - Put page-level entity context, primary status, filters, and main actions in the route header when they control the whole screen.
 - Keep global navigation quiet and structural. It should orient and switch major destinations, not compete with page content, search, or primary workflow actions.
+- The sidebar should show stable destinations for the current container, not every route the user has permission to access.
 - Choose top navigation, sidebar, or split navigation from the actual information architecture: use a top nav for a small flat set of destinations, a sidebar for many stable destinations or nested workspaces, and avoid role-specific shells until the role workflows truly diverge.
 - Separate navigation destinations from commands, previews, search, account controls, and page actions. A nav item should move to a stable place; commands belong in headers, toolbars, popovers, dialogs, or sheets.
+- Do not make mutation commands route users away as a side effect. Create, invite, edit, and similar commands should open the local workflow and keep the user on the current surface after success unless the user explicitly requests navigation.
 - Before changing navigation, identify the exact navigation layer: app shell navigation, workspace tabs, page tabs, table actions, or command buttons. Do not edit nearby navigation-looking UI by assumption.
 - For sidebar navigation, preserve stable collapsed/expanded geometry: icon anchors must not move, collapsed rows must be true icon targets, and vertical regions such as search, nav, utility, and account controls must not jump during expansion.
 - Sidebar navigation should use list/sidebar selection styling rather than generic button or control fills; communicate state with neutral fill, text/icon contrast, and focus before stronger color.
@@ -91,6 +95,7 @@
 - Do not wrap header toggles in input-like bordered containers; render them as lightweight label-and-switch controls aligned with the header actions.
 - Keep toggle labels stable across on/off states; use the switch state to express the value instead of changing adjacent label text.
 - Use compact, task-focused layouts for internal tools; avoid decorative or marketing-style composition in operational screens.
+- Do not add counters to tables, actions, headers, tabs, or list rows unless the user explicitly asks for a count or the count is required to choose an action. Prefer the object/action itself over count decoration.
 - Avoid nested card-on-card structures unless the inner card is a repeated item, modal, or genuinely framed tool.
 
 ## Forms And Inputs

@@ -68,8 +68,8 @@ const roleWorkflows = [
     trend: '+6%',
   },
   {
-    id: 'practice-manager',
-    label: 'Practice Manager',
+    id: 'clinic-manager',
+    label: 'Clinic Manager',
     priorities: [
       'Review chair utilization and staffing gaps',
       'Approve outstanding billing exceptions',

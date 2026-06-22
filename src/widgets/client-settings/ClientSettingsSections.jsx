@@ -1,10 +1,7 @@
 import {
-  AvatarFallback,
-  Badge,
+  Button,
   CodeValue,
-  EmptyState,
-  ListPanel,
-  ListRow,
+  ConfirmationDialog,
   Panel,
   PanelBody,
   PanelHeader,
@@ -12,13 +9,20 @@ import {
   SectionNav,
   UnavailableState,
 } from '@/shared/ui'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+
+import { WORKSPACE_ROLES } from '../../entities/workspace-membership'
+import { leaveClientWorkspace } from '../../domain/services/clientMembershipService'
+import { createBusinessDeletionRequest } from '../../domain/services/clientRequestsService'
+import { ClientTeamManagement } from '../../features/client-team-management'
+import { useToast } from '../../shared/notifications'
 
 const settingsSections = [
   {
-    id: 'general',
-    iconName: 'user',
-    label: 'General',
+    id: 'company',
+    iconName: 'settings',
+    label: 'Company',
   },
   {
     id: 'team',
@@ -26,19 +30,18 @@ const settingsSections = [
     label: 'Team',
   },
   {
-    id: 'notifications',
-    iconName: 'bell',
-    label: 'Notifications',
-  },
-  {
-    id: 'security',
+    id: 'access',
     iconName: 'lock',
-    label: 'Security',
+    label: 'Access',
   },
 ]
 
 function getSelectedSection(sectionId) {
-  return settingsSections.some((section) => section.id === sectionId) ? sectionId : 'general'
+  return settingsSections.some((section) => section.id === sectionId) ? sectionId : 'company'
+}
+
+function createUuid() {
+  return crypto.randomUUID()
 }
 
 function getSectionHref(sectionId, routeParams = {}, pathname = '/client/settings') {
@@ -50,7 +53,7 @@ function getSectionHref(sectionId, routeParams = {}, pathname = '/client/setting
     }
   })
 
-  if (sectionId !== 'general') {
+  if (sectionId !== 'company') {
     nextParams.set('section', sectionId)
   }
 
@@ -75,43 +78,12 @@ function ClientSettingsNavigation({ routeParams, selectedSection }) {
   )
 }
 
-export function ProfileSettingsSection({ membership, profile }) {
-  return (
-    <Panel>
-      <PanelHeader
-        divided
-        subtitle="Your portal identity and client access role."
-        title="Profile"
-      />
-      <PanelBody>
-        <PropertyGrid
-          columns={3}
-          items={[
-            {
-              label: 'Name',
-              value: profile.name,
-            },
-            {
-              label: 'Email',
-              value: profile.email,
-            },
-            {
-              label: 'Portal role',
-              value: <Badge tone="blue">{membership?.roleLabel ?? profile.roleLabel}</Badge>,
-            },
-          ]}
-        />
-      </PanelBody>
-    </Panel>
-  )
-}
-
 export function CompanySettingsSection({ client }) {
   return (
     <Panel>
       <PanelHeader
         divided
-        subtitle="The client workspace connected to your account."
+        subtitle="The client workspace connected to this portal."
         title="Company"
       />
       <PanelBody>
@@ -119,7 +91,7 @@ export function CompanySettingsSection({ client }) {
           columns={2}
           items={[
             {
-              label: 'Client',
+              label: 'Account',
               value: client.name,
             },
             {
@@ -141,99 +113,181 @@ export function CompanySettingsSection({ client }) {
   )
 }
 
-export function TeamMembersSection({ members }) {
+function WorkspaceAccessSection({ onAuthChange, page, runtime }) {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [isDeleteRequestConfirmOpen, setIsDeleteRequestConfirmOpen] = useState(false)
+  const [status, setStatus] = useState('idle')
+  const [deleteRequestStatus, setDeleteRequestStatus] = useState('idle')
+  const ownerCount = page.members.filter((member) => member.role === WORKSPACE_ROLES.OWNER).length
+  const isLastOwner = page.currentMembership?.role === WORKSPACE_ROLES.OWNER && ownerCount <= 1
+  const canLeave = Boolean(page.currentMembership && !isLastOwner && status !== 'leaving')
+  const businessDeletionRequest = page.sections.access?.businessDeletionRequest ?? null
+  const canRequestBusinessDeletion = Boolean(
+    page.sections.access?.canRequestBusinessDeletion
+    && !businessDeletionRequest
+    && deleteRequestStatus !== 'submitting',
+  )
+
+  function leaveWorkspace() {
+    if (!canLeave) {
+      return
+    }
+
+    setStatus('leaving')
+    void runtime.dataClient.write((repositories) => leaveClientWorkspace({
+      clientId: page.client.id,
+      repositories,
+      viewer: runtime.viewer,
+    })).then(() => {
+      setIsConfirmOpen(false)
+      toast.success('Workspace left', 'Your access to this client workspace was removed.')
+      onAuthChange?.()
+      navigate('/access-denied', { replace: true })
+    }).catch((error) => {
+      setStatus('idle')
+      toast.error('Workspace was not left', error.message)
+    })
+  }
+
+  function requestBusinessDeletion() {
+    if (!canRequestBusinessDeletion) {
+      return
+    }
+
+    setDeleteRequestStatus('submitting')
+    void runtime.dataClient.write((repositories) => createBusinessDeletionRequest({
+      activityIdGenerator: createUuid,
+      idGenerator: createUuid,
+      input: {
+        clientId: page.client.id,
+      },
+      repositories,
+      viewer: runtime.viewer,
+    })).then((request) => {
+      setIsDeleteRequestConfirmOpen(false)
+      setDeleteRequestStatus('submitted')
+      toast.success('Deletion request submitted', `${request.title} was sent to the agency team.`)
+    }).catch((error) => {
+      setDeleteRequestStatus('idle')
+      toast.error('Deletion request was not submitted', error.message)
+    })
+  }
+
   return (
     <Panel>
       <PanelHeader
+        action={page.currentMembership ? (
+          <Button
+            disabled={!canLeave}
+            onClick={() => setIsConfirmOpen(true)}
+            type="button"
+            variant="destructive"
+          >
+            {status === 'leaving' ? 'Leaving...' : 'Leave workspace'}
+          </Button>
+        ) : null}
         divided
-        subtitle="People with access to this client portal."
-        title="Team Members"
+        subtitle="Your access level for this client workspace."
+        title="Access"
       />
-      <PanelBody className="p-0">
-        {members.length ? (
-          <ListPanel>
-            {members.map((member) => (
-              <ListRow
-                description={member.email}
-                key={member.id}
-                leading={<AvatarFallback name={member.name} />}
-                title={member.name}
-                trailing={<Badge tone={member.role === 'owner' ? 'blue' : 'neutral'}>{member.roleLabel}</Badge>}
-              />
-            ))}
-          </ListPanel>
-        ) : (
-          <EmptyState
-            className="m-card"
-            description="No members are currently attached to this client."
-            iconName="users"
-            title="No team members"
-          />
-        )}
-      </PanelBody>
-    </Panel>
-  )
-}
-
-export function UnavailableSettingsSection({ iconName, section, title }) {
-  return (
-    <Panel className="min-h-[360px]">
-      <PanelBody className="flex min-h-[360px] items-center justify-center">
+      <PanelBody className="grid gap-card">
+        <PropertyGrid
+          columns={2}
+          items={[
+            {
+              label: 'Workspace role',
+              value: page.currentMembership?.roleLabel ?? 'No membership',
+            },
+            {
+              label: 'Access status',
+              value: page.currentMembership ? 'Active' : 'Unavailable',
+            },
+          ]}
+        />
         <UnavailableState
           className="bg-transparent p-0"
-          description={section.message}
-          iconName={iconName}
-          title={title}
+          description={isLastOwner
+            ? 'Transfer ownership to another owner before leaving this workspace.'
+            : 'Leaving the workspace removes your active access but keeps historical records intact.'}
+          iconName="lock"
+          title={isLastOwner ? 'Ownership transfer required' : 'Workspace access is controlled'}
         />
+        <div className="rounded-control bg-block-subtle p-card">
+          <div className="flex flex-col gap-control sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-ui font-semibold text-text-primary">Business deletion request</h3>
+              <p className="mt-tag max-w-readable text-body text-text-muted">
+                {businessDeletionRequest
+                  ? 'A deletion request is already waiting for agency review.'
+                  : 'Ask the agency team to review and process deletion of this client workspace.'}
+              </p>
+              {businessDeletionRequest ? (
+                <p className="mt-item text-label text-text-secondary">
+                  Request status: {businessDeletionRequest.status}
+                </p>
+              ) : null}
+            </div>
+            <Button
+              disabled={!canRequestBusinessDeletion}
+              onClick={() => setIsDeleteRequestConfirmOpen(true)}
+              type="button"
+              variant="destructive"
+            >
+              {deleteRequestStatus === 'submitting' ? 'Submitting...' : 'Request deletion'}
+            </Button>
+          </div>
+        </div>
       </PanelBody>
+      <ConfirmationDialog
+        confirmLabel="Leave workspace"
+        description={`You will lose access to ${page.client.name}. Historical records will stay in the workspace.`}
+        isConfirming={status === 'leaving'}
+        onConfirm={leaveWorkspace}
+        onOpenChange={setIsConfirmOpen}
+        open={isConfirmOpen}
+        title="Leave this workspace?"
+        tone="destructive"
+      />
+      <ConfirmationDialog
+        confirmLabel="Submit request"
+        description={`This will notify the agency team that ${page.client.name} wants this business workspace deleted. No records will be removed automatically.`}
+        isConfirming={deleteRequestStatus === 'submitting'}
+        onConfirm={requestBusinessDeletion}
+        onOpenChange={setIsDeleteRequestConfirmOpen}
+        open={isDeleteRequestConfirmOpen}
+        title="Request business deletion?"
+        tone="destructive"
+      />
     </Panel>
   )
 }
 
-function GeneralSettingsSection({ page }) {
-  return (
-    <div className="grid gap-card">
-      <ProfileSettingsSection membership={page.currentMembership} profile={page.profile} />
-      <CompanySettingsSection client={page.client} />
-    </div>
-  )
-}
-
-function SelectedSettingsSection({ page, selectedSection }) {
+function SelectedSettingsSection({ onAuthChange, page, runtime, selectedSection }) {
   if (selectedSection === 'team') {
-    return <TeamMembersSection members={page.members} />
+    return <ClientTeamManagement clientId={page.client.id} page={page} runtime={runtime} />
   }
 
-  if (selectedSection === 'notifications') {
-    return (
-      <UnavailableSettingsSection
-        iconName="bell"
-        section={page.sections.notifications}
-        title="Notification Settings"
-      />
-    )
+  if (selectedSection === 'access') {
+    return <WorkspaceAccessSection onAuthChange={onAuthChange} page={page} runtime={runtime} />
   }
 
-  if (selectedSection === 'security') {
-    return (
-      <UnavailableSettingsSection
-        iconName="lock"
-        section={page.sections.security}
-        title="Security and Authorization"
-      />
-    )
-  }
-
-  return <GeneralSettingsSection page={page} />
+  return <CompanySettingsSection client={page.client} />
 }
 
-export function ClientSettingsWorkspace({ page, routeParams = {} }) {
+export function ClientSettingsWorkspace({ onAuthChange, page, routeParams = {}, runtime }) {
   const selectedSection = getSelectedSection(routeParams.section)
 
   return (
     <div className="grid items-start gap-card lg:grid-cols-[240px_minmax(0,1fr)]">
       <ClientSettingsNavigation routeParams={routeParams} selectedSection={selectedSection} />
-      <SelectedSettingsSection page={page} selectedSection={selectedSection} />
+      <SelectedSettingsSection
+        onAuthChange={onAuthChange}
+        page={page}
+        runtime={runtime}
+        selectedSection={selectedSection}
+      />
     </div>
   )
 }

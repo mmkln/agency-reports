@@ -25,7 +25,7 @@ const recommendedActionLabels = {
   monitor_recent_publish: 'Recently published',
   review_and_publish: 'Review and publish',
   review_stale_published_work: 'Check freshness',
-  write_client_safe_explanation: 'Write client-safe explanation',
+  write_client_safe_explanation: 'Write portal-ready explanation',
   write_client_summary: 'Write summary',
 }
 
@@ -87,7 +87,8 @@ function ReviewItemCard({
   const canCreateRequest = item.recommendedAction === 'create_client_request' && !hasLinkedRequests
 
   return (
-    <article className="rounded-block bg-block p-4 shadow-block" data-testid={`client-work-review-${item.workItemId ?? item.taskId}`}>
+    <Panel data-testid={`client-work-review-${item.workItemId ?? item.taskId}`}>
+      <PanelBody>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -108,7 +109,7 @@ function ReviewItemCard({
           </div>
 
           <p className="mt-3 max-w-readable text-body text-text-secondary">
-            {item.summary || item.sourceTask?.clientSafeSummary || 'No client-safe summary yet.'}
+            {item.summary || item.sourceTask?.clientSafeSummary || 'No portal-ready summary yet.'}
           </p>
 
           <LinkedRequestsBlock requests={item.linkedRequests} />
@@ -160,7 +161,8 @@ function ReviewItemCard({
           )}
         </div>
       </div>
-    </article>
+      </PanelBody>
+    </Panel>
   )
 }
 
@@ -222,7 +224,7 @@ export function AdminClientWorkReviewWorkspace({
           <Panel>
             <PanelBody>
               <EmptyState
-                description="Client-facing work that needs review will appear here."
+                description="Published work that needs review will appear here."
                 iconName="checkCircle2"
                 title="No review items"
               />
@@ -233,11 +235,11 @@ export function AdminClientWorkReviewWorkspace({
 
       <ConfirmationDialog
         confirmLabel="Archive"
-        description={pendingArchive ? `${pendingArchive.title} will be removed from the client-facing surface.` : ''}
+        description={pendingArchive ? `${pendingArchive.title} will be removed from the portal surface.` : ''}
         onConfirm={onArchiveConfirm}
         onOpenChange={(open) => !open && onArchive(null)}
         open={Boolean(pendingArchive)}
-        title="Archive client-facing work?"
+        title="Archive published work?"
         tone="destructive"
       />
     </>

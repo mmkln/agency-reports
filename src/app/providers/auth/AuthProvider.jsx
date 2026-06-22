@@ -1,63 +1,100 @@
-import { useCallback, useMemo, useState } from 'react'
-import { USER_ROLES } from '../../../entities/profile'
-import { getCurrentViewer, setAuthSession } from '../../../domain/services/authService'
-import { portalRepository } from '../repositories/portalRepository'
-import { createAsyncPortalDataClient } from '../repositories/createAsyncPortalDataClient'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { buildAuthRuntime } from './authRuntime'
 import { AuthContext } from './AuthContext'
+import { createAuthApiClient } from './authApiClient'
+import { createBackendAuthClient } from './backendAuthClient'
+import { createBrowserAuthTokenStorage } from './browserAuthTokenStorage'
+import { createTokenAuthenticatedApiClient } from './tokenAuthenticatedApiClient'
 
-const portalDataClient = createAsyncPortalDataClient({
-  repositories: portalRepository,
+const removedLocalDataClient = Object.freeze({
+  read() {
+    return Promise.reject(new Error('Local portal repository reads were removed. Add a backend API read path for this screen.'))
+  },
+  write() {
+    return Promise.reject(new Error('Local portal repository writes were removed. Add a backend API mutation path for this workflow.'))
+  },
 })
+
+const authTokenStorage = createBrowserAuthTokenStorage()
 
 export function AuthProvider({ children }) {
   const [authRevision, setAuthRevision] = useState(0)
+  const [viewer, setViewer] = useState(null)
+  const [authStatus, setAuthStatus] = useState('loading')
+  const handleSessionExpired = useCallback(() => {
+    setViewer(null)
+    setAuthStatus('ready')
+    setAuthRevision((current) => current + 1)
+  }, [])
+  const backendApiClient = useMemo(() => createTokenAuthenticatedApiClient({
+    onSessionExpired: handleSessionExpired,
+    tokenStorage: authTokenStorage,
+  }), [handleSessionExpired])
+  const portalAuthClient = useMemo(() => createBackendAuthClient({
+    apiClient: createAuthApiClient({ apiClient: backendApiClient }),
+    tokenStorage: authTokenStorage,
+  }), [backendApiClient])
 
-  const viewer = useMemo(() => {
-    void authRevision
-    return getCurrentViewer({ repositories: portalRepository })
-  }, [authRevision])
+  const refreshAuth = useCallback(() => {
+    setAuthStatus('loading')
 
-  const runtime = useMemo(() => {
-    const agencyClientIds = viewer?.agencyId
-      ? portalRepository.clients
-        .list()
-        .filter((client) => client.agency_id === viewer.agencyId)
-        .map((client) => client.id)
-      : []
-    const runtimeViewer = viewer?.role === USER_ROLES.AGENCY_TEAM
-      ? {
-          ...viewer,
-          clientIds: [...new Set([...(viewer.clientIds ?? []), ...agencyClientIds])],
-        }
-      : viewer
+    return portalAuthClient.getCurrentViewer()
+      .then((nextViewer) => {
+        setViewer(nextViewer)
+        setAuthStatus('ready')
+        return nextViewer
+      })
+      .catch((error) => {
+        setViewer(null)
+        setAuthStatus('error')
+        throw error
+      })
+  }, [portalAuthClient])
 
-    return {
-      defaultClientId: runtimeViewer?.role === USER_ROLES.AGENCY_ADMIN
-        ? portalRepository.clients.list()[0]?.id ?? null
-        : runtimeViewer?.clientId ?? runtimeViewer?.clientIds?.[0] ?? null,
-      dataClient: portalDataClient,
-      repositories: portalRepository,
-      viewer: runtimeViewer,
-    }
-  }, [viewer])
+  useEffect(() => {
+    void Promise.resolve().then(() => refreshAuth()).catch(() => {})
+  }, [refreshAuth])
+
+  const runtime = useMemo(() => buildAuthRuntime({
+    apiClient: backendApiClient,
+    dataClient: removedLocalDataClient,
+    skipRepositoryRouteContext: true,
+    viewer,
+  }), [backendApiClient, viewer])
 
   const handleAuthChange = useCallback(() => {
     setAuthRevision((current) => current + 1)
-  }, [])
+    void refreshAuth().catch(() => {})
+  }, [refreshAuth])
 
-  const handleLogin = useCallback((userId) => {
-    setAuthSession(userId)
-    handleAuthChange()
-  }, [handleAuthChange])
+  const handleSignIn = useCallback((credentials) => (
+    portalAuthClient.signInWithEmail(credentials)
+      .then((nextViewer) => {
+        setViewer(nextViewer)
+        setAuthStatus('ready')
+        handleAuthChange()
+        return nextViewer
+      })
+  ), [handleAuthChange, portalAuthClient])
+
+  const handleSignOut = useCallback(() => {
+    void portalAuthClient.signOut().finally(() => {
+      setViewer(null)
+      handleAuthChange()
+    })
+  }, [handleAuthChange, portalAuthClient])
 
   const value = {
     viewer,
+    isAuthLoading: authStatus === 'loading',
+    authStatus,
     runtime,
     authRevision,
+    authClient: portalAuthClient,
     onAuthChange: handleAuthChange,
-    onLogin: handleLogin,
-    dataClient: portalDataClient,
-    repositories: portalRepository,
+    onSignIn: handleSignIn,
+    onSignOut: handleSignOut,
+    dataClient: removedLocalDataClient,
   }
 
   return (

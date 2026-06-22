@@ -10,8 +10,16 @@ import {
   NEEDED_ACTION_STATUSES,
   NEEDED_ACTION_TYPES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
+import {
+  canCreateWorkspaceRequests,
+  canRequestWorkspaceDeletion,
+} from '../policies/workspaceAccessPolicy'
+import {
+  ACTIVITY_EVENT_TYPES,
+  recordActivityEvent,
+} from './activityTrackingService'
 import { createNeededAction } from './neededFromClientService'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -109,7 +117,9 @@ function createHistoryEvent({ metadata = {}, now, type, viewer }) {
     created_at: now(),
     created_by: viewer?.userId ?? null,
     metadata: {
-      actor_role: viewer?.role ?? null,
+      actor_role: viewer?.agencyMemberships?.[0]?.role
+        ?? viewer?.workspaceMemberships?.[0]?.role
+        ?? null,
       ...metadata,
     },
     type,
@@ -152,14 +162,22 @@ function countBy(requests, predicate) {
 }
 
 function assertClientUserCanSubmit({ clientId, viewer }) {
-  if (viewer?.role !== USER_ROLES.CLIENT_USER || !canAccessClient(viewer, clientId)) {
+  if (!canAccessWorkspaceResource(viewer, clientId) || !canCreateWorkspaceRequests(viewer, clientId)) {
     throw new Error('Only client users can submit requests for their client.')
   }
 }
 
+function assertClientOwnerCanRequestBusinessDeletion({ clientId, viewer }) {
+  assertClientUserCanSubmit({ clientId, viewer })
+
+  if (!canRequestWorkspaceDeletion(viewer, clientId)) {
+    throw new Error('Only workspace owners can request business deletion.')
+  }
+}
+
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN) {
-    throw new Error('Only agency admins can manage client requests.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage requests.')
   }
 }
 
@@ -184,6 +202,44 @@ function isOpenNeededAction(action) {
   ].includes(action.status)
 }
 
+function isOpenBusinessDeletionRequest(request) {
+  const normalizedRequest = normalizeClientRequest(request)
+
+  return normalizedRequest.request_type === CLIENT_REQUEST_TYPES.BUSINESS_DELETION
+    && ![
+      CLIENT_REQUEST_STATUSES.ARCHIVED,
+      CLIENT_REQUEST_STATUSES.COMPLETED,
+      CLIENT_REQUEST_STATUSES.DECLINED,
+    ].includes(normalizedRequest.status)
+}
+
+function recordClientRequestActivity({
+  activityIdGenerator,
+  clientId,
+  now,
+  repositories,
+  request,
+  viewer,
+}) {
+  if (!activityIdGenerator || !repositories.activityEvents) {
+    return null
+  }
+
+  return recordActivityEvent({
+    clientId,
+    eventType: ACTIVITY_EVENT_TYPES.CLIENT_REQUEST_CREATED,
+    idGenerator: activityIdGenerator,
+    metadata: {
+      requestId: request.id,
+      title: request.title,
+      type: request.request_type,
+    },
+    now,
+    repositories,
+    viewer,
+  })
+}
+
 function findOpenClarificationAction({ repositories, request }) {
   const relatedActionId = normalizeClientRequest(request).related_needed_action_id
   const relatedAction = relatedActionId
@@ -195,7 +251,7 @@ function findOpenClarificationAction({ repositories, request }) {
   }
 
   return repositories.neededFromClient
-    ?.listByClientId(request.client_id)
+    ?.listByWorkspaceId(request.client_id)
     .find((action) => action.related_request_id === request.id && isOpenNeededAction(action))
     ?? null
 }
@@ -247,17 +303,17 @@ export function getClientRequestsPage({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
-  const client = repositories.clients.findById(normalizedClientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
-  if (!client || !canAccessClient(viewer, normalizedClientId)) {
+  if (!client || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
     }
   }
 
-  const requests = (repositories.clientRequests?.listByClientId(normalizedClientId) ?? [])
+  const requests = (repositories.clientRequests?.listByWorkspaceId(normalizedClientId) ?? [])
     .map(mapClientRequest)
     .sort(sortRequests)
 
@@ -288,14 +344,15 @@ export function getClientRequestsPage({
 }
 
 export function createClientRequest({
+  activityIdGenerator,
   idGenerator,
   input = {},
   now = () => new Date().toISOString(),
   repositories,
   viewer,
 }) {
-  const clientId = normalizeText(input.clientId || viewer?.clientId)
-  const client = repositories.clients.findById(clientId)
+  const clientId = normalizeText(input.clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client) {
     throw new Error('Client is not available for requests.')
@@ -338,8 +395,60 @@ export function createClientRequest({
   }
 
   repositories.clientRequests.upsert(request)
+  recordClientRequestActivity({
+    activityIdGenerator,
+    clientId,
+    now: () => timestamp,
+    repositories,
+    request,
+    viewer,
+  })
 
   return mapClientRequest(request)
+}
+
+export function createBusinessDeletionRequest({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  viewer,
+}) {
+  const clientId = normalizeText(input.clientId || viewer?.activeWorkspaceId)
+  const client = repositories.workspaces.findById(clientId)
+
+  if (!client) {
+    throw new Error('Client is not available for deletion requests.')
+  }
+
+  assertClientOwnerCanRequestBusinessDeletion({
+    clientId,
+    viewer,
+  })
+
+  const existingRequest = repositories.clientRequests
+    .listByWorkspaceId(clientId)
+    .find(isOpenBusinessDeletionRequest)
+
+  if (existingRequest) {
+    throw new Error('A business deletion request is already open.')
+  }
+
+  return createClientRequest({
+    activityIdGenerator,
+    idGenerator,
+    input: {
+      clientId,
+      description: normalizeText(input.reason)
+        || `Workspace owner requested deletion for ${client.name}. Agency admin review is required before any records are removed.`,
+      requestType: CLIENT_REQUEST_TYPES.BUSINESS_DELETION,
+      title: `Business deletion request - ${client.name}`,
+    },
+    now,
+    repositories,
+    viewer,
+  })
 }
 
 export function listAdminClientRequestsWorkspace({
@@ -349,9 +458,12 @@ export function listAdminClientRequestsWorkspace({
 }) {
   assertAgencyAdmin(viewer)
 
-  const clients = repositories.clients.list()
+  const clients = repositories.workspaces
+    .list()
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
+  const clientIds = new Set(clients.map((client) => client.id))
   const requests = filterAdminRequestsByClient(
-    (repositories.clientRequests?.list() ?? []).map((request) => {
+    (repositories.clientRequests?.list() ?? []).filter((request) => clientIds.has(request.client_id)).map((request) => {
       const mappedRequest = mapClientRequest(request)
 
       return {
@@ -403,7 +515,7 @@ export function updateClientRequestTriage({
 
   const request = repositories.clientRequests.findById(requestId)
 
-  if (!request) {
+  if (!request || !canAccessWorkspaceResource(viewer, request.client_id)) {
     throw new Error('Client request was not found.')
   }
 
@@ -415,7 +527,7 @@ export function updateClientRequestTriage({
   const clarificationAction = nextStatus === CLIENT_REQUEST_STATUSES.WAITING_ON_CLIENT
     ? createRequestClarificationAction({
       activityIdGenerator,
-      agencyResponse: requireText(agencyResponse, 'Agency response'),
+      agencyResponse: requireText(agencyResponse, 'Team response'),
       idGenerator,
       now: () => timestamp,
       repositories,

@@ -35,7 +35,7 @@ export function ClientWorkItemReviewDialog({
       <DialogContent className="max-w-modal-lg">
         <form onSubmit={onSubmit}>
           <DialogHeader>
-            <DialogTitle>{item ? `Review ${item.title}` : 'Review client-facing work'}</DialogTitle>
+            <DialogTitle>{item ? `Review ${item.title}` : 'Review published work'}</DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-4 px-5 py-4">
@@ -50,7 +50,7 @@ export function ClientWorkItemReviewDialog({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="client-work-summary">Client-safe summary</Label>
+              <Label htmlFor="client-work-summary">Portal-ready summary</Label>
               <Textarea
                 className="resize-none"
                 id="client-work-summary"

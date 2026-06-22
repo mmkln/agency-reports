@@ -1,6 +1,6 @@
+import { CLIENT_TYPES, isClinicClient } from '../../entities/client'
 import { DASHBOARD_LINK_STATUSES, DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import { isDashboardVisibleToClient, isReportVisibleToClient } from '../policies/visibilityPolicy'
 
 function sortByDateDesc(a, b, fieldName) {
@@ -37,11 +37,7 @@ function mapReport(report) {
 }
 
 function canAccessDashboardClient({ client, clientId, viewer }) {
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId) && client.agency_id === viewer.agencyId
-  }
-
-  return canAccessClient(viewer, clientId)
+  return Boolean(client) && canAccessWorkspaceResource(viewer, clientId)
 }
 
 function isDashboardVisibleForMode(dashboardLink, mode) {
@@ -52,6 +48,16 @@ function isDashboardVisibleForMode(dashboardLink, mode) {
   return isDashboardVisibleToClient(dashboardLink)
 }
 
+function buildClinicResultsRedirect({ clientId, dashboard }) {
+  const search = new URLSearchParams({ clientId })
+
+  if (dashboard?.id) {
+    search.set('dashboardId', dashboard.id)
+  }
+
+  return `/client/reports-dashboards?${search.toString()}#source-dashboard`
+}
+
 export function getClientDashboardPage({
   clientId,
   dashboardId,
@@ -59,7 +65,7 @@ export function getClientDashboardPage({
   repositories,
   viewer,
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!client || !canAccessDashboardClient({ client, clientId, viewer })) {
     return {
@@ -69,7 +75,7 @@ export function getClientDashboardPage({
   }
 
   const visibleDashboards = repositories.dashboardLinks
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter((dashboardLink) => isDashboardVisibleForMode(dashboardLink, mode))
     .sort((a, b) => (
       Number(b.show_on_overview) - Number(a.show_on_overview)
@@ -82,7 +88,7 @@ export function getClientDashboardPage({
     : visibleDashboards[0] ?? null
 
   const latestReport = repositories.reports
-    .listByClientId(clientId)
+    .listByWorkspaceId(clientId)
     .filter(isReportVisibleToClient)
     .sort((a, b) => sortByDateDesc(a, b, 'period_end'))[0] ?? null
 
@@ -91,9 +97,13 @@ export function getClientDashboardPage({
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
+      type: CLIENT_TYPES.CLINIC,
     },
     dashboard: dashboard ? mapDashboard(dashboard) : null,
     latestReport: latestReport ? mapReport(latestReport) : null,
+    redirectTo: isClinicClient(client)
+      ? buildClinicResultsRedirect({ clientId, dashboard })
+      : null,
     reason: dashboardId && !dashboard ? 'dashboard_not_found' : null,
     status: 'ready',
   }

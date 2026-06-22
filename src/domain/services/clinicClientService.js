@@ -1,4 +1,4 @@
-import { CLIENT_TYPES, CLIENT_TYPE_META } from '../../entities/client'
+import { CLIENT_TYPES, CLIENT_TYPE_META, isClinicClient } from '../../entities/client'
 import { DASHBOARD_LINK_STATUS_META } from '../../entities/dashboard-link'
 import {
   CLINIC_ACQUISITION_CHANNEL_META,
@@ -25,8 +25,8 @@ import {
   CLINIC_NEEDED_ACTION_TYPES,
   NEEDED_ACTION_STATUSES,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 import { isDashboardVisibleToClient } from '../policies/visibilityPolicy'
 import { listClientNeededActions } from './neededFromClientService'
 
@@ -200,6 +200,32 @@ function buildOptionsFromRecords(records, getValue, getLabel, getMeta = () => nu
   })
 
   return [...optionsByValue.values()].sort((left, right) => left.label.localeCompare(right.label))
+}
+
+function buildClinicDataTrust({ records, source }) {
+  const dataSources = [...new Set(
+    records
+      .map((record) => record.dataSource)
+      .filter(Boolean),
+  )].sort((left, right) => left.localeCompare(right))
+  const lastUpdatedAt = records
+    .map((record) => record.lastUpdatedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null
+
+  return {
+    dataSourceLabel: dataSources.join(', ') || 'Agency-reviewed aggregate records',
+    dataSources,
+    lastUpdatedAt,
+    noPatientLevelData: true,
+    privacyBoundaryLabel: 'Aggregate clinic metrics only; no patient-level data shown',
+    recordCount: records.length,
+    source,
+    visibilityLabel: source === 'draft'
+      ? 'Draft admin preview'
+      : 'Published aggregate records only',
+  }
 }
 
 function buildClinicFilterOptions({ foundationPage, records, selected, extra = {} }) {
@@ -856,6 +882,7 @@ function mapComplianceReview(review, { locationsById, serviceLinesById }) {
     pendingApprovals: normalizedReview.pending_approvals,
     policyIssues: normalizedReview.policy_issues,
     platform: normalizedReview.platform,
+    relatedActions: [],
     riskNote: normalizedReview.risk_note,
     serviceLine: normalizedReview.service_line_id
       ? serviceLinesById.get(normalizedReview.service_line_id) ?? null
@@ -887,6 +914,7 @@ function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
     lastUpdatedAt: normalizedApproval.last_updated_at,
     location: normalizedApproval.location_id ? locationsById.get(normalizedApproval.location_id) ?? null : null,
     locationId: normalizedApproval.location_id,
+    relatedActions: [],
     requestedByLabel: normalizedApproval.requested_by_label,
     serviceLine: normalizedApproval.service_line_id
       ? serviceLinesById.get(normalizedApproval.service_line_id) ?? null
@@ -896,6 +924,72 @@ function mapMedicalApproval(approval, { locationsById, serviceLinesById }) {
     statusMeta: CLINIC_APPROVAL_STATUS_META[normalizedApproval.status],
     title: normalizedApproval.title,
     version: normalizedApproval.version,
+  }
+}
+
+function listOpenComplianceActions({
+  approvalIds,
+  clientId,
+  repositories,
+  reviewIds,
+  viewer,
+}) {
+  if (!repositories.neededFromClient) {
+    return []
+  }
+
+  const actionsResult = listClientNeededActions({
+    clientId,
+    repositories,
+    viewer,
+  })
+
+  if (actionsResult.status === 'error') {
+    return []
+  }
+
+  return actionsResult.actions.filter((action) => (
+    (
+      action.relatedComplianceReviewId
+        && reviewIds.has(action.relatedComplianceReviewId)
+    )
+      || (
+        action.relatedMedicalApprovalId
+          && approvalIds.has(action.relatedMedicalApprovalId)
+      )
+  ) && ![
+    NEEDED_ACTION_STATUSES.CANCELLED,
+    NEEDED_ACTION_STATUSES.RESOLVED,
+  ].includes(action.status))
+}
+
+function attachComplianceActions({ actions, approvals, reviews }) {
+  const actionsByApprovalId = new Map()
+  const actionsByReviewId = new Map()
+
+  actions.forEach((action) => {
+    if (action.relatedComplianceReviewId) {
+      const reviewActions = actionsByReviewId.get(action.relatedComplianceReviewId) ?? []
+      reviewActions.push(action)
+      actionsByReviewId.set(action.relatedComplianceReviewId, reviewActions)
+    }
+
+    if (action.relatedMedicalApprovalId) {
+      const approvalActions = actionsByApprovalId.get(action.relatedMedicalApprovalId) ?? []
+      approvalActions.push(action)
+      actionsByApprovalId.set(action.relatedMedicalApprovalId, approvalActions)
+    }
+  })
+
+  return {
+    approvals: approvals.map((approval) => ({
+      ...approval,
+      relatedActions: actionsByApprovalId.get(approval.id) ?? [],
+    })),
+    reviews: reviews.map((review) => ({
+      ...review,
+      relatedActions: actionsByReviewId.get(review.id) ?? [],
+    })),
   }
 }
 
@@ -917,21 +1011,17 @@ function summarizeCompliance({ approvals, reviews }) {
 }
 
 function canReadClinicClient({ client, clientId, viewer }) {
-  if (!client || client.type !== CLIENT_TYPES.CLINIC) {
+  if (!client || !isClinicClient(client)) {
     return false
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN) {
-    return Boolean(viewer.agencyId && client.agency_id === viewer.agencyId)
-  }
-
-  return canAccessClient(viewer, clientId)
+  return canAccessWorkspaceResource(viewer, clientId)
 }
 
 function canPreviewClinicDrafts({ client, source, viewer }) {
   return source === 'draft'
-    && viewer?.role === USER_ROLES.AGENCY_ADMIN
-    && Boolean(viewer.agencyId && client?.agency_id === viewer.agencyId)
+    && hasAgencyAdminMembership(viewer)
+    && canAccessWorkspaceResource(viewer, client?.id)
 }
 
 function isPublishedClinicRecord(record) {
@@ -939,7 +1029,7 @@ function isPublishedClinicRecord(record) {
 }
 
 function listClientVisibleClinicRecords({ clientId, repository, source }) {
-  const records = repository?.listByClientId(clientId) ?? []
+  const records = repository?.listByWorkspaceId(clientId) ?? []
 
   if (source === 'draft') {
     return records
@@ -954,7 +1044,7 @@ export function getClientClinicFoundationPage({
   source = 'published',
   viewer,
 }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
   if (!canReadClinicClient({ client, clientId, viewer })) {
     return {
@@ -963,22 +1053,22 @@ export function getClientClinicFoundationPage({
     }
   }
 
-  const locations = (repositories.clinicLocations?.listByClientId(clientId) ?? [])
+  const locations = (repositories.clinicLocations?.listByWorkspaceId(clientId) ?? [])
     .sort(sortRawByDisplayOrder)
     .map(mapLocation)
   const locationsById = new Map(locations.map((location) => [location.id, location]))
-  const serviceLines = (repositories.clinicServiceLines?.listByClientId(clientId) ?? [])
+  const serviceLines = (repositories.clinicServiceLines?.listByWorkspaceId(clientId) ?? [])
     .sort(sortRawByDisplayOrder)
     .map((serviceLine) => mapServiceLine(serviceLine, locationsById))
-  const profileRecord = repositories.clinicProfiles?.listByClientId(clientId)?.[0] ?? null
+  const profileRecord = repositories.clinicProfiles?.listByWorkspaceId(clientId)?.[0] ?? null
 
   return {
     client: {
       id: client.id,
       name: client.name,
       portalSlug: client.portal_slug,
-      type: client.type,
-      typeMeta: CLIENT_TYPE_META[client.type],
+      type: CLIENT_TYPES.CLINIC,
+      typeMeta: CLIENT_TYPE_META[CLIENT_TYPES.CLINIC],
     },
     locations,
     profile: mapProfile(profileRecord),
@@ -1034,9 +1124,14 @@ export function getClientClinicServiceLinesPage(input) {
   const serviceLines = attachPerformanceToServiceLines(filteredFoundationServiceLines, performanceRecords)
   const locations = attachPerformanceToLocations(foundationPage.locations, locationPerformanceRecords)
   const totals = performanceRecords.reduce(addServiceLinePerformanceTotals, createEmptyServiceLinePerformanceTotals())
+  const trustRecords = [...performanceRecords, ...locationPerformanceRecords]
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: trustRecords,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       extra: {
         availableCampaignStatuses: buildOptionsFromRecords(
@@ -1112,9 +1207,14 @@ export function getClientPatientAcquisitionPage(input) {
   const totals = snapshots.reduce(addSnapshotTotals, createEmptyAcquisitionTotals())
   const funnelTotals = buildFunnelTotals({ pipelineSnapshots, snapshots })
   const inquiries = totals.calls + totals.forms + totals.chats
+  const trustRecords = [...snapshots, ...pipelineSnapshots]
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: trustRecords,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       extra: {
         availableChannels: buildOptionsFromRecords(
@@ -1146,7 +1246,7 @@ export function getClientPatientAcquisitionPage(input) {
     profile: foundationPage.profile,
     serviceLines: foundationPage.serviceLines,
     snapshots,
-    sourceLinks: (input.repositories.dashboardLinks?.listByClientId(input.clientId) ?? [])
+    sourceLinks: (input.repositories.dashboardLinks?.listByWorkspaceId(input.clientId) ?? [])
       .filter(isDashboardVisibleToClient)
       .map(mapSourceDashboardLink),
     source: foundationPage.source,
@@ -1198,6 +1298,10 @@ export function getClientCallsBookingsPage(input) {
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: metrics,
+      source: foundationPage.source,
+    }),
     filters: buildClinicFilterOptions({
       foundationPage,
       records: allMetrics,
@@ -1257,6 +1361,10 @@ export function getClientReputationPage(input) {
 
   return {
     client: foundationPage.client,
+    dataTrust: buildClinicDataTrust({
+      records: snapshotsWithActions,
+      source: foundationPage.source,
+    }),
     isEmpty: snapshotsWithActions.length === 0,
     latestSnapshot: snapshotsWithActions[0] ?? null,
     latestUpdatedAt: snapshotsWithActions
@@ -1303,22 +1411,44 @@ export function getClientComplianceApprovalsPage(input) {
       new Date(left.dueDate ?? '9999-12-31').getTime() - new Date(right.dueDate ?? '9999-12-31').getTime()
       || left.title.localeCompare(right.title)
     ))
+  const openComplianceActions = listOpenComplianceActions({
+    approvalIds: new Set(approvals.map((approval) => approval.id)),
+    clientId: input.clientId,
+    repositories: input.repositories,
+    reviewIds: new Set(reviews.map((review) => review.id)),
+    viewer: input.viewer,
+  })
+  const complianceRecordsWithActions = attachComplianceActions({
+    actions: openComplianceActions,
+    approvals,
+    reviews,
+  })
 
   return {
-    approvals,
+    approvals: complianceRecordsWithActions.approvals,
     client: foundationPage.client,
-    isEmpty: reviews.length === 0 && approvals.length === 0,
-    latestUpdatedAt: [...reviews, ...approvals]
+    dataTrust: buildClinicDataTrust({
+      records: [
+        ...complianceRecordsWithActions.reviews,
+        ...complianceRecordsWithActions.approvals,
+      ],
+      source: foundationPage.source,
+    }),
+    isEmpty: complianceRecordsWithActions.reviews.length === 0 && complianceRecordsWithActions.approvals.length === 0,
+    latestUpdatedAt: [
+      ...complianceRecordsWithActions.reviews,
+      ...complianceRecordsWithActions.approvals,
+    ]
       .map((item) => item.lastUpdatedAt)
       .filter(Boolean)
       .sort()
       .at(-1) ?? null,
     locations: foundationPage.locations,
     profile: foundationPage.profile,
-    reviews,
+    reviews: complianceRecordsWithActions.reviews,
     serviceLines: foundationPage.serviceLines,
     source: foundationPage.source,
     status: 'ready',
-    totals: summarizeCompliance({ approvals, reviews }),
+    totals: summarizeCompliance(complianceRecordsWithActions),
   }
 }

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
   Button,
   ConfirmationDialog,
+  DataTable,
   DataTableSurface,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,14 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   StatusBadge,
-  Table,
-  TableActionCell,
-  TableActionHead,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
 
 import { REPORT_STATUSES, REPORT_STATUS_META } from '../../../entities/report'
@@ -96,17 +89,7 @@ export function ReportsTable({
 }) {
   const [reportPendingDelete, setReportPendingDelete] = useState(null)
   const [statusChange, setStatusChange] = useState(null)
-
-  function confirmDeleteReport() {
-    if (!reportPendingDelete) {
-      return
-    }
-
-    onDeleteReport(reportPendingDelete.id)
-    setReportPendingDelete(null)
-  }
-
-  function requestStatusChange(report, status) {
+  const requestStatusChange = useCallback((report, status) => {
     if (status === report.status) {
       return
     }
@@ -116,6 +99,127 @@ export function ReportsTable({
       status,
       ...getStatusChangeCopy(report, status),
     })
+  }, [])
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'title',
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-text-primary">{row.original.title}</p>
+          <p className="mt-1 max-w-lg truncate text-label font-normal text-text-muted">
+            {row.original.summary || 'No executive summary yet'}
+          </p>
+        </div>
+      ),
+      header: 'Report',
+      meta: {
+        label: 'Report',
+        minWidthClassName: 'min-w-[280px]',
+      },
+    },
+    {
+      accessorKey: 'client.name',
+      cell: ({ row }) => (
+        <div>
+          <p className="font-medium text-text-secondary">{row.original.client.name}</p>
+          <p className="mt-0.5 text-label font-normal text-text-muted">/{row.original.client.portalSlug}</p>
+        </div>
+      ),
+      header: 'Account',
+      sortingFn: (left, right) => (
+        String(left.original.client.name ?? '').localeCompare(String(right.original.client.name ?? ''))
+      ),
+    },
+    {
+      accessorKey: 'periodStart',
+      cell: ({ row }) => formatPeriod(row.original),
+      header: 'Period',
+      meta: {
+        cellClassName: 'text-text-secondary',
+      },
+    },
+    {
+      accessorKey: 'status',
+      cell: ({ row }) => <StatusBadge meta={row.original.statusMeta} />,
+      header: 'Status',
+    },
+    {
+      accessorKey: 'publishedAt',
+      cell: ({ row }) => formatDate(row.original.publishedAt),
+      header: 'Published',
+      meta: {
+        cellClassName: 'text-text-muted',
+      },
+    },
+    {
+      cell: ({ row }) => {
+        const report = row.original
+
+        return (
+          <div className="flex justify-end gap-1.5">
+            <Button onClick={() => onEditReport(report)} size="sm" type="button" variant="outline">
+              Edit
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button aria-label="Report actions" size="icon-sm" type="button" variant="ghost">
+                  <Icon name="ellipsis" size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-56">
+                <DropdownMenuItem asChild>
+                  <Link to={`/admin/client-report-preview?clientId=${report.clientId}&reportId=${report.id}`}>
+                    <Icon name="fileText" size={15} />
+                    Preview report
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDuplicateReport(report.id)}>
+                  <Icon name="fileText" size={15} />
+                  Duplicate report
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {statusOrder.map((status) => (
+                  <DropdownMenuItem
+                    disabled={status === report.status}
+                    key={status}
+                    onClick={() => requestStatusChange(report, status)}
+                  >
+                    <Icon name={REPORT_STATUS_META[status]?.icon ?? 'circle'} size={15} />
+                    <span>Set {REPORT_STATUS_META[status]?.label ?? status}</span>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setReportPendingDelete(report)}
+                  variant="destructive"
+                >
+                  <Icon name="close" size={15} />
+                  Delete report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )
+      },
+      enableSorting: false,
+      header: 'Actions',
+      id: 'actions',
+      meta: {
+        isAction: true,
+        label: 'Actions',
+        nowrap: true,
+      },
+    },
+  ], [onDuplicateReport, onEditReport, requestStatusChange])
+
+  function confirmDeleteReport() {
+    if (!reportPendingDelete) {
+      return
+    }
+
+    onDeleteReport(reportPendingDelete.id)
+    setReportPendingDelete(null)
   }
 
   function confirmStatusChange() {
@@ -130,100 +234,19 @@ export function ReportsTable({
   return (
     <>
       <DataTableSurface>
-        <Table className="min-w-[1120px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Report</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Published</TableHead>
-              <TableActionHead>Actions</TableActionHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.map((report) => {
-              return (
-                <TableRow key={report.id}>
-                  <TableCell>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-text-primary">{report.title}</p>
-                      <p className="mt-1 max-w-lg truncate text-label font-normal text-text-muted">
-                        {report.summary || 'No executive summary yet'}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium text-text-secondary">{report.client.name}</p>
-                    <p className="mt-0.5 text-label font-normal text-text-muted">/{report.client.portalSlug}</p>
-                  </TableCell>
-                  <TableCell className="text-text-secondary">
-                    {formatPeriod(report)}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge meta={report.statusMeta} />
-                  </TableCell>
-                  <TableCell className="text-text-muted">
-                    {formatDate(report.publishedAt)}
-                  </TableCell>
-                  <TableActionCell>
-                    <div className="flex justify-end gap-1.5">
-                      <Button onClick={() => onEditReport(report)} size="sm" type="button" variant="outline">
-                        Edit
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-label="Report actions" size="icon-sm" type="button" variant="ghost">
-                            <Icon name="ellipsis" size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-56">
-                          <DropdownMenuItem asChild>
-                            <Link to={`/admin/client-report-preview?clientId=${report.clientId}&reportId=${report.id}`}>
-                              <Icon name="fileText" size={15} />
-                              Preview report
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onDuplicateReport(report.id)}>
-                            <Icon name="fileText" size={15} />
-                            Duplicate report
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {statusOrder.map((status) => (
-                            <DropdownMenuItem
-                              disabled={status === report.status}
-                              key={status}
-                              onClick={() => requestStatusChange(report, status)}
-                            >
-                              <Icon name={REPORT_STATUS_META[status]?.icon ?? 'circle'} size={15} />
-                              <span>Set {REPORT_STATUS_META[status]?.label ?? status}</span>
-                            </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setReportPendingDelete(report)}
-                            variant="destructive"
-                          >
-                            <Icon name="close" size={15} />
-                            Delete report
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableActionCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={columns}
+          data={reports}
+          emptyMessage="No reports yet."
+          getRowId={(report) => report.id}
+        />
       </DataTableSurface>
 
       <ConfirmationDialog
         confirmLabel="Delete report"
         description={
           reportPendingDelete
-            ? `This removes "${reportPendingDelete.title}" from local demo data. Client users will no longer see it.`
+            ? `This removes "${reportPendingDelete.title}". Portal users will no longer see it.`
             : ''
         }
         onConfirm={confirmDeleteReport}

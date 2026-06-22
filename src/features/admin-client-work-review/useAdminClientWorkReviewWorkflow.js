@@ -65,7 +65,7 @@ function createRequestInputFromReviewItem(item) {
       || item.sourceTask?.blockerNote
       || `Please review ${item.title}.`,
     dueDate: item.targetDate ?? '',
-    internalNotes: 'Created from the client-facing work review queue.',
+    internalNotes: 'Created from the published work review queue.',
     ownerName: '',
     priority: NEEDED_ACTION_PRIORITIES.MEDIUM,
     relatedTaskId: sourceTaskId,
@@ -180,7 +180,7 @@ export function useAdminClientWorkReviewWorkflow({
     }))
       .then((publishedItem) => {
         reloadReview()
-        toast.success('Published to client portal', `${publishedItem.title} is now client-visible.`)
+        toast.success('Published to portal', `${publishedItem.title} is now visible.`)
       })
       .catch((caughtError) => {
         toast.error('Work item was not published', caughtError.message)

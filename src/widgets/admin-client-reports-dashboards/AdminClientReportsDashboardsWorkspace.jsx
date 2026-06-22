@@ -31,6 +31,7 @@ function SectionShell({
             </Link>
           </Button>
         )}
+        divided
         iconName={iconName}
         title={title}
       />
@@ -65,6 +66,20 @@ function ResourceRow({
   )
 }
 
+function getExecutiveSummaryText(content) {
+  const summary = content?.executive_summary
+
+  if (!summary) {
+    return 'No executive summary yet.'
+  }
+
+  if (typeof summary === 'string') {
+    return summary
+  }
+
+  return summary.narrative || summary.main_win || summary.next_focus || 'No executive summary yet.'
+}
+
 function PerformanceSection({ clientId, periods }) {
   const manageHref = `/admin/performance-dashboards?clientId=${clientId}`
 
@@ -85,13 +100,13 @@ function PerformanceSection({ clientId, periods }) {
               statusMeta={period.statusMeta}
               title={period.title}
             >
-              {period.content?.executive_summary || 'No executive summary yet.'}
+              {getExecutiveSummaryText(period.content)}
             </ResourceRow>
           ))}
         </div>
       ) : (
         <EmptyState
-          description="Create interpreted performance periods before publishing the client-facing results view."
+          description="Create interpreted performance periods before publishing the portal results view."
           iconName="barChart"
           title="No performance periods"
         />
@@ -126,7 +141,7 @@ function SourceDashboardsSection({ clientId, dashboardLinks }) {
         </div>
       ) : (
         <EmptyState
-          description="Add Looker Studio, AgencyAnalytics, Databox, or other source dashboards as controlled client resources."
+          description="Add Looker Studio, AgencyAnalytics, Databox, or other source dashboards as controlled account resources."
           iconName="layoutDashboard"
           title="No source dashboards"
         />
@@ -161,7 +176,7 @@ function ReportsSection({ clientId, reports }) {
         </div>
       ) : (
         <EmptyState
-          description="Create monthly, weekly, campaign, or custom reports after agency review."
+          description="Create monthly, weekly, campaign, or custom reports after team review."
           iconName="fileText"
           title="No reports"
         />

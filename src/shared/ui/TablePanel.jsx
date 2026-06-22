@@ -1,17 +1,6 @@
 import { Badge } from './Badge'
-import {
-  Table,
-  TableActionCell,
-  TableActionHead,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 
-import { cn } from '@/lib/utils'
-
+import { DataTable } from './DataTable'
 import { Panel, PanelBody, PanelHeader } from './Panel'
 import { useInspectorId } from './inspectorId'
 
@@ -27,47 +16,34 @@ function isActionColumn(column) {
 
 export function TablePanel({ columns, id, rows, title }) {
   const inspectorId = useInspectorId('TablePanel', id)
+  const dataTableColumns = columns.map((column) => {
+    const isAction = isActionColumn(column)
+
+    return {
+      accessorKey: column.key,
+      cell: ({ row }) => (column.render ? column.render(row.original) : row.original[column.key]),
+      enableSorting: false,
+      header: column.label,
+      id: column.key,
+      meta: {
+        align: column.align,
+        isAction,
+        label: column.label,
+        nowrap: isAction,
+      },
+    }
+  })
 
   return (
     <Panel id={inspectorId}>
       <PanelHeader divided title={title} />
       <PanelBody>
-        <Table className="min-w-[760px]">
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => {
-                const HeaderCell = isActionColumn(column) ? TableActionHead : TableHead
-
-                return (
-                  <HeaderCell className={column.align === 'right' ? 'text-right' : ''} key={column.key}>
-                    {column.label}
-                  </HeaderCell>
-                )
-              })}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id ?? row.channel ?? row.label}>
-                {columns.map((column) => {
-                  const BodyCell = isActionColumn(column) ? TableActionCell : TableCell
-
-                  return (
-                    <BodyCell
-                      className={cn(
-                        column.align === 'right' ? 'text-right' : '',
-                        isActionColumn(column) ? 'group-hover/table-row:bg-control-hover' : '',
-                      )}
-                      key={column.key}
-                    >
-                      {column.render ? column.render(row) : row[column.key]}
-                    </BodyCell>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={dataTableColumns}
+          data={rows}
+          enablePagination={false}
+          getRowId={(row) => row.id ?? row.channel ?? row.label}
+        />
       </PanelBody>
     </Panel>
   )

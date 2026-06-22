@@ -101,6 +101,18 @@ function getArray(input, names) {
   return value
 }
 
+function getSectionArray(input, sectionName, names) {
+  const topLevelValue = getFirstValue(input, names)
+
+  if (topLevelValue !== undefined) {
+    return getArray(input, names)
+  }
+
+  const sectionInput = input?.[sectionName]
+
+  return isPlainObject(sectionInput) ? getArray(sectionInput, names) : []
+}
+
 function normalizePeriod(input = {}, fallbackPeriod = null, context = 'Reporting period') {
   const source = isPlainObject(input) ? input : {}
 
@@ -193,6 +205,25 @@ function normalizePatientAcquisitionMetric(record, fallbackPeriod) {
   }
 }
 
+function normalizeBookingPipelineMetric(record, fallbackPeriod) {
+  return {
+    ...normalizeCommonFields(record, fallbackPeriod, 'Booking pipeline period'),
+    attended_appointments: normalizeNumber(record.attended_appointments, 'Attended appointments'),
+    booked_appointments: normalizeNumber(record.booked_appointments, 'Booked appointments'),
+    campaign_name: normalizeText(record.campaign_name),
+    calls: normalizeNumber(record.calls, 'Calls'),
+    chats: normalizeNumber(record.chats, 'Chats'),
+    clicks: normalizeNumber(record.clicks, 'Clicks'),
+    forms: normalizeNumber(record.forms, 'Forms'),
+    impressions: normalizeNumber(record.impressions, 'Impressions'),
+    insight: normalizeText(record.insight),
+    landing_page_visits: normalizeNumber(record.landing_page_visits, 'Landing page visits'),
+    missed_calls: normalizeNumber(record.missed_calls, 'Missed calls'),
+    no_response_leads: normalizeNumber(record.no_response_leads, 'No-response leads'),
+    qualified_inquiries: normalizeNumber(record.qualified_inquiries, 'Qualified inquiries'),
+  }
+}
+
 function normalizeCallBookingMetric(record, fallbackPeriod) {
   return {
     ...normalizeCommonFields(record, fallbackPeriod, 'Calls/bookings period'),
@@ -209,6 +240,31 @@ function normalizeCallBookingMetric(record, fallbackPeriod) {
     not_booked_reasons: normalizeNotBookedReasons(record.not_booked_reasons),
     peak_call_times: normalizePeakCallTimes(record.peak_call_times),
     total_calls: normalizeNumber(record.total_calls, 'Total calls'),
+  }
+}
+
+function normalizeLocationPerformanceMetric(record, fallbackPeriod) {
+  return {
+    ...normalizeCommonFields(record, fallbackPeriod, 'Location performance period'),
+    answered_calls: normalizeNumber(record.answered_calls, 'Answered calls'),
+    booked_appointments: normalizeNumber(record.booked_appointments, 'Booked appointments'),
+    compliance_status: normalizeEnum(
+      record.compliance_status,
+      VALID_COMPLIANCE_STATUSES,
+      CLINIC_COMPLIANCE_STATUSES.NOT_REVIEWED,
+      'Location compliance status',
+    ),
+    cost_per_booked_appointment: normalizeNumber(
+      record.cost_per_booked_appointment,
+      'Cost per booked appointment',
+    ),
+    google_rating: normalizeGoogleRating(record.google_rating),
+    inquiries: normalizeNumber(record.inquiries, 'Inquiries'),
+    insight: normalizeText(record.insight),
+    missed_calls: normalizeNumber(record.missed_calls, 'Missed calls'),
+    review_count: normalizeNumber(record.review_count, 'Review count'),
+    reviews_gained: normalizeNumber(record.reviews_gained, 'Reviews gained'),
+    spend: normalizeNumber(record.spend, 'Spend'),
   }
 }
 
@@ -295,33 +351,53 @@ export function normalizeClinicImportPayload(payload = {}, { now = () => new Dat
   assertClinicAggregateRecord(payload, 'Clinic import payload')
 
   const fallbackPeriod = normalizeOptionalPeriod(payload)
-  const serviceLinePerformance = getArray(payload, ['service_line_performance', 'serviceLinePerformance'])
+  const serviceLinePerformance = getSectionArray(payload, 'metrics', [
+    'service_line_performance',
+    'service_lines',
+    'serviceLinePerformance',
+  ])
     .map((record) => normalizeServiceLinePerformanceMetric(record, fallbackPeriod))
+  const bookingPipelineSnapshots = getSectionArray(payload, 'metrics', [
+    'booking_pipeline',
+    'booking_pipeline_snapshots',
+    'bookingPipelineSnapshots',
+  ])
+    .map((record) => normalizeBookingPipelineMetric(record, fallbackPeriod))
+  const locationPerformance = getSectionArray(payload, 'metrics', [
+    'location_performance',
+    'locations',
+    'locationPerformance',
+  ])
+    .map((record) => normalizeLocationPerformanceMetric(record, fallbackPeriod))
 
   return {
     clientId: requireText(payload.client_id ?? payload.clientId, 'Client ID'),
     complianceInput: {
-      complianceReviews: getArray(payload, ['compliance_reviews', 'complianceReviews'])
+      complianceReviews: getSectionArray(payload, 'compliance', ['compliance_reviews', 'complianceReviews'])
         .map(normalizeComplianceReviewItem),
     },
     contractVersion: normalizeText(payload.contract_version ?? payload.contractVersion)
       || CLINIC_IMPORT_CONTRACT_VERSION,
     importedAt: normalizeText(payload.imported_at ?? payload.importedAt) || now(),
     metricsInput: {
-      callBookingMetrics: getArray(payload, [
+      bookingPipelineSnapshots,
+      callBookingMetrics: getSectionArray(payload, 'metrics', [
+        'calls_bookings',
         'calls_bookings_metrics',
         'call_booking_metrics',
         'callBookingMetrics',
       ]).map((record) => normalizeCallBookingMetric(record, fallbackPeriod)),
-      patientAcquisitionSnapshots: getArray(payload, [
+      patientAcquisitionSnapshots: getSectionArray(payload, 'metrics', [
+        'patient_acquisition',
         'patient_acquisition_metrics',
         'patient_acquisition_snapshots',
         'patientAcquisitionMetrics',
       ]).map((record) => normalizePatientAcquisitionMetric(record, fallbackPeriod)),
+      locationPerformance,
       serviceLinePerformance,
     },
     reputationInput: {
-      reputationSnapshots: getArray(payload, ['reputation_snapshots', 'reputationSnapshots'])
+      reputationSnapshots: getSectionArray(payload, 'reputation', ['reputation_snapshots', 'reputationSnapshots'])
         .map((record) => normalizeReputationSnapshot(record, fallbackPeriod)),
     },
     serviceLinePerformance,

@@ -1,9 +1,13 @@
 import {
   CLINIC_RECORD_PUBLISH_STATES,
   normalizeCallBookingMetric,
+  normalizeComplianceReview,
+  normalizeMedicalApproval,
+  normalizeReputationSnapshot,
 } from '../../entities/clinic'
 import {
   CLIENT_TYPES,
+  isClinicClient,
 } from '../../entities/client'
 import {
   CLINIC_NEEDED_ACTION_TYPES,
@@ -14,17 +18,20 @@ import {
   NEEDED_ACTION_TYPES,
   normalizeNeededAction,
 } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
 import { TASK_STATUSES } from '../../entities/task'
 import {
   ACTIVITY_EVENT_TYPES,
   recordActivityEvent,
 } from './activityTrackingService'
-import { canAccessClient } from '../policies/accessPolicy'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
 import {
   canAgencyProcessNeededAction,
   canClientRespondToNeededAction,
 } from '../policies/neededActionPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasWorkspaceMembership,
+} from '../policies/routeAccessPolicy'
 import { isNeededActionVisibleToClient } from '../policies/visibilityPolicy'
 
 const VALID_NEEDED_ACTION_STATUSES = new Set(Object.values(NEEDED_ACTION_STATUSES))
@@ -34,6 +41,18 @@ const VALID_CLINIC_BOOKING_SUGGESTION_TYPES = new Set([
   CLINIC_NEEDED_ACTION_TYPES.APPROVE_CALL_SCRIPT,
   CLINIC_NEEDED_ACTION_TYPES.CONFIRM_APPOINTMENT_AVAILABILITY,
   CLINIC_NEEDED_ACTION_TYPES.FIX_MISSED_CALL_FOLLOW_UP,
+])
+const VALID_CLINIC_REPUTATION_SUGGESTION_TYPES = new Set([
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_REVIEW_RESPONSE,
+  CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW,
+])
+const VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES = new Set([
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_AD_COPY,
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_LANDING_PAGE,
+  CLINIC_NEEDED_ACTION_TYPES.APPROVE_MEDICAL_CLAIM,
+  CLINIC_NEEDED_ACTION_TYPES.CONFIRM_SERVICE_PRICING,
+  CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING,
+  CLINIC_NEEDED_ACTION_TYPES.SEND_DOCTOR_BIO,
 ])
 const VALID_CLIENT_RESPONSE_STATUSES = new Set([
   NEEDED_ACTION_STATUSES.ANSWERED,
@@ -85,19 +104,17 @@ function requireText(value, fieldName) {
 function getAction({ actionId, repositories, viewer }) {
   const action = repositories.neededFromClient.findById(actionId)
 
-  if (!action || !canAccessClient(viewer, action.client_id)) {
+  if (!action || !canAccessWorkspaceResource(viewer, action.client_id)) {
     throw new Error('Needed action was not found.')
   }
 
-  if (viewer?.role === USER_ROLES.AGENCY_ADMIN && repositories.clients?.findById) {
-    const client = repositories.clients.findById(action.client_id)
-
-    if (!client || client.agency_id !== viewer.agencyId) {
-      throw new Error('Needed action was not found.')
-    }
-  }
-
   return action
+}
+
+function getViewerActorRole(viewer) {
+  return viewer?.agencyMemberships?.[0]?.role
+    ?? viewer?.workspaceMemberships?.[0]?.role
+    ?? null
 }
 
 function createHistoryEvent({ metadata = {}, now, type, viewer }) {
@@ -105,7 +122,7 @@ function createHistoryEvent({ metadata = {}, now, type, viewer }) {
     created_at: now(),
     created_by: viewer?.userId ?? null,
     metadata: {
-      actor_role: viewer?.role ?? null,
+      actor_role: getViewerActorRole(viewer),
       ...metadata,
     },
     type,
@@ -120,8 +137,8 @@ function appendHistory(action, event) {
 }
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can process needed actions.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can process needed actions.')
   }
 }
 
@@ -182,9 +199,9 @@ function normalizeOptionalUrl(value = '', fieldName) {
 function getAdminClients({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
-  return repositories.clients
+  return repositories.workspaces
     .list()
-    .filter((client) => client.agency_id === viewer.agencyId)
+    .filter((client) => canAccessWorkspaceResource(viewer, client.id))
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
@@ -401,7 +418,7 @@ function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }
     viewer,
   })
 
-  if (client.type !== CLIENT_TYPES.CLINIC) {
+  if (!isClinicClient(client)) {
     throw new Error('Clinic booking suggestions are only available for clinic clients.')
   }
 
@@ -410,6 +427,87 @@ function getAdminCallBookingMetric({ callBookingMetricId, repositories, viewer }
   }
 
   return normalizedMetric
+}
+
+function getAdminReputationSnapshot({ repositories, reputationSnapshotId, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const snapshot = repositories.reputationSnapshots?.findById?.(reputationSnapshotId)
+
+  if (!snapshot) {
+    throw new Error('Clinic reputation snapshot was not found.')
+  }
+
+  const normalizedSnapshot = normalizeReputationSnapshot(snapshot)
+  const client = getAdminClient({
+    clientId: normalizedSnapshot.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (!isClinicClient(client)) {
+    throw new Error('Clinic reputation suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedSnapshot.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic reputation suggestions can only be created from published snapshots.')
+  }
+
+  return normalizedSnapshot
+}
+
+function getAdminComplianceReview({ complianceReviewId, repositories, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const review = repositories.complianceReviews?.findById?.(complianceReviewId)
+
+  if (!review) {
+    throw new Error('Clinic compliance review was not found.')
+  }
+
+  const normalizedReview = normalizeComplianceReview(review)
+  const client = getAdminClient({
+    clientId: normalizedReview.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (!isClinicClient(client)) {
+    throw new Error('Clinic compliance suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedReview.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic compliance suggestions can only be created from published reviews.')
+  }
+
+  return normalizedReview
+}
+
+function getAdminMedicalApproval({ medicalApprovalId, repositories, viewer }) {
+  assertAgencyAdmin(viewer)
+
+  const approval = repositories.medicalApprovals?.findById?.(medicalApprovalId)
+
+  if (!approval) {
+    throw new Error('Clinic medical approval was not found.')
+  }
+
+  const normalizedApproval = normalizeMedicalApproval(approval)
+  const client = getAdminClient({
+    clientId: normalizedApproval.client_id,
+    repositories,
+    viewer,
+  })
+
+  if (!isClinicClient(client)) {
+    throw new Error('Clinic medical approval suggestions are only available for clinic clients.')
+  }
+
+  if (normalizedApproval.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED) {
+    throw new Error('Clinic medical approval suggestions can only be created from published approvals.')
+  }
+
+  return normalizedApproval
 }
 
 function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
@@ -461,13 +559,145 @@ function getClinicBookingSuggestionDefaults({ metric, suggestionType }) {
 
 function assertNoOpenClinicBookingSuggestionDuplicate({ metric, repositories, suggestionType }) {
   const duplicate = repositories.neededFromClient
-    .listByClientId(metric.client_id)
+    .listByWorkspaceId(metric.client_id)
     .some((action) => isOpenNeededAction(action)
       && action.clinic_action_type === suggestionType
       && action.related_call_booking_metric_id === metric.id)
 
   if (duplicate) {
     throw new Error('An open clinic booking action already exists for this suggestion.')
+  }
+}
+
+function getClinicReputationSuggestionDefaults({ snapshot, suggestionType }) {
+  const periodLabel = snapshot.period_label || 'the selected period'
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.RESPOND_TO_NEGATIVE_REVIEW) {
+    return {
+      complianceRisk: 'Do not include reviewer names, patient names, appointment details, or medical context in the portal response workflow.',
+      description: 'Confirm who should respond to negative or unanswered reviews and what tone or escalation rule should be used.',
+      impactIfDelayed: 'Unanswered negative reviews can weaken local trust and reduce new patient conversion.',
+      patientImpact: 'Patients may avoid booking if reputation concerns appear unresolved.',
+      priority: snapshot.negative_reviews > 0
+        ? NEEDED_ACTION_PRIORITIES.HIGH
+        : NEEDED_ACTION_PRIORITIES.MEDIUM,
+      title: 'Respond to negative or unanswered reviews',
+      type: NEEDED_ACTION_TYPES.FEEDBACK,
+      whyNeeded: `${snapshot.negative_reviews} negative reviews and ${snapshot.unanswered_reviews} unanswered reviews were tracked in ${periodLabel}.`,
+    }
+  }
+
+  return {
+    complianceRisk: 'Review responses must stay general, avoid confirming patient status, and avoid unsupported medical claims.',
+    description: 'Approve the prepared review response drafts before they are published on public profiles.',
+    impactIfDelayed: 'Response drafts may stay unpublished, leaving review follow-up visibly incomplete.',
+    patientImpact: 'Clear, compliant responses help prospective patients see that the clinic handles concerns responsibly.',
+    priority: snapshot.review_response_drafts >= 3
+      ? NEEDED_ACTION_PRIORITIES.HIGH
+      : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: 'Approve review response drafts',
+    type: NEEDED_ACTION_TYPES.APPROVAL,
+    whyNeeded: `${snapshot.review_response_drafts} review response drafts are waiting for approval from ${periodLabel}.`,
+  }
+}
+
+function assertNoOpenClinicReputationSuggestionDuplicate({ repositories, snapshot, suggestionType }) {
+  const duplicate = repositories.neededFromClient
+    .listByWorkspaceId(snapshot.client_id)
+    .some((action) => isOpenNeededAction(action)
+      && action.clinic_action_type === suggestionType
+      && action.related_reputation_snapshot_id === snapshot.id)
+
+  if (duplicate) {
+    throw new Error('An open clinic reputation action already exists for this suggestion.')
+  }
+}
+
+function getClinicComplianceSuggestionDefaults({ review, suggestionType }) {
+  const areaLabel = review.platform || review.title || 'the compliance review'
+  const openIssueCount = review.open_issues + review.blocked_items + review.limited_ads
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING) {
+    return {
+      complianceRisk: 'Tracking and privacy changes must avoid sending patient-level health data or PHI into analytics/ad platforms.',
+      description: 'Confirm the privacy/tracking setup, consent language, and whether the current configuration is approved for clinic marketing.',
+      impactIfDelayed: 'Campaign tracking or retargeting may remain paused or limited until privacy risk is resolved.',
+      patientImpact: 'Safer tracking keeps patient privacy protected while preserving aggregate reporting.',
+      priority: NEEDED_ACTION_PRIORITIES.HIGH,
+      title: 'Confirm privacy and tracking setup',
+      type: NEEDED_ACTION_TYPES.DECISION,
+      whyNeeded: `${areaLabel} has ${openIssueCount} open, blocked, or limited compliance items.`,
+    }
+  }
+
+  return {
+    complianceRisk: 'Do not include patient examples, unsupported treatment claims, or patient identifiers in the portal workflow.',
+    description: 'Review the compliance issue, confirm what can be published, and provide the safest approved direction.',
+    impactIfDelayed: 'Ads, landing pages, or clinic growth campaigns may remain limited until the compliance issue is resolved.',
+    patientImpact: 'Clear compliant messaging helps prospective patients understand services without misleading claims.',
+    priority: review.blocked_items > 0 || review.open_issues >= 2
+      ? NEEDED_ACTION_PRIORITIES.HIGH
+      : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: 'Resolve compliance review issue',
+    type: NEEDED_ACTION_TYPES.DECISION,
+    whyNeeded: `${areaLabel} has ${openIssueCount} open, blocked, or limited compliance items.`,
+  }
+}
+
+function getClinicMedicalApprovalSuggestionDefaults({ approval, suggestionType }) {
+  const dueText = approval.due_date ? ` by ${approval.due_date}` : ''
+  const base = {
+    complianceRisk: 'The approval response must avoid patient identifiers and should only approve portal-ready claim, copy, pricing, or policy language.',
+    description: approval.instructions || 'Review the pending medical approval and approve, request changes, or reject it with a portal-ready comment.',
+    impactIfDelayed: 'Campaigns, landing pages, or medical claims may stay blocked until the clinic approves the item.',
+    patientImpact: 'Approved, accurate information helps patients understand the service and next step.',
+    priority: approval.due_date ? NEEDED_ACTION_PRIORITIES.HIGH : NEEDED_ACTION_PRIORITIES.MEDIUM,
+    title: approval.title ? `Approve: ${approval.title}` : 'Approve medical content',
+    type: NEEDED_ACTION_TYPES.APPROVAL,
+    whyNeeded: `Approval is pending${dueText}.`,
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONNECT_CALL_TRACKING) {
+    return {
+      ...base,
+      description: approval.instructions || 'Approve the privacy, consent, or tracking language before it is used.',
+      title: approval.title ? `Approve privacy/tracking: ${approval.title}` : 'Approve privacy and tracking setup',
+    }
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.CONFIRM_SERVICE_PRICING) {
+    return {
+      ...base,
+      title: approval.title ? `Confirm pricing: ${approval.title}` : 'Confirm treatment pricing',
+    }
+  }
+
+  if (suggestionType === CLINIC_NEEDED_ACTION_TYPES.SEND_DOCTOR_BIO) {
+    return {
+      ...base,
+      title: approval.title ? `Approve provider content: ${approval.title}` : 'Approve provider content',
+    }
+  }
+
+  return base
+}
+
+function assertNoOpenClinicComplianceSuggestionDuplicate({
+  complianceReviewId,
+  medicalApprovalId,
+  repositories,
+  suggestionType,
+  clientId,
+}) {
+  const duplicate = repositories.neededFromClient
+    .listByWorkspaceId(clientId)
+    .some((action) => isOpenNeededAction(action)
+      && action.clinic_action_type === suggestionType
+      && (!complianceReviewId || action.related_compliance_review_id === complianceReviewId)
+      && (!medicalApprovalId || action.related_medical_approval_id === medicalApprovalId))
+
+  if (duplicate) {
+    throw new Error('An open clinic compliance action already exists for this suggestion.')
   }
 }
 
@@ -516,16 +746,16 @@ export function listClientNeededActions({
   repositories,
   viewer,
 }) {
-  const normalizedClientId = normalizeText(clientId || viewer?.clientId)
+  const normalizedClientId = normalizeText(clientId || viewer?.activeWorkspaceId)
 
-  if (!normalizedClientId || !canAccessClient(viewer, normalizedClientId)) {
+  if (!normalizedClientId || !canAccessWorkspaceResource(viewer, normalizedClientId)) {
     return {
       reason: 'access_denied',
       status: 'error',
     }
   }
 
-  const client = repositories.clients?.findById(normalizedClientId)
+  const client = repositories.workspaces.findById(normalizedClientId)
 
   if (!client) {
     return {
@@ -535,7 +765,7 @@ export function listClientNeededActions({
   }
 
   const actions = repositories.neededFromClient
-    .listByClientId(normalizedClientId)
+    .listByWorkspaceId(normalizedClientId)
     .filter(isNeededActionVisibleToClient)
     .sort((a, b) => {
       const priority = {
@@ -557,7 +787,7 @@ export function listClientNeededActions({
       portalSlug: client.portal_slug,
       primaryContactEmail: client.primary_contact_email,
       primaryContactName: client.primary_contact_name,
-      type: client.type,
+      type: CLIENT_TYPES.CLINIC,
     },
     status: 'ready',
   }
@@ -735,6 +965,155 @@ export function createNeededActionFromClinicBookingSuggestion({
   })
 }
 
+export function createNeededActionFromClinicReputationSuggestion({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  reputationSnapshotId,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_REPUTATION_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic reputation suggestion type is invalid.')
+  }
+
+  const snapshot = getAdminReputationSnapshot({
+    repositories,
+    reputationSnapshotId,
+    viewer,
+  })
+
+  assertNoOpenClinicReputationSuggestionDuplicate({
+    repositories,
+    snapshot,
+    suggestionType,
+  })
+
+  const defaults = getClinicReputationSuggestionDefaults({
+    snapshot,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: snapshot.client_id,
+      clinicActionType: suggestionType,
+      relatedLocationId: snapshot.location_id,
+      relatedReputationSnapshotId: snapshot.id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicComplianceSuggestion({
+  activityIdGenerator,
+  complianceReviewId,
+  idGenerator,
+  input = {},
+  now = () => new Date().toISOString(),
+  repositories,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic compliance suggestion type is invalid.')
+  }
+
+  const review = getAdminComplianceReview({
+    complianceReviewId,
+    repositories,
+    viewer,
+  })
+
+  assertNoOpenClinicComplianceSuggestionDuplicate({
+    clientId: review.client_id,
+    complianceReviewId: review.id,
+    repositories,
+    suggestionType,
+  })
+
+  const defaults = getClinicComplianceSuggestionDefaults({
+    review,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: review.client_id,
+      clinicActionType: suggestionType,
+      relatedCampaignName: review.platform,
+      relatedComplianceReviewId: review.id,
+      relatedLocationId: review.location_id,
+      relatedServiceLineId: review.service_line_id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
+export function createNeededActionFromClinicMedicalApprovalSuggestion({
+  activityIdGenerator,
+  idGenerator,
+  input = {},
+  medicalApprovalId,
+  now = () => new Date().toISOString(),
+  repositories,
+  suggestionType,
+  viewer,
+}) {
+  if (!VALID_CLINIC_COMPLIANCE_SUGGESTION_TYPES.has(suggestionType)) {
+    throw new Error('Clinic medical approval suggestion type is invalid.')
+  }
+
+  const approval = getAdminMedicalApproval({
+    medicalApprovalId,
+    repositories,
+    viewer,
+  })
+
+  assertNoOpenClinicComplianceSuggestionDuplicate({
+    clientId: approval.client_id,
+    medicalApprovalId: approval.id,
+    repositories,
+    suggestionType,
+  })
+
+  const defaults = getClinicMedicalApprovalSuggestionDefaults({
+    approval,
+    suggestionType,
+  })
+
+  return createNeededAction({
+    activityIdGenerator,
+    idGenerator,
+    input: Object.assign({}, defaults, input, {
+      clientId: approval.client_id,
+      clinicActionType: suggestionType,
+      relatedLocationId: approval.location_id,
+      relatedMedicalApprovalId: approval.id,
+      relatedServiceLineId: approval.service_line_id,
+      relatedTaskId: '',
+      relatedWorkItemId: '',
+    }),
+    now,
+    repositories,
+    viewer,
+  })
+}
+
 export function updateNeededAction({
   actionId,
   input = {},
@@ -854,9 +1233,9 @@ export function listOpenNeededActionsForWorkItem({
   workItemId,
 }) {
   const workItem = getAdminWorkItem({ repositories, viewer, workItemId })
-  const client = repositories.clients.findById(workItem.client_id)
+  const client = repositories.workspaces.findById(workItem.client_id)
   const actions = repositories.neededFromClient
-    .listByClientId(workItem.client_id)
+    .listByWorkspaceId(workItem.client_id)
     .filter((action) => action.related_work_item_id === workItem.id)
     .filter(isOpenNeededAction)
     .map((action) => mapNeededAction({ action, client }))
@@ -933,7 +1312,7 @@ export function answerNeededAction({
 }) {
   const action = getAction({ actionId, repositories, viewer })
 
-  if (viewer?.role !== USER_ROLES.CLIENT_USER) {
+  if (!hasWorkspaceMembership(viewer)) {
     throw new Error('Only client users can respond to needed actions.')
   }
 

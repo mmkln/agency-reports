@@ -6,7 +6,7 @@ import { Icon } from '@/shared/icons'
 import { SectionCard } from './_shared'
 
 export function ContactAskQuestionBlock({ client }) {
-  const contactName = client?.primaryContactName || 'Your agency contact'
+  const contactName = client?.primaryContactName || 'Your workspace contact'
   const contactEmail = client?.primaryContactEmail || ''
   const requestsHref = client?.id ? `/client/requests?clientId=${client.id}` : '/client/requests'
 
@@ -33,12 +33,12 @@ export function ContactAskQuestionBlock({ client }) {
             </a>
           ) : (
             <p className="mt-1 text-body text-text-secondary">
-              Use Requests to send a question to the agency team.
+              Use Requests to send a question to the team.
             </p>
           )}
         </div>
         <p className="text-body text-text-secondary">
-          Questions and change requests are tracked in Requests so the agency can review and respond without exposing internal tasks.
+          Questions and change requests are tracked in Requests so the team can review and respond without exposing internal tasks.
         </p>
       </div>
     </SectionCard>

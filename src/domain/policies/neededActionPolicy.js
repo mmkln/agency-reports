@@ -1,5 +1,10 @@
 import { NEEDED_ACTION_STATUSES } from '../../entities/needed-from-client'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessWorkspaceResource } from './accessPolicy'
+import {
+  hasAgencyAdminMembership,
+  hasWorkspaceMembership,
+} from './routeAccessPolicy'
+import { canRespondToWorkspaceActions } from './workspaceAccessPolicy'
 
 export const neededActionStatusSelectionOrder = Object.freeze([
   NEEDED_ACTION_STATUSES.PENDING,
@@ -70,12 +75,13 @@ export function getNeededActionStatusSelectionOptions({
 }
 
 export function canClientRespondToNeededAction({ action, viewer }) {
-  return viewer?.role === USER_ROLES.CLIENT_USER
+  return hasWorkspaceMembership(viewer)
+    && canRespondToWorkspaceActions(viewer, action?.client_id)
     && action?.status === NEEDED_ACTION_STATUSES.PENDING
 }
 
 export function canAgencyProcessNeededAction({ action, viewer, targetStatus }) {
-  return viewer?.role === USER_ROLES.AGENCY_ADMIN
-    && Boolean(viewer.agencyId)
+  return hasAgencyAdminMembership(viewer)
+    && canAccessWorkspaceResource(viewer, action?.client_id)
     && canTransitionNeededActionStatus(action?.status, targetStatus)
 }

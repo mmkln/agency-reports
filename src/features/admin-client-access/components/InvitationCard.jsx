@@ -1,13 +1,22 @@
-import { Link } from 'react-router-dom'
-
 import {
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   StatusBadge,
 } from '@/shared/ui'
+import { Icon } from '@/shared/icons'
 
 import { CLIENT_INVITATION_STATUSES, CLIENT_INVITATION_STATUS_META } from '../../../entities/client-invitation'
-import { Icon } from '../../../shared/icons'
-import { buildInviteLink } from '../invitationLinks'
+import { WORKSPACE_ROLE_META } from '../../../entities/workspace-membership'
+
+const DELIVERY_STATUS_META = {
+  failed: { label: 'Email failed', tone: 'rose' },
+  pending: { label: 'Email pending', tone: 'amber' },
+  sent: { label: 'Email sent', tone: 'green' },
+}
 
 function formatInvitationDate(date) {
   if (!date) {
@@ -21,58 +30,74 @@ function formatInvitationDate(date) {
   }).format(new Date(date))
 }
 
+function formatSentCount(count) {
+  const normalizedCount = Number(count || 0)
+
+  if (normalizedCount === 0) {
+    return 'Not sent yet'
+  }
+
+  return normalizedCount === 1 ? 'Sent once' : `Sent ${normalizedCount} times`
+}
+
 export function InvitationCard({
   invitation,
   onCancel,
-  onCopy,
   onResend,
 }) {
-  const inviteLink = buildInviteLink(invitation.token)
   const isPending = invitation.status === CLIENT_INVITATION_STATUSES.PENDING
+  const canManageInvitation = isPending && onCancel && onResend
+  const deliveryMeta = DELIVERY_STATUS_META[invitation.make_delivery_status] ?? DELIVERY_STATUS_META.pending
+  const roleLabel = WORKSPACE_ROLE_META[invitation.role]?.label ?? invitation.role
 
   return (
-    <article className="rounded-control bg-block-subtle p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-ui text-text-primary">{invitation.email}</p>
-          <p className="mt-0.5 truncate text-label font-normal text-text-muted">
-            {invitation.name || 'Unnamed invite'} | {invitation.role} | expires {formatInvitationDate(invitation.expires_at)}
-          </p>
-        </div>
-        <StatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
-      </div>
-
-      <p className="mt-3 truncate rounded-item bg-block px-2 py-1.5 font-mono text-label font-normal text-text-muted">
-        {inviteLink}
-      </p>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button onClick={() => onCopy(invitation)} size="sm" type="button" variant="outline">
-          Copy link
-        </Button>
-        <Button asChild size="sm" type="button" variant="outline">
-          <Link to={`/accept-invite?token=${invitation.token}`}>
-            Preview invite page
-            <Icon name="arrowUpRight" size={13} />
-          </Link>
-        </Button>
-        {isPending ? (
-          <>
-            <Button onClick={() => onResend(invitation)} size="sm" type="button" variant="ghost">
-              Resend
-            </Button>
-            <Button
-              className="text-destructive hover:text-destructive"
-              onClick={() => onCancel(invitation)}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              Revoke invite
-            </Button>
-          </>
+    <article className="grid gap-control px-component py-control md:grid-cols-[minmax(240px,1.4fr)_150px_120px_150px_120px_44px] md:items-center">
+      <div className="min-w-0">
+        <h3 className="m-0 truncate text-ui font-semibold text-text-primary">
+          {invitation.name || 'Unnamed invite'}
+        </h3>
+        <p className="m-0 truncate text-ui text-text-muted">{invitation.email}</p>
+        {invitation.make_delivery_error ? (
+          <p className="m-0 truncate text-label text-destructive">{invitation.make_delivery_error}</p>
         ) : null}
       </div>
+
+      <span className="truncate text-ui text-text-muted">{roleLabel}</span>
+      <StatusBadge meta={CLIENT_INVITATION_STATUS_META[invitation.status]} />
+      <div className="flex min-w-0 flex-wrap items-center gap-tag">
+        <StatusBadge meta={deliveryMeta} />
+        <span className="truncate text-ui text-text-muted">{formatSentCount(invitation.sent_count)}</span>
+      </div>
+      <span className="text-ui text-text-muted">{formatInvitationDate(invitation.expires_at)}</span>
+      {canManageInvitation ? (
+        <div className="flex justify-start md:justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                aria-label="Invitation actions"
+                icon={<Icon name="ellipsis" size={16} />}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onResend(invitation)}>
+                Resend
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onCancel(invitation)}
+              >
+                Revoke invite
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <span aria-hidden="true" />
+      )}
     </article>
   )
 }

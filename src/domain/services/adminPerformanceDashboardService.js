@@ -7,11 +7,12 @@ import {
   PERFORMANCE_DATA_MODE_META,
   validatePerformanceDashboardPeriod,
 } from '../../entities/performance-dashboard'
-import { USER_ROLES } from '../../entities/profile'
+import { canAccessWorkspaceResource } from '../policies/accessPolicy'
+import { hasAgencyAdminMembership } from '../policies/routeAccessPolicy'
 
 function assertAgencyAdmin(viewer) {
-  if (viewer?.role !== USER_ROLES.AGENCY_ADMIN || !viewer.agencyId) {
-    throw new Error('Only agency admins can manage performance dashboards.')
+  if (!hasAgencyAdminMembership(viewer)) {
+    throw new Error('Only admins can manage performance dashboards.')
   }
 }
 
@@ -42,10 +43,10 @@ function normalizeRequiredDate(value, fieldName) {
 }
 
 function getAdminClient({ clientId, repositories, viewer }) {
-  const client = repositories.clients.findById(clientId)
+  const client = repositories.workspaces.findById(clientId)
 
-  if (!client || client.agency_id !== viewer.agencyId) {
-    throw new Error('Client was not found for this agency.')
+  if (!client || !canAccessWorkspaceResource(viewer, client.id)) {
+    throw new Error('Account was not found.')
   }
 
   return client
@@ -120,9 +121,9 @@ export function listAdminPerformanceDashboardPeriods({ repositories, viewer }) {
   assertAgencyAdmin(viewer)
 
   const clientsById = new Map(
-    repositories.clients
+    repositories.workspaces
       .list()
-      .filter((client) => client.agency_id === viewer.agencyId)
+      .filter((client) => canAccessWorkspaceResource(viewer, client.id))
       .map((client) => [client.id, client]),
   )
 

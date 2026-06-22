@@ -11,11 +11,17 @@ import {
 import { getMedicalApprovalDecisionCapabilities } from '../../../domain/services/adminClinicComplianceService'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   SelectField,
   SelectItem,
   TextField,
 } from './ComplianceFields'
+import { ComplianceSuggestedActionButtons } from './ComplianceSuggestedActionButtons'
 
 function createBlankApproval() {
   return {
@@ -59,17 +65,14 @@ function getPublishLabel(record) {
   ].label
 }
 
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
-}
-
 export function MedicalApprovalsCard({
+  createdActionKeys = new Set(),
+  creatingActionKey = '',
   draft,
   isDirty,
   locations,
   onApplyDecision,
+  onCreateSuggestedAction = () => {},
   onPublish,
   onUpdate,
   serviceLines,
@@ -130,11 +133,14 @@ export function MedicalApprovalsCard({
         {draft.medicalApprovals.map((approval, index) => (
           <ApprovalEditor
             approval={approval}
+            createdActionKeys={createdActionKeys}
+            creatingActionKey={creatingActionKey}
             index={index}
             isDirty={isDirty}
             key={approval.id || `new-approval-${index}`}
             locations={locations}
             onApplyDecision={applyDecision}
+            onCreateSuggestedAction={onCreateSuggestedAction}
             onPublish={onPublish}
             onRemove={removeApproval}
             onUpdate={updateApproval}
@@ -148,10 +154,13 @@ export function MedicalApprovalsCard({
 
 function ApprovalEditor({
   approval,
+  createdActionKeys,
+  creatingActionKey,
   index,
   isDirty,
   locations,
   onApplyDecision,
+  onCreateSuggestedAction,
   onPublish,
   onRemove,
   onUpdate,
@@ -170,14 +179,18 @@ function ApprovalEditor({
           <p className="text-label text-text-muted">
             Status: {getStatusLabel(approval.status)}
           </p>
-          <p className="text-label text-text-muted">
-            {getPublishLabel(approval)}
-            {approval.published_at ? ` at ${approval.published_at}` : ''}
-          </p>
-        </div>
+                <p className="text-label text-text-muted">
+                  {getPublishLabel(approval)}
+                  {approval.published_at ? ` at ${approval.published_at}` : ''}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={approval.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={approval.publish_readiness} />
+                </div>
+              </div>
         <div className="flex items-center gap-2">
           <Button
-            disabled={!canPublishRecord(approval, isDirty)}
+            disabled={!canPublishClinicRecord(approval, isDirty)}
             onClick={() => onPublish({ id: approval.id, type: 'approval' })}
             size="sm"
             type="button"
@@ -190,6 +203,16 @@ function ApprovalEditor({
           </Button>
         </div>
       </div>
+
+      <ComplianceSuggestedActionButtons
+        createdActionKeys={createdActionKeys}
+        creatingActionKey={creatingActionKey}
+        isDirty={isDirty}
+        onCreateSuggestedAction={onCreateSuggestedAction}
+        record={approval}
+        recordType="approval"
+        suggestions={approval.medical_approval_action_suggestions}
+      />
 
       <div className="grid gap-component md:grid-cols-3">
         <TextField
@@ -247,7 +270,7 @@ function ApprovalEditor({
         <TextField
           label="Requested by"
           onChange={(value) => onUpdate(index, 'requested_by_label', value)}
-          placeholder="Agency team"
+          placeholder="Team"
           value={approval.requested_by_label}
         />
         <TextField
@@ -272,7 +295,7 @@ function ApprovalEditor({
         <NotesField
           label="Decision comment"
           onChange={(value) => onUpdate(index, 'decision_comment', value)}
-          placeholder="Client-safe decision note"
+          placeholder="Portal-ready decision note"
           value={approval.decision_comment}
         />
       </div>

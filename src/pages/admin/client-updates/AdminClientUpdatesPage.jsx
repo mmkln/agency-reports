@@ -1,24 +1,23 @@
 import {
   Button,
-  CardContent,
   PageShell,
-  PrimitiveCard as Card,
 } from '@/shared/ui'
 
 import {
   ClientUpdateDialog,
   useAdminClientUpdatesWorkflow,
 } from '../../../features/admin-client-updates'
-import { AdminClientWorkspaceHeader } from '../../../features/admin-client-workspace'
+import {
+  AdminClientWorkspaceHeader,
+  WorkspaceState,
+} from '../../../features/admin-client-workspace'
 import { Icon } from '../../../shared/icons'
 import { AdminClientUpdatesWorkspace } from '../../../widgets/admin-client-updates'
 
 function WorkspaceLoadingState() {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="min-h-[260px] animate-pulse" />
-      </Card>
+      <WorkspaceState />
     </PageShell>
   )
 }
@@ -26,11 +25,7 @@ function WorkspaceLoadingState() {
 function WorkspaceErrorState({ message }) {
   return (
     <PageShell className="px-app-gutter py-content-gutter" width="content">
-      <Card className="bg-block shadow-none">
-        <CardContent className="flex min-h-[260px] items-center justify-center text-ui text-destructive">
-          {message}
-        </CardContent>
-      </Card>
+      <WorkspaceState message={message} status="error" />
     </PageShell>
   )
 }
@@ -47,7 +42,7 @@ export function AdminClientUpdatesPage({ routeParams = {}, runtime }) {
   }
 
   if (workflow.updatesResource.status === 'error' || !workflow.client) {
-    return <WorkspaceErrorState message={workflow.updatesResource.error || 'Client was not found.'} />
+    return <WorkspaceErrorState message={workflow.updatesResource.error || 'Account was not found.'} />
   }
 
   return (
@@ -61,7 +56,7 @@ export function AdminClientUpdatesPage({ routeParams = {}, runtime }) {
         )}
         client={workflow.client}
         currentPage="updates"
-        eyebrow="Client updates"
+        eyebrow="Portal updates"
         width="content"
       />
 

@@ -10,6 +10,11 @@ import {
 } from '../../../entities/clinic'
 import { WorkspaceCard } from '../../admin-client-workspace'
 import {
+  canPublishClinicRecord,
+  ClinicPublishReadinessBadge,
+  ClinicPublishReadinessNote,
+} from '../../admin-clinic-publish'
+import {
   NotesField,
   NumberField,
   SelectField,
@@ -45,12 +50,6 @@ function getPublishLabel(record) {
   return CLINIC_RECORD_PUBLISH_STATE_META[
     record.publish_state || CLINIC_RECORD_PUBLISH_STATES.DRAFT
   ].label
-}
-
-function canPublishRecord(record, isDirty) {
-  return Boolean(record.id)
-    && !isDirty
-    && record.publish_state !== CLINIC_RECORD_PUBLISH_STATES.PUBLISHED
 }
 
 export function ServiceLinePerformanceCard({
@@ -118,10 +117,14 @@ export function ServiceLinePerformanceCard({
                   {getPublishLabel(performance)}
                   {performance.published_at ? ` at ${performance.published_at}` : ''}
                 </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ClinicPublishReadinessBadge readiness={performance.publish_readiness} />
+                  <ClinicPublishReadinessNote readiness={performance.publish_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  disabled={!canPublishRecord(performance, isDirty)}
+                  disabled={!canPublishClinicRecord(performance, isDirty)}
                   onClick={() => onPublish({ id: performance.id, type: 'service_line_performance' })}
                   size="sm"
                   type="button"

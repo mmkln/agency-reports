@@ -4,6 +4,11 @@ This document defines the frontend architecture for implementing UC-001, UC-002,
 
 The current product direction is Agency Client Portal Aggregator. Legacy DentalFlow demo pages are preserved only as visual/reference code under `src/pages/legacy`.
 
+Business-domain ownership is defined in `docs/domain-ownership-model.md`.
+Frontend route, shell, sidebar, and settings work must follow that model when
+distinguishing personal user account data from agency-owned data and
+company/workspace-owned data.
+
 ## Architecture Style
 
 Use a pragmatic Feature-Sliced / domain-first structure:
@@ -195,6 +200,7 @@ Rules:
 
 ```text
 - Client-scoped pages should share the client workspace header/tabs so context does not reset between surfaces.
+- The sidebar should show stable destinations for the current container, not every route the user has permission to access.
 - Overview editors can reference tasks, requests, dashboards, and reports, but full management belongs to the owning surface.
 - Internal tasks are not the client-facing work contract. Mature client-facing active work is represented by `ClientWorkItem` records that may reference a source task but own their own safe title, summary, status, target date, and publish state.
 - `ClientWorkItem.publish_state` is the source of truth for whether work appears in client-facing active work. Existing task `visibility` / `client_visible` fields are legacy migration hints and internal filtering aids, not the mature client-facing publish contract.
@@ -202,6 +208,34 @@ Rules:
 - Workflow records remain live source records in their repositories/services. Do not copy them into overview draft/publish snapshots unless a use case explicitly requires a frozen historical artifact.
 - Draft/publish state belongs to authored overview content and report content, not to operational workflow records by default.
 - If a workflow has status transitions, responses, history, filters, creation, or destructive actions, model it as a feature/domain service and route-level surface rather than an embedded section in another page.
+```
+
+## Navigation Context Architecture
+
+Route access and sidebar navigation are separate concerns.
+
+```text
+Route access = may this viewer open this route?
+Navigation context = should this destination appear in this container's sidebar?
+```
+
+The app shell should compose navigation from the current container:
+
+```text
+General agency container = agency-wide destinations such as Accounts, Tasks, Dashboards, Performance, and Reports.
+Admin client workspace container = selected client destinations such as Overview, Projects, Actions, Requests, Results, Files, Access, Activity, and clinic setup where applicable.
+Client portal container = client-facing destinations for the authenticated user's client membership.
+Team operations container = agency team operational destinations.
+```
+
+Rules:
+
+```text
+- Do not derive sidebar items by listing every route a role can access.
+- Use route metadata and workspace context to decide the sidebar container first.
+- Keep direct route access available when authorized, but surface contextual routes only inside their owning container.
+- Client/clinic-specific destinations should not appear in general agency navigation just because an agency admin has the capability to open them.
+- App sidebar components should render a prepared navigation model; role, capability, client type, and workspace-context decisions belong in routing/navigation policy helpers.
 ```
 
 ## Mature Client Destination Architecture

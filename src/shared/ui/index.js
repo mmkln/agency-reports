@@ -32,6 +32,7 @@ export { ConfirmationDialog } from './ConfirmationDialog'
 export { ContentToolbar } from './ContentToolbar'
 export { DashboardSectionGrid } from './DashboardSectionGrid'
 export { DetailRow } from './DetailRow'
+export { DataTable } from './DataTable'
 export { DataTableSurface } from './DataTableSurface'
 export {
   Dialog,
@@ -67,6 +68,7 @@ export { EmptyState } from './EmptyState'
 export { ErrorBlock } from './ErrorBlock'
 export { FilterTabs } from './FilterTabs'
 export { FormField } from './FormField'
+export { FreshnessMiniBar } from './FreshnessMiniBar'
 export { GoalCard } from './GoalCard'
 export { IconButton } from './IconButton'
 export { useInspectorId } from './inspectorId'
@@ -77,6 +79,7 @@ export { LabeledNote } from './LabeledNote'
 export { ListPanel } from './ListPanel'
 export { ListRow } from './ListRow'
 export { MetricGrid } from './MetricGrid'
+export { MetricTile } from './MetricTile'
 export { MultiSelect } from './MultiSelect'
 export { MutedBlock } from './MutedBlock'
 export { NativeSelect, NativeSelect as Select } from './NativeSelect'
@@ -109,7 +112,10 @@ export {
 } from '@/components/ui/select'
 export { ReadOnlyField } from './ReadOnlyField'
 export { ScrollArea, ScrollBar } from './ScrollArea'
+export { ReportSection } from './ReportSection'
+export { ResourceState } from './ResourceState'
 export { SearchField } from './SearchField'
+export { SectionJumpNav } from './SectionJumpNav'
 export { SectionNav } from './SectionNav'
 export { Separator } from '@/components/ui/separator'
 export {
@@ -125,6 +131,7 @@ export {
   SheetTrigger,
 } from '@/components/ui/sheet'
 export { StatCard } from './StatCard'
+export { StickyDashboardToolbar } from './StickyDashboardToolbar'
 export { StatusBadge } from './StatusBadge'
 export { statusToneClasses } from './statusToneClasses'
 export { Skeleton } from '@/components/ui/skeleton'
@@ -132,8 +139,6 @@ export { Switch } from '@/components/ui/switch'
 export { TableBadge, TablePanel } from './TablePanel'
 export {
   Table,
-  TableActionCell,
-  TableActionHead,
   TableBody,
   TableCaption,
   TableCell,
@@ -147,6 +152,7 @@ export { TaskItem } from './TaskItem'
 export { Textarea } from '@/components/ui/textarea'
 export { Timeline, TimelineItem } from './Timeline'
 export { ToggleGroup } from './ToggleGroup'
+export { ViewModeToggle } from './ViewModeToggle'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip'
 export { TooltipIconButton } from './TooltipIconButton'
 export { UnavailableState } from './UnavailableState'
