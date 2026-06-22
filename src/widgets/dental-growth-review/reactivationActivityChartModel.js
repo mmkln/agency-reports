@@ -74,6 +74,15 @@ function getCampaignWeekIndex(startDate, currentDate) {
   return Math.floor(daysBetween(startDate, currentDate) / DAYS_IN_WEEK)
 }
 
+function getBoundaryPosition(seriesLength, afterIndex) {
+  if (seriesLength <= 0) {
+    return 0
+  }
+
+  const position = (afterIndex / seriesLength) * 100
+  return Math.max(0, Math.min(100, position))
+}
+
 function buildWeekBoundaryLines(series) {
   const campaignStartDate = parseUtcDate(series[0]?.date)
 
@@ -85,7 +94,7 @@ function buildWeekBoundaryLines(series) {
   let currentWeekIndex = 0
   let previousPoint = null
 
-  series.forEach((point) => {
+  series.forEach((point, index) => {
     const pointDate = parseUtcDate(point.date)
 
     if (!pointDate) {
@@ -99,6 +108,7 @@ function buildWeekBoundaryLines(series) {
         afterLabel: point.label,
         beforeLabel: previousPoint.label,
         id: `campaign-week-boundary-${weekIndex}`,
+        position: getBoundaryPosition(series.length, index),
       })
       currentWeekIndex = weekIndex
     }
