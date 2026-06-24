@@ -1,6 +1,5 @@
 import { Icon } from '@/shared/icons'
 import {
-  DashboardSectionGrid,
   Panel,
   PanelBody,
   PanelHeader,
@@ -21,14 +20,6 @@ const toneFillClass = {
   green: 'bg-success',
   purple: 'bg-premium-purple',
   rose: 'bg-destructive',
-}
-
-const toneMutedClass = {
-  amber: 'bg-warning-muted',
-  blue: 'bg-action-muted',
-  green: 'bg-success-muted',
-  purple: 'bg-premium-purple/10',
-  rose: 'bg-destructive-muted',
 }
 
 function ExecutiveOverviewMetric({ metric }) {
@@ -195,13 +186,110 @@ function ZoneTwoFinancialHealth({ page }) {
   )
 }
 
-function UnitEconomicsCard({ metric }) {
+function EmphasizedText({ emphasis, text }) {
+  if (!emphasis || !text.includes(emphasis)) {
+    return text
+  }
+
+  const [before, after] = text.split(emphasis)
+
   return (
-    <div className={`grid gap-tag rounded-block p-component ${toneMutedClass[metric.tone] ?? toneMutedClass.blue}`}>
-      <p className="text-label text-text-muted">{metric.label}</p>
-      <p className={`text-data tabular-nums ${toneTextClass[metric.tone] ?? toneTextClass.blue}`}>{metric.value}</p>
-      <p className="text-ui text-text-secondary">{metric.helper}</p>
+    <>
+      {before}<span className="font-semibold text-text-primary">{emphasis}</span>{after}
+    </>
+  )
+}
+
+function UnitEconomicsRatioCard({ ratio }) {
+  return (
+    <div className="grid content-between gap-component rounded-block bg-premium-purple/10 p-card shadow-none ring-1 ring-premium-purple/20">
+      <div className="grid gap-control">
+        <p className="text-label font-medium uppercase text-text-muted">{ratio.label}</p>
+        <div className="flex items-end gap-tag">
+          <span className="text-display tabular-nums text-success-foreground">{ratio.value}</span>
+          <span className="pb-micro text-data tabular-nums text-text-muted">{ratio.suffix}</span>
+        </div>
+        <p className="max-w-readable text-ui text-text-primary">{ratio.summary}</p>
+      </div>
+      <div className="grid gap-tag">
+        <div className="relative h-tag rounded-full bg-gradient-to-r from-destructive via-warning to-success">
+          <span
+            aria-hidden="true"
+            className="absolute top-1/2 z-10 h-control w-micro -translate-x-1/2 -translate-y-1/2 rounded-full bg-text-primary"
+            style={{ left: `${Math.max(0, Math.min(100, ratio.marker))}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-control text-label font-medium text-text-muted">
+          {ratio.rangeLabels.map((label) => (
+            <span className="first:text-left last:text-right" key={label}>{label}</span>
+          ))}
+        </div>
+      </div>
     </div>
+  )
+}
+
+function AcquisitionCostCard({ metric }) {
+  return (
+    <div className="grid gap-tag rounded-block bg-block p-component shadow-none ring-1 ring-separator">
+      <p className="text-label font-medium uppercase text-text-muted">{metric.label}</p>
+      <p className={`text-data tabular-nums ${toneTextClass[metric.tone] ?? toneTextClass.blue}`}>{metric.value}</p>
+      <div className="grid gap-micro text-ui text-text-secondary">
+        <p>{metric.detail}</p>
+        <p>{metric.helper}</p>
+      </div>
+    </div>
+  )
+}
+
+function UnitEconomicsMetricCard({ metric }) {
+  const surfaceClass = metric.featured
+    ? 'bg-premium-purple/10 ring-premium-purple/30'
+    : 'bg-block ring-separator'
+
+  return (
+    <div className={`grid content-between gap-component rounded-block p-component shadow-none ring-1 ${surfaceClass}`}>
+      <div className="flex min-w-0 items-center justify-between gap-control">
+        <p className="min-w-0 text-label font-medium uppercase text-text-muted">{metric.label}</p>
+        <StatusBadge className="shrink-0" tone={metric.tone}>{metric.badge}</StatusBadge>
+      </div>
+      <div className="grid gap-tag">
+        <p className={`text-display tabular-nums ${metric.featured ? 'text-premium-purple' : 'text-text-primary'}`}>
+          {metric.value}
+        </p>
+        <p className="text-ui text-text-secondary">
+          <EmphasizedText emphasis={metric.emphasis} text={metric.helper} />
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ZoneThreeUnitEconomics({ page }) {
+  return (
+    <section className="grid gap-component">
+      <ZoneHeader eyebrow="Zone 3" title={(
+        <>
+          Unit Economics <span className="ml-control text-ui font-normal text-text-secondary">what each patient is worth vs what it costs to get them</span>
+        </>
+      )}
+      />
+      <div className="grid gap-component xl:grid-cols-2">
+        <div className="grid gap-component">
+          <UnitEconomicsRatioCard ratio={page.unitEconomics.ratio} />
+          <div className="grid gap-component md:grid-cols-2">
+            {page.unitEconomics.acquisitionCosts.map((metric) => (
+              <AcquisitionCostCard key={metric.id} metric={metric} />
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-component md:grid-cols-2">
+          {page.unitEconomics.metrics.map((metric) => (
+            <UnitEconomicsMetricCard key={metric.id} metric={metric} />
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -294,22 +382,9 @@ export function ExecutiveDashboard({ page }) {
 
       <ZoneTwoFinancialHealth page={page} />
 
-      <DashboardSectionGrid>
-        <Panel>
-          <PanelHeader
-            divided
-            iconName="dollarSign"
-            subtitle="What each patient is worth compared with what it costs to acquire."
-            title="Unit Economics"
-          />
-          <PanelBody className="grid gap-control md:grid-cols-3">
-            {page.unitEconomics.map((metric) => (
-              <UnitEconomicsCard key={metric.id} metric={metric} />
-            ))}
-          </PanelBody>
-        </Panel>
-        <ChannelMix channels={page.channelMix} />
-      </DashboardSectionGrid>
+      <ZoneThreeUnitEconomics page={page} />
+
+      <ChannelMix channels={page.channelMix} />
 
       <Funnel funnel={page.funnel} />
 
