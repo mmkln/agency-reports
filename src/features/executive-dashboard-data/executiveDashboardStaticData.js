@@ -244,18 +244,56 @@ export const executiveDashboardStaticData = Object.freeze({
       },
     ],
   },
-  channelMix: [
-    { id: 'reactivation', label: 'Reactivation', value: 50, share: '43%', tone: 'green' },
-    { id: 'meta', label: 'Meta leads', value: 33, share: '28%', tone: 'purple' },
-    { id: 'recall', label: 'Returning / recall', value: 33, share: '28%', tone: 'blue' },
-  ],
-  funnel: [
-    { id: 'enrolled', label: 'Enrolled', value: 648, conversion: '100%', progress: 100, tone: 'blue' },
-    { id: 'reached', label: 'Reached', value: 627, conversion: '97%', progress: 97, tone: 'blue' },
-    { id: 'replied', label: 'Replied', value: 85, conversion: '13%', progress: 34, tone: 'purple' },
-    { id: 'booked', label: 'Booked hygiene', value: 50, conversion: '59% of replies', progress: 24, tone: 'green' },
-    { id: 'accepted', label: 'Treatment accepted', value: 4, conversion: '8%', progress: 10, tone: 'rose' },
-  ],
+  leadConversion: {
+    bookingsBySource: {
+      total: 116,
+      badge: 'live · GHL',
+      sources: [
+        { id: 'reactivation', label: 'Reactivation', value: 50, share: '43%', tone: 'green' },
+        { id: 'meta', label: 'Meta leads', value: 33, share: '28%', tone: 'purple' },
+        { id: 'recall', label: 'Returning / recall', value: 33, share: '28%', tone: 'blue' },
+      ],
+      revenue: [
+        { id: 'reactivation', label: 'Reactivation · hygiene', value: '$10,000' },
+        { id: 'meta', label: 'Meta leads · new', value: '$6,600' },
+        { id: 'other', label: 'Other / Dentrix', value: '~$50K est' },
+      ],
+    },
+    reactivationFunnel: {
+      badge: 'GHL live',
+      note: 'avg ticket $200',
+      stages: [
+        { id: 'enrolled', label: 'Enrolled', value: 648, progress: 100, tone: 'blue' },
+        { id: 'reached', label: 'Reached', value: 627, progress: 97, conversion: '97%', tone: 'blue' },
+        { id: 'replied', label: 'Replied', value: 85, progress: 34, conversion: '13%', tone: 'purple' },
+        { id: 'booked', label: 'Booked hygiene', value: 50, progress: 24, conversion: '59% of replies · $10K rev', tone: 'purple' },
+        { id: 'accepted', label: 'Treatment accepted', value: 4, progress: 10, conversion: '8% — handoff gap', tone: 'green' },
+      ],
+      footer: 'CAC: $39/patient · $200 avg ticket · 5.1× day-one return',
+      footerEmphasis: '5.1× day-one return',
+    },
+    metaPaidAds: {
+      badge: 'partial data',
+      flow: [
+        { id: 'spend', value: '$3.2K', label: 'Spend' },
+        { id: 'leads', value: '122', label: 'Leads' },
+        { id: 'booked', value: '33', label: 'Booked', helper: '$97 CAC', tone: 'green' },
+      ],
+      cacByChannel: [
+        { id: 'reactivation', label: 'Reactivation', value: '$39', helper: '$200 ticket · 5.1× return', tone: 'green' },
+        { id: 'meta-booked', label: 'Meta (booked)', value: '$97', helper: '$200 ticket · 2× return', tone: 'amber' },
+        { id: 'meta-shown', label: 'Meta (shown)', value: '$26', helper: 'per lead, not per patient', tone: 'neutral' },
+      ],
+      signals: [
+        { id: 'spend', label: '✓ spend', tone: 'green' },
+        { id: 'leads', label: '✓ leads', tone: 'green' },
+        { id: 'bookings', label: '✓ bookings (GHL)', tone: 'green' },
+        { id: 'roi', label: '✕ per-campaign ROI', tone: 'rose' },
+        { id: 'utm', label: '✕ UTM', tone: 'rose' },
+      ],
+      missing: 'which campaign produced which booked patient. Need UTM or agency report to optimize ad spend by creative.',
+    },
+  },
   decisions: [
     {
       id: 'handoff',
