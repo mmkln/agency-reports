@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { Icon } from '@/shared/icons'
 import {
   Button,
@@ -6,6 +8,7 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 
+import { AcceptedTreatmentDrawer } from './AcceptedTreatmentDrawer'
 import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
 import { reactivationText } from './reactivationTypography'
 
@@ -292,19 +295,18 @@ function buildActivityCards({ cards, funnelChart }) {
   return nextCards
 }
 
-function ActivityCard({ card }) {
+function ActivityCard({ card, isInteractive = false, onClick }) {
   const tone = getCardTone(card)
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
   const valueClass = classes.value ?? reactivationText.metricValue
   const captionClass = reactivationText.metricCaption
-
-  return (
-    <article className={`flex min-h-[92px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
+  const content = (
+    <>
       <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
         <Icon name={getCardIconName(card)} size={15} />
       </span>
 
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1 text-left">
         <p className={valueClass}>
           {formatCardValue(card)}
         </p>
@@ -312,6 +314,31 @@ function ActivityCard({ card }) {
           {formatCardCaption(card)}
         </p>
       </div>
+
+      {isInteractive ? (
+        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-control text-text-quaternary">
+          <Icon name="arrowRight" size={14} />
+        </span>
+      ) : null}
+    </>
+  )
+
+  if (isInteractive) {
+    return (
+      <button
+        aria-label={`View ${formatCardCaption(card)} patients`}
+        className={`flex min-h-[92px] w-full items-center gap-control rounded-block px-4 py-3 shadow-block transition hover:bg-fill-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${classes.surface}`}
+        onClick={onClick}
+        type="button"
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <article className={`flex min-h-[92px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
+      {content}
     </article>
   )
 }
@@ -451,6 +478,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
 }
 
 export function ReactivationCampaignSummary({
+  acceptedTreatmentDrilldown,
   campaign,
   chart,
   funnelChart,
@@ -458,6 +486,8 @@ export function ReactivationCampaignSummary({
   refresh,
   updatedAt,
 }) {
+  const [acceptedTreatmentOpen, setAcceptedTreatmentOpen] = useState(false)
+
   if (!chart?.available) {
     return null
   }
@@ -484,6 +514,10 @@ export function ReactivationCampaignSummary({
     periodRange,
     cohortCount > 0 ? `${cohortCount.toLocaleString('en-US')} patients in cohort` : '',
   ].filter(Boolean)
+  const openAcceptedTreatment = () => {
+    setAcceptedTreatmentOpen(true)
+    acceptedTreatmentDrilldown?.load?.()
+  }
 
   return (
     <section className="grid gap-control">
@@ -507,9 +541,19 @@ export function ReactivationCampaignSummary({
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         <ReactivationCampaignKpiCards funnelChart={funnelChart} />
         {secondaryCards.map((card) => (
-          <ActivityCard card={card} key={card.key || card.label} />
+          <ActivityCard
+            card={card}
+            isInteractive={card.key === TREATMENT_ACCEPTED_STAGE_KEY}
+            key={card.key || card.label}
+            onClick={card.key === TREATMENT_ACCEPTED_STAGE_KEY ? openAcceptedTreatment : undefined}
+          />
         ))}
       </div>
+      <AcceptedTreatmentDrawer
+        drilldown={acceptedTreatmentDrilldown}
+        onOpenChange={setAcceptedTreatmentOpen}
+        open={acceptedTreatmentOpen}
+      />
     </section>
   )
 }

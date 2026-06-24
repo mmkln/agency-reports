@@ -287,3 +287,23 @@ export async function getGrowthReviewDashboardPageFromApi({
     zones: mapZoneState(preset),
   }
 }
+
+export async function getAcceptedTreatmentDrilldownFromApi({
+  apiClient,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    return {
+      available: false,
+      items: [],
+      reason: 'workspace_not_found',
+      stage: {
+        count: 0,
+        key: 'treatment_accepted',
+        label: 'Treatment Accepted',
+      },
+    }
+  }
+
+  return apiClient.get(`/api/workspaces/${workspaceId}/growth-review/drilldowns/accepted-treatment/`)
+}

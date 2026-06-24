@@ -10,6 +10,7 @@ import { WeeklyTrackActivityHeatmap } from './WeeklyTrackActivityHeatmap'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
 
 export function DentalGrowthReviewDashboard({
+  acceptedTreatmentDrilldown,
   funnelEmptyAction,
   onRetry,
   page,
@@ -32,6 +33,7 @@ export function DentalGrowthReviewDashboard({
         chart={reactivationActivity}
         funnelChart={funnelChart}
         period={page.charts?.period ?? page.period}
+        acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
         refresh={refresh}
         updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
       />

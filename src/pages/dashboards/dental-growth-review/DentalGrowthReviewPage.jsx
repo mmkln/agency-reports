@@ -1,4 +1,5 @@
 import {
+  useAcceptedTreatmentDrilldown,
   useGrowthReviewReadModel,
   useGrowthReviewRefresh,
 } from '../../../features/growth-review-data'
@@ -18,6 +19,10 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
     onCompleted: growthReview.reload,
     workspaceId: growthReview.workspaceId,
   })
+  const acceptedTreatmentDrilldown = useAcceptedTreatmentDrilldown({
+    apiClient: runtime.apiClient,
+    workspaceId: growthReview.workspaceId,
+  })
   const page = growthReview.page
 
   if (growthReview.status === 'loading' || !page) {
@@ -31,6 +36,7 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
   return (
     <PageShell className="pb-section pt-card" width="wide">
       <DentalGrowthReviewDashboard
+        acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
         funnelEmptyAction={funnelEmptyAction}
         onRetry={growthReview.reload}
         page={page}
