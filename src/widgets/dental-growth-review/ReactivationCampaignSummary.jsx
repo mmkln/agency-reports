@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { forwardRef } from 'react'
 
 import { Icon } from '@/shared/icons'
 import {
@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 
-import { AcceptedTreatmentDrawer } from './AcceptedTreatmentDrawer'
+import { AcceptedTreatmentPopover } from './AcceptedTreatmentPopover'
 import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
 import { reactivationText } from './reactivationTypography'
 
@@ -295,7 +295,12 @@ function buildActivityCards({ cards, funnelChart }) {
   return nextCards
 }
 
-function ActivityCard({ card, isInteractive = false, onClick }) {
+const ActivityCard = forwardRef(function ActivityCard({
+  card,
+  className = '',
+  isInteractive = false,
+  ...triggerProps
+}, ref) {
   const tone = getCardTone(card)
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
   const valueClass = classes.value ?? reactivationText.metricValue
@@ -324,12 +329,18 @@ function ActivityCard({ card, isInteractive = false, onClick }) {
   )
 
   if (isInteractive) {
+    const buttonClassName = [
+      `flex min-h-[92px] w-full items-center gap-control rounded-block px-4 py-3 shadow-block transition hover:bg-fill-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${classes.surface}`,
+      className,
+    ].filter(Boolean).join(' ')
+
     return (
       <button
         aria-label={`View ${formatCardCaption(card)} patients`}
-        className={`flex min-h-[92px] w-full items-center gap-control rounded-block px-4 py-3 shadow-block transition hover:bg-fill-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring ${classes.surface}`}
-        onClick={onClick}
+        className={buttonClassName}
+        ref={ref}
         type="button"
+        {...triggerProps}
       >
         {content}
       </button>
@@ -341,7 +352,7 @@ function ActivityCard({ card, isInteractive = false, onClick }) {
       {content}
     </article>
   )
-}
+})
 
 function RefreshStepStatus({ step }) {
   const status = step.status || 'pending'
@@ -486,8 +497,6 @@ export function ReactivationCampaignSummary({
   refresh,
   updatedAt,
 }) {
-  const [acceptedTreatmentOpen, setAcceptedTreatmentOpen] = useState(false)
-
   if (!chart?.available) {
     return null
   }
@@ -514,10 +523,6 @@ export function ReactivationCampaignSummary({
     periodRange,
     cohortCount > 0 ? `${cohortCount.toLocaleString('en-US')} patients in cohort` : '',
   ].filter(Boolean)
-  const openAcceptedTreatment = () => {
-    setAcceptedTreatmentOpen(true)
-    acceptedTreatmentDrilldown?.load?.()
-  }
 
   return (
     <section className="grid gap-control">
@@ -540,20 +545,21 @@ export function ReactivationCampaignSummary({
       <div className="grid gap-control md:grid-cols-3 xl:grid-cols-7">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         <ReactivationCampaignKpiCards funnelChart={funnelChart} />
-        {secondaryCards.map((card) => (
-          <ActivityCard
-            card={card}
-            isInteractive={card.key === TREATMENT_ACCEPTED_STAGE_KEY}
-            key={card.key || card.label}
-            onClick={card.key === TREATMENT_ACCEPTED_STAGE_KEY ? openAcceptedTreatment : undefined}
-          />
-        ))}
+        {secondaryCards.map((card) => {
+          if (card.key === TREATMENT_ACCEPTED_STAGE_KEY) {
+            return (
+              <AcceptedTreatmentPopover
+                drilldown={acceptedTreatmentDrilldown}
+                key={card.key || card.label}
+              >
+                <ActivityCard card={card} isInteractive />
+              </AcceptedTreatmentPopover>
+            )
+          }
+
+          return <ActivityCard card={card} key={card.key || card.label} />
+        })}
       </div>
-      <AcceptedTreatmentDrawer
-        drilldown={acceptedTreatmentDrilldown}
-        onOpenChange={setAcceptedTreatmentOpen}
-        open={acceptedTreatmentOpen}
-      />
     </section>
   )
 }
