@@ -542,6 +542,17 @@ function ZoneFiveDecisions({ page }) {
   )
 }
 
+function ExecutiveDashboardFooter({ note }) {
+  return (
+    <footer className="border-t border-separator pt-component text-ui text-text-secondary">
+      <p>
+        <span className="font-semibold text-text-primary">{note.liveLabel}</span> {note.liveText}{' '}
+        <span className="font-semibold text-text-primary">{note.estimatedLabel}</span> {note.estimatedText}
+      </p>
+    </footer>
+  )
+}
+
 export function ExecutiveDashboard({ page }) {
   return (
     <div className="grid gap-section">
@@ -555,6 +566,8 @@ export function ExecutiveDashboard({ page }) {
       <ZoneFourLeadConversion page={page} />
 
       <ZoneFiveDecisions page={page} />
+
+      <ExecutiveDashboardFooter note={page.footerNote} />
     </div>
   )
 }

@@ -329,4 +329,10 @@ export const executiveDashboardStaticData = Object.freeze({
       tone: 'green',
     },
   ],
+  footerNote: {
+    liveLabel: 'Live data',
+    liveText: '(GHL): Marketing pipeline — 122 opps, 89 new leads, 33 booked @ $6,600. Dentrix pipeline — 3,917 opps, 774 in "New Booking" @ $60,400 recorded. Reactivation — 648 enrolled, 50 booked, $200 avg hygiene ticket.',
+    estimatedLabel: 'Estimated:',
+    estimatedText: 'total production, collections ratio, overhead, A/R — need Dentrix billing export connected. Benchmarks: ADA, Levin Group, Dental Economics.',
+  },
 })
