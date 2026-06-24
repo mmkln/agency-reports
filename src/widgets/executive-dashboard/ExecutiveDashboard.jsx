@@ -1,7 +1,6 @@
 import { Icon } from '@/shared/icons'
 import {
   DashboardSectionGrid,
-  MetricGrid,
   Panel,
   PanelBody,
   PanelHeader,
@@ -118,28 +117,81 @@ function ZoneOneOverview({ page }) {
   )
 }
 
-function ProgressMetric({ metric }) {
+function BenchmarkRange({
+  className,
+  end = 100,
+  start = 0,
+}) {
+  if (start === undefined || end === undefined) {
+    return null
+  }
+
   return (
-    <Panel>
-      <PanelBody className="grid gap-component">
-        <div className="flex items-start justify-between gap-control">
-          <div className="min-w-0">
-            <p className="text-label text-text-muted">{metric.label}</p>
-            <p className="mt-tag text-data tabular-nums text-text-primary">{metric.value}</p>
-          </div>
-          <StatusBadge tone={metric.tone}>{metric.status}</StatusBadge>
+    <span
+      aria-hidden="true"
+      className={`absolute top-0 h-full rounded-full ${className}`}
+      style={{
+        left: `${Math.max(0, Math.min(100, start))}%`,
+        width: `${Math.max(0, Math.min(100, end - start))}%`,
+      }}
+    />
+  )
+}
+
+function FinancialHealthMetric({ metric }) {
+  return (
+    <div className="grid gap-control rounded-control bg-block px-component py-control shadow-none ring-1 ring-separator">
+      <p className="text-label font-medium uppercase text-text-muted">{metric.label}</p>
+      <div className="flex items-end justify-between gap-control">
+        <p className="text-display tabular-nums text-text-primary">
+          {metric.value}
+          {metric.suffix ? <span className="ml-micro text-ui font-semibold text-text-muted">{metric.suffix}</span> : null}
+        </p>
+        <StatusBadge tone={metric.tone}>{metric.status}</StatusBadge>
+      </div>
+      <div className="grid gap-tag">
+        <div className="relative h-tag rounded-full bg-fill-secondary">
+          <BenchmarkRange className="bg-success-muted" end={metric.goodEnd} start={metric.goodStart} />
+          <BenchmarkRange className="bg-destructive-muted" end={metric.badEnd} start={metric.badStart} />
+          <span
+            aria-hidden="true"
+            className={`absolute top-1/2 z-10 size-control -translate-x-1/2 -translate-y-1/2 rounded-full ${toneFillClass[metric.tone] ?? toneFillClass.amber}`}
+            style={{ left: `${Math.max(0, Math.min(100, metric.marker))}%` }}
+          />
+          <span
+            aria-hidden="true"
+            className="absolute top-1/2 z-20 h-control w-micro -translate-x-1/2 -translate-y-1/2 rounded-full bg-text-muted"
+            style={{ left: `${Math.max(0, Math.min(100, metric.targetMarker))}%` }}
+          />
         </div>
-        <div className="grid gap-tag">
-          <div className="h-2 overflow-hidden rounded-full bg-fill-secondary">
-            <div
-              className={`h-full rounded-full ${toneFillClass[metric.tone] ?? toneFillClass.blue}`}
-              style={{ width: `${Math.max(0, Math.min(100, metric.progress))}%` }}
-            />
-          </div>
-          <p className="text-label text-text-muted">{metric.helper}</p>
+        <div className="flex items-center justify-between gap-control text-label font-medium text-text-muted">
+          {metric.rangeLabels.map((label) => (
+            <span className="first:text-left last:text-right" key={label}>{label}</span>
+          ))}
         </div>
-      </PanelBody>
-    </Panel>
+      </div>
+    </div>
+  )
+}
+
+function ZoneTwoFinancialHealth({ page }) {
+  return (
+    <section className="grid gap-component">
+      <ZoneHeader eyebrow="Zone 2" title={(
+        <>
+          Financial Health <span className="ml-control text-ui font-normal text-text-secondary">vs industry benchmarks</span>
+        </>
+      )}
+      />
+      <div className="grid gap-component md:grid-cols-2 xl:grid-cols-5">
+        {page.financialHealth.map((metric) => (
+          <FinancialHealthMetric key={metric.id} metric={metric} />
+        ))}
+      </div>
+      <div className="rounded-control bg-block-subtle px-component py-control text-ui text-text-secondary ring-1 ring-separator">
+        <span className="font-semibold text-text-primary">Data note:</span> {page.financialHealthNote}
+      </div>
+    </section>
   )
 }
 
@@ -240,19 +292,7 @@ export function ExecutiveDashboard({ page }) {
       <ExecutiveOverviewHeader page={page} />
       <ZoneOneOverview page={page} />
 
-      <section className="grid gap-card">
-        <div className="grid gap-tag">
-          <h2 className="text-heading text-text-primary">Financial Health</h2>
-          <p className="max-w-readable text-ui text-text-secondary">
-            Primary executive metrics stay focused on revenue, acquisition efficiency, and the handoff constraint.
-          </p>
-        </div>
-        <MetricGrid className="lg:grid-cols-4">
-          {page.financialHealth.map((metric) => (
-            <ProgressMetric key={metric.id} metric={metric} />
-          ))}
-        </MetricGrid>
-      </section>
+      <ZoneTwoFinancialHealth page={page} />
 
       <DashboardSectionGrid>
         <Panel>
