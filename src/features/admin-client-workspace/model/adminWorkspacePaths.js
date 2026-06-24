@@ -1,6 +1,7 @@
 import {
   getAgencyWorkspaceAccessPath,
   getAgencyWorkspaceDataPath,
+  getAgencyWorkspaceExecutivePath,
   getAgencyWorkspaceReviewPath,
   getAgencyWorkspaceReviewSetupPath,
   getAgencyWorkspaceSetupPath,
@@ -20,6 +21,10 @@ export function getWorkspaceDataSourcesPath(workspaceOrId) {
 
 export function getWorkspaceReviewPath(workspaceOrId) {
   return getAgencyWorkspaceReviewPath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceExecutivePath(workspaceOrId) {
+  return getAgencyWorkspaceExecutivePath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {

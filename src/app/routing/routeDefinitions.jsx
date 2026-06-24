@@ -7,6 +7,7 @@ import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePag
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
 import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
+import { ExecutiveDashboardPageHeader } from '../../pages/dashboards/executive/ExecutiveDashboardPageHeader'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
@@ -18,6 +19,7 @@ import {
   AccountSettingsPageRoute,
   AgencyWorkspaceAccessPageRoute,
   AgencyWorkspaceDataPageRoute,
+  AgencyWorkspaceExecutivePageRoute,
   AgencyWorkspaceReviewPageRoute,
   AgencyWorkspaceReviewSetupPageRoute,
   AgencyWorkspaceSetupPageRoute,
@@ -28,6 +30,7 @@ import {
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
   ExecutiveDashboardPageRoute,
+  PortalWorkspaceExecutivePageRoute,
   PortalWorkspaceReviewPageRoute,
 } from './RoutePages'
 import { useAuth } from '../providers/auth/useAuth'
@@ -126,20 +129,6 @@ export const routeDefinitions = [
     element: <AdminClientDetailPageRoute />,
   },
   {
-    path: ROUTE_PATHS.agencyExecutiveDashboard,
-    id: 'agency-executive-dashboard',
-    label: 'Executive',
-    pageTitle: 'Executive Dashboard',
-    access: routeAccessMetadataById['agency-executive-dashboard'].access,
-    fullBleedContent: true,
-    hidePageHeader: true,
-    iconName: 'trendingUp',
-    navigationScope: AGENCY,
-    navOrder: 12,
-    showInNav: true,
-    element: <ExecutiveDashboardPageRoute />,
-  },
-  {
     path: ROUTE_PATHS.agencyWorkspaces,
     id: 'admin-workspaces',
     label: 'Workspaces',
@@ -228,6 +217,19 @@ export const routeDefinitions = [
     element: <AgencyWorkspaceReviewPageRoute />,
   },
   {
+    path: ROUTE_PATHS.agencyWorkspaceExecutive,
+    id: 'agency-workspace-executive',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['agency-workspace-executive'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'barChart',
+    showInNav: false,
+    element: <AgencyWorkspaceExecutivePageRoute />,
+  },
+  {
     path: ROUTE_PATHS.agencyWorkspaceAccess,
     id: 'agency-workspace-access',
     activeNavigationId: 'admin-workspaces',
@@ -275,6 +277,21 @@ export const routeDefinitions = [
     element: <PortalWorkspaceReviewPageRoute />,
   },
   {
+    path: ROUTE_PATHS.portalWorkspaceExecutive,
+    id: 'portal-workspace-executive',
+    activeNavigationId: 'executive-dashboard',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['portal-workspace-executive'].access,
+    contentWidth: 'content',
+    header: ExecutiveDashboardPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Executive',
+    navigationScope: CLIENT_PORTAL,
+    showInNav: false,
+    element: <PortalWorkspaceExecutivePageRoute />,
+  },
+  {
     path: ROUTE_PATHS.portalGrowthReview,
     id: 'dental-growth-review',
     label: 'Growth Review',
@@ -287,6 +304,20 @@ export const routeDefinitions = [
     navigationScope: CLIENT_PORTAL,
     navOrder: 10,
     element: <DentalGrowthReviewPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalExecutive,
+    id: 'executive-dashboard',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['executive-dashboard'].access,
+    contentWidth: 'content',
+    header: ExecutiveDashboardPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Executive',
+    navigationScope: CLIENT_PORTAL,
+    navOrder: 11,
+    element: <ExecutiveDashboardPageRoute />,
   },
   {
     path: ROUTE_PATHS.portalSettings,

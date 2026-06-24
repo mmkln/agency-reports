@@ -16,35 +16,43 @@ import {
 function WorkspaceTabs({ client, currentPage, sections }) {
   const clientId = client?.id
   const pages = sections.flatMap((section) => section.pages)
+  const settingsPages = pages.filter((page) => page.group !== 'review')
+  const reviewPages = pages.filter((page) => page.group === 'review')
 
   if (!clientId || pages.length === 0) {
     return null
   }
 
+  function renderTab(page) {
+    const isActive = page.id === currentPage
+    const label = getClientWorkspacePageLabel(page, client)
+
+    return (
+      <Link
+        aria-current={isActive ? 'page' : undefined}
+        className={cn(
+          'inline-flex h-control-small shrink-0 items-center gap-tag rounded-item px-item text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35',
+          isActive
+            ? 'text-text-primary'
+            : 'text-text-muted hover:bg-control-hover hover:text-text-primary',
+        )}
+        key={page.id}
+        title={label}
+        to={getClientWorkspacePageHref(page, clientId)}
+      >
+        {page.iconName ? <Icon className="text-current" name={page.iconName} size={15} /> : null}
+        <span>{label}</span>
+      </Link>
+    )
+  }
+
   return (
     <nav aria-label={`${client?.name ?? 'Client'} workspace sections`} className="flex min-w-0 items-center gap-control overflow-x-auto">
-      {pages.map((page) => {
-        const isActive = page.id === currentPage
-        const label = getClientWorkspacePageLabel(page, client)
-
-        return (
-          <Link
-            aria-current={isActive ? 'page' : undefined}
-            className={cn(
-              'inline-flex h-control-small shrink-0 items-center gap-tag rounded-item px-item text-label font-medium no-underline transition-colors duration-motion-fast ease-motion-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35',
-              isActive
-                ? 'text-text-primary'
-                : 'text-text-muted hover:bg-control-hover hover:text-text-primary',
-            )}
-            key={page.id}
-            title={label}
-            to={getClientWorkspacePageHref(page, clientId)}
-          >
-            {page.iconName ? <Icon className="text-current" name={page.iconName} size={15} /> : null}
-            <span>{label}</span>
-          </Link>
-        )
-      })}
+      {settingsPages.map(renderTab)}
+      {settingsPages.length && reviewPages.length ? (
+        <span aria-hidden="true" className="h-control-small w-px shrink-0 bg-separator" />
+      ) : null}
+      {reviewPages.map(renderTab)}
     </nav>
   )
 }

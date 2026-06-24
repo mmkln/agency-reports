@@ -10,13 +10,15 @@ export const ROUTE_PATHS = Object.freeze({
   agencyWorkspaceData: '/agency/workspaces/:workspaceId/data',
   agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
   agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
+  agencyWorkspaceExecutive: '/agency/workspaces/:workspaceId/executive',
   agencyWorkspaceAccess: '/agency/workspaces/:workspaceId/access',
-  agencyExecutiveDashboard: '/agency/executive-dashboard',
 
   portalHome: '/portal',
   portalGrowthReview: '/portal/growth-review',
+  portalExecutive: '/portal/executive',
   portalWorkspaceDetail: '/portal/workspaces/:workspaceId',
   portalWorkspaceReview: '/portal/workspaces/:workspaceId/review',
+  portalWorkspaceExecutive: '/portal/workspaces/:workspaceId/executive',
   portalSettings: '/portal/settings',
 })
 
@@ -60,12 +62,20 @@ export function getAgencyWorkspaceReviewPath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceReview, { workspaceId })
 }
 
+export function getAgencyWorkspaceExecutivePath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceExecutive, { workspaceId })
+}
+
 export function getAgencyWorkspaceAccessPath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceAccess, { workspaceId })
 }
 
 export function getPortalWorkspaceReviewPath(workspaceId) {
   return buildPath(ROUTE_PATHS.portalWorkspaceReview, { workspaceId })
+}
+
+export function getPortalWorkspaceExecutivePath(workspaceId) {
+  return buildPath(ROUTE_PATHS.portalWorkspaceExecutive, { workspaceId })
 }
 
 export function withSearchParams(path, params = {}) {

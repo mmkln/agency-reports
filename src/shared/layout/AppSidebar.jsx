@@ -72,6 +72,7 @@ const clientPerformanceRouteIds = new Set([
   'client-executive-performance',
   'client-monthly-strategy',
   'dental-growth-review',
+  'executive-dashboard',
   'client-reports-dashboards',
   'client-patient-acquisition',
   'client-calls-bookings',

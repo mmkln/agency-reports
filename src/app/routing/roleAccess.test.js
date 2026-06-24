@@ -108,6 +108,33 @@ describe('canAccessRouteWithContext', () => {
     })).toBe(false)
   })
 
+  it('allows portal workspace executive by workspace path param', () => {
+    const viewer = createViewer({
+      workspaceCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-executive'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-executive'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('allows agency workspace executive only through managed workspace relationships', () => {
+    const viewer = createViewer({
+      agencyCapabilities: [AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW],
+      managedWorkspaceId: WORKSPACE_ID,
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-executive'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-executive'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
 })
 
 describe('filterRoutesForNavigation', () => {
@@ -117,6 +144,7 @@ describe('filterRoutesForNavigation', () => {
     })
     const routes = [
       routeAccessMetadataById['dental-growth-review'],
+      routeAccessMetadataById['executive-dashboard'],
       routeAccessMetadataById['client-settings'],
     ].map((route) => ({
       ...route,
@@ -127,6 +155,6 @@ describe('filterRoutesForNavigation', () => {
       routeParams: { clientId: WORKSPACE_ID },
       routes,
       viewer,
-    }).map((route) => route.id)).toEqual(['dental-growth-review'])
+    }).map((route) => route.id)).toEqual(['dental-growth-review', 'executive-dashboard'])
   })
 })
