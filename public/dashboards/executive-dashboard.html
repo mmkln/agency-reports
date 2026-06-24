@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspo Dental — Executive Monthly Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f8fafc;--surface:#ffffff;--surface-2:#f5f5f7;--surface-3:#f1f3f7;
+    --border:#e2e8f0;--border-soft:#e5e7eb;--text:#1d1d1f;--muted:#5f6368;--faint:#737780;
+    --blue:#5a45ff;--purple:#bf5af2;--green:#34c759;--amber:#f59e0b;--red:#ef4444;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --r-block:16px;--r-control:12px;--r-item:8px;
+    --shadow:0 1px 4px -2px rgba(29,29,31,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:54px}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .topbar{border-bottom:1px solid var(--border);background:#ffffff;position:sticky;top:0;z-index:20}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:54px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;font-size:13px;color:var(--text)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:conic-gradient(from 0deg,#5a45ff,#bf5af2,#34c759,#5a45ff)}
+  .tabs{display:flex;gap:4px}
+  .tab{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:6px 12px;border-radius:7px;text-decoration:none}
+  .tab.active{color:var(--text);background:var(--surface-3)}
+  .who{font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+
+  section{margin-top:30px}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--border-soft);padding-bottom:9px}
+  .sec-title{font-size:15px;font-weight:700}
+  .sec-title span{color:var(--faint);font-weight:500;margin-left:6px;font-size:12.5px}
+
+  .dbadge{font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:5px;margin-left:8px;letter-spacing:.03em;vertical-align:middle}
+  .db-live{color:var(--green);background:rgba(52,199,89,.1)}
+  .db-est{color:var(--amber);background:rgba(245,158,11,.1)}
+  .db-miss{color:var(--red);background:rgba(239,68,68,.1)}
+
+  .period{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-top:24px;flex-wrap:wrap}
+  .period h1{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .period h1 small{display:block;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--faint);letter-spacing:.05em;margin-top:6px}
+  .headline-strip{display:flex;gap:12px;flex-wrap:wrap}
+  .hl{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-control);padding:12px 16px;min-width:160px;box-shadow:var(--shadow)}
+  .hl .k{font-family:var(--mono);font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+  .hl .v{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:3px}
+  .hl .d{font-size:11px;margin-top:1px;color:var(--muted)}
+  .up{color:var(--green)}.dn{color:var(--red)}
+
+  .intel{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-block);overflow:hidden;box-shadow:var(--shadow)}
+  .col-head{padding:11px 15px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-soft)}
+  .col-head .tag{width:7px;height:7px;border-radius:2px}
+  .col.worked .col-head{color:var(--green)}.col.worked .tag{background:var(--green)}
+  .col.failed .col-head{color:var(--red)}.col.failed .tag{background:var(--red)}
+  .col.next .col-head{color:var(--blue)}.col.next .tag{background:var(--blue)}
+  .item{padding:11px 15px;border-bottom:1px solid var(--border-soft);display:flex;gap:11px;align-items:baseline}
+  .item:last-child{border-bottom:none}
+  .item .fig{font-family:var(--mono);font-size:14px;font-weight:700;white-space:nowrap;letter-spacing:-.02em;flex-shrink:0}
+  .col.worked .fig{color:var(--green)}.col.failed .fig{color:var(--red)}.col.next .fig{color:var(--blue)}
+  .item .txt{font-size:12.5px;color:var(--muted);line-height:1.35}
+
+  .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-control);padding:14px 14px 13px;box-shadow:var(--shadow)}
+  .kpi .label{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+  .kpi-row{display:flex;align-items:baseline;justify-content:space-between;margin:7px 0 11px;gap:6px}
+  .kpi .big{font-size:26px;font-weight:800;letter-spacing:-.025em;flex-shrink:0}
+  .kpi .status{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap}
+  .s-ok{color:var(--green);background:rgba(52,199,89,.12)}
+  .s-watch{color:var(--amber);background:rgba(245,158,11,.12)}
+  .s-room{color:var(--blue);background:rgba(90,69,255,.12)}
+  .bullet{height:8px;border-radius:5px;background:var(--surface-3);position:relative;overflow:visible;margin-bottom:7px}
+  .bz{position:absolute;top:0;bottom:0;border-radius:5px}
+  .bz.good{background:rgba(52,199,89,.2)}
+  .bz.bad{background:rgba(239,68,68,.15)}
+  .bmark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--muted);border-radius:2px}
+  .bval{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);border:2.5px solid var(--bg)}
+  .bv-ok{background:var(--green)}.bv-watch{background:var(--amber)}.bv-room{background:var(--blue)}
+  .bcap{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  .bcap b{color:var(--muted);font-weight:600}
+
+  .ue{display:grid;grid-template-columns:1.1fr 1fr;gap:12px}
+  .hero-ratio{background:linear-gradient(160deg,#f5f0ff,#fafafa);border:1px solid var(--border);border-radius:var(--r-block);padding:20px;box-shadow:var(--shadow)}
+  .hero-ratio .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .ratio-num{font-size:58px;font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--green);margin:4px 0}
+  .ratio-num span{font-size:24px;color:var(--muted);font-weight:600}
+  .ratio-read{font-size:12.5px;color:var(--text);line-height:1.5;margin-bottom:14px}
+  .ratio-read b{color:var(--green)}
+  .scale-bar{height:7px;border-radius:5px;background:linear-gradient(90deg,#ef4444,#f59e0b 38%,#34c759 62%);position:relative;margin-bottom:5px}
+  .scale-mark{position:absolute;top:-4px;width:2px;height:15px;background:var(--text);border-radius:2px}
+  .scale-cap{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  .mini-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-control);padding:13px;box-shadow:var(--shadow)}
+  .mini .label{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+  .mini .big{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:4px 0 1px}
+  .mini .sub{font-size:11px;color:var(--faint);line-height:1.35}
+
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-control);padding:14px;display:flex;flex-direction:column;gap:2px;position:relative;box-shadow:var(--shadow)}
+  .field.star{border-color:rgba(191,90,242,.3);background:linear-gradient(150deg,rgba(191,90,242,.07),var(--surface))}
+  .field .src{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(90,69,255,.08);padding:2px 6px;border-radius:5px}
+  .field .ft{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;padding-right:58px;min-height:22px}
+  .field .fbig{font-size:26px;font-weight:800;letter-spacing:-.025em;margin:3px 0 2px}
+  .field.star .fbig{color:var(--purple)}
+  .field .fsub{font-size:11.5px;color:var(--muted);line-height:1.4}
+  .field .fsub b{color:var(--text);font-weight:600}
+  .field .fsub .est{color:var(--amber);font-style:italic}
+
+  .rev-top{display:grid;grid-template-columns:.85fr 1.15fr 1fr;gap:12px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-block);padding:16px;box-shadow:var(--shadow)}
+  .panel h3{font-size:12.5px;font-weight:700;margin-bottom:14px}
+  .donut-wrap{display:flex;align-items:center;gap:14px}
+  .donut-legend{display:flex;flex-direction:column;gap:9px;flex:1}
+  .dl{display:flex;align-items:center;gap:8px;font-size:12px}
+  .dl i{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+  .dl .nm{color:var(--muted);flex:1}
+  .dl .vl{font-family:var(--mono);color:var(--text);font-weight:600}
+  .dl .pc{font-family:var(--mono);color:var(--faint);font-size:10.5px;width:34px;text-align:right}
+
+  .funnels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .funnel-stage{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .fn-bar{height:32px;border-radius:7px;display:flex;align-items:center;padding:0 11px;font-weight:700;font-size:12px;font-family:var(--mono);color:#fff;flex-shrink:0;justify-content:flex-end}
+  .fn-meta{font-size:11.5px;color:var(--muted);line-height:1.3}
+  .fn-meta b{color:var(--text);font-weight:600}
+  .fn-meta .pct{font-family:var(--mono);color:var(--green)}
+  .fn-meta .warn{font-family:var(--mono);color:var(--red)}
+
+  .meta-flow{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:12px}
+  .mf{flex:1;text-align:center;background:var(--surface-2);border-radius:10px;padding:10px 5px}
+  .mf .mv{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .mf .mk{font-family:var(--mono);font-size:9px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+  .mf .mcac{font-family:var(--mono);font-size:9.5px;color:var(--green);margin-top:1px}
+  .mf-arrow{color:var(--faint);font-size:14px;flex-shrink:0}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+  .chip{font-family:var(--mono);font-size:10px;padding:3px 7px;border-radius:6px}
+  .chip.has{color:var(--green);background:rgba(52,199,89,.1)}
+  .chip.miss{color:var(--red);background:rgba(239,68,68,.1)}
+  .gap-line{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px solid var(--border-soft);padding-top:10px}
+  .gap-line b{color:var(--amber);font-weight:600}
+
+  .cac-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:12px}
+  .cac-row:last-child{border-bottom:none}
+  .cac-row .ch{color:var(--muted)}
+  .cac-row .cv{font-family:var(--mono);font-weight:700}
+  .cac-row .cs{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .cac-row.best .cv{color:var(--green)}
+  .cac-row.mid .cv{color:var(--amber)}
+
+  .dec{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card-dec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-block);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+  .dec-top{padding:13px 15px}
+  .dec-q{font-size:13px;font-weight:700;line-height:1.35;margin-bottom:5px}
+  .dec-data{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .dec-data b{color:var(--text);font-weight:600}
+  .dec-rec{padding:10px 15px;background:var(--surface-2);border-top:1px solid var(--border-soft);flex:1}
+  .dec-rec .rl{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--green);margin-bottom:3px}
+  .dec-rec p{font-size:12px;color:var(--text);line-height:1.45}
+  .dec-foot{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;border-top:1px solid var(--border-soft);font-family:var(--mono);font-size:10.5px;gap:8px}
+  .dec-foot .owner{color:var(--muted)}
+  .dec-foot .impact{color:var(--green);font-weight:600;text-align:right}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:11px;font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+  .dsrc{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;padding:11px 15px;margin-top:10px;font-size:11.5px;color:var(--faint);line-height:1.5}
+  .dsrc b{color:var(--muted)}
+
+  footer{margin-top:40px;border-top:1px solid var(--border-soft);padding-top:14px;font-size:11px;color:var(--faint);line-height:1.6}
+  footer b{color:var(--muted)}
+
+  @media(max-width:1060px){
+    .intel,.dec,.rev-top,.funnels{grid-template-columns:1fr}
+    .grid5{grid-template-columns:repeat(2,1fr)}
+    .ue{grid-template-columns:1fr}
+    .period h1{font-size:21px}
+  }
+  @media(max-width:560px){.grid5,.fields,.mini-row{grid-template-columns:1fr}.tabs{display:none}}
+  @media print{
+    .topbar{position:static}
+    section,.period{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand"><span class="dot"></span> INSPO DENTAL · WORKSPACE</div>
+      <nav class="tabs">
+        <a class="tab" href="#">Setup</a><a class="tab" href="#">Data</a>
+        <a class="tab" href="#">Daily Ops</a><a class="tab" href="#">Operator</a>
+        <a class="tab active" href="#">Executive</a><a class="tab" href="#">Access</a>
+      </nav>
+      <div class="who">Roman Stadli</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- PERIOD -->
+    <div class="period">
+      <div>
+        <div class="eyebrow">Monthly Executive Review</div>
+        <h1>June 2026<small>GHL MARKETING PIPELINE · DENTRIX SYNC · DATA THROUGH JUN 24</small></h1>
+      </div>
+      <div class="headline-strip">
+        <div class="hl">
+          <div class="k">Total Production</div>
+          <div class="v num">$67K</div>
+          <div class="d">Dentrix · 774 visits @ avg $87 <span class="db-est dbadge">est</span></div>
+        </div>
+        <div class="hl">
+          <div class="k">New Bookings (Meta)</div>
+          <div class="v num">33</div>
+          <div class="d"><span class="up">$6,600</span> @ $200/booking <span class="db-live dbadge">GHL live</span></div>
+        </div>
+        <div class="hl">
+          <div class="k">Total Opportunities</div>
+          <div class="v num">3,917</div>
+          <div class="d">Dentrix pipeline <span class="db-live dbadge">GHL live</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONE 1 -->
+    <section>
+      <div class="sec-head"><div class="eyebrow" style="margin-right:6px">Zone 1</div><div class="sec-title">The Month in One Glance</div></div>
+      <div class="intel">
+        <div class="col worked">
+          <div class="col-head"><span class="tag"></span> Worked</div>
+          <div class="item"><span class="fig num">33</span><span class="txt">Meta leads booked from 122 total — 27% conversion</span></div>
+          <div class="item"><span class="fig num">$97</span><span class="txt">cost per booked patient from Meta (calculable now)</span></div>
+          <div class="item"><span class="fig num">$39</span><span class="txt">cost per reactivated hygiene patient — 5.1× day-one return</span></div>
+        </div>
+        <div class="col failed">
+          <div class="col-head"><span class="tag"></span> Didn't Work</div>
+          <div class="item"><span class="fig num">89/122</span><span class="txt">Meta leads stuck in "New Lead" — never contacted or converted</span></div>
+          <div class="item"><span class="fig">$0</span><span class="txt">no revenue-per-campaign data — spend vs outcome unmeasurable by ad</span></div>
+          <div class="item"><span class="fig num">4/50</span><span class="txt">reactivated patients who accepted treatment beyond hygiene</span></div>
+        </div>
+        <div class="col next">
+          <div class="col-head"><span class="tag"></span> Next</div>
+          <div class="item"><span class="fig num">89</span><span class="txt">stale Meta leads need a follow-up sequence, not manual outreach</span></div>
+          <div class="item"><span class="fig num">+$78–125K</span><span class="txt">unscheduled Dentrix treatment ($312K EV) — automate follow-up</span></div>
+          <div class="item"><span class="fig">Fix</span><span class="txt">hygiene-to-treatment handoff after reactivation visits</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 2 -->
+    <section>
+      <div class="sec-head"><div class="eyebrow" style="margin-right:6px">Zone 2</div><div class="sec-title">Financial Health <span>vs industry benchmarks</span></div></div>
+      <div class="grid5">
+
+        <div class="kpi">
+          <div class="label">Production / Day</div>
+          <div class="kpi-row"><div class="big num">$87<span style="font-size:13px;color:var(--faint)">/visit</span></div><div class="status s-watch">Low</div></div>
+          <div class="bullet"><div class="bz good" style="left:43%;width:43%"></div><div class="bmark" style="left:43%"></div><div class="bval bv-watch" style="left:9%"></div></div>
+          <div class="bcap"><span>$0</span><span><b>$200+ target/visit</b></span><span>$600</span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Collections Ratio</div>
+          <div class="kpi-row"><div class="big num">95%<span style="font-size:13px;color:var(--faint)"> est</span></div><div class="status s-watch">Watch</div></div>
+          <div class="bullet"><div class="bz good" style="left:87%;width:13%"></div><div class="bmark" style="left:87%"></div><div class="bval bv-watch" style="left:69%"></div></div>
+          <div class="bcap"><span>85%</span><span><b>98% target</b></span><span>100%</span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">A/R &gt; 90 Days</div>
+          <div class="kpi-row"><div class="big num">12%<span style="font-size:13px;color:var(--faint)"> est</span></div><div class="status s-watch">Watch</div></div>
+          <div class="bullet"><div class="bz good" style="left:0;width:50%"></div><div class="bz bad" style="left:75%;width:25%"></div><div class="bmark" style="left:50%"></div><div class="bval bv-watch" style="left:60%"></div></div>
+          <div class="bcap"><span>0%</span><span><b>under 10%</b></span><span>20%</span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Overhead</div>
+          <div class="kpi-row"><div class="big num">61%<span style="font-size:13px;color:var(--faint)"> est</span></div><div class="status s-ok">Healthy</div></div>
+          <div class="bullet"><div class="bz good" style="left:0;width:43%"></div><div class="bmark" style="left:43%"></div><div class="bval bv-ok" style="left:37%"></div></div>
+          <div class="bcap"><span>50%</span><span><b>under 63%</b></span><span>80%</span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Marketing % of Coll.</div>
+          <div class="kpi-row"><div class="big num">3.6%</div><div class="status s-room">Room</div></div>
+          <div class="bullet"><div class="bz good" style="left:53%;width:27%"></div><div class="bmark" style="left:53%"></div><div class="bval bv-room" style="left:24%"></div></div>
+          <div class="bcap"><span>0%</span><span><b>8–12% growth</b></span><span>15%</span></div>
+        </div>
+
+      </div>
+      <div class="dsrc"><b>Data note:</b> Production/day based on Dentrix "New Booking" stage: 774 visits @ $60,400 recorded value — likely partial field population. Collections, overhead, A/R marked estimated until Dentrix billing export is connected.</div>
+    </section>
+
+    <!-- ZONE 3 -->
+    <section>
+      <div class="sec-head"><div class="eyebrow" style="margin-right:6px">Zone 3</div><div class="sec-title">Unit Economics <span>what each patient is worth vs what it costs to get them</span></div></div>
+      <div class="ue">
+        <div>
+          <div class="hero-ratio">
+            <div class="cap">Patient Value : Cost to Acquire (blended)</div>
+            <div class="ratio-num num">51<span>:1</span></div>
+            <div class="ratio-read">Every $1 spent acquiring a patient returns <b>$51</b> in lifetime revenue. Above 7:1 means there's room to invest more in growth.</div>
+            <div class="scale-bar"><div class="scale-mark" style="left:97%"></div></div>
+            <div class="scale-cap"><span>3:1 floor</span><span>7:1 healthy</span><span>you · 51:1 →</span></div>
+          </div>
+          <div class="mini-row">
+            <div class="mini">
+              <div class="label">Meta CAC (calculable)</div>
+              <div class="big num" style="color:var(--amber)">$97</div>
+              <div class="sub">$3,200 spend ÷ 33 booked<br>$200 hygiene → 2× first-visit return</div>
+            </div>
+            <div class="mini">
+              <div class="label">Reactivation CAC</div>
+              <div class="big num" style="color:var(--green)">$58</div>
+              <div class="sub">campaign cost ÷ 50 booked<br>$200 hygiene → 3.4× first-visit return</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fields">
+          <div class="field star">
+            <span class="src">EV · GHL</span>
+            <div class="ft">Unscheduled Treatment Pipeline</div>
+            <div class="fbig num">$312K</div>
+            <div class="fsub">Diagnosed, quoted, <b>not yet booked</b></div>
+          </div>
+          <div class="field">
+            <span class="src">VFI · GHL</span>
+            <div class="ft">System ROI since install</div>
+            <div class="fbig num">7.9×</div>
+            <div class="fsub">$146K earned vs <b>$18.5K system cost</b></div>
+          </div>
+          <div class="field">
+            <span class="src">FTV · GHL</span>
+            <div class="ft">Avg First Visit (reactivation)</div>
+            <div class="fbig num">$200</div>
+            <div class="fsub">Hygiene cleaning <b>confirmed avg ticket</b></div>
+          </div>
+          <div class="field">
+            <span class="src">LTV · GHL</span>
+            <div class="ft">Avg Patient Lifetime Value</div>
+            <div class="fbig num">$9.4K</div>
+            <div class="fsub">Cosmetic patients <b>~$27.8K</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 4 -->
+    <section>
+      <div class="sec-head"><div class="eyebrow" style="margin-right:6px">Zone 4</div><div class="sec-title">Where Leads Come From &amp; How They Convert</div></div>
+
+      <div class="rev-top">
+        <!-- donut -->
+        <div class="panel">
+          <h3>Bookings by source <span class="dbadge db-live">live · GHL</span></h3>
+          <div class="donut-wrap">
+            <svg width="112" height="112" viewBox="0 0 112 112">
+              <circle cx="56" cy="56" r="44" fill="none" stroke="#f1f3f7" stroke-width="15"/>
+              <circle cx="56" cy="56" r="44" fill="none" stroke="#bf5af2" stroke-width="15"
+                stroke-dasharray="138.2 138.2" transform="rotate(-90 56 56)"/>
+              <circle cx="56" cy="56" r="44" fill="none" stroke="#34c759" stroke-width="15"
+                stroke-dasharray="150.6 125.8" stroke-dashoffset="-138.2" transform="rotate(-90 56 56)"/>
+              <circle cx="56" cy="56" r="44" fill="none" stroke="#5a45ff" stroke-width="15"
+                stroke-dasharray="12.8 263.6" stroke-dashoffset="-288.8" transform="rotate(-90 56 56)"/>
+              <text x="56" y="52" text-anchor="middle" fill="#1d1d1f" font-size="17" font-weight="800" font-family="Geist">116</text>
+              <text x="56" y="66" text-anchor="middle" fill="#737780" font-size="8.5" font-family="JetBrains Mono">BOOKED</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="dl"><i style="background:#34c759"></i><span class="nm">Reactivation</span><span class="vl">50</span><span class="pc">43%</span></div>
+              <div class="dl"><i style="background:#bf5af2"></i><span class="nm">Meta leads</span><span class="vl">33</span><span class="pc">28%</span></div>
+              <div class="dl"><i style="background:#5a45ff"></i><span class="nm">Returning / recall</span><span class="vl">33</span><span class="pc">28%</span></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-soft)">
+            <div style="font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em">Revenue by source</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Reactivation · hygiene</span><span class="num" style="font-family:var(--mono)">$10,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Meta leads · new</span><span class="num" style="font-family:var(--mono)">$6,600</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--faint)">Other / Dentrix</span><span class="num" style="font-family:var(--mono);color:var(--faint)">~$50K est</span></div>
+          </div>
+        </div>
+
+        <!-- reactivation funnel -->
+        <div class="panel">
+          <h3>Reactivation funnel <span class="dbadge db-live">GHL live</span> <span style="color:var(--faint);font-weight:400;font-size:11px">· avg ticket $200</span></h3>
+          <div class="funnel-stage"><div class="fn-bar num" style="width:100%;background:#5a45ff">648</div><div class="fn-meta"><b>Enrolled</b> — lapsed patient cohort</div></div>
+          <div class="funnel-stage"><div class="fn-bar num" style="width:62%;background:#7c6bff">627</div><div class="fn-meta"><b>Reached</b> <span class="pct">97%</span></div></div>
+          <div class="funnel-stage"><div class="fn-bar num" style="width:34%;background:#a890ff;color:#1d1d1f">85</div><div class="fn-meta"><b>Replied</b> <span class="pct">13%</span></div></div>
+          <div class="funnel-stage"><div class="fn-bar num" style="width:24%;background:#bf5af2">50</div><div class="fn-meta"><b>Booked hygiene</b> <span class="pct">59% of replies</span> · <span style="font-family:var(--mono);color:var(--green)">$10K rev</span></div></div>
+          <div class="funnel-stage"><div class="fn-bar num" style="width:10%;background:#34c759">4</div><div class="fn-meta"><b>Treatment accepted</b> <span class="warn">8%</span> — handoff gap</div></div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:12px;color:var(--muted)">
+            CAC: $39/patient · $200 avg ticket · <span style="color:var(--green);font-family:var(--mono);font-weight:600">5.1× day-one return</span>
+          </div>
+        </div>
+
+        <!-- meta panel -->
+        <div class="panel">
+          <h3>Meta paid ads <span class="dbadge db-est">partial data</span></h3>
+          <div class="meta-flow">
+            <div class="mf"><div class="mv num">$3.2K</div><div class="mk">Spend</div></div>
+            <div class="mf-arrow">→</div>
+            <div class="mf"><div class="mv num">122</div><div class="mk">Leads</div></div>
+            <div class="mf-arrow">→</div>
+            <div class="mf"><div class="mv num" style="color:var(--green)">33</div><div class="mk">Booked</div><div class="mcac">$97 CAC</div></div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div style="font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">CAC by channel</div>
+            <div class="cac-row best"><span class="ch">Reactivation</span><span class="cv num">$39</span><span class="cs">$200 ticket · 5.1× return</span></div>
+            <div class="cac-row mid"><span class="ch">Meta (booked)</span><span class="cv num">$97</span><span class="cs">$200 ticket · 2× return</span></div>
+            <div class="cac-row"><span class="ch">Meta (shown)</span><span class="cv num" style="color:var(--faint)">$26</span><span class="cs">per lead, not per patient</span></div>
+          </div>
+
+          <div class="chips">
+            <span class="chip has">✓ spend</span><span class="chip has">✓ leads</span><span class="chip has">✓ bookings (GHL)</span>
+            <span class="chip miss">✗ per-campaign ROI</span><span class="chip miss">✗ UTM</span>
+          </div>
+          <div class="gap-line"><b>Missing:</b> which campaign produced which booked patient. Need UTM or agency report to optimize ad spend by creative.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE 5 -->
+    <section>
+      <div class="sec-head"><div class="eyebrow" style="margin-right:6px">Zone 5</div><div class="sec-title">Decisions This Month <span>evidence · recommendation · owner · deadline</span></div></div>
+      <div class="dec">
+
+        <div class="card-dec">
+          <div class="dec-top">
+            <div class="dec-q">Follow up on the 89 stale Meta leads?</div>
+            <div class="dec-data">89 of 122 Meta leads are stuck in "New Lead" at <b>$0 value</b>. At Meta's current conversion rate, ~24 of them would book if touched.</div>
+          </div>
+          <div class="dec-rec"><div class="rl">Recommend</div><p>Build a short automated sequence for new leads in GHL. These are paid for — leaving them idle is direct waste.</p></div>
+          <div class="dec-foot"><span class="owner">Roman + Matt · 2 weeks</span><span class="impact num">~$4.8K</span></div>
+        </div>
+
+        <div class="card-dec">
+          <div class="dec-top">
+            <div class="dec-q">Automate unscheduled-treatment follow-up?</div>
+            <div class="dec-data">$312K diagnosed, unbooked. <b>25–40% recoverable in 90 days</b> with systematic follow-up.</div>
+          </div>
+          <div class="dec-rec"><div class="rl">Recommend</div><p>Yes — highest-return build on the roadmap. Pull Dentrix unscheduled list and build GHL sequence next sprint.</p></div>
+          <div class="dec-foot"><span class="owner">Roman + Matt · 30d</span><span class="impact num">+$78–125K</span></div>
+        </div>
+
+        <div class="card-dec">
+          <div class="dec-top">
+            <div class="dec-q">Get per-campaign attribution from Meta agency?</div>
+            <div class="dec-data">$3.2K/mo spent. You know total cost per booked patient ($97) but <b>not which campaign or creative is performing.</b></div>
+          </div>
+          <div class="dec-rec"><div class="rl">Recommend</div><p>Request UTM setup from the agency. Without it, the budget can't be optimized — only increased or cut.</p></div>
+          <div class="dec-foot"><span class="owner">Matt · 2 weeks</span><span class="impact num">unlocks optimization</span></div>
+        </div>
+
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--green)"></i> on / above target</span>
+        <span><i style="background:var(--amber)"></i> watch</span>
+        <span><i style="background:var(--red)"></i> below target</span>
+        <span><i style="background:var(--blue)"></i> room to invest</span>
+      </div>
+    </section>
+
+    <footer>
+      <b>Live data</b> (GHL): Marketing pipeline — 122 opps, 89 new leads, 33 booked @ $6,600. Dentrix pipeline — 3,917 opps, 774 in "New Booking" @ $60,400 recorded. Reactivation — 648 enrolled, 50 booked, $200 avg hygiene ticket. <b>Estimated</b>: total production, collections ratio, overhead, A/R — need Dentrix billing export connected. Benchmarks: ADA, Levin Group, Dental Economics.
+    </footer>
+
+  </div>
+</body>
+</html>

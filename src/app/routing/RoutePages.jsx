@@ -14,6 +14,7 @@ import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
 import { AdminWorkspacesPage } from '../../pages/admin/workspaces/AdminWorkspacesPage'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
+import { ExecutiveDashboardPage } from '../../pages/admin/executive-dashboard/ExecutiveDashboardPage'
 import { PortalWorkspaceReviewPage } from '../../pages/portal/workspace-review/PortalWorkspaceReviewPage'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
@@ -54,4 +55,5 @@ export const AdminClientsPageRoute = withPageProps(AdminClientsPage, undefined)
 export const AdminWorkspacesPageRoute = withPageProps(AdminWorkspacesPage, undefined)
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, undefined)
 export const DentalGrowthReviewPageRoute = withPageProps(DentalGrowthReviewPage, undefined)
+export const ExecutiveDashboardPageRoute = withPageProps(ExecutiveDashboardPage, undefined)
 export const PortalWorkspaceReviewPageRoute = withPageProps(PortalWorkspaceReviewPage, undefined)

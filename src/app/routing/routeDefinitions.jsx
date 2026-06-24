@@ -27,6 +27,7 @@ import {
   AdminWorkspacesPageRoute,
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
+  ExecutiveDashboardPageRoute,
   PortalWorkspaceReviewPageRoute,
 } from './RoutePages'
 import { useAuth } from '../providers/auth/useAuth'
@@ -123,6 +124,20 @@ export const routeDefinitions = [
     iconName: 'users',
     showInNav: false,
     element: <AdminClientDetailPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyExecutiveDashboard,
+    id: 'agency-executive-dashboard',
+    label: 'Executive',
+    pageTitle: 'Executive Dashboard',
+    access: routeAccessMetadataById['agency-executive-dashboard'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'trendingUp',
+    navigationScope: AGENCY,
+    navOrder: 12,
+    showInNav: true,
+    element: <ExecutiveDashboardPageRoute />,
   },
   {
     path: ROUTE_PATHS.agencyWorkspaces,

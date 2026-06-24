@@ -11,6 +11,7 @@ export const ROUTE_PATHS = Object.freeze({
   agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
   agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
   agencyWorkspaceAccess: '/agency/workspaces/:workspaceId/access',
+  agencyExecutiveDashboard: '/agency/executive-dashboard',
 
   portalHome: '/portal',
   portalGrowthReview: '/portal/growth-review',

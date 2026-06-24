@@ -126,6 +126,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-executive-dashboard',
+    path: ROUTE_PATHS.agencyExecutiveDashboard,
+    access: {
+      capability: AGENCY_CAPABILITIES.MANAGE_DASHBOARDS,
+      scope: AGENCY,
+    },
+  },
+  {
     id: 'portal-home',
     path: ROUTE_PATHS.portalHome,
     access: { scope: ACCOUNT },
