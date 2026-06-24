@@ -1,4 +1,3 @@
-import { Icon } from '@/shared/icons'
 import {
   StatusBadge,
 } from '@/shared/ui'
@@ -491,17 +490,55 @@ function ZoneFourLeadConversion({ page }) {
 
 function DecisionCard({ decision }) {
   return (
-    <div className="grid gap-component rounded-block bg-block p-component shadow-block">
-      <div className="flex items-start justify-between gap-control">
+    <div className="overflow-hidden rounded-block bg-block shadow-none ring-1 ring-separator">
+      <div className="grid gap-tag p-component">
         <h3 className="text-ui font-semibold text-text-primary">{decision.title}</h3>
-        <StatusBadge tone={decision.tone}>{decision.owner}</StatusBadge>
+        <p className="text-ui text-text-secondary">
+          <EmphasizedText emphasis={decision.emphasis} text={decision.evidence} />
+        </p>
       </div>
-      <p className="text-ui text-text-secondary">{decision.recommendation}</p>
-      <div className="flex items-center gap-tag text-label text-text-muted">
-        <Icon name="calendar" size={14} />
-        <span>{decision.due}</span>
+      <div className="grid gap-tag bg-block-subtle p-component">
+        <p className="text-label font-medium uppercase text-success-foreground">Recommend</p>
+        <p className="text-ui text-text-primary">{decision.recommendation}</p>
+      </div>
+      <div className="flex items-center justify-between gap-control px-component py-control text-label font-medium text-text-muted">
+        <span>{decision.owner} · {decision.due}</span>
+        <span className={toneTextClass[decision.tone] ?? toneTextClass.green}>{decision.outcome}</span>
       </div>
     </div>
+  )
+}
+
+const decisionLegend = [
+  { label: 'on / above target', tone: 'green' },
+  { label: 'watch', tone: 'amber' },
+  { label: 'below target', tone: 'rose' },
+  { label: 'room to invest', tone: 'purple' },
+]
+
+function ZoneFiveDecisions({ page }) {
+  return (
+    <section className="grid gap-component">
+      <ZoneHeader eyebrow="Zone 5" title={(
+        <>
+          Decisions This Month <span className="ml-control text-ui font-normal text-text-secondary">evidence · recommendation · owner · deadline</span>
+        </>
+      )}
+      />
+      <div className="grid gap-component lg:grid-cols-3">
+        {page.decisions.map((decision) => (
+          <DecisionCard decision={decision} key={decision.id} />
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-component text-label font-medium text-text-muted">
+        {decisionLegend.map((item) => (
+          <div className="flex items-center gap-tag" key={item.label}>
+            <span className={`size-item rounded-full ${toneFillClass[item.tone] ?? toneFillClass.green}`} />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -517,19 +554,7 @@ export function ExecutiveDashboard({ page }) {
 
       <ZoneFourLeadConversion page={page} />
 
-      <section className="grid gap-card">
-        <div className="grid gap-tag">
-          <h2 className="text-heading text-text-primary">Decisions This Month</h2>
-          <p className="max-w-readable text-ui text-text-secondary">
-            Each decision is phrased as an owner-ready management action, not a raw analytics observation.
-          </p>
-        </div>
-        <div className="grid gap-card lg:grid-cols-3">
-          {page.decisions.map((decision) => (
-            <DecisionCard decision={decision} key={decision.id} />
-          ))}
-        </div>
-      </section>
+      <ZoneFiveDecisions page={page} />
     </div>
   )
 }
