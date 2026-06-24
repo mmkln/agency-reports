@@ -32,71 +32,89 @@ const toneMutedClass = {
   rose: 'bg-destructive-muted',
 }
 
-function ExecutiveSummary({ page }) {
+function ExecutiveOverviewMetric({ metric }) {
   return (
-    <Panel>
-      <PanelBody>
-        <div className="grid gap-card lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.42fr)]">
-          <div className="grid gap-component">
-            <div className="flex flex-wrap items-center gap-control">
-              <StatusBadge icon="barChart" tone="blue">{page.sourceLabel}</StatusBadge>
-              <StatusBadge tone="neutral">{page.updatedAtLabel}</StatusBadge>
-            </div>
-            <div className="grid gap-item">
-              <p className="text-label text-text-muted">{page.audienceLabel}</p>
-              <h2 className="max-w-title text-display text-text-primary">{page.title}</h2>
-              <p className="max-w-readable text-body text-text-secondary">{page.summary.narrative}</p>
-            </div>
-          </div>
-          <div className="grid content-start gap-control rounded-block bg-block-subtle p-card">
-            <p className="text-label text-text-muted">Reporting period</p>
-            <p className="text-data tabular-nums text-text-primary">{page.periodLabel}</p>
-            <div className="grid gap-tag text-ui text-text-secondary">
-              <p><span className="font-semibold text-text-primary">Main win:</span> {page.summary.mainWin}</p>
-              <p><span className="font-semibold text-text-primary">Main issue:</span> {page.summary.mainIssue}</p>
-              <p><span className="font-semibold text-text-primary">Next focus:</span> {page.summary.nextFocus}</p>
-            </div>
-          </div>
-        </div>
-      </PanelBody>
-    </Panel>
+    <div className="grid content-between rounded-block bg-block p-component shadow-block ring-1 ring-separator">
+      <div className="grid gap-tag">
+        <p className="text-label font-medium uppercase text-text-muted">{metric.label}</p>
+        <p className="text-display tabular-nums text-text-primary">{metric.value}</p>
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-tag">
+        <p className={`min-w-0 text-ui text-text-secondary ${metric.contextTone ? toneTextClass[metric.contextTone] : ''}`}>
+          {metric.context}
+        </p>
+        {metric.badge ? (
+          <StatusBadge className="min-h-control-mini" tone={metric.tone}>{metric.badge}</StatusBadge>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
-function HeadlineMetricCard({ metric }) {
+function ExecutiveOverviewHeader({ page }) {
   return (
-    <Panel>
-      <PanelBody className="grid gap-component">
-        <div className="flex items-start justify-between gap-control">
-          <div className="min-w-0">
-            <p className="text-label text-text-muted">{metric.label}</p>
-            <p className="mt-tag text-data tabular-nums text-text-primary">{metric.value}</p>
-          </div>
-          <StatusBadge tone={metric.tone}>{metric.status}</StatusBadge>
+    <section className="grid gap-card lg:grid-cols-2 lg:items-end">
+      <div className="grid gap-control py-component">
+        <div className="grid gap-tag">
+          <p className="text-label font-medium uppercase text-text-muted">{page.periodContext.eyebrow}</p>
+          <h2 className="text-display text-text-primary">{page.periodContext.title}</h2>
+          <p className="text-label font-medium uppercase text-text-muted">{page.periodContext.meta}</p>
         </div>
-        <p className="text-ui text-text-secondary">{metric.context}</p>
-      </PanelBody>
-    </Panel>
+      </div>
+      <div className="grid gap-control md:grid-cols-3">
+        {page.overviewMetrics.map((metric) => (
+          <ExecutiveOverviewMetric key={metric.id} metric={metric} />
+        ))}
+      </div>
+    </section>
   )
 }
 
-function IntelligenceColumn({ column }) {
+function ZoneHeader({ eyebrow, title }) {
   return (
-    <Panel>
-      <PanelHeader
-        divided
-        iconName={column.id === 'worked' ? 'checkCircle2' : column.id === 'failed' ? 'triangleAlert' : 'target'}
-        title={column.label}
-      />
-      <PanelBody className="grid gap-0 py-control">
+    <div className="flex items-baseline gap-card border-b border-separator pb-component">
+      <p className="text-label font-medium uppercase text-text-muted">{eyebrow}</p>
+      <h2 className="text-heading text-text-primary">{title}</h2>
+    </div>
+  )
+}
+
+function ZoneOneColumn({ column }) {
+  return (
+    <div className="overflow-hidden rounded-block bg-block shadow-block ring-1 ring-separator">
+      <div className="flex h-control-large items-center gap-control border-b border-separator px-component">
+        <span className={`size-item rounded-item ${toneFillClass[column.tone] ?? toneFillClass.blue}`} />
+        <h3 className={`text-label font-medium uppercase ${toneTextClass[column.tone] ?? toneTextClass.blue}`}>
+          {column.label}
+        </h3>
+      </div>
+      <div className="grid">
         {column.items.map((item) => (
-          <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-control border-b border-separator py-control last:border-b-0" key={`${column.id}:${item.figure}`}>
-            <p className={`text-heading tabular-nums ${toneTextClass[column.tone]}`}>{item.figure}</p>
-            <p className="text-ui text-text-secondary">{item.text}</p>
+          <div
+            className="flex items-start gap-component border-b border-separator px-component py-control last:border-b-0"
+            key={`${column.id}:${item.figure}`}
+          >
+            <p className={`w-number-field shrink-0 text-heading tabular-nums ${toneTextClass[column.tone] ?? toneTextClass.blue}`}>
+              {item.figure}
+            </p>
+            <p className="text-ui font-normal text-text-secondary">{item.text}</p>
           </div>
         ))}
-      </PanelBody>
-    </Panel>
+      </div>
+    </div>
+  )
+}
+
+function ZoneOneOverview({ page }) {
+  return (
+    <section className="grid gap-component">
+      <ZoneHeader eyebrow="Zone 1" title="The Month in One Glance" />
+      <div className="grid gap-card lg:grid-cols-3">
+        {page.intelligence.map((column) => (
+          <ZoneOneColumn column={column} key={column.id} />
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -219,19 +237,8 @@ function DecisionCard({ decision }) {
 export function ExecutiveDashboard({ page }) {
   return (
     <div className="grid gap-section">
-      <ExecutiveSummary page={page} />
-
-      <MetricGrid className="lg:grid-cols-4">
-        {page.headlineMetrics.map((metric) => (
-          <HeadlineMetricCard key={metric.id} metric={metric} />
-        ))}
-      </MetricGrid>
-
-      <section className="grid gap-card lg:grid-cols-3">
-        {page.intelligence.map((column) => (
-          <IntelligenceColumn column={column} key={column.id} />
-        ))}
-      </section>
+      <ExecutiveOverviewHeader page={page} />
+      <ZoneOneOverview page={page} />
 
       <section className="grid gap-card">
         <div className="grid gap-tag">
