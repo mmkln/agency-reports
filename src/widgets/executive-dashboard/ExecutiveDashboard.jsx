@@ -340,7 +340,7 @@ function SourceDonut({ sources, total }) {
 
 function BookingsBySourceCard({ className = '', source }) {
   return (
-    <ZoneCard className={`grid gap-component ${className}`}>
+    <ZoneCard className={`grid content-start gap-component ${className}`}>
       <div className="flex items-center justify-between gap-control">
         <h3 className="text-ui font-semibold text-text-primary">Bookings by source</h3>
         <StatusBadge tone="green">{source.badge}</StatusBadge>
@@ -377,33 +377,32 @@ function BookingsBySourceCard({ className = '', source }) {
 
 function ReactivationFunnelCard({ className = '', funnel }) {
   return (
-    <ZoneCard className={`grid gap-component ${className}`}>
+    <ZoneCard className={`grid content-start gap-component ${className}`}>
       <div className="flex flex-wrap items-center gap-tag">
         <h3 className="text-ui font-semibold text-text-primary">Reactivation funnel</h3>
         <StatusBadge tone="green">{funnel.badge}</StatusBadge>
         <span className="text-ui text-text-muted">· {funnel.note}</span>
       </div>
-      <div className="grid gap-control">
+      <div className="grid gap-component">
         {funnel.stages.map((stage) => (
-          <div className="flex items-center gap-control" key={stage.id}>
-            <div className="min-w-0 flex-1">
-              <div className="h-control-small rounded-control bg-fill-secondary">
-                <div
-                  className={`flex h-full items-center justify-end rounded-control px-control text-label font-semibold tabular-nums text-action-foreground ${toneFillClass[stage.tone] ?? toneFillClass.blue}`}
-                  style={{ width: `${Math.max(10, Math.min(100, stage.progress))}%` }}
-                >
-                  {stage.value}
-                </div>
+          <div className="grid gap-tag" key={stage.id}>
+            <div className="flex items-baseline justify-between gap-component">
+              <div className="min-w-0">
+                <p className="text-ui font-semibold text-text-primary">{stage.label}</p>
+                {stage.conversion ? (
+                  <p className={`text-label font-medium ${toneTextClass[stage.conversionTone] ?? toneTextClass.green}`}>
+                    {stage.conversion}
+                  </p>
+                ) : null}
               </div>
+              <p className="text-ui font-semibold tabular-nums text-text-primary">{stage.value}</p>
             </div>
-            <p className="w-number-field shrink-0 text-ui font-semibold text-text-primary">
-              {stage.label}
-              {stage.conversion ? (
-                <span className={`ml-tag font-normal ${stage.tone === 'rose' ? 'text-destructive' : 'text-success-foreground'}`}>
-                  {stage.conversion}
-                </span>
-              ) : null}
-            </p>
+            <div className="h-control rounded-control bg-fill-secondary">
+              <div
+                className={`h-full rounded-control ${toneFillClass[stage.tone] ?? toneFillClass.blue}`}
+                style={{ width: `${Math.max(8, Math.min(100, stage.progress))}%` }}
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -416,7 +415,7 @@ function ReactivationFunnelCard({ className = '', funnel }) {
 
 function MetaFlowStep({ step }) {
   return (
-    <div className="grid min-w-0 flex-1 place-items-center gap-tag rounded-control bg-block-subtle p-component text-center">
+    <div className="grid min-w-0 place-items-center gap-tag rounded-control bg-block-subtle p-control text-center">
       <p className={`text-data tabular-nums ${toneTextClass[step.tone] ?? 'text-text-primary'}`}>{step.value}</p>
       <p className="text-indicator font-medium uppercase text-text-muted">{step.label}</p>
       {step.helper ? <p className={toneTextClass[step.tone] ?? 'text-text-secondary'}>{step.helper}</p> : null}
@@ -438,16 +437,15 @@ function SignalPill({ signal }) {
 
 function MetaPaidAdsCard({ ads, className = '' }) {
   return (
-    <ZoneCard className={`grid gap-component ${className}`}>
+    <ZoneCard className={`grid content-start gap-component ${className}`}>
       <div className="flex items-center justify-between gap-control">
         <h3 className="text-ui font-semibold text-text-primary">Meta paid ads</h3>
         <StatusBadge tone="amber">{ads.badge}</StatusBadge>
       </div>
-      <div className="flex items-center gap-control">
-        {ads.flow.map((step, index) => (
-          <div className="flex min-w-0 flex-1 items-center gap-control" key={step.id}>
+      <div className="grid gap-control md:grid-cols-3">
+        {ads.flow.map((step) => (
+          <div className="min-w-0" key={step.id}>
             <MetaFlowStep step={step} />
-            {index < ads.flow.length - 1 ? <span className="shrink-0 text-text-muted">→</span> : null}
           </div>
         ))}
       </div>
@@ -455,10 +453,12 @@ function MetaPaidAdsCard({ ads, className = '' }) {
         <p className="text-label font-medium uppercase text-text-muted">CAC by channel</p>
         <div className="grid">
           {ads.cacByChannel.map((item) => (
-            <div className="grid grid-cols-3 items-center gap-control border-b border-separator py-tag text-ui last:border-b-0" key={item.id}>
-              <span className="text-text-secondary">{item.label}</span>
-              <span className={`font-semibold tabular-nums ${toneTextClass[item.tone] ?? toneTextClass.neutral}`}>{item.value}</span>
-              <span className="text-right font-mono text-label text-text-muted">{item.helper}</span>
+            <div className="flex items-start justify-between gap-component border-b border-separator py-control last:border-b-0" key={item.id}>
+              <div className="min-w-0">
+                <p className="text-ui font-medium text-text-primary">{item.label}</p>
+                <p className="text-label text-text-muted">{item.helper}</p>
+              </div>
+              <span className={`shrink-0 text-ui font-semibold tabular-nums ${toneTextClass[item.tone] ?? toneTextClass.neutral}`}>{item.value}</span>
             </div>
           ))}
         </div>
@@ -479,7 +479,7 @@ function ZoneFourLeadConversion({ page }) {
   return (
     <section className="grid gap-component">
       <ZoneHeader eyebrow="Zone 4" title="Where Leads Come From & How They Convert" />
-      <div className="grid gap-component xl:grid-cols-7">
+      <div className="grid items-start gap-component xl:grid-cols-7">
         <BookingsBySourceCard className="xl:col-span-2" source={page.leadConversion.bookingsBySource} />
         <ReactivationFunnelCard className="xl:col-span-3" funnel={page.leadConversion.reactivationFunnel} />
         <MetaPaidAdsCard ads={page.leadConversion.metaPaidAds} className="xl:col-span-2" />

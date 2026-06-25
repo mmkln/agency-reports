@@ -244,12 +244,8 @@ function getFunnelStageByKey(funnelChart, key) {
   })
 }
 
-function getStageCount(stage) {
-  return Number(stage?.stage_count ?? stage?.count ?? stage?.output_count ?? 0)
-}
-
 function getSequenceActiveCount(funnelChart) {
-  return getStageCount(getFunnelStageByKey(funnelChart, SEQUENCE_ACTIVE_STAGE_KEY))
+  return Number(funnelChart?.currentStageCounts?.[SEQUENCE_ACTIVE_STAGE_KEY]?.count ?? 0)
 }
 
 function getTreatmentAcceptedStage(funnelChart) {
