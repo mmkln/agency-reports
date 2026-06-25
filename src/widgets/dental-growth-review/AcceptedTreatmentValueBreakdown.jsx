@@ -1,17 +1,63 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui'
+
 import { ReactivationChartPanel } from './ReactivationChartPanel'
 
-const valueRows = [
+const summaryCards = [
   {
-    key: 'pendingProcedureTotalFee',
-    label: 'Pending fee',
+    key: 'paid_value',
   },
   {
+    key: 'open_value',
+  },
+  {
+    key: 'total_expected_value',
+  },
+]
+
+const tableColumns = [
+  {
+    getTotal: ({ cards }) => getCardByKey(cards, 'paid_value')?.value,
+    getValue: (row) => row.paidValue,
+    key: 'paid',
+    label: 'Paid',
+  },
+  {
+    getTotal: ({ cards }) => getCardByKey(cards, 'open_value')?.value,
+    getValue: (row) => row.openValue,
+    key: 'open',
+    label: 'Open',
+  },
+  {
+    getTotal: ({ rawTotals }) => rawTotals.expected_value,
+    getValue: (row) => row.rawValues?.expected_value,
     key: 'expectedValue',
-    label: 'Expected',
+    label: 'Expected value',
   },
   {
+    getTotal: ({ rawTotals }) => rawTotals.pending_procedure_total_fee,
+    getValue: (row) => row.rawValues?.pending_procedure_total_fee,
+    key: 'pending',
+    label: 'Pending',
+  },
+  {
+    getTotal: ({ rawTotals }) => rawTotals.lifetime_value,
+    getValue: (row) => row.rawValues?.lifetime_value,
     key: 'lifetimeValue',
-    label: 'Lifetime',
+    label: 'Lifetime value',
+  },
+  {
+    getTotal: ({ rawTotals }) => rawTotals.first_time_value,
+    getValue: (row) => row.rawValues?.first_time_value,
+    key: 'firstTimeValue',
+    label: 'First time value',
   },
 ]
 
@@ -33,36 +79,85 @@ function getCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
 }
 
-function SummaryCard({ card, currency }) {
-  if (!card) {
-    return null
-  }
+function FinancialSummary({ cards, currency }) {
+  const resolvedCards = summaryCards
+    .map((item) => ({
+      ...item,
+      card: getCardByKey(cards, item.key),
+    }))
+    .filter((item) => item.card)
 
   return (
-    <div className="rounded-control bg-fill-secondary px-control py-4">
-      <p className="text-label font-medium text-text-muted">{card.label}</p>
-      <p className="mt-2 text-title font-semibold tabular-nums text-text-primary">
-        {formatCurrency(card.value, currency)}
-      </p>
+    <div className="overflow-hidden rounded-control">
+      <div className="grid divide-y divide-separator md:grid-cols-3 md:divide-x md:divide-y-0">
+        {resolvedCards.map((item) => (
+          <div className="px-card py-component" key={item.key}>
+            <p className="text-label font-medium text-text-muted">{item.card.label}</p>
+            <p className="mt-item text-heading font-semibold tabular-nums text-text-primary">
+              {formatCurrency(item.card.value, currency)}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
 function PatientValueRow({ currency, row }) {
   return (
-    <tr className="border-t border-separator">
-      <th className="px-control py-3 text-left text-label font-semibold text-text-primary" scope="row">
+    <TableRow>
+      <TableCell className="font-semibold text-text-primary">
         <span className="block max-w-56 truncate">{row.contactName}</span>
-      </th>
-      <td className="px-control py-3 text-label font-medium text-text-muted">
+      </TableCell>
+      <TableCell className="font-medium text-text-muted">
         {row.trackLabel || (row.track ? `Track ${row.track}` : '')}
-      </td>
-      {valueRows.map((item) => (
-        <td className="px-control py-3 text-right text-label font-semibold tabular-nums text-text-primary" key={item.key}>
-          {formatCurrency(row[item.key], currency)}
-        </td>
+      </TableCell>
+      {tableColumns.map((column) => (
+        <TableCell className="text-right font-semibold tabular-nums text-text-primary" key={column.key}>
+          {formatCurrency(column.getValue(row), currency)}
+        </TableCell>
       ))}
-    </tr>
+    </TableRow>
+  )
+}
+
+function PatientsValueTable({ currency, rows, cards, rawTotals }) {
+  return (
+    <div className="mt-component overflow-hidden rounded-control border border-separator">
+      <Table className="min-w-[1040px]">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Patient</TableHead>
+            <TableHead>Track</TableHead>
+            {tableColumns.map((column) => (
+              <TableHead className="text-right" key={column.key}>
+                {column.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <PatientValueRow
+              currency={currency}
+              key={row.id || `${row.contactId}:${row.opportunityId}`}
+              row={row}
+            />
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell className="font-semibold text-text-primary">Total</TableCell>
+            <TableCell className="font-medium text-text-muted">{rows.length} patients</TableCell>
+            {tableColumns.map((column) => (
+              <TableCell className="text-right font-semibold tabular-nums text-text-primary" key={column.key}>
+                {formatCurrency(column.getTotal({ cards, rawTotals }), currency)}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
   )
 }
 
@@ -72,6 +167,7 @@ export function AcceptedTreatmentValueBreakdown({ chart }) {
   }
 
   const cards = chart.summary?.cards ?? []
+  const rawTotals = chart.summary?.rawTotals ?? {}
   const rows = chart.summary?.rows ?? []
   const currency = chart.currency || 'USD'
 
@@ -84,37 +180,10 @@ export function AcceptedTreatmentValueBreakdown({ chart }) {
       subtitle="Paid revenue, open balance, and projected value for accepted treatments."
       title="Accepted Treatment Value Breakdown"
     >
-      <div className="grid gap-control md:grid-cols-3">
-        <SummaryCard card={getCardByKey(cards, 'expected_value')} currency={currency} />
-        <SummaryCard card={getCardByKey(cards, 'pending_procedure_total_fee')} currency={currency} />
-        <SummaryCard card={getCardByKey(cards, 'lifetime_value')} currency={currency} />
-      </div>
+      <FinancialSummary cards={cards} currency={currency} />
 
       {rows.length ? (
-        <div className="mt-component overflow-x-auto">
-          <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left">
-            <thead>
-              <tr className="text-caption font-semibold uppercase tracking-[0.08em] text-text-muted">
-                <th className="px-control py-2 text-left" scope="col">Patient</th>
-                <th className="px-control py-2 text-left" scope="col">Track</th>
-                {valueRows.map((item) => (
-                  <th className="px-control py-2 text-right" key={item.key} scope="col">
-                    {item.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <PatientValueRow
-                  currency={currency}
-                  key={row.id || `${row.contactId}:${row.opportunityId}`}
-                  row={row}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PatientsValueTable cards={cards} currency={currency} rawTotals={rawTotals} rows={rows} />
       ) : null}
     </ReactivationChartPanel>
   )

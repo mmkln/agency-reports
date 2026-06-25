@@ -450,6 +450,11 @@ function normalizeAcceptedTreatmentValueCard(card = {}) {
 
 function normalizeAcceptedTreatmentValueRow(row = {}) {
   const source = isPlainObject(row) ? row : {}
+  const rawValues = isPlainObject(source.raw_values)
+    ? source.raw_values
+    : isPlainObject(source.rawValues)
+      ? source.rawValues
+      : {}
 
   return {
     contactId: normalizeText(source.contact_id ?? source.contactId),
@@ -458,13 +463,17 @@ function normalizeAcceptedTreatmentValueRow(row = {}) {
     firstTimeValue: source.first_time_value ?? source.firstTimeValue ?? '0.00',
     id: normalizeText(source.id),
     lifetimeValue: source.lifetime_value ?? source.lifetimeValue ?? '0.00',
+    openValue: source.open_value ?? source.openValue ?? '0.00',
     opportunityId: normalizeText(source.opportunity_id ?? source.opportunityId),
     opportunityName: normalizeText(source.opportunity_name ?? source.opportunityName),
+    paidValue: source.paid_value ?? source.paidValue ?? '0.00',
     pendingProcedureTotalFee: source.pending_procedure_total_fee
       ?? source.pendingProcedureTotalFee
       ?? '0.00',
+    rawValues,
     track: normalizeText(source.track),
     trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+    totalExpectedValue: source.total_expected_value ?? source.totalExpectedValue ?? '0.00',
     valueFromIstart: source.value_from_istart ?? source.valueFromIstart ?? '0.00',
   }
 }
@@ -479,6 +488,11 @@ function normalizeAcceptedTreatmentValueBreakdown(chart = {}) {
     reason: normalizeText(source.reason),
     summary: {
       cards: normalizeArray(summary.cards).map(normalizeAcceptedTreatmentValueCard),
+      rawTotals: isPlainObject(summary.raw_totals)
+        ? summary.raw_totals
+        : isPlainObject(summary.rawTotals)
+          ? summary.rawTotals
+          : {},
       rows: normalizeArray(summary.rows).map(normalizeAcceptedTreatmentValueRow),
       totals: isPlainObject(summary.totals) ? summary.totals : {},
     },
