@@ -1,4 +1,4 @@
-import { Fragment, forwardRef } from 'react'
+import { forwardRef } from 'react'
 
 import { Icon } from '@/shared/icons'
 import {
@@ -529,23 +529,12 @@ export function ReactivationCampaignSummary({
     : ''
   const weeklyDelta = getRecentBookingsDelta(chart.series)
   const periodRange = formatPeriodRange(period)
-  const headerMeta = [
-    periodRange
-      ? { key: 'period', label: periodRange }
-      : null,
-    cohortCount > 0
-      ? {
-          key: 'cohort',
-          label: `${cohortCount.toLocaleString('en-US')} patients in cohort`,
-          suffix: sequenceActiveCount > 0
-            ? {
-                label: `${sequenceActiveCount.toLocaleString('en-US')} active in sequence`,
-                tone: 'success',
-              }
-            : null,
-        }
-      : null,
-  ].filter(Boolean)
+  const cohortLabel = cohortCount > 0
+    ? `${cohortCount.toLocaleString('en-US')} patients in cohort`
+    : ''
+  const sequenceActiveLabel = sequenceActiveCount > 0
+    ? `${sequenceActiveCount.toLocaleString('en-US')} active in sequence`
+    : ''
 
   return (
     <section className="grid gap-control">
@@ -554,24 +543,21 @@ export function ReactivationCampaignSummary({
           <h2 className={reactivationText.sectionTitle}>
             {campaign?.name || 'Reactivation campaign'}
           </h2>
-          {headerMeta.length ? (
-            <p className={`mt-tag ${reactivationText.updatedMeta}`}>
-              {headerMeta.map((item, index) => (
-                <Fragment key={item.key}>
-                  {index > 0 ? <span> · </span> : null}
-                  <span>{item.label}</span>
-                  {item.suffix ? (
+          {periodRange || cohortLabel ? (
+            <div className={`mt-tag grid gap-1 ${reactivationText.updatedMeta}`}>
+              {periodRange ? <p>{periodRange}</p> : null}
+              {cohortLabel ? (
+                <p>
+                  <span>{cohortLabel}</span>
+                  {sequenceActiveLabel ? (
                     <>
-                      <span> (</span>
-                      <span className={item.suffix.tone === 'success' ? 'text-success' : ''}>
-                        {item.suffix.label}
-                      </span>
-                      <span>)</span>
+                      <span> · </span>
+                      <span>{sequenceActiveLabel}</span>
                     </>
                   ) : null}
-                </Fragment>
-              ))}
-            </p>
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-control">
