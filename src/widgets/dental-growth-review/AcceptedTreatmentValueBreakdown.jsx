@@ -12,13 +12,14 @@ import { ReactivationChartPanel } from './ReactivationChartPanel'
 
 const summaryCards = [
   {
-    key: 'paid_value',
+    key: 'total_expected_value',
+    prominence: 'primary',
   },
   {
     key: 'open_value',
   },
   {
-    key: 'total_expected_value',
+    key: 'paid_value',
   },
 ]
 
@@ -28,18 +29,21 @@ const tableColumns = [
     getValue: (row) => row.paidValue,
     key: 'paid',
     label: 'Paid',
+    priority: 'primary',
   },
   {
     getTotal: ({ cards }) => getCardByKey(cards, 'open_value')?.value,
     getValue: (row) => row.openValue,
     key: 'open',
     label: 'Open',
+    priority: 'primary',
   },
   {
     getTotal: ({ rawTotals }) => rawTotals.expected_value,
     getValue: (row) => row.rawValues?.expected_value,
     key: 'expectedValue',
     label: 'Expected value',
+    priority: 'primary',
   },
   {
     getTotal: ({ rawTotals }) => rawTotals.pending_procedure_total_fee,
@@ -79,6 +83,18 @@ function getCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
 }
 
+function getCurrencyToneClass(value, priority = 'secondary') {
+  const amount = Number(value)
+
+  if (Number.isFinite(amount) && amount < 0) {
+    return 'font-semibold text-destructive'
+  }
+
+  return priority === 'primary'
+    ? 'font-semibold text-text-primary'
+    : 'font-medium text-text-secondary'
+}
+
 function FinancialSummary({ cards, currency }) {
   const resolvedCards = summaryCards
     .map((item) => ({
@@ -93,7 +109,10 @@ function FinancialSummary({ cards, currency }) {
         {resolvedCards.map((item) => (
           <div className="px-card py-component" key={item.key}>
             <p className="text-label font-medium text-text-muted">{item.card.label}</p>
-            <p className="mt-item text-heading font-semibold tabular-nums text-text-primary">
+            <p className={`mt-item font-semibold tabular-nums text-text-primary ${
+              item.prominence === 'primary' ? 'text-title' : 'text-heading'
+            }`}
+            >
               {formatCurrency(item.card.value, currency)}
             </p>
           </div>
@@ -113,7 +132,10 @@ function PatientValueRow({ currency, row }) {
         {row.trackLabel || (row.track ? `Track ${row.track}` : '')}
       </TableCell>
       {tableColumns.map((column) => (
-        <TableCell className="text-right font-semibold tabular-nums text-text-primary" key={column.key}>
+        <TableCell
+          className={`text-right tabular-nums ${getCurrencyToneClass(column.getValue(row), column.priority)}`}
+          key={column.key}
+        >
           {formatCurrency(column.getValue(row), currency)}
         </TableCell>
       ))}
@@ -150,7 +172,13 @@ function PatientsValueTable({ currency, rows, cards, rawTotals }) {
             <TableCell className="font-semibold text-text-primary">Total</TableCell>
             <TableCell className="font-medium text-text-muted">{rows.length} patients</TableCell>
             {tableColumns.map((column) => (
-              <TableCell className="text-right font-semibold tabular-nums text-text-primary" key={column.key}>
+              <TableCell
+                className={`text-right tabular-nums ${getCurrencyToneClass(
+                  column.getTotal({ cards, rawTotals }),
+                  column.priority,
+                )}`}
+                key={column.key}
+              >
                 {formatCurrency(column.getTotal({ cards, rawTotals }), currency)}
               </TableCell>
             ))}
