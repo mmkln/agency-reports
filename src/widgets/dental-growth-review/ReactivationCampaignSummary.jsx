@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { Fragment, forwardRef } from 'react'
 
 import { Icon } from '@/shared/icons'
 import {
@@ -93,6 +93,7 @@ const cardToneByKey = {
 
 const DURATION_CARD_KEY = 'duration'
 const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
+const SEQUENCE_ACTIVE_STAGE_KEY = 'sequence_active'
 
 const refreshStatusLabel = {
   already_running: 'Already running',
@@ -232,15 +233,27 @@ function normalizeStageKey(value) {
     .replaceAll(' ', '_')
 }
 
-function getTreatmentAcceptedStage(funnelChart) {
+function getFunnelStageByKey(funnelChart, key) {
   const stages = Array.isArray(funnelChart?.stages) ? funnelChart.stages : []
 
   return stages.find((stage) => {
     const id = normalizeStageKey(stage.id ?? stage.stage_id)
     const name = normalizeStageKey(stage.stage_name ?? stage.name)
 
-    return id === TREATMENT_ACCEPTED_STAGE_KEY || name === TREATMENT_ACCEPTED_STAGE_KEY
+    return id === key || name === key
   })
+}
+
+function getStageCount(stage) {
+  return Number(stage?.stage_count ?? stage?.count ?? stage?.output_count ?? 0)
+}
+
+function getSequenceActiveCount(funnelChart) {
+  return getStageCount(getFunnelStageByKey(funnelChart, SEQUENCE_ACTIVE_STAGE_KEY))
+}
+
+function getTreatmentAcceptedStage(funnelChart) {
+  return getFunnelStageByKey(funnelChart, TREATMENT_ACCEPTED_STAGE_KEY)
 }
 
 function createTreatmentAcceptedCard(funnelChart) {
@@ -513,6 +526,7 @@ export function ReactivationCampaignSummary({
   const heroCard = cards.find((card) => HERO_CARD_KEYS.includes(card.key))
   const secondaryCards = cards.filter((card) => card !== heroCard)
   const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
+  const sequenceActiveCount = getSequenceActiveCount(funnelChart)
   const bookingsCount = Number(heroCard?.value ?? 0)
   const bookedPercent = heroCard && cohortCount > 0
     ? formatCohortPercent((bookingsCount / cohortCount) * 100)
@@ -520,8 +534,21 @@ export function ReactivationCampaignSummary({
   const weeklyDelta = getRecentBookingsDelta(chart.series)
   const periodRange = formatPeriodRange(period)
   const headerMeta = [
-    periodRange,
-    cohortCount > 0 ? `${cohortCount.toLocaleString('en-US')} patients in cohort` : '',
+    periodRange
+      ? { key: 'period', label: periodRange }
+      : null,
+    cohortCount > 0
+      ? {
+          key: 'cohort',
+          label: `${cohortCount.toLocaleString('en-US')} patients in cohort`,
+          suffix: sequenceActiveCount > 0
+            ? {
+                label: `${sequenceActiveCount.toLocaleString('en-US')} active in sequence`,
+                tone: 'success',
+              }
+            : null,
+        }
+      : null,
   ].filter(Boolean)
 
   return (
@@ -533,7 +560,21 @@ export function ReactivationCampaignSummary({
           </h2>
           {headerMeta.length ? (
             <p className={`mt-tag ${reactivationText.updatedMeta}`}>
-              {headerMeta.join(' · ')}
+              {headerMeta.map((item, index) => (
+                <Fragment key={item.key}>
+                  {index > 0 ? <span> · </span> : null}
+                  <span>{item.label}</span>
+                  {item.suffix ? (
+                    <>
+                      <span> (</span>
+                      <span className={item.suffix.tone === 'success' ? 'text-success' : ''}>
+                        {item.suffix.label}
+                      </span>
+                      <span>)</span>
+                    </>
+                  ) : null}
+                </Fragment>
+              ))}
             </p>
           ) : null}
         </div>
