@@ -3,6 +3,7 @@ import {
   DentalGrowthReviewState,
   FunnelView,
 } from './DentalGrowthReviewBlocks'
+import { AcceptedTreatmentValueBreakdown } from './AcceptedTreatmentValueBreakdown'
 import { BookingsByTrackComparisonPanel } from './BookingsByTrackComparisonPanel'
 import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
@@ -22,6 +23,7 @@ export function DentalGrowthReviewDashboard({
 
   const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages ?? []
+  const acceptedTreatmentValueBreakdown = page.charts?.acceptedTreatmentValueBreakdown ?? null
   const reactivationActivity = page.charts?.reactivationActivity ?? null
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
@@ -39,6 +41,7 @@ export function DentalGrowthReviewDashboard({
       />
 
       <div className="grid gap-4">
+        <AcceptedTreatmentValueBreakdown chart={acceptedTreatmentValueBreakdown} />
         <ReactivationActivityChart chart={reactivationActivity} />
         <WeeklyTrackActivityHeatmap section={weeklyActivity} />
         {/* <BookingsByTrackPanel funnelChart={funnelChart} /> */}

@@ -410,6 +410,55 @@ function normalizeWeeklyActivitySection(section = {}) {
   }
 }
 
+function normalizeAcceptedTreatmentValueCard(card = {}) {
+  const source = isPlainObject(card) ? card : {}
+
+  return {
+    key: normalizeText(source.key),
+    label: normalizeText(source.label),
+    value: source.value ?? '0.00',
+  }
+}
+
+function normalizeAcceptedTreatmentValueRow(row = {}) {
+  const source = isPlainObject(row) ? row : {}
+
+  return {
+    contactId: normalizeText(source.contact_id ?? source.contactId),
+    contactName: normalizeText(source.contact_name ?? source.contactName),
+    expectedValue: source.expected_value ?? source.expectedValue ?? '0.00',
+    firstTimeValue: source.first_time_value ?? source.firstTimeValue ?? '0.00',
+    id: normalizeText(source.id),
+    lifetimeValue: source.lifetime_value ?? source.lifetimeValue ?? '0.00',
+    opportunityId: normalizeText(source.opportunity_id ?? source.opportunityId),
+    opportunityName: normalizeText(source.opportunity_name ?? source.opportunityName),
+    pendingProcedureTotalFee: source.pending_procedure_total_fee
+      ?? source.pendingProcedureTotalFee
+      ?? '0.00',
+    track: normalizeText(source.track),
+    trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+    valueFromIstart: source.value_from_istart ?? source.valueFromIstart ?? '0.00',
+  }
+}
+
+function normalizeAcceptedTreatmentValueBreakdown(chart = {}) {
+  const source = isPlainObject(chart) ? chart : {}
+  const summary = isPlainObject(source.summary) ? source.summary : {}
+
+  return {
+    available: source.available === true,
+    currency: normalizeText(source.currency || 'USD'),
+    reason: normalizeText(source.reason),
+    summary: {
+      cards: normalizeArray(summary.cards).map(normalizeAcceptedTreatmentValueCard),
+      rows: normalizeArray(summary.rows).map(normalizeAcceptedTreatmentValueRow),
+      totals: isPlainObject(summary.totals) ? summary.totals : {},
+    },
+    title: normalizeText(source.title) || 'Accepted Treatment Value Breakdown',
+    type: normalizeText(source.type),
+  }
+}
+
 export function normalizeGrowthReviewWeeklyReportingReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const weeklyReporting = isPlainObject(source.weekly_reporting)
@@ -445,6 +494,9 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   return {
     calculated_at: normalizeText(source.calculated_at),
     calculation_version: normalizeText(source.calculation_version),
+    acceptedTreatmentValueBreakdown: normalizeAcceptedTreatmentValueBreakdown(
+      charts.accepted_treatment_value_breakdown ?? charts.acceptedTreatmentValueBreakdown,
+    ),
     metrics: normalizedMetrics,
     funnel: normalizeFunnelChart(funnel),
     reactivationActivity: normalizeReactivationActivityChart(
