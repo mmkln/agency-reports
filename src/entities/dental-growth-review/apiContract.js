@@ -501,6 +501,43 @@ function normalizeAcceptedTreatmentValueBreakdown(chart = {}) {
   }
 }
 
+function normalizeBookedAppointmentsByReplyChannelRow(row = {}) {
+  const source = isPlainObject(row) ? row : {}
+
+  return {
+    email: Number(source.email ?? 0) || 0,
+    percentOfTotal: Number(source.percent_of_total ?? source.percentOfTotal ?? 0) || 0,
+    sms: Number(source.sms ?? 0) || 0,
+    total: Number(source.total ?? 0) || 0,
+    track: normalizeText(source.track),
+    trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+  }
+}
+
+function normalizeBookedAppointmentsByReplyChannel(chart = {}) {
+  const source = isPlainObject(chart) ? chart : {}
+  const totals = isPlainObject(source.totals) ? source.totals : {}
+
+  return {
+    available: source.available === true,
+    channels: normalizeArray(source.channels).map((channel) => ({
+      key: normalizeText(channel?.key),
+      label: normalizeText(channel?.label),
+    })),
+    reason: normalizeText(source.reason),
+    rows: normalizeArray(source.rows).map(normalizeBookedAppointmentsByReplyChannelRow),
+    title: normalizeText(source.title) || 'Booked Appointments by Reply Channel',
+    totals: {
+      email: Number(totals.email ?? 0) || 0,
+      percentOfTotal: Number(totals.percent_of_total ?? totals.percentOfTotal ?? 0) || 0,
+      sms: Number(totals.sms ?? 0) || 0,
+      total: Number(totals.total ?? 0) || 0,
+      unattributed: Number(totals.unattributed ?? 0) || 0,
+    },
+    type: normalizeText(source.type),
+  }
+}
+
 export function normalizeGrowthReviewWeeklyReportingReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const weeklyReporting = isPlainObject(source.weekly_reporting)
@@ -538,6 +575,9 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
     calculation_version: normalizeText(source.calculation_version),
     acceptedTreatmentValueBreakdown: normalizeAcceptedTreatmentValueBreakdown(
       charts.accepted_treatment_value_breakdown ?? charts.acceptedTreatmentValueBreakdown,
+    ),
+    bookedAppointmentsByReplyChannel: normalizeBookedAppointmentsByReplyChannel(
+      charts.booked_appointments_by_reply_channel ?? charts.bookedAppointmentsByReplyChannel,
     ),
     metrics: normalizedMetrics,
     funnel: normalizeFunnelChart(funnel),
