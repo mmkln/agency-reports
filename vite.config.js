@@ -15,7 +15,7 @@ function getApiBaseUrlForMode(mode) {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ mode }) => {
   const apiBaseUrl = process.env.VITE_API_BASE_URL
     ?? getApiBaseUrlForMode(mode)
   const routingMode = process.env.VITE_ROUTING_MODE ?? (mode === 'github-pages' ? 'hash' : undefined)

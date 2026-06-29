@@ -3,6 +3,8 @@ import {
   DentalGrowthReviewState,
   FunnelView,
 } from './DentalGrowthReviewBlocks'
+import { Icon } from '@/shared/icons'
+import { Button } from '@/shared/ui'
 import { AcceptedTreatmentValueBreakdown } from './AcceptedTreatmentValueBreakdown'
 import { BookedAppointmentsByReplyChannel } from './BookedAppointmentsByReplyChannel'
 import { BookingsByTrackComparisonPanel } from './BookingsByTrackComparisonPanel'
@@ -10,6 +12,36 @@ import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
 import { WeeklyTrackActivityHeatmap } from './WeeklyTrackActivityHeatmap'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
+
+function GrowthReviewUpdateAction({ refresh, secondaryAction }) {
+  const isRefreshing = Boolean(refresh?.isRefreshing)
+  const canRefresh = Boolean(refresh?.startRefresh)
+
+  if (!canRefresh && !secondaryAction) {
+    return null
+  }
+
+  function handleRefresh() {
+    void refresh?.startRefresh?.()
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-control">
+      {canRefresh ? (
+        <Button
+          disabled={isRefreshing}
+          onClick={handleRefresh}
+          size="sm"
+          type="button"
+        >
+          <Icon name={isRefreshing ? 'clock' : 'refreshCw'} size={14} />
+          {isRefreshing ? 'Updating' : 'Update Review'}
+        </Button>
+      ) : null}
+      {secondaryAction}
+    </div>
+  )
+}
 
 export function DentalGrowthReviewDashboard({
   acceptedTreatmentDrilldown,
@@ -29,6 +61,12 @@ export function DentalGrowthReviewDashboard({
   const reactivationActivity = page.charts?.reactivationActivity ?? null
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
+  const lifecycleEmptyAction = (
+    <GrowthReviewUpdateAction
+      refresh={refresh}
+      secondaryAction={funnelEmptyAction}
+    />
+  )
 
   return (
     <>
@@ -52,7 +90,7 @@ export function DentalGrowthReviewDashboard({
       {trackPerformance ? <BookingsByTrackComparisonPanel funnelChart={funnelChart} /> : null}
 
       <FunnelView
-        emptyAction={funnelEmptyAction}
+        emptyAction={lifecycleEmptyAction}
         funnel={funnelStages}
         funnelChart={funnelChart}
       />
