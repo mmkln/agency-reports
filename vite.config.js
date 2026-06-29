@@ -25,7 +25,7 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
-    base: command === 'build' ? '/agency-reports/' : '/',
+    base: '/',
     define: Object.keys(envDefines).length ? envDefines : undefined,
     plugins: [tailwindcss(), react()],
     resolve: {
