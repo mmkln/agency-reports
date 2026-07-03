@@ -6,10 +6,24 @@ import {
   useGrowthReviewLayoutEditor,
 } from '@/features/growth-review-layout'
 import { Icon } from '@/shared/icons'
-import { Button } from '@/shared/ui'
+import { Button, SectionRailNav } from '@/shared/ui'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
 import { renderGrowthReviewDashboardWidget } from './dashboardWidgetRegistry'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
+
+const SUMMARY_SECTION_ID = 'growth-review-summary'
+const sectionRailLabelByWidgetKey = {
+  accepted_treatment_value_breakdown: 'Treatment Value',
+  booked_appointments_by_reply_channel: 'Booked by Channel',
+  bookings_by_track: 'Bookings by Track',
+  reactivation_activity: 'Activity',
+  reactivation_lifecycle: 'Lifecycle',
+  weekly_track_activity: 'Weekly Activity',
+}
+
+function getWidgetSectionId(widgetKey) {
+  return `growth-review-${widgetKey}`
+}
 
 function GrowthReviewUpdateAction({ refresh, secondaryAction }) {
   const isRefreshing = Boolean(refresh?.isRefreshing)
@@ -108,25 +122,40 @@ export function DentalGrowthReviewDashboard({
       }),
     }))
     .filter(({ widget }) => widget)
+  const sectionNavItems = [
+    { id: SUMMARY_SECTION_ID, label: 'Summary' },
+    ...renderedWidgets.map(({ item }) => ({
+      id: getWidgetSectionId(item.widgetKey),
+      label: sectionRailLabelByWidgetKey[item.widgetKey] ?? item.label,
+    })),
+  ]
 
   return (
     <>
-      <ReactivationCampaignSummary
-        campaign={page.campaign}
-        chart={reactivationActivity}
-        funnelChart={funnelChart}
-        period={page.charts?.period ?? page.period}
-        acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
-        refresh={refresh}
-        secondaryAction={layoutAction}
-        updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
-      />
+      <SectionRailNav items={sectionNavItems} />
+
+      <section className="scroll-mt-24" id={SUMMARY_SECTION_ID}>
+        <ReactivationCampaignSummary
+          acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
+          campaign={page.campaign}
+          chart={reactivationActivity}
+          funnelChart={funnelChart}
+          period={page.charts?.period ?? page.period}
+          refresh={refresh}
+          secondaryAction={layoutAction}
+          updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
+        />
+      </section>
 
       <div className="grid gap-4">
         {renderedWidgets.map(({ item, widget }) => (
-          <div key={item.widgetKey}>
+          <section
+            className="scroll-mt-24"
+            id={getWidgetSectionId(item.widgetKey)}
+            key={item.widgetKey}
+          >
             {widget}
-          </div>
+          </section>
         ))}
       </div>
       <GrowthReviewLayoutModal editor={layoutEditor} />

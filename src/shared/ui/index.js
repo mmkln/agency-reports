@@ -117,6 +117,7 @@ export { ResourceState } from './ResourceState'
 export { SearchField } from './SearchField'
 export { SectionJumpNav } from './SectionJumpNav'
 export { SectionNav } from './SectionNav'
+export { SectionRailNav } from './SectionRailNav'
 export { Separator } from '@/components/ui/separator'
 export {
   Sheet,
