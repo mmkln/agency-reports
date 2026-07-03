@@ -42,6 +42,7 @@ const cardToneClass = {
 
 const cardIconByKey = {
   actual_bookings: 'calendar',
+  booked_expected_value: 'dollarSign',
   bookings: 'calendar',
   conversion_rate: 'checkCircle2',
   emails_sent: 'mail',
@@ -55,6 +56,7 @@ const cardIconByKey = {
 
 const cardCaptionByKey = {
   actual_bookings: 'Booked appointments',
+  booked_expected_value: 'Booked expected value',
   conversion_rate: 'Booking conversion',
   emails_sent: 'Emails sent',
   manager_calls: 'Calls completed',
@@ -67,6 +69,7 @@ const cardCaptionByKey = {
 
 const cardTitleByKey = {
   actual_bookings: 'Bookings',
+  booked_expected_value: 'Value',
   bookings: 'Bookings',
   conversion_rate: 'Conversion',
   emails_sent: 'Email',
@@ -80,6 +83,7 @@ const cardTitleByKey = {
 
 const cardToneByKey = {
   actual_bookings: 'green',
+  booked_expected_value: 'green',
   bookings: 'green',
   conversion_rate: 'neutral',
   emails_sent: 'purple',
