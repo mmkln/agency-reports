@@ -7,9 +7,9 @@ const toneClass = {
   purple: 'bg-premium-purple/10 text-premium-purple',
 }
 
-function CampaignKpiCard({ card }) {
+function CampaignKpiCard({ card, className = '' }) {
   return (
-    <article className="flex min-h-[92px] items-center gap-control rounded-block bg-block px-4 py-3 shadow-block">
+    <article className={`flex min-h-[92px] items-center gap-control rounded-block bg-block px-4 py-3 shadow-block ${className}`}>
       <span className={`inline-flex size-9 shrink-0 items-center justify-center rounded-control ${toneClass[card.tone] ?? toneClass.blue}`}>
         <Icon name={card.iconName} size={17} />
       </span>
@@ -27,14 +27,16 @@ function CampaignKpiCard({ card }) {
   )
 }
 
-export function ReactivationCampaignKpiCards({ funnelChart }) {
+export function ReactivationCampaignKpiCards({ className = '', funnelChart, includeIds }) {
+  const includedIds = Array.isArray(includeIds) && includeIds.length ? new Set(includeIds) : null
   const cards = buildCampaignKpiCardsModel(funnelChart)
+    .filter((card) => !includedIds || includedIds.has(card.id))
 
   if (!cards.length) {
     return null
   }
 
   return cards.map((card) => (
-    <CampaignKpiCard card={card} key={card.id} />
+    <CampaignKpiCard card={card} className={className} key={card.id} />
   ))
 }

@@ -96,6 +96,7 @@ const cardToneByKey = {
 }
 
 const DURATION_CARD_KEY = 'duration'
+const BOOKED_EXPECTED_VALUE_CARD_KEY = 'booked_expected_value'
 const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
 const SEQUENCE_ACTIVE_STAGE_KEY = 'sequence_active'
 
@@ -230,6 +231,10 @@ function formatCardCaption(card) {
   return caption
 }
 
+function findCardByKey(cards, key) {
+  return cards.find((card) => card.key === key) ?? null
+}
+
 function normalizeStageKey(value) {
   return String(value ?? '')
     .trim()
@@ -361,7 +366,7 @@ const ActivityCard = forwardRef(function ActivityCard({
   }
 
   return (
-    <article className={`flex min-h-[92px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface}`}>
+    <article className={`flex min-h-[92px] items-center gap-control rounded-block px-4 py-3 shadow-block ${classes.surface} ${className}`}>
       {content}
     </article>
   )
@@ -444,6 +449,8 @@ function RefreshStatusPopover({ refresh }) {
 }
 
 const HERO_CARD_KEYS = ['actual_bookings', 'bookings']
+const PATIENT_REPLIES_CARD_ID = 'patient-replies'
+const REPLY_TO_BOOKING_CARD_ID = 'reply-to-booking'
 
 function getRecentBookingsDelta(series = [], days = 7) {
   const points = (Array.isArray(series) ? series : []).filter((point) => point?.date)
@@ -482,7 +489,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
   ].filter(Boolean).join(' · ')
 
   return (
-    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-3 xl:col-span-2">
+    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-2 xl:col-span-2">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
         <Icon name="calendar" size={19} />
       </span>
@@ -495,6 +502,22 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
           {context ? (
             <span className="text-ui font-normal leading-5 text-text-secondary">{context}</span>
           ) : null}
+        </p>
+      </div>
+    </article>
+  )
+}
+
+function BookedExpectedValueCard({ card }) {
+  return (
+    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-2 xl:col-span-2">
+      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
+        <Icon name="dollarSign" size={19} />
+      </span>
+      <div className="min-w-0">
+        <p className={reactivationText.metricLabel}>Booked expected value</p>
+        <p className="mt-tag text-[30px] font-semibold leading-[34px] tracking-normal tabular-nums text-success">
+          {formatCardValue(card)}
         </p>
       </div>
     </article>
@@ -525,7 +548,13 @@ export function ReactivationCampaignSummary({
   }
 
   const heroCard = cards.find((card) => HERO_CARD_KEYS.includes(card.key))
-  const secondaryCards = cards.filter((card) => card !== heroCard)
+  const bookedExpectedValueCard = findCardByKey(cards, BOOKED_EXPECTED_VALUE_CARD_KEY)
+  const treatmentAcceptedCard = findCardByKey(cards, TREATMENT_ACCEPTED_STAGE_KEY)
+  const activityCards = cards.filter((card) => (
+    card !== heroCard
+    && card !== bookedExpectedValueCard
+    && card !== treatmentAcceptedCard
+  ))
   const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
   const sequenceActiveCount = getSequenceActiveCount(funnelChart)
   const bookingsCount = Number(heroCard?.value ?? 0)
@@ -571,24 +600,31 @@ export function ReactivationCampaignSummary({
           {secondaryAction}
         </div>
       </header>
-      <div className="grid gap-control md:grid-cols-3 xl:grid-cols-7">
+      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-6">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
-        <ReactivationCampaignKpiCards funnelChart={funnelChart} />
-        {secondaryCards.map((card) => {
-          if (card.key === TREATMENT_ACCEPTED_STAGE_KEY) {
-            return (
-              <AcceptedTreatmentPopover
-                drilldown={acceptedTreatmentDrilldown}
-                key={card.key || card.label}
-              >
-                <ActivityCard card={card} isInteractive />
-              </AcceptedTreatmentPopover>
-            )
-          }
-
-          return <ActivityCard card={card} key={card.key || card.label} />
-        })}
+        {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
+        <ReactivationCampaignKpiCards funnelChart={funnelChart} includeIds={[PATIENT_REPLIES_CARD_ID]} />
+        {treatmentAcceptedCard ? (
+          <AcceptedTreatmentPopover
+            drilldown={acceptedTreatmentDrilldown}
+            key={treatmentAcceptedCard.key || treatmentAcceptedCard.label}
+          >
+            <ActivityCard card={treatmentAcceptedCard} isInteractive />
+          </AcceptedTreatmentPopover>
+        ) : null}
       </div>
+      {activityCards.length ? (
+        <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
+          <ReactivationCampaignKpiCards
+            className="xl:col-span-2"
+            funnelChart={funnelChart}
+            includeIds={[REPLY_TO_BOOKING_CARD_ID]}
+          />
+          {activityCards.map((card) => (
+            <ActivityCard card={card} className="xl:col-span-2" key={card.key || card.label} />
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }
