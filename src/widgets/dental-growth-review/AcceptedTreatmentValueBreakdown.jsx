@@ -16,9 +16,6 @@ const summaryCards = [
     prominence: 'primary',
   },
   {
-    key: 'open_value',
-  },
-  {
     key: 'paid_value',
   },
 ]
