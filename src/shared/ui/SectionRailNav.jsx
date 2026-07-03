@@ -118,7 +118,7 @@ export function SectionRailNav({
       )}
       id={inspectorId}
     >
-      <div className="relative min-h-64 w-64">
+      <div className="relative min-h-64 w-11 overflow-visible">
         <div className="absolute right-0 top-1/2 grid -translate-y-1/2 justify-items-end gap-tag py-control transition-opacity duration-motion-fast ease-motion-standard group-hover:opacity-0 group-focus-within:opacity-0">
           {sectionItems.map((item) => {
             const isActive = currentActiveId === item.id
