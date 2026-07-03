@@ -25,6 +25,25 @@ const summaryCards = [
 
 const tableColumns = [
   {
+    getTotal: ({ rawTotals }) => rawTotals.first_time_value,
+    getValue: (row) => row.rawValues?.first_time_value,
+    key: 'firstTimeValue',
+    label: 'First time value',
+  },
+  {
+    getTotal: ({ rawTotals }) => rawTotals.pending_procedure_total_fee,
+    getValue: (row) => row.rawValues?.pending_procedure_total_fee,
+    key: 'pending',
+    label: 'Pending Procedure Value',
+  },
+  {
+    getTotal: ({ rawTotals }) => rawTotals.expected_value,
+    getValue: (row) => row.rawValues?.expected_value,
+    key: 'expectedValue',
+    label: 'Total Expected Value',
+    priority: 'primary',
+  },
+  {
     getTotal: ({ cards }) => getCardByKey(cards, 'paid_value')?.value,
     getValue: (row) => row.paidValue,
     key: 'paid',
@@ -32,36 +51,10 @@ const tableColumns = [
     priority: 'primary',
   },
   {
-    getTotal: ({ cards }) => getCardByKey(cards, 'open_value')?.value,
-    getValue: (row) => row.openValue,
-    key: 'open',
-    label: 'Open',
-    priority: 'primary',
-  },
-  {
-    getTotal: ({ rawTotals }) => rawTotals.expected_value,
-    getValue: (row) => row.rawValues?.expected_value,
-    key: 'expectedValue',
-    label: 'Expected value',
-    priority: 'primary',
-  },
-  {
-    getTotal: ({ rawTotals }) => rawTotals.pending_procedure_total_fee,
-    getValue: (row) => row.rawValues?.pending_procedure_total_fee,
-    key: 'pending',
-    label: 'Pending',
-  },
-  {
     getTotal: ({ rawTotals }) => rawTotals.lifetime_value,
     getValue: (row) => row.rawValues?.lifetime_value,
     key: 'lifetimeValue',
     label: 'Lifetime value',
-  },
-  {
-    getTotal: ({ rawTotals }) => rawTotals.first_time_value,
-    getValue: (row) => row.rawValues?.first_time_value,
-    key: 'firstTimeValue',
-    label: 'First time value',
   },
 ]
 
