@@ -8,7 +8,6 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 
-import { AcceptedTreatmentPopover } from './AcceptedTreatmentPopover'
 import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
 import { reactivationText } from './reactivationTypography'
 
@@ -95,10 +94,9 @@ const cardToneByKey = {
   treatment_accepted: 'neutral',
 }
 
-const DURATION_CARD_KEY = 'duration'
 const BOOKED_EXPECTED_VALUE_CARD_KEY = 'booked_expected_value'
-const TREATMENT_ACCEPTED_STAGE_KEY = 'treatment_accepted'
 const SEQUENCE_ACTIVE_STAGE_KEY = 'sequence_active'
+const HIDDEN_ACTIVITY_CARD_KEYS = new Set(['duration', 'patients'])
 
 const refreshStatusLabel = {
   already_running: 'Already running',
@@ -188,6 +186,17 @@ function getRefreshButtonLabel(refresh) {
 }
 
 function formatCardValue(card) {
+  if (card.key === BOOKED_EXPECTED_VALUE_CARD_KEY) {
+    const value = Number(card.value)
+    if (Number.isFinite(value)) {
+      return new Intl.NumberFormat('en-US', {
+        currency: 'USD',
+        maximumFractionDigits: 0,
+        style: 'currency',
+      }).format(value)
+    }
+  }
+
   if (card.displayValue) {
     return card.displayValue
   }
@@ -235,46 +244,8 @@ function findCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
 }
 
-function normalizeStageKey(value) {
-  return String(value ?? '')
-    .trim()
-    .toLowerCase()
-    .replaceAll(' ', '_')
-}
-
-function getFunnelStageByKey(funnelChart, key) {
-  const stages = Array.isArray(funnelChart?.stages) ? funnelChart.stages : []
-
-  return stages.find((stage) => {
-    const id = normalizeStageKey(stage.id ?? stage.stage_id)
-    const name = normalizeStageKey(stage.stage_name ?? stage.name)
-
-    return id === key || name === key
-  })
-}
-
 function getSequenceActiveCount(funnelChart) {
   return Number(funnelChart?.currentStageCounts?.[SEQUENCE_ACTIVE_STAGE_KEY]?.count ?? 0)
-}
-
-function getTreatmentAcceptedStage(funnelChart) {
-  return getFunnelStageByKey(funnelChart, TREATMENT_ACCEPTED_STAGE_KEY)
-}
-
-function createTreatmentAcceptedCard(funnelChart) {
-  const stage = getTreatmentAcceptedStage(funnelChart)
-  if (!stage) {
-    return null
-  }
-  const treatmentAcceptedCount = Number(stage.stage_count ?? stage.count ?? stage.output_count ?? 0)
-
-  return {
-    caption: 'Accepted treatment',
-    displayValue: treatmentAcceptedCount.toLocaleString('en-US'),
-    key: TREATMENT_ACCEPTED_STAGE_KEY,
-    label: 'Treatment',
-    value: treatmentAcceptedCount,
-  }
 }
 
 function formatCohortPercent(value) {
@@ -285,32 +256,10 @@ function formatCohortPercent(value) {
   return value >= 10 ? `${Math.round(value)}%` : `${value.toFixed(1)}%`
 }
 
-function buildActivityCards({ cards, funnelChart }) {
-  const derivedCards = [
-    createTreatmentAcceptedCard(funnelChart),
-  ].filter(Boolean)
-  const sourceCards = (Array.isArray(cards) ? cards : [])
-    .filter((card) => card.key !== 'patients')
+function buildActivityCards({ cards }) {
+  return (Array.isArray(cards) ? cards : [])
+    .filter((card) => !HIDDEN_ACTIVITY_CARD_KEYS.has(card.key))
     .filter((card) => !(card.key === 'manager_calls' && !Number(card.value)))
-
-  const nextCards = []
-  let derivedInserted = false
-
-  sourceCards.forEach((card) => {
-    if (card.key === DURATION_CARD_KEY) {
-      nextCards.push(...derivedCards)
-      derivedInserted = true
-      return
-    }
-
-    nextCards.push(card)
-  })
-
-  if (!derivedInserted) {
-    nextCards.push(...derivedCards)
-  }
-
-  return nextCards
 }
 
 const ActivityCard = forwardRef(function ActivityCard({
@@ -525,7 +474,6 @@ function BookedExpectedValueCard({ card }) {
 }
 
 export function ReactivationCampaignSummary({
-  acceptedTreatmentDrilldown,
   campaign,
   chart,
   funnelChart,
@@ -540,7 +488,6 @@ export function ReactivationCampaignSummary({
 
   const cards = buildActivityCards({
     cards: chart.cards,
-    funnelChart,
   })
 
   if (!cards.length) {
@@ -549,11 +496,9 @@ export function ReactivationCampaignSummary({
 
   const heroCard = cards.find((card) => HERO_CARD_KEYS.includes(card.key))
   const bookedExpectedValueCard = findCardByKey(cards, BOOKED_EXPECTED_VALUE_CARD_KEY)
-  const treatmentAcceptedCard = findCardByKey(cards, TREATMENT_ACCEPTED_STAGE_KEY)
   const activityCards = cards.filter((card) => (
     card !== heroCard
     && card !== bookedExpectedValueCard
-    && card !== treatmentAcceptedCard
   ))
   const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
   const sequenceActiveCount = getSequenceActiveCount(funnelChart)
@@ -603,15 +548,11 @@ export function ReactivationCampaignSummary({
       <div className="grid gap-control md:grid-cols-2 xl:grid-cols-6">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
-        <ReactivationCampaignKpiCards funnelChart={funnelChart} includeIds={[PATIENT_REPLIES_CARD_ID]} />
-        {treatmentAcceptedCard ? (
-          <AcceptedTreatmentPopover
-            drilldown={acceptedTreatmentDrilldown}
-            key={treatmentAcceptedCard.key || treatmentAcceptedCard.label}
-          >
-            <ActivityCard card={treatmentAcceptedCard} isInteractive />
-          </AcceptedTreatmentPopover>
-        ) : null}
+        <ReactivationCampaignKpiCards
+          className="md:col-span-2 xl:col-span-2"
+          funnelChart={funnelChart}
+          includeIds={[PATIENT_REPLIES_CARD_ID]}
+        />
       </div>
       {activityCards.length ? (
         <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
