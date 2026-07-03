@@ -1,16 +1,14 @@
 import {
-  // BookingsByTrackPanel,
   DentalGrowthReviewState,
-  FunnelView,
 } from './DentalGrowthReviewBlocks'
+import {
+  GrowthReviewLayoutModal,
+  useGrowthReviewLayoutEditor,
+} from '@/features/growth-review-layout'
 import { Icon } from '@/shared/icons'
 import { Button } from '@/shared/ui'
-import { AcceptedTreatmentValueBreakdown } from './AcceptedTreatmentValueBreakdown'
-import { BookedAppointmentsByReplyChannel } from './BookedAppointmentsByReplyChannel'
-import { BookingsByTrackComparisonPanel } from './BookingsByTrackComparisonPanel'
-import { ReactivationActivityChart } from './ReactivationActivityChart'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
-import { WeeklyTrackActivityHeatmap } from './WeeklyTrackActivityHeatmap'
+import { renderGrowthReviewDashboardWidget } from './dashboardWidgetRegistry'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
 
 function GrowthReviewUpdateAction({ refresh, secondaryAction }) {
@@ -43,13 +41,31 @@ function GrowthReviewUpdateAction({ refresh, secondaryAction }) {
   )
 }
 
+function canViewerCustomizeGrowthReviewLayout(viewer) {
+  return (viewer?.agencyMemberships ?? []).some((membership) => (
+    membership.status === 'active'
+    && (membership.capabilities ?? []).includes('integrations.manage')
+  ))
+}
+
 export function DentalGrowthReviewDashboard({
   acceptedTreatmentDrilldown,
+  apiClient,
   funnelEmptyAction,
+  onLayoutSaved,
   onRetry,
   page,
   refresh,
+  viewer,
+  workspaceId,
 }) {
+  const layoutEditor = useGrowthReviewLayoutEditor({
+    apiClient,
+    layout: page.layout,
+    onSaved: onLayoutSaved,
+    workspaceId,
+  })
+
   if (page.status === 'error' || !page.period) {
     return <DentalGrowthReviewState onRetry={onRetry} page={page} />
   }
@@ -61,12 +77,37 @@ export function DentalGrowthReviewDashboard({
   const reactivationActivity = page.charts?.reactivationActivity ?? null
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
+  const canCustomizeLayout = canViewerCustomizeGrowthReviewLayout(viewer)
   const lifecycleEmptyAction = (
     <GrowthReviewUpdateAction
       refresh={refresh}
       secondaryAction={funnelEmptyAction}
     />
   )
+  const layoutAction = canCustomizeLayout ? (
+    <Button
+      onClick={layoutEditor.open}
+      type="button"
+      variant="secondary"
+    >
+      Customize
+    </Button>
+  ) : null
+  const renderedWidgets = (page.layout?.items ?? [])
+    .map((item) => ({
+      item,
+      widget: renderGrowthReviewDashboardWidget(item.widgetKey, {
+        acceptedTreatmentValueBreakdown,
+        bookedAppointmentsByReplyChannel,
+        funnelChart,
+        funnelStages,
+        lifecycleEmptyAction,
+        reactivationActivity,
+        trackPerformance,
+        weeklyActivity,
+      }),
+    }))
+    .filter(({ widget }) => widget)
 
   return (
     <>
@@ -77,23 +118,18 @@ export function DentalGrowthReviewDashboard({
         period={page.charts?.period ?? page.period}
         acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
         refresh={refresh}
+        secondaryAction={layoutAction}
         updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
       />
 
       <div className="grid gap-4">
-        <AcceptedTreatmentValueBreakdown chart={acceptedTreatmentValueBreakdown} />
-        <ReactivationActivityChart chart={reactivationActivity} />
-        <BookedAppointmentsByReplyChannel chart={bookedAppointmentsByReplyChannel} />
-        <WeeklyTrackActivityHeatmap section={weeklyActivity} />
-        {/* <BookingsByTrackPanel funnelChart={funnelChart} /> */}
+        {renderedWidgets.map(({ item, widget }) => (
+          <div key={item.widgetKey}>
+            {widget}
+          </div>
+        ))}
       </div>
-      {trackPerformance ? <BookingsByTrackComparisonPanel funnelChart={funnelChart} /> : null}
-
-      <FunnelView
-        emptyAction={lifecycleEmptyAction}
-        funnel={funnelStages}
-        funnelChart={funnelChart}
-      />
+      <GrowthReviewLayoutModal editor={layoutEditor} />
     </>
   )
 }

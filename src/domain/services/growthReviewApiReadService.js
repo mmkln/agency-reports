@@ -2,6 +2,7 @@ import {
   DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
+  normalizeGrowthReviewDashboardLayout,
   normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
   normalizeGrowthReviewWeeklyReportingReadModel,
@@ -276,6 +277,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     },
     period: readModel.period,
     periodOptions: periodOptions.periodOptions,
+    layout: charts.layout,
     preset,
     previousPeriod: null,
     reason: null,
@@ -286,6 +288,31 @@ export async function getGrowthReviewDashboardPageFromApi({
     weeklyReporting,
     zones: mapZoneState(preset),
   }
+}
+
+export async function updateGrowthReviewDashboardLayout({
+  apiClient,
+  items,
+  reset = false,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    throw new Error('workspaceId is required to update Growth Review layout.')
+  }
+
+  const payload = await apiClient.request(`/api/workspaces/${workspaceId}/growth-review/layout/`, {
+    body: reset
+      ? { reset: true }
+      : {
+        items: items.map((item, index) => ({
+          position: (index + 1) * 10,
+          widget_key: item.widgetKey ?? item.widget_key,
+        })),
+      },
+    method: 'PUT',
+  })
+
+  return normalizeGrowthReviewDashboardLayout(payload.layout)
 }
 
 export async function getAcceptedTreatmentDrilldownFromApi({

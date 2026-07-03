@@ -504,6 +504,7 @@ export function ReactivationCampaignSummary({
   funnelChart,
   period,
   refresh,
+  secondaryAction,
   updatedAt,
 }) {
   if (!chart?.available) {
@@ -563,6 +564,7 @@ export function ReactivationCampaignSummary({
         <div className="flex shrink-0 flex-wrap items-center gap-control">
           <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
           {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
+          {secondaryAction}
         </div>
       </header>
       <div className="grid gap-control md:grid-cols-3 xl:grid-cols-7">

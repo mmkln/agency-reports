@@ -37,10 +37,14 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
     <PageShell className="pb-section pt-card" width="wide">
       <DentalGrowthReviewDashboard
         acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
+        apiClient={runtime.apiClient}
         funnelEmptyAction={funnelEmptyAction}
+        onLayoutSaved={growthReview.reload}
         onRetry={growthReview.reload}
         page={page}
         refresh={refresh}
+        viewer={runtime.viewer}
+        workspaceId={growthReview.workspaceId}
       />
     </PageShell>
   )

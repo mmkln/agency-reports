@@ -538,6 +538,47 @@ function normalizeBookedAppointmentsByReplyChannel(chart = {}) {
   }
 }
 
+export const DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS = [
+  { label: 'Accepted Treatment Value Breakdown', widgetKey: 'accepted_treatment_value_breakdown' },
+  { label: 'Reactivation Activity', widgetKey: 'reactivation_activity' },
+  { label: 'Breakdown by Track', widgetKey: 'booked_appointments_by_reply_channel' },
+  { label: 'Weekly Activity', widgetKey: 'weekly_track_activity' },
+  { label: 'Bookings by Track', widgetKey: 'bookings_by_track' },
+  { label: 'Reactivation Lifecycle', widgetKey: 'reactivation_lifecycle' },
+]
+
+function normalizeLayoutItem(item = {}, index = 0) {
+  const source = isPlainObject(item) ? item : {}
+  const widgetKey = normalizeText(source.widget_key ?? source.widgetKey ?? source.key)
+
+  return {
+    label: normalizeText(source.label),
+    position: Number(source.position ?? (index + 1) * 10),
+    widgetKey,
+  }
+}
+
+export function normalizeGrowthReviewDashboardLayout(layout = {}) {
+  const source = isPlainObject(layout) ? layout : {}
+  const rawItems = normalizeArray(source.items)
+  const items = rawItems.length
+    ? rawItems.map(normalizeLayoutItem).filter((item) => item.widgetKey)
+    : DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS.map((item, index) => ({
+      ...item,
+      position: (index + 1) * 10,
+    }))
+
+  return {
+    dashboardType: normalizeText(source.dashboard_type ?? source.dashboardType) || 'growth_review_reactivation',
+    isDefault: source.is_default === true || source.isDefault === true,
+    items,
+    layoutVersion: Number(source.layout_version ?? source.layoutVersion ?? 1) || 1,
+    updatedAt: normalizeText(source.updated_at ?? source.updatedAt),
+    updatedBy: normalizeText(source.updated_by ?? source.updatedBy),
+    workspaceId: normalizeText(source.workspace_id ?? source.workspaceId),
+  }
+}
+
 export function normalizeGrowthReviewWeeklyReportingReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const weeklyReporting = isPlainObject(source.weekly_reporting)
@@ -579,6 +620,7 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
     bookedAppointmentsByReplyChannel: normalizeBookedAppointmentsByReplyChannel(
       charts.booked_appointments_by_reply_channel ?? charts.bookedAppointmentsByReplyChannel,
     ),
+    layout: normalizeGrowthReviewDashboardLayout(source.layout),
     metrics: normalizedMetrics,
     funnel: normalizeFunnelChart(funnel),
     reactivationActivity: normalizeReactivationActivityChart(
