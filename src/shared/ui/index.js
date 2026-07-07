@@ -138,6 +138,7 @@ export { statusToneClasses } from './statusToneClasses'
 export { Skeleton } from '@/components/ui/skeleton'
 export { Switch } from '@/components/ui/switch'
 export { TableBadge, TablePanel } from './TablePanel'
+export { TablePagination } from './TablePagination'
 export {
   Table,
   TableBody,
@@ -153,6 +154,7 @@ export { TaskItem } from './TaskItem'
 export { Textarea } from '@/components/ui/textarea'
 export { Timeline, TimelineItem } from './Timeline'
 export { ToggleGroup } from './ToggleGroup'
+export { usePagination } from './usePagination'
 export { ViewModeToggle } from './ViewModeToggle'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip'
 export { TooltipIconButton } from './TooltipIconButton'

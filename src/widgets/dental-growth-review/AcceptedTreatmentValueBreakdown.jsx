@@ -5,7 +5,9 @@ import {
   TableFooter,
   TableHead,
   TableHeader,
+  TablePagination,
   TableRow,
+  usePagination,
 } from '@/shared/ui'
 
 import { ReactivationChartPanel } from './ReactivationChartPanel'
@@ -134,6 +136,11 @@ function PatientValueRow({ currency, row }) {
 }
 
 function PatientsValueTable({ currency, rows, cards, rawTotals }) {
+  const pagination = usePagination({
+    initialPageSize: 10,
+    items: rows,
+  })
+
   return (
     <div className="mt-component overflow-hidden rounded-control border border-separator">
       <Table className="min-w-[1040px]">
@@ -149,7 +156,7 @@ function PatientsValueTable({ currency, rows, cards, rawTotals }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
+          {pagination.pageItems.map((row) => (
             <PatientValueRow
               currency={currency}
               key={row.id || `${row.contactId}:${row.opportunityId}`}
@@ -175,6 +182,7 @@ function PatientsValueTable({ currency, rows, cards, rawTotals }) {
           </TableRow>
         </TableFooter>
       </Table>
+      <TablePagination itemLabel="patients" {...pagination} />
     </div>
   )
 }
