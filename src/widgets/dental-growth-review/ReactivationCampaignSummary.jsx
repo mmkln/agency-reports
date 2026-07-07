@@ -438,7 +438,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
   ].filter(Boolean).join(' · ')
 
   return (
-    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-2 xl:col-span-2">
+    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
         <Icon name="calendar" size={19} />
       </span>
@@ -459,7 +459,7 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
 
 function BookedExpectedValueCard({ card }) {
   return (
-    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block md:col-span-2 xl:col-span-2">
+    <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
         <Icon name="dollarSign" size={19} />
       </span>
@@ -545,27 +545,25 @@ export function ReactivationCampaignSummary({
           {secondaryAction}
         </div>
       </header>
-      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
         <ReactivationCampaignKpiCards
-          className="md:col-span-2 xl:col-span-2"
           funnelChart={funnelChart}
           includeIds={[PATIENT_REPLIES_CARD_ID]}
         />
+        {activityCards.length ? (
+          <>
+            <ReactivationCampaignKpiCards
+              funnelChart={funnelChart}
+              includeIds={[REPLY_TO_BOOKING_CARD_ID]}
+            />
+            {activityCards.map((card) => (
+              <ActivityCard card={card} key={card.key || card.label} />
+            ))}
+          </>
+        ) : null}
       </div>
-      {activityCards.length ? (
-        <div className="grid gap-control md:grid-cols-3 xl:grid-cols-6">
-          <ReactivationCampaignKpiCards
-            className="xl:col-span-2"
-            funnelChart={funnelChart}
-            includeIds={[REPLY_TO_BOOKING_CARD_ID]}
-          />
-          {activityCards.map((card) => (
-            <ActivityCard card={card} className="xl:col-span-2" key={card.key || card.label} />
-          ))}
-        </div>
-      ) : null}
     </section>
   )
 }
