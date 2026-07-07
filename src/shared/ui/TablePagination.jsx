@@ -18,7 +18,7 @@ export function TablePagination({
   itemLabel = 'items',
   nextPage,
   pageSize,
-  pageSizeOptions = [10, 25, 50],
+  pageSizeOptions = [5, 10, 25, 50],
   previousPage,
   setPageSize,
   startItem,

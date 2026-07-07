@@ -137,7 +137,6 @@ function PatientValueRow({ currency, row }) {
 
 function PatientsValueTable({ currency, rows, cards, rawTotals }) {
   const pagination = usePagination({
-    initialPageSize: 10,
     items: rows,
   })
 

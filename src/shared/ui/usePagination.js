@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 
 export function usePagination({
-  initialPageSize = 10,
+  initialPageSize = 5,
   items,
-  pageSizeOptions = [10, 25, 50],
+  pageSizeOptions = [5, 10, 25, 50],
 }) {
   const [pageIndex, setPageIndex] = useState(0)
   const [pageSize, setPageSizeValue] = useState(initialPageSize)
