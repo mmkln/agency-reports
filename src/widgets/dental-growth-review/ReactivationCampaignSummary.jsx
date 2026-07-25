@@ -105,6 +105,7 @@ const cardToneByKey = {
 const BOOKED_EXPECTED_VALUE_CARD_KEY = 'booked_expected_value'
 const SEQUENCE_ACTIVE_STAGE_KEY = 'sequence_active'
 const HIDDEN_ACTIVITY_CARD_KEYS = new Set(['duration', 'patients'])
+const LABELED_ACTIVITY_CARD_KEYS = new Set(['negative_replies', 'opt_out_patients'])
 
 const refreshStatusLabel = {
   already_running: 'Already running',
@@ -248,6 +249,25 @@ function formatCardCaption(card) {
   return caption
 }
 
+function getActivityCardLabel(card) {
+  if (!LABELED_ACTIVITY_CARD_KEYS.has(card.key)) {
+    return ''
+  }
+
+  return String(cardCaptionByKey[card.key] || card.label || '').trim()
+}
+
+function getActivityCardCaption(card) {
+  const caption = formatCardCaption(card)
+  const label = getActivityCardLabel(card)
+
+  if (label && caption.toLowerCase() === label.toLowerCase()) {
+    return ''
+  }
+
+  return caption
+}
+
 function findCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
 }
@@ -280,19 +300,30 @@ const ActivityCard = forwardRef(function ActivityCard({
   const classes = cardToneClass[tone] ?? cardToneClass.neutral
   const valueClass = classes.value ?? reactivationText.metricValue
   const captionClass = reactivationText.metricCaption
+  const label = getActivityCardLabel(card)
+  const caption = getActivityCardCaption(card)
+  const iconSizeClass = label ? 'size-9' : 'size-8'
+  const iconSize = label ? 17 : 15
+  const labeledValueClass = 'mt-micro text-[26px] font-semibold leading-[30px] tabular-nums text-text-primary'
+  const labeledCaptionClass = 'mt-tag truncate text-label font-medium text-text-muted'
   const content = (
     <>
-      <span className={`inline-flex size-8 shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
-        <Icon name={getCardIconName(card)} size={15} />
+      <span className={`inline-flex ${iconSizeClass} shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
+        <Icon name={getCardIconName(card)} size={iconSize} />
       </span>
 
       <div className="min-w-0 flex-1 text-left">
-        <p className={valueClass}>
+        {label ? (
+          <p className="truncate text-label font-semibold text-text-primary">{label}</p>
+        ) : null}
+        <p className={label ? labeledValueClass : valueClass}>
           {formatCardValue(card)}
         </p>
-        <p className={`mt-tag truncate ${captionClass}`} title={`${getCardTitle(card)}: ${formatCardCaption(card)}`}>
-          {formatCardCaption(card)}
-        </p>
+        {caption ? (
+          <p className={label ? labeledCaptionClass : `mt-tag truncate ${captionClass}`} title={`${getCardTitle(card)}: ${caption}`}>
+            {caption}
+          </p>
+        ) : null}
       </div>
 
       {isInteractive ? (
@@ -553,7 +584,7 @@ export function ReactivationCampaignSummary({
           {secondaryAction}
         </div>
       </header>
-      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-4">
         {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
         {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
         <ReactivationCampaignKpiCards
