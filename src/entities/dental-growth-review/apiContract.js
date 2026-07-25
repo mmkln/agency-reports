@@ -357,6 +357,7 @@ function normalizeReactivationActivityCard(card = {}) {
   const source = isPlainObject(card) ? card : {}
 
   return {
+    caption: normalizeText(source.caption ?? source.helper),
     displayValue: normalizeText(source.display_value ?? source.displayValue),
     key: normalizeText(source.key),
     label: normalizeText(source.label),
