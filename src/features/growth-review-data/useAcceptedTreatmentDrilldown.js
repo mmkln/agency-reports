@@ -4,11 +4,16 @@ import { getAcceptedTreatmentDrilldownFromApi } from '../../domain/services/grow
 
 export function useAcceptedTreatmentDrilldown({
   apiClient,
+  campaignId = '',
   workspaceId,
 }) {
-  const [data, setData] = useState(null)
+  const [dataState, setDataState] = useState({
+    campaignId: '',
+    data: null,
+  })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const data = dataState.campaignId === campaignId ? dataState.data : null
 
   const load = useCallback(async ({ force = false } = {}) => {
     if (!apiClient || !workspaceId) {
@@ -25,10 +30,14 @@ export function useAcceptedTreatmentDrilldown({
     try {
       const payload = await getAcceptedTreatmentDrilldownFromApi({
         apiClient,
+        campaignId,
         workspaceId,
       })
 
-      setData(payload)
+      setDataState({
+        campaignId,
+        data: payload,
+      })
       setIsLoading(false)
       return payload
     } catch (requestError) {
@@ -36,7 +45,7 @@ export function useAcceptedTreatmentDrilldown({
       setIsLoading(false)
       return null
     }
-  }, [apiClient, data, workspaceId])
+  }, [apiClient, campaignId, data, workspaceId])
 
   return {
     data,

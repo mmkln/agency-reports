@@ -3,6 +3,10 @@ import {
   useGrowthReviewReadModel,
   useGrowthReviewRefresh,
 } from '../../../features/growth-review-data'
+import {
+  GrowthReviewCampaignSelector,
+  useGrowthReviewCampaignSelection,
+} from '../../../features/growth-review-campaign-selection'
 import { PageShell } from '@/shared/ui'
 import {
   DentalGrowthReviewDashboard,
@@ -14,13 +18,21 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
     routeParams,
     runtime,
   })
+  const campaignSelection = useGrowthReviewCampaignSelection({
+    apiClient: runtime.apiClient,
+    routeParams,
+    workspaceId: growthReview.workspaceId,
+  })
+  const selectedCampaignId = campaignSelection.selectedCampaignId || growthReview.campaignId
   const refresh = useGrowthReviewRefresh({
     apiClient: runtime.apiClient,
+    campaignId: selectedCampaignId,
     onCompleted: growthReview.reload,
     workspaceId: growthReview.workspaceId,
   })
   const acceptedTreatmentDrilldown = useAcceptedTreatmentDrilldown({
     apiClient: runtime.apiClient,
+    campaignId: selectedCampaignId,
     workspaceId: growthReview.workspaceId,
   })
   const page = growthReview.page
@@ -38,6 +50,14 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
       <DentalGrowthReviewDashboard
         acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
         apiClient={runtime.apiClient}
+        campaignSelector={(
+          <GrowthReviewCampaignSelector
+            campaigns={campaignSelection.campaigns}
+            isLoading={campaignSelection.isLoading}
+            onSelect={campaignSelection.selectCampaign}
+            selectedCampaign={campaignSelection.selectedCampaign ?? page.campaign}
+          />
+        )}
         funnelEmptyAction={funnelEmptyAction}
         onLayoutSaved={growthReview.reload}
         onRetry={growthReview.reload}

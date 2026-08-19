@@ -65,6 +65,7 @@ function canViewerCustomizeGrowthReviewLayout(viewer) {
 export function DentalGrowthReviewDashboard({
   acceptedTreatmentDrilldown,
   apiClient,
+  campaignSelector,
   funnelEmptyAction,
   onLayoutSaved,
   onRetry,
@@ -138,6 +139,7 @@ export function DentalGrowthReviewDashboard({
         <ReactivationCampaignSummary
           acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
           campaign={page.campaign}
+          campaignSelector={campaignSelector}
           chart={reactivationActivity}
           funnelChart={funnelChart}
           period={page.charts?.period ?? page.period}

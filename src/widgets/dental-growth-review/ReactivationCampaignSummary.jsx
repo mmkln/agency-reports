@@ -514,6 +514,7 @@ function BookedExpectedValueCard({ card }) {
 
 export function ReactivationCampaignSummary({
   campaign,
+  campaignSelector,
   chart,
   funnelChart,
   period,
@@ -558,9 +559,11 @@ export function ReactivationCampaignSummary({
     <section className="grid gap-control">
       <header className="flex flex-wrap items-start justify-between gap-control">
         <div className="min-w-0">
-          <h2 className={reactivationText.sectionTitle}>
-            {campaign?.name || 'Reactivation campaign'}
-          </h2>
+          {campaignSelector ?? (
+            <h2 className={reactivationText.sectionTitle}>
+              {campaign?.name || 'Reactivation campaign'}
+            </h2>
+          )}
           {periodRange || cohortLabel ? (
             <div className={`mt-tag grid gap-1 ${reactivationText.updatedMeta}`}>
               {periodRange ? <p>{periodRange}</p> : null}

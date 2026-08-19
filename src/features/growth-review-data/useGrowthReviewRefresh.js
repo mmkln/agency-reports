@@ -10,6 +10,27 @@ function normalizeStepMetadata(metadata) {
   return metadata && typeof metadata === 'object' ? metadata : {}
 }
 
+function buildCampaignQuery(campaignId) {
+  if (!campaignId) {
+    return ''
+  }
+
+  const params = new URLSearchParams()
+  params.set('campaign_id', campaignId)
+
+  return `?${params.toString()}`
+}
+
+function buildRefreshRequestBody(campaignId) {
+  if (!campaignId) {
+    return {}
+  }
+
+  return {
+    campaign_id: campaignId,
+  }
+}
+
 function normalizeStepStatus(step, metadata) {
   const status = step.status ?? ''
   const reason = metadata.reason ?? ''
@@ -48,6 +69,7 @@ function normalizeRefreshRun(payload) {
     : []
 
   return {
+    campaignId: refresh.campaign_id ?? refresh.campaignId ?? '',
     completedAt: refresh.completed_at ?? refresh.completedAt ?? '',
     errorMessage: refresh.error_message ?? refresh.errorMessage ?? '',
     id: refresh.id ?? '',
@@ -55,6 +77,18 @@ function normalizeRefreshRun(payload) {
     status: refresh.status ?? '',
     steps,
   }
+}
+
+function isRefreshRunForCampaign(refreshRun, campaignId) {
+  if (!refreshRun) {
+    return false
+  }
+
+  if (!campaignId) {
+    return true
+  }
+
+  return refreshRun.campaignId === campaignId
 }
 
 function resolveRefreshStatus(refreshRun) {
@@ -82,6 +116,7 @@ function resolveRefreshStatus(refreshRun) {
 
 export function useGrowthReviewRefresh({
   apiClient,
+  campaignId = '',
   onCompleted,
   workspaceId,
 }) {
@@ -120,12 +155,17 @@ export function useGrowthReviewRefresh({
     }
 
     return apiClient
-      .get(`/api/workspaces/${workspaceId}/growth-review/refresh/latest/`)
+      .get(`/api/workspaces/${workspaceId}/growth-review/refresh/latest/${buildCampaignQuery(campaignId)}`)
       .then((payload) => applyRefreshRun(payload))
-  }, [apiClient, applyRefreshRun, workspaceId])
+  }, [apiClient, applyRefreshRun, campaignId, workspaceId])
 
   const startRefresh = useCallback(() => {
-    if (!workspaceId || status === 'queued' || status === 'running') {
+    const hasActiveRefresh = (
+      isRefreshRunForCampaign(refreshRun, campaignId)
+      && (status === 'queued' || status === 'running')
+    )
+
+    if (!workspaceId || hasActiveRefresh) {
       return Promise.resolve(null)
     }
 
@@ -133,6 +173,7 @@ export function useGrowthReviewRefresh({
     setError('')
     completedRefreshIdRef.current = ''
     setRefreshRun({
+      campaignId,
       errorMessage: '',
       id: '',
       status: 'queued',
@@ -147,7 +188,7 @@ export function useGrowthReviewRefresh({
     })
 
     return apiClient
-      .post(`/api/workspaces/${workspaceId}/growth-review/refresh/`, {})
+      .post(`/api/workspaces/${workspaceId}/growth-review/refresh/`, buildRefreshRequestBody(campaignId))
       .then((payload) => {
         const result = applyRefreshRun(payload)
 
@@ -167,12 +208,14 @@ export function useGrowthReviewRefresh({
         }))
         return null
       })
-  }, [apiClient, applyRefreshRun, notifyCompleted, status, workspaceId])
+  }, [apiClient, applyRefreshRun, campaignId, notifyCompleted, refreshRun, status, workspaceId])
 
-  const refreshRunId = refreshRun?.id ?? ''
+  const activeRefreshRun = isRefreshRunForCampaign(refreshRun, campaignId) ? refreshRun : null
+  const activeStatus = activeRefreshRun ? status : 'idle'
+  const refreshRunId = activeRefreshRun?.id ?? ''
 
   useEffect(() => {
-    if (!workspaceId || !refreshRunId || (status !== 'queued' && status !== 'running')) {
+    if (!workspaceId || !refreshRunId || (activeStatus !== 'queued' && activeStatus !== 'running')) {
       return undefined
     }
 
@@ -206,14 +249,14 @@ export function useGrowthReviewRefresh({
       cancelled = true
       window.clearInterval(intervalId)
     }
-  }, [loadLatestRefresh, notifyCompleted, refreshRunId, status, workspaceId])
+  }, [activeStatus, loadLatestRefresh, notifyCompleted, refreshRunId, workspaceId])
 
   return {
-    error,
-    isRefreshing: status === 'queued' || status === 'running',
+    error: activeRefreshRun ? error : '',
+    isRefreshing: activeStatus === 'queued' || activeStatus === 'running',
     loadLatestRefresh,
-    refreshRun,
+    refreshRun: activeRefreshRun,
     startRefresh,
-    status,
+    status: activeStatus,
   }
 }

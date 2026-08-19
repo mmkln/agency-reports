@@ -239,12 +239,65 @@ function normalizeCampaignMetadata(payload) {
     activityStartDate: campaign.activity_start_date ?? campaign.activityStartDate ?? '',
     id: campaign.id ?? '',
     name: campaign.name ?? campaign.label ?? '',
+    status: campaign.status ?? '',
+    type: campaign.type ?? '',
     value: campaign.value ?? campaign.campaign_value ?? campaign.campaignValue ?? '',
+  }
+}
+
+function buildCampaignQuery(campaignId) {
+  if (!campaignId) {
+    return ''
+  }
+
+  const params = new URLSearchParams()
+  params.set('campaign_id', campaignId)
+
+  return `?${params.toString()}`
+}
+
+function normalizeGrowthReviewCampaignOption(campaign = {}) {
+  return {
+    activityStartDate: campaign.activity_start_date ?? campaign.activityStartDate ?? '',
+    campaignValue: campaign.campaign_value ?? campaign.campaignValue ?? campaign.value ?? '',
+    hasCompletedCalculation: Boolean(
+      campaign.has_completed_calculation ?? campaign.hasCompletedCalculation,
+    ),
+    id: campaign.id ?? '',
+    isDefault: Boolean(campaign.is_default ?? campaign.isDefault),
+    lastCalculatedAt: campaign.last_calculated_at ?? campaign.lastCalculatedAt ?? '',
+    name: campaign.name ?? campaign.label ?? '',
+    pipelineId: campaign.pipeline_id ?? campaign.pipelineId ?? '',
+    sourceConnectionId: campaign.source_connection_id ?? campaign.sourceConnectionId ?? '',
+    status: campaign.status ?? '',
+    type: campaign.type ?? '',
+  }
+}
+
+export async function getGrowthReviewCampaignsFromApi({
+  apiClient,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    return {
+      campaigns: [],
+      defaultCampaignId: '',
+    }
+  }
+
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/campaigns/`)
+
+  return {
+    campaigns: Array.isArray(payload?.campaigns)
+      ? payload.campaigns.map(normalizeGrowthReviewCampaignOption)
+      : [],
+    defaultCampaignId: payload?.default_campaign_id ?? payload?.defaultCampaignId ?? '',
   }
 }
 
 export async function getGrowthReviewDashboardPageFromApi({
   apiClient,
+  campaignId,
   now = new Date(),
   viewer,
   workspaceId,
@@ -256,7 +309,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     }
   }
 
-  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`)
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/${buildCampaignQuery(campaignId)}`)
   const readModel = normalizeGrowthReviewReadModel({
     ...payload,
     workspace_id: payload?.workspace_id ?? workspaceId,
@@ -269,6 +322,7 @@ export async function getGrowthReviewDashboardPageFromApi({
   return {
     calculationMeta: null,
     campaign: normalizeCampaignMetadata(payload),
+    campaignId: campaignId || payload?.campaign?.id || '',
     charts,
     client: {
       id: workspaceId,
@@ -317,6 +371,7 @@ export async function updateGrowthReviewDashboardLayout({
 
 export async function getAcceptedTreatmentDrilldownFromApi({
   apiClient,
+  campaignId,
   workspaceId,
 }) {
   if (!workspaceId) {
@@ -332,5 +387,5 @@ export async function getAcceptedTreatmentDrilldownFromApi({
     }
   }
 
-  return apiClient.get(`/api/workspaces/${workspaceId}/growth-review/drilldowns/accepted-treatment/`)
+  return apiClient.get(`/api/workspaces/${workspaceId}/growth-review/drilldowns/accepted-treatment/${buildCampaignQuery(campaignId)}`)
 }
