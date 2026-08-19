@@ -28,6 +28,18 @@ export const routeAccessMetadata = Object.freeze([
     access: { scope: PUBLIC },
   },
   {
+    id: 'forgot-password',
+    layout: 'auth',
+    path: '/forgot-password',
+    access: { scope: PUBLIC },
+  },
+  {
+    id: 'reset-password',
+    layout: 'auth',
+    path: '/reset-password',
+    access: { scope: PUBLIC },
+  },
+  {
     id: 'login',
     layout: 'auth',
     path: '/login',

@@ -140,6 +140,12 @@ export function LoginPage({ onAuthChange }) {
                       type="password"
                       value={password}
                     />
+                    <Link
+                      className="justify-self-end text-ui font-medium text-brand no-underline hover:text-brand/80"
+                      to="/forgot-password"
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
 
                   <Button className="w-full" size="lg" type="submit">

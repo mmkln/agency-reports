@@ -143,6 +143,18 @@ export function createBackendAuthClient({
       tokenStorage.write(response.tokens)
       return mapBackendViewerContextToViewer(response.viewer)
     },
+    requestPasswordReset({ email }) {
+      return apiClient.post('/api/auth/password-reset/request/', { email }, { skipAuth: true })
+    },
+    getPasswordReset(token) {
+      return apiClient.get(`/api/auth/password-reset/${token}/`, { skipAuth: true })
+    },
+    confirmPasswordReset({ token, password, passwordConfirm }) {
+      return apiClient.post(`/api/auth/password-reset/${token}/confirm/`, {
+        password,
+        password_confirm: passwordConfirm,
+      }, { skipAuth: true })
+    },
     async signOut() {
       const refresh = tokenStorage.read()?.refresh
 

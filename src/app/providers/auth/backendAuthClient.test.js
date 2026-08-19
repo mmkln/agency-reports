@@ -74,6 +74,77 @@ describe('createBackendAuthClient', () => {
     }))
   })
 
+  it('requests password reset without auth', async () => {
+    const apiClient = {
+      get: vi.fn(),
+      post: vi.fn(() => Promise.resolve({
+        detail: 'If an account exists for this email, reset instructions have been sent.',
+        ok: true,
+      })),
+    }
+    const authClient = createBackendAuthClient({
+      apiClient,
+      tokenStorage: createMemoryTokenStorage(),
+    })
+
+    await expect(authClient.requestPasswordReset({
+      email: 'owner@example.com',
+    })).resolves.toEqual(expect.objectContaining({ ok: true }))
+
+    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/password-reset/request/', {
+      email: 'owner@example.com',
+    }, { skipAuth: true })
+  })
+
+  it('looks up a password reset token without auth', async () => {
+    const apiClient = {
+      get: vi.fn(() => Promise.resolve({
+        reset: {
+          email: 'o***@example.com',
+          expires_at: '2026-08-19T10:30:00Z',
+          status: 'pending',
+        },
+      })),
+      post: vi.fn(),
+    }
+    const authClient = createBackendAuthClient({
+      apiClient,
+      tokenStorage: createMemoryTokenStorage(),
+    })
+
+    await expect(authClient.getPasswordReset('reset-token')).resolves.toEqual({
+      reset: expect.objectContaining({
+        status: 'pending',
+      }),
+    })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/api/auth/password-reset/reset-token/', {
+      skipAuth: true,
+    })
+  })
+
+  it('confirms password reset without auth', async () => {
+    const apiClient = {
+      get: vi.fn(),
+      post: vi.fn(() => Promise.resolve({ ok: true })),
+    }
+    const authClient = createBackendAuthClient({
+      apiClient,
+      tokenStorage: createMemoryTokenStorage(),
+    })
+
+    await expect(authClient.confirmPasswordReset({
+      password: 'NewPass123!',
+      passwordConfirm: 'NewPass123!',
+      token: 'reset-token',
+    })).resolves.toEqual({ ok: true })
+
+    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/password-reset/reset-token/confirm/', {
+      password: 'NewPass123!',
+      password_confirm: 'NewPass123!',
+    }, { skipAuth: true })
+  })
+
   it('returns null without calling /me when no access token is stored', async () => {
     const apiClient = {
       get: vi.fn(),

@@ -8,7 +8,9 @@ import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPa
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
 import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
 import { ExecutiveDashboardPageHeader } from '../../pages/dashboards/executive/ExecutiveDashboardPageHeader'
+import { ForgotPasswordPage } from '../../pages/auth/forgot-password/ForgotPasswordPage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
+import { ResetPasswordPage } from '../../pages/auth/reset-password/ResetPasswordPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
 import { AuthenticatedRedirectRoute } from './AuthenticatedRedirectRoute'
@@ -72,6 +74,24 @@ export const routeDefinitions = [
     access: routeAccessMetadataById['accept-invite'].access,
     showInNav: false,
     element: <AcceptInvitePage />,
+  },
+  {
+    path: '/forgot-password',
+    id: 'forgot-password',
+    label: 'Forgot Password',
+    layout: 'auth',
+    access: routeAccessMetadataById['forgot-password'].access,
+    showInNav: false,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    id: 'reset-password',
+    label: 'Reset Password',
+    layout: 'auth',
+    access: routeAccessMetadataById['reset-password'].access,
+    showInNav: false,
+    element: <ResetPasswordPage />,
   },
   {
     path: '/login',
