@@ -77,6 +77,16 @@ export function AuthProvider({ children }) {
       })
   ), [handleAuthChange, portalAuthClient])
 
+  const handleEmailCodeSignIn = useCallback((credentials) => (
+    portalAuthClient.signInWithEmailCode(credentials)
+      .then((nextViewer) => {
+        setViewer(nextViewer)
+        setAuthStatus('ready')
+        handleAuthChange()
+        return nextViewer
+      })
+  ), [handleAuthChange, portalAuthClient])
+
   const handleSignOut = useCallback(() => {
     void portalAuthClient.signOut().finally(() => {
       setViewer(null)
@@ -92,6 +102,7 @@ export function AuthProvider({ children }) {
     authRevision,
     authClient: portalAuthClient,
     onAuthChange: handleAuthChange,
+    onEmailCodeSignIn: handleEmailCodeSignIn,
     onSignIn: handleSignIn,
     onSignOut: handleSignOut,
     dataClient: removedLocalDataClient,

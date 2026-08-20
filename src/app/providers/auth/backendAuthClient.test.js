@@ -96,6 +96,64 @@ describe('createBackendAuthClient', () => {
     }, { skipAuth: true })
   })
 
+  it('requests an email login code without auth', async () => {
+    const apiClient = {
+      get: vi.fn(),
+      post: vi.fn(() => Promise.resolve({
+        detail: 'If an account exists for this email, a sign-in code has been sent.',
+        ok: true,
+      })),
+    }
+    const authClient = createBackendAuthClient({
+      apiClient,
+      tokenStorage: createMemoryTokenStorage(),
+    })
+
+    await expect(authClient.requestEmailLoginCode({
+      email: 'owner@example.com',
+    })).resolves.toEqual(expect.objectContaining({ ok: true }))
+
+    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/email-code/request/', {
+      email: 'owner@example.com',
+    }, { skipAuth: true })
+  })
+
+  it('stores tokens and returns the mapped viewer after email code verification', async () => {
+    const tokenStorage = createMemoryTokenStorage()
+    const apiClient = {
+      get: vi.fn(),
+      post: vi.fn(() => Promise.resolve({
+        tokens: {
+          access: 'code-access-token',
+          refresh: 'code-refresh-token',
+          token_type: 'Bearer',
+        },
+        viewer: createViewerContext(),
+      })),
+    }
+    const authClient = createBackendAuthClient({ apiClient, tokenStorage })
+
+    const viewer = await authClient.signInWithEmailCode({
+      code: '123456',
+      email: 'owner@example.com',
+    })
+
+    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/email-code/verify/', {
+      code: '123456',
+      email: 'owner@example.com',
+    }, { skipAuth: true })
+    expect(tokenStorage.write).toHaveBeenCalledWith({
+      access: 'code-access-token',
+      refresh: 'code-refresh-token',
+      token_type: 'Bearer',
+    })
+    expect(viewer).toEqual(expect.objectContaining({
+      authSource: 'backend-token',
+      email: 'owner@example.com',
+      userId: 'user_1',
+    }))
+  })
+
   it('looks up a password reset token without auth', async () => {
     const apiClient = {
       get: vi.fn(() => Promise.resolve({

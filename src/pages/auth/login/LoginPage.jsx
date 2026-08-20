@@ -1,32 +1,15 @@
-import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { Button, CardContent, Input, PrimitiveCard as Card } from '@/shared/ui'
+import { CardContent, PrimitiveCard as Card } from '@/shared/ui'
 
 import { getPostLoginHref } from '../../../app/routing/postLoginRedirect'
+import { useAuth } from '../../../app/providers/auth/useAuth'
+import { AuthLoginPanel } from '../../../features/auth-login'
 import { Icon } from '../../../shared/icons'
 import { useToast } from '../../../shared/notifications'
 import { BrandLogo } from '../../../shared/ui'
-import { useAuth } from '../../../app/providers/auth/useAuth'
 
 const DEFAULT_EMAIL = ''
-
-function AuthInput({ iconName, label, ...props }) {
-  return (
-    <label className="grid gap-item">
-      <span className="text-label text-text-secondary">{label}</span>
-      <span className="relative block">
-        <Icon
-          aria-hidden="true"
-          className="pointer-events-none absolute left-control top-1/2 -translate-y-1/2 text-text-muted"
-          name={iconName}
-          size={18}
-        />
-        <Input className="pl-layout" {...props} />
-      </span>
-    </label>
-  )
-}
 
 export function LoginPage({ onAuthChange }) {
   const auth = useAuth()
@@ -35,31 +18,15 @@ export function LoginPage({ onAuthChange }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const toast = useToast()
-  const [email, setEmail] = useState(DEFAULT_EMAIL)
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
 
-  function signIn(nextEmail, nextPassword) {
-    void (auth.onSignIn ?? authClient.signInWithEmail)({
-      email: nextEmail,
-      password: nextPassword,
-    }).then((viewer) => {
-      resolvedOnAuthChange?.()
-      toast.success('Signed in', `Welcome back, ${viewer.name}.`)
+  function handleAuthenticated(viewer) {
+    resolvedOnAuthChange?.()
+    toast.success('Signed in', `Welcome back, ${viewer.name}.`)
 
-      navigate(getPostLoginHref({
-        nextHref: searchParams.get('next'),
-        viewer,
-      }), { replace: true })
-    }).catch((caughtError) => {
-      setError(caughtError.message)
-      toast.error('Sign in failed', caughtError.message)
-    })
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault()
-    signIn(email, password)
+    navigate(getPostLoginHref({
+      nextHref: searchParams.get('next'),
+      viewer,
+    }), { replace: true })
   }
 
   return (
@@ -100,71 +67,16 @@ export function LoginPage({ onAuthChange }) {
 
             <section className="flex items-center p-panel lg:p-page">
               <div className="mx-auto w-full max-w-form">
-                <div>
-                  <p className="text-ui text-brand">Welcome back</p>
-                  <h2 className="mt-item text-display text-text-primary">Sign in</h2>
-                  <p className="mt-item text-body text-text-secondary">
-                    Use your email and password to continue.
-                  </p>
-                </div>
-
-                <form className="mt-panel grid gap-component" onSubmit={handleSubmit}>
-                  <AuthInput
-                    autoComplete="email"
-                    iconName="mail"
-                    inputMode="email"
-                    label="Email"
-                    name="email"
-                    onChange={(event) => {
-                      setEmail(event.target.value)
-                      setError('')
-                    }}
-                    placeholder="owner@example.com"
-                    required
-                    type="email"
-                    value={email}
-                  />
-
-                  <div className="grid gap-item">
-                    <AuthInput
-                      autoComplete="current-password"
-                      iconName="lock"
-                      label="Password"
-                      name="password"
-                      onChange={(event) => {
-                        setPassword(event.target.value)
-                        setError('')
-                      }}
-                      placeholder="Password"
-                      required
-                      type="password"
-                      value={password}
-                    />
-                    <Link
-                      className="justify-self-end text-ui font-medium text-brand no-underline hover:text-brand/80"
-                      to="/forgot-password"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <Button className="w-full" size="lg" type="submit">
-                    Sign in
-                  </Button>
-                </form>
-
-                {error ? (
-                  <p className="mt-component rounded-control bg-destructive/10 px-control py-item text-ui text-destructive">
-                    {error}
-                  </p>
-                ) : null}
-
-                <p className="mt-card text-center text-ui text-text-secondary">
-                  Have an invitation?{' '}
-                  <Link className="font-medium text-brand no-underline hover:text-brand/80" to="/accept-invite">
-                    Accept it
-                  </Link>
-                </p>
+                <AuthLoginPanel
+                  initialEmail={DEFAULT_EMAIL}
+                  onAuthenticated={handleAuthenticated}
+                  onEmailCodeRequest={authClient.requestEmailLoginCode}
+                  onEmailCodeSignIn={auth.onEmailCodeSignIn ?? authClient.signInWithEmailCode}
+                  onError={(caughtError) => {
+                    toast.error('Sign in failed', caughtError.message)
+                  }}
+                  onPasswordSignIn={auth.onSignIn ?? authClient.signInWithEmail}
+                />
               </div>
             </section>
           </CardContent>
