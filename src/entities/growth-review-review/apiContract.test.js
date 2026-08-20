@@ -14,17 +14,16 @@ describe('growth review review API contract', () => {
         activity_start_date: '2026-08-01',
         allowed_statuses: ['active', 'completed', 'archived'],
         configuration: {
-          configured_count: 6,
+          configured_count: 7,
           is_complete: false,
           missing_keys: ['sms_reply_channel', 'email_reply_channel'],
-          required_count: 8,
+          required_count: 9,
         },
         external_campaign_key: 'reactivation_august_2026',
         id: 'review-1',
         is_default: true,
         name: 'August review',
         pipeline_id: 'pipeline-1',
-        sequence_active_stage_id: 'stage-1',
         signals: [{
           entity: 'contact',
           expected_values: ['reactivation_august_2026'],
@@ -48,15 +47,14 @@ describe('growth review review API contract', () => {
       activityStartDate: '2026-08-01',
       allowedStatuses: ['active', 'completed', 'archived'],
       configuration: {
-        configuredCount: 6,
+        configuredCount: 7,
         isComplete: false,
         missingKeys: ['sms_reply_channel', 'email_reply_channel'],
-        requiredCount: 8,
+        requiredCount: 9,
       },
       externalCampaignKey: 'reactivation_august_2026',
       isDefault: true,
       pipelineId: 'pipeline-1',
-      sequenceActiveStageId: 'stage-1',
       sourceConnectionId: 'source-1',
     })
     expect(result.reviews[0].signals[0]).toMatchObject({
@@ -100,7 +98,6 @@ describe('growth review review API contract', () => {
       isDefault: true,
       name: ' August review ',
       pipelineId: 'pipeline-1',
-      sequenceActiveStageId: 'stage-1',
       signals: [{
         entity: 'contact',
         expectedValues: ['reactivation_august_2026'],
@@ -117,7 +114,6 @@ describe('growth review review API contract', () => {
       is_default: true,
       name: 'August review',
       pipeline_id: 'pipeline-1',
-      sequence_active_stage_id: 'stage-1',
       signals: [{
         confidence: 'medium',
         entity: 'contact',

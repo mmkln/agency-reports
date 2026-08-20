@@ -11,8 +11,15 @@ const selectedReview = {
   isDefault: true,
   name: 'Reactivation Campaign May 2026',
   pipelineId: 'pipeline-1',
-  sequenceActiveStageId: 'stage-1',
   signals: [{
+    entity: 'contact',
+    expectedValues: ['reactivation2_sequence_started'],
+    id: 'signal-sequence-started',
+    isActive: true,
+    key: 'sequence_started',
+    label: 'Sequence started',
+    source: 'tag',
+  }, {
     entity: 'opportunity',
     expectedValues: ['treatment accepted'],
     id: 'signal-1',
@@ -50,7 +57,6 @@ const workflow = {
     isDefault: false,
     name: '',
     pipelineId: 'pipeline-1',
-    sequenceActiveStageId: '',
     signals: [],
     sourceConnectionId: 'connection-1',
     status: 'active',
@@ -72,6 +78,7 @@ const workflow = {
     }],
     pipelines: [],
     signalKeys: [
+      { label: 'Sequence started', required: true, value: 'sequence_started' },
       { label: 'Treatment accepted', required: true, value: 'treatment_accepted' },
       { label: 'SMS reply channel', required: true, value: 'sms_reply_channel' },
     ],
@@ -88,7 +95,7 @@ const workflow = {
   pipelinesForReviewSource: [{
     id: 'pipeline-1',
     name: 'Reactivation',
-    stages: [{ id: 'stage-1', name: 'Sequence Active' }],
+    stages: [],
   }],
   pipelineSyncState: 'idle',
   requestArchive: vi.fn(),
@@ -102,7 +109,6 @@ const workflow = {
     isDefault: true,
     name: 'Reactivation Campaign May 2026',
     pipelineId: 'pipeline-1',
-    sequenceActiveStageId: 'stage-1',
     signals: selectedReview.signals,
     sourceConnectionId: 'connection-1',
     status: 'active',
@@ -133,7 +139,8 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('Treatment accepted')
     expect(html).toContain('Search tags')
     expect(html).toContain('Search custom fields')
-    expect(html).toContain('1 of 2 configured')
+    expect(html).toContain('2 of 3 configured')
+    expect(html).toContain('Sequence started')
     expect(html).toContain('You can save partial progress')
     expect(html).toContain('aria-label="Remove Treatment accepted source"')
     expect(html).toContain('aria-label="Collapse outcome mapping"')

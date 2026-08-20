@@ -232,11 +232,13 @@ export function ReviewMappingsSection({
   onAdd,
   onChange,
   onRemove,
+  onRefreshTags,
   options,
   validationResult,
   validationState,
   onValidate,
   signalError,
+  tagSyncState,
 }) {
   const requiredKeys = useMemo(
     () => (options.signalKeys ?? []).filter((signalKey) => signalKey.required),
@@ -275,18 +277,36 @@ export function ReviewMappingsSection({
             {isComplete ? ' · Ready' : ' · Setup incomplete'}
           </span>
         </span>
-        <CollapsibleTrigger asChild>
-          <TooltipIconButton
-            label={mappingsOpen ? 'Collapse outcome mapping' : 'Expand outcome mapping'}
-            size="md"
+        <div className="flex items-center gap-item">
+          <Button
+            disabled={!draft.sourceConnectionId || tagSyncState === 'syncing'}
+            icon={(
+              <Icon
+                className={tagSyncState === 'syncing' ? 'animate-spin' : ''}
+                name="refreshCw"
+                size={15}
+              />
+            )}
+            onClick={onRefreshTags}
+            size="sm"
+            type="button"
+            variant="outline"
           >
-            <Icon
-              className={`transition-transform duration-motion-fast ${mappingsOpen ? 'rotate-180' : ''}`}
-              name="chevronDown"
-              size={18}
-            />
-          </TooltipIconButton>
-        </CollapsibleTrigger>
+            {tagSyncState === 'syncing' ? 'Refreshing...' : 'Refresh tags'}
+          </Button>
+          <CollapsibleTrigger asChild>
+            <TooltipIconButton
+              label={mappingsOpen ? 'Collapse outcome mapping' : 'Expand outcome mapping'}
+              size="md"
+            >
+              <Icon
+                className={`transition-transform duration-motion-fast ${mappingsOpen ? 'rotate-180' : ''}`}
+                name="chevronDown"
+                size={18}
+              />
+            </TooltipIconButton>
+          </CollapsibleTrigger>
+        </div>
       </div>
 
       <CollapsibleContent className="grid gap-card">

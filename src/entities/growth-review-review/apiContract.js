@@ -46,7 +46,6 @@ export function normalizeGrowthReviewReview(source = {}) {
     isDefault: source.is_default === true || source.isDefault === true,
     name: normalizeText(source.name),
     pipelineId: normalizeText(source.pipeline_id ?? source.pipelineId),
-    sequenceActiveStageId: normalizeText(source.sequence_active_stage_id),
     signals: normalizeArray(source.signals).map(normalizeGrowthReviewReviewSignal),
     sourceConnectionId: normalizeText(source.source_connection_id ?? source.sourceConnectionId),
     status: normalizeText(source.status) || 'draft',
@@ -103,6 +102,7 @@ function normalizeCustomField(source = {}) {
 
 function normalizeTag(source = {}) {
   return {
+    externalId: normalizeText(source.external_id ?? source.externalId),
     label: normalizeText(source.label),
     sourceConnectionId: normalizeText(source.source_connection_id),
     value: normalizeText(source.value),
@@ -160,7 +160,6 @@ export function toGrowthReviewReviewInput(draft) {
     is_default: draft.isDefault === true,
     name: normalizeText(draft.name),
     pipeline_id: normalizeText(draft.pipelineId),
-    sequence_active_stage_id: normalizeText(draft.sequenceActiveStageId),
     signals: normalizeArray(draft.signals).map(toGrowthReviewSignalInput),
     source_connection_id: normalizeText(draft.sourceConnectionId),
     status: normalizeText(draft.status) || 'draft',
@@ -177,11 +176,6 @@ export function toGrowthReviewReviewValidationInput(draft, reviewId = '') {
 export function normalizeGrowthReviewReviewValidation(payload = {}) {
   const validation = payload.validation ?? payload
   return {
-    sequenceActiveStage: {
-      id: normalizeText(validation.sequence_active_stage?.id),
-      label: normalizeText(validation.sequence_active_stage?.label),
-      matchCount: Number(validation.sequence_active_stage?.match_count ?? 0),
-    },
     signals: normalizeArray(validation.signals).map((signal) => ({
       key: normalizeText(signal.key),
       matchCount: Number(signal.match_count ?? 0),

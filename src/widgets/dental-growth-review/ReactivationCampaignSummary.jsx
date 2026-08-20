@@ -103,7 +103,7 @@ const cardToneByKey = {
 }
 
 const BOOKED_EXPECTED_VALUE_CARD_KEY = 'booked_expected_value'
-const SEQUENCE_ACTIVE_STAGE_KEY = 'sequence_active'
+const SEQUENCE_STARTED_STAGE_KEY = 'sequence_started'
 const HIDDEN_ACTIVITY_CARD_KEYS = new Set(['duration', 'patients'])
 const LABELED_ACTIVITY_CARD_KEYS = new Set(['negative_replies', 'opt_out_patients'])
 
@@ -272,8 +272,10 @@ function findCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
 }
 
-function getSequenceActiveCount(funnelChart) {
-  return Number(funnelChart?.currentStageCounts?.[SEQUENCE_ACTIVE_STAGE_KEY]?.count ?? 0)
+function getSequenceStartedCount(funnelChart) {
+  const stage = funnelChart?.stages?.find((item) => item.stage_id === SEQUENCE_STARTED_STAGE_KEY)
+
+  return Number(stage?.stage_count ?? 0)
 }
 
 function formatCohortPercent(value) {
@@ -541,7 +543,7 @@ export function ReactivationCampaignSummary({
     && card !== bookedExpectedValueCard
   ))
   const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
-  const sequenceActiveCount = getSequenceActiveCount(funnelChart)
+  const sequenceStartedCount = getSequenceStartedCount(funnelChart)
   const bookingsCount = Number(heroCard?.value ?? 0)
   const bookedPercent = heroCard && cohortCount > 0
     ? formatCohortPercent((bookingsCount / cohortCount) * 100)
@@ -551,8 +553,8 @@ export function ReactivationCampaignSummary({
   const cohortLabel = cohortCount > 0
     ? `${cohortCount.toLocaleString('en-US')} patients in cohort`
     : ''
-  const sequenceActiveLabel = sequenceActiveCount > 0
-    ? `${sequenceActiveCount.toLocaleString('en-US')} active in sequence`
+  const sequenceStartedLabel = sequenceStartedCount > 0
+    ? `${sequenceStartedCount.toLocaleString('en-US')} started sequence`
     : ''
 
   return (
@@ -570,10 +572,10 @@ export function ReactivationCampaignSummary({
               {cohortLabel ? (
                 <p>
                   <span>{cohortLabel}</span>
-                  {sequenceActiveLabel ? (
+                  {sequenceStartedLabel ? (
                     <>
                       <span> · </span>
-                      <span>{sequenceActiveLabel}</span>
+                      <span>{sequenceStartedLabel}</span>
                     </>
                   ) : null}
                 </p>

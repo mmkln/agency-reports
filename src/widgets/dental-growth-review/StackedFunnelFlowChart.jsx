@@ -30,8 +30,7 @@ const VERTICAL_GRID_X_END = 360
 const VERTICAL_THICKNESS_SCALE = 1.35
 
 const stageLabelDisplayName = {
-  'sequence active': 'Sequence Progress',
-  sequence_active: 'Sequence Progress',
+  sequence_started: 'Sequence Progress',
 }
 
 export function StackedFunnelFlowChart({

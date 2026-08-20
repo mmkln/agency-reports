@@ -78,6 +78,7 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           onChangeSource={workflow.changeReviewSource}
           onRemoveSignal={workflow.removeReviewSignal}
           onRefreshPipelines={workflow.refreshPipelines}
+          onRefreshTags={workflow.refreshTags}
           onReset={workflow.resetReviewDraft}
           onSave={workflow.saveReview}
           onValidate={workflow.validateReview}
@@ -87,6 +88,7 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           pipelines={workflow.pipelinesForReviewSource}
           pipelineSyncState={workflow.pipelineSyncState}
           review={workflow.selectedReview}
+          tagSyncState={workflow.tagSyncState}
           validationResult={workflow.validationResult}
           validationState={workflow.validationState}
         />

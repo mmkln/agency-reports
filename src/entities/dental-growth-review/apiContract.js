@@ -279,7 +279,6 @@ function normalizeFunnelChart(funnel = {}) {
     breakdowns: normalizeFunnelBreakdowns(source.breakdowns),
     calculation_note: normalizeText(source.calculation_note),
     confidence: normalizeText(source.confidence || DENTAL_GROWTH_REVIEW_CONFIDENCE.MEDIUM),
-    currentStageCounts: normalizeCurrentStageCounts(source.current_stage_counts ?? source.currentStageCounts),
     date_range_applied: source.date_range_applied === true,
     mode: normalizeText(source.mode),
     pipeline: isPlainObject(source.pipeline) ? source.pipeline : null,
@@ -288,33 +287,6 @@ function normalizeFunnelChart(funnel = {}) {
     stages: rawStages.map(normalizeFunnelStage),
     type: normalizeText(source.type),
   }
-}
-
-function normalizeCurrentStageCount(source = {}) {
-  const value = isPlainObject(source) ? source : {}
-
-  return {
-    calculationMode: normalizeText(value.calculation_mode ?? value.calculationMode),
-    count: Number(value.count ?? value.stage_count ?? value.stageCount ?? 0),
-    entity: normalizeText(value.entity),
-    formula: normalizeText(value.formula),
-    opportunityCount: Number(value.opportunity_count ?? value.opportunityCount ?? 0),
-    pipelineId: normalizeText(value.pipeline_id ?? value.pipelineId),
-    pipelineName: normalizeText(value.pipeline_name ?? value.pipelineName),
-    stageId: normalizeText(value.stage_id ?? value.stageId),
-    stageName: normalizeText(value.stage_name ?? value.stageName),
-  }
-}
-
-function normalizeCurrentStageCounts(source = {}) {
-  const value = isPlainObject(source) ? source : {}
-
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [
-      normalizeText(key),
-      normalizeCurrentStageCount(item),
-    ]),
-  )
 }
 
 function normalizeFunnelBreakdown(source = {}) {

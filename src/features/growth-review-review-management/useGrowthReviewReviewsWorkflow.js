@@ -9,7 +9,7 @@ import {
   updateGrowthReviewReview,
   validateGrowthReviewReview,
 } from '@/entities/growth-review-review'
-import { syncGhlPipelines } from '@/entities/ghl-integration'
+import { syncGhlPipelines, syncGhlTags } from '@/entities/ghl-integration'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 import { useToast } from '@/shared/notifications'
 
@@ -20,7 +20,6 @@ function createReviewDraft(review = null) {
     isDefault: review?.isDefault === true,
     name: review?.name ?? '',
     pipelineId: review?.pipelineId ?? '',
-    sequenceActiveStageId: review?.sequenceActiveStageId ?? '',
     signals: review?.signals.map((signal) => ({ ...signal })) ?? [],
     sourceConnectionId: review?.sourceConnectionId ?? '',
     status: review?.status ?? 'draft',
@@ -112,6 +111,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const [operationState, setOperationState] = useState('idle')
   const [optionsOverride, setOptionsOverride] = useState(null)
   const [pipelineSyncState, setPipelineSyncState] = useState('idle')
+  const [tagSyncState, setTagSyncState] = useState('idle')
   const [reviewPendingArchive, setReviewPendingArchive] = useState(null)
   const [validationResult, setValidationResult] = useState(null)
   const [validationState, setValidationState] = useState('idle')
@@ -191,7 +191,6 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     const nextValue = {
       ...reviewDraft,
       [field]: value,
-      ...(field === 'pipelineId' ? { sequenceActiveStageId: '' } : {}),
     }
     setDraftOverride({
       reviewId: selectedReview.id,
@@ -211,7 +210,6 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       value: {
         ...reviewDraft,
         pipelineId,
-        sequenceActiveStageId: '',
         sourceConnectionId,
       },
     })
@@ -320,6 +318,27 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       toast.error('Pipelines were not updated', getOperationError(error, 'Try again.'))
     } finally {
       setPipelineSyncState('idle')
+    }
+  }
+
+  async function refreshTags(sourceConnectionId) {
+    if (!sourceConnectionId || tagSyncState === 'syncing') {
+      return
+    }
+
+    setTagSyncState('syncing')
+    try {
+      await syncGhlTags(apiClient, workspaceId, sourceConnectionId)
+      const refreshedOptions = await getGrowthReviewReviewOptions(apiClient, workspaceId)
+      setOptionsOverride({
+        value: refreshedOptions,
+        workspaceId,
+      })
+      toast.success('Tags updated', 'The latest GHL tags are now available.')
+    } catch (error) {
+      toast.error('Tags were not updated', getOperationError(error, 'Try again.'))
+    } finally {
+      setTagSyncState('idle')
     }
   }
 
@@ -473,6 +492,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     requestArchive: setReviewPendingArchive,
     removeReviewSignal,
     refreshPipelines,
+    refreshTags,
     resetReviewDraft,
     resource,
     reviewDraft,
@@ -484,5 +504,6 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     validateReview,
     validationResult,
     validationState,
+    tagSyncState,
   }
 }

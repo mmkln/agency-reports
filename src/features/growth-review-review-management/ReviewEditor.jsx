@@ -46,6 +46,7 @@ export function ReviewEditor({
   onChangeSource,
   onRemoveSignal,
   onRefreshPipelines,
+  onRefreshTags,
   onReset,
   onSave,
   onValidate,
@@ -55,6 +56,7 @@ export function ReviewEditor({
   pipelines,
   pipelineSyncState,
   review,
+  tagSyncState,
   validationResult,
   validationState,
 }) {
@@ -64,8 +66,6 @@ export function ReviewEditor({
     (review.allowedStatuses ?? []).includes(status.value)
     && status.value !== 'archived'
   ))
-  const selectedPipeline = pipelines.find((pipeline) => pipeline.id === draft.pipelineId)
-
   return (
     <Panel className="min-w-0">
       <PanelHeader action={headerAction} divided>
@@ -167,19 +167,6 @@ export function ReviewEditor({
               >
                 <PipelineOptions pipelines={pipelines} />
               </ReviewSelectField>
-              <ReviewSelectField
-                disabled={!draft.pipelineId}
-                error={fieldErrors.sequence_active_stage_id ?? fieldErrors.sequenceActiveStageId}
-                id="review-sequence-active-stage"
-                label="Sequence Active stage"
-                onValueChange={(value) => onChangeField('sequenceActiveStageId', value)}
-                placeholder="Select stage"
-                value={draft.sequenceActiveStageId}
-              >
-                {(selectedPipeline?.stages ?? []).map((stage) => (
-                  <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
-                ))}
-              </ReviewSelectField>
             </div>
           </EditorSection>
 
@@ -210,11 +197,13 @@ export function ReviewEditor({
             onAdd={onAddSignal}
             onChange={onChangeSignal}
             onRemove={onRemoveSignal}
+            onRefreshTags={() => onRefreshTags(draft.sourceConnectionId)}
             onValidate={onValidate}
             options={options}
             signalError={fieldErrors.signals}
             validationResult={validationResult}
             validationState={validationState}
+            tagSyncState={tagSyncState}
           />
 
           <ReviewFieldError>{fieldErrors.detail}</ReviewFieldError>
