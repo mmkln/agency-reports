@@ -20,6 +20,16 @@ const selectedReview = {
     key: 'treatment_accepted',
     label: 'Treatment accepted',
     source: 'tag',
+  }, {
+    entity: 'opportunity',
+    expectedValues: [],
+    fieldId: 'field-1',
+    fieldKey: 'opportunity.treatment_accepted',
+    id: 'signal-2',
+    isActive: true,
+    key: 'sms_reply_channel',
+    label: 'SMS reply channel',
+    source: 'custom_field',
   }],
   sourceConnectionId: 'connection-1',
   status: 'active',
@@ -53,7 +63,13 @@ const workflow = {
   operationError: '',
   operationState: 'idle',
   options: {
-    customFields: [],
+    customFields: [{
+      entity: 'opportunity',
+      fieldKey: 'opportunity.treatment_accepted',
+      id: 'field-1',
+      label: 'Treatment accepted',
+      sourceConnectionId: 'connection-1',
+    }],
     pipelines: [],
     signalKeys: [
       { label: 'Treatment accepted', required: true, value: 'treatment_accepted' },
@@ -116,6 +132,7 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).not.toContain('Campaign review</span>')
     expect(html).toContain('Treatment accepted')
     expect(html).toContain('Search tags')
+    expect(html).toContain('Search custom fields')
     expect(html).toContain('1 of 2 configured')
     expect(html).toContain('You can save partial progress')
     expect(html).toContain('aria-label="Remove Treatment accepted source"')

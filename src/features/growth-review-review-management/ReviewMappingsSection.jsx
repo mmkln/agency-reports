@@ -42,7 +42,15 @@ function MappingSelect({ children, id, label, onValueChange, placeholder, value 
   )
 }
 
-function TagMappingCombobox({ id, label, onValueChange, options, value }) {
+function MappingCombobox({
+  emptyMessage,
+  id,
+  label,
+  onValueChange,
+  options,
+  placeholder,
+  value,
+}) {
   const selectedOption = options.find((option) => option.value === value) ?? null
 
   return (
@@ -53,9 +61,9 @@ function TagMappingCombobox({ id, label, onValueChange, options, value }) {
         onValueChange={(option) => onValueChange(option?.value ?? '')}
         value={selectedOption}
       >
-        <ComboboxInput id={id} placeholder="Search tags" showClear />
+        <ComboboxInput id={id} placeholder={placeholder} showClear />
         <ComboboxContent>
-          <ComboboxEmpty>No tags found.</ComboboxEmpty>
+          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
           <ComboboxList>
             {(option) => (
               <ComboboxItem key={option.value} value={option}>
@@ -69,6 +77,34 @@ function TagMappingCombobox({ id, label, onValueChange, options, value }) {
   )
 }
 
+function parseMatchingValues(value) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function MatchingValuesInput({ id, onCommit, value }) {
+  const [draftValue, setDraftValue] = useState(null)
+  const displayedValue = draftValue ?? value
+
+  function changeValue(event) {
+    const nextValue = event.target.value
+    setDraftValue(nextValue)
+    onCommit(parseMatchingValues(nextValue))
+  }
+
+  return (
+    <Input
+      id={id}
+      onBlur={() => setDraftValue(null)}
+      onChange={changeValue}
+      placeholder="Value 1, Value 2"
+      value={displayedValue}
+    />
+  )
+}
+
 function SignalMappingRow({
   customFields,
   index,
@@ -78,6 +114,10 @@ function SignalMappingRow({
   tags,
 }) {
   const expectedValues = mapping.expectedValues.join(', ')
+  const customFieldOptions = customFields.map((field) => ({
+    label: field.label,
+    value: field.id,
+  }))
 
   function changeSource(source) {
     onChange(index, {
@@ -131,34 +171,31 @@ function SignalMappingRow({
       )}
 
       {mapping.source === 'tag' ? (
-        <TagMappingCombobox
+        <MappingCombobox
+          emptyMessage="No tags found."
           id={`review-signal-${index}-tag`}
           label="GHL tag"
           onValueChange={(value) => onChange(index, { expectedValues: [value] })}
           options={tags}
+          placeholder="Search tags"
           value={mapping.expectedValues[0] ?? ''}
         />
       ) : (
         <div className="grid gap-component sm:grid-cols-2">
-          <MappingSelect
+          <MappingCombobox
+            emptyMessage="No custom fields found."
             id={`review-signal-${index}-field`}
             label="GHL custom field"
             onValueChange={changeCustomField}
+            options={customFieldOptions}
+            placeholder="Search custom fields"
             value={mapping.fieldId}
-            placeholder="Select field"
-          >
-            {customFields.map((field) => (
-              <SelectItem key={field.id} value={field.id}>{field.label}</SelectItem>
-            ))}
-          </MappingSelect>
+          />
           <div className="grid gap-item">
             <Label htmlFor={`review-signal-${index}-values`}>Matching values</Label>
-            <Input
+            <MatchingValuesInput
               id={`review-signal-${index}-values`}
-              onChange={(event) => onChange(index, {
-                expectedValues: event.target.value.split(',').map((value) => value.trim()).filter(Boolean),
-              })}
-              placeholder="Value 1, Value 2"
+              onCommit={(values) => onChange(index, { expectedValues: values })}
               value={expectedValues}
             />
           </div>
