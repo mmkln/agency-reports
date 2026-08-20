@@ -1,8 +1,10 @@
 import {
   normalizeGrowthReviewReview,
   normalizeGrowthReviewReviewOptionsPayload,
+  normalizeGrowthReviewReviewValidation,
   normalizeGrowthReviewReviewsPayload,
   toGrowthReviewReviewInput,
+  toGrowthReviewReviewValidationInput,
 } from './apiContract'
 
 function reviewsPath(workspaceId) {
@@ -29,6 +31,13 @@ export function updateGrowthReviewReview(apiClient, workspaceId, reviewId, draft
     body: toGrowthReviewReviewInput(draft),
     method: 'PATCH',
   }).then((payload) => normalizeGrowthReviewReview(payload.review))
+}
+
+export function validateGrowthReviewReview(apiClient, workspaceId, reviewId, draft) {
+  return apiClient.post(
+    `${reviewsPath(workspaceId)}validate/`,
+    toGrowthReviewReviewValidationInput(draft, reviewId),
+  ).then(normalizeGrowthReviewReviewValidation)
 }
 
 export function archiveGrowthReviewReview(apiClient, workspaceId, review) {

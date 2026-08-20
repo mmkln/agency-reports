@@ -1,4 +1,3 @@
-import { Icon } from '@/shared/icons'
 import {
   Button,
   Label,
@@ -21,6 +20,7 @@ import {
   SourceConnectionOptions,
 } from './ReviewFormFields'
 import { PipelineRefreshButton } from './PipelineRefreshButton'
+import { ReviewMappingsSection } from './ReviewMappingsSection'
 
 function EditorSection({ children, description, title }) {
   return (
@@ -34,47 +34,37 @@ function EditorSection({ children, description, title }) {
   )
 }
 
-function SignalSummary({ signals }) {
-  return (
-    <div className="divide-y divide-separator">
-      {signals.map((signal) => (
-        <div className="flex items-start justify-between gap-component py-item first:pt-0 last:pb-0" key={signal.id}>
-          <div className="min-w-0">
-            <p className="text-ui font-medium text-text-primary">{signal.label}</p>
-            <p className="mt-tag truncate text-label font-normal text-text-muted">
-              {signal.expectedValues.join(', ') || 'Configured by the reporting template'}
-            </p>
-          </div>
-          {signal.isActive ? (
-            <Icon className="mt-micro shrink-0 text-success" name="checkCircle2" size={16} />
-          ) : null}
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export function ReviewEditor({
   draft,
   fieldErrors,
   header,
   headerAction,
   isDirty,
+  onAddSignal,
   onChangeField,
+  onChangeSignal,
   onChangeSource,
+  onRemoveSignal,
   onRefreshPipelines,
   onReset,
   onSave,
+  onValidate,
   operationError,
   operationState,
   options,
   pipelines,
   pipelineSyncState,
   review,
+  validationResult,
+  validationState,
 }) {
   const isBusy = operationState !== 'idle'
   const isArchived = review.status === 'archived'
-  const editableStatuses = options.statuses.filter((status) => status.value !== 'archived')
+  const editableStatuses = options.statuses.filter((status) => (
+    (review.allowedStatuses ?? []).includes(status.value)
+    && status.value !== 'archived'
+  ))
+  const selectedPipeline = pipelines.find((pipeline) => pipeline.id === draft.pipelineId)
 
   return (
     <Panel className="min-w-0">
@@ -177,6 +167,19 @@ export function ReviewEditor({
               >
                 <PipelineOptions pipelines={pipelines} />
               </ReviewSelectField>
+              <ReviewSelectField
+                disabled={!draft.pipelineId}
+                error={fieldErrors.sequence_active_stage_id ?? fieldErrors.sequenceActiveStageId}
+                id="review-sequence-active-stage"
+                label="Sequence Active stage"
+                onValueChange={(value) => onChangeField('sequenceActiveStageId', value)}
+                placeholder="Select stage"
+                value={draft.sequenceActiveStageId}
+              >
+                {(selectedPipeline?.stages ?? []).map((stage) => (
+                  <SelectItem key={stage.id} value={stage.id}>{stage.name}</SelectItem>
+                ))}
+              </ReviewSelectField>
             </div>
           </EditorSection>
 
@@ -186,27 +189,33 @@ export function ReviewEditor({
           >
             <div className="max-w-xl">
               <ReviewTextField
-                error={fieldErrors.campaign_key ?? fieldErrors.campaignKey}
-                id="review-campaign-key"
-                label="Campaign key"
-                onChange={(value) => onChangeField('campaignKey', value)}
+                disabled={review.status !== 'draft'}
+                error={fieldErrors.external_campaign_key ?? fieldErrors.externalCampaignKey}
+                help={review.status === 'draft'
+                  ? 'Stable identifier for this external GHL campaign.'
+                  : 'The external campaign key is locked after activation.'}
+                id="review-external-campaign-key"
+                label="External campaign key"
+                onChange={(value) => onChangeField('externalCampaignKey', value)}
                 placeholder="Reactivation2_aug2026"
                 required
-                value={draft.campaignKey}
+                value={draft.externalCampaignKey}
               />
             </div>
           </EditorSection>
 
-          <EditorSection
-            description="These reporting signals are maintained by the reactivation review template."
-            title="Outcome mapping"
-          >
-            {review.signals.length > 0 ? (
-              <SignalSummary signals={review.signals} />
-            ) : (
-              <p className="text-ui text-text-muted">No reporting signals are configured.</p>
-            )}
-          </EditorSection>
+          <ReviewMappingsSection
+            draft={draft}
+            key={review.id}
+            onAdd={onAddSignal}
+            onChange={onChangeSignal}
+            onRemove={onRemoveSignal}
+            onValidate={onValidate}
+            options={options}
+            signalError={fieldErrors.signals}
+            validationResult={validationResult}
+            validationState={validationState}
+          />
 
           <ReviewFieldError>{fieldErrors.detail}</ReviewFieldError>
 

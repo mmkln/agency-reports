@@ -72,17 +72,23 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
             />
           )}
           isDirty={workflow.isDirty}
+          onAddSignal={workflow.addReviewSignal}
           onChangeField={workflow.changeReviewField}
+          onChangeSignal={workflow.changeReviewSignal}
           onChangeSource={workflow.changeReviewSource}
+          onRemoveSignal={workflow.removeReviewSignal}
           onRefreshPipelines={workflow.refreshPipelines}
           onReset={workflow.resetReviewDraft}
           onSave={workflow.saveReview}
+          onValidate={workflow.validateReview}
           operationError={workflow.operationError}
           operationState={workflow.operationState}
           options={workflow.options}
           pipelines={workflow.pipelinesForReviewSource}
           pipelineSyncState={workflow.pipelineSyncState}
           review={workflow.selectedReview}
+          validationResult={workflow.validationResult}
+          validationState={workflow.validationState}
         />
       ) : (
         <EmptyState

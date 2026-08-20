@@ -17,6 +17,7 @@ export function ReviewFieldError({ children }) {
 }
 
 export function ReviewTextField({
+  disabled = false,
   error,
   help,
   id,
@@ -32,6 +33,7 @@ export function ReviewTextField({
       <Label htmlFor={id}>{label}{required ? ' *' : ''}</Label>
       <Input
         aria-invalid={Boolean(error)}
+        disabled={disabled}
         id={id}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

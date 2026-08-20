@@ -5,35 +5,43 @@ import { GrowthReviewReviewManagement } from './GrowthReviewReviewManagement'
 
 const selectedReview = {
   activityStartDate: '2026-05-26',
-  campaignKey: 'reactivation_may_2026',
+  allowedStatuses: ['active', 'completed', 'archived'],
+  externalCampaignKey: 'reactivation_may_2026',
   id: 'review-1',
   isDefault: true,
   name: 'Reactivation Campaign May 2026',
   pipelineId: 'pipeline-1',
+  sequenceActiveStageId: 'stage-1',
   signals: [{
+    entity: 'opportunity',
     expectedValues: ['treatment accepted'],
     id: 'signal-1',
     isActive: true,
     key: 'treatment_accepted',
     label: 'Treatment accepted',
+    source: 'tag',
   }],
   sourceConnectionId: 'connection-1',
   status: 'active',
 }
 
 const workflow = {
+  addReviewSignal: vi.fn(),
   changeCreateField: vi.fn(),
   changeCreateSource: vi.fn(),
   changeReviewField: vi.fn(),
+  changeReviewSignal: vi.fn(),
   changeReviewSource: vi.fn(),
   closeCreateDialog: vi.fn(),
   confirmArchive: vi.fn(),
   createDraft: {
     activityStartDate: '',
-    campaignKey: '',
+    externalCampaignKey: '',
     isDefault: false,
     name: '',
     pipelineId: 'pipeline-1',
+    sequenceActiveStageId: '',
+    signals: [],
     sourceConnectionId: 'connection-1',
     status: 'active',
   },
@@ -45,27 +53,41 @@ const workflow = {
   operationError: '',
   operationState: 'idle',
   options: {
+    customFields: [],
     pipelines: [],
+    signalKeys: [
+      { label: 'Treatment accepted', required: true, value: 'treatment_accepted' },
+      { label: 'SMS reply channel', required: true, value: 'sms_reply_channel' },
+    ],
     sourceConnections: [{ externalAccountId: 'location-1', id: 'connection-1' }],
     statuses: [
+      { label: 'Draft', value: 'draft' },
       { label: 'Active', value: 'active' },
       { label: 'Completed', value: 'completed' },
       { label: 'Archived', value: 'archived' },
     ],
+    tags: [{ label: 'Treatment accepted', sourceConnectionId: 'connection-1', value: 'treatment accepted' }],
   },
-  pipelinesForCreateSource: [{ id: 'pipeline-1', name: 'Reactivation' }],
-  pipelinesForReviewSource: [{ id: 'pipeline-1', name: 'Reactivation' }],
+  pipelinesForCreateSource: [{ id: 'pipeline-1', name: 'Reactivation', stages: [] }],
+  pipelinesForReviewSource: [{
+    id: 'pipeline-1',
+    name: 'Reactivation',
+    stages: [{ id: 'stage-1', name: 'Sequence Active' }],
+  }],
   pipelineSyncState: 'idle',
   requestArchive: vi.fn(),
+  removeReviewSignal: vi.fn(),
   refreshPipelines: vi.fn(),
   resetReviewDraft: vi.fn(),
   resource: { reload: vi.fn(), status: 'ready' },
   reviewDraft: {
     activityStartDate: '2026-05-26',
-    campaignKey: 'reactivation_may_2026',
+    externalCampaignKey: 'reactivation_may_2026',
     isDefault: true,
     name: 'Reactivation Campaign May 2026',
     pipelineId: 'pipeline-1',
+    sequenceActiveStageId: 'stage-1',
+    signals: selectedReview.signals,
     sourceConnectionId: 'connection-1',
     status: 'active',
   },
@@ -74,6 +96,9 @@ const workflow = {
   saveReview: vi.fn(),
   selectReview: vi.fn(),
   selectedReview,
+  validateReview: vi.fn(),
+  validationResult: null,
+  validationState: 'idle',
 }
 
 vi.mock('./useGrowthReviewReviewsWorkflow', () => ({
@@ -90,6 +115,11 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('Active')
     expect(html).not.toContain('Campaign review</span>')
     expect(html).toContain('Treatment accepted')
+    expect(html).toContain('Search tags')
+    expect(html).toContain('1 of 2 configured')
+    expect(html).toContain('You can save partial progress')
+    expect(html).toContain('aria-label="Remove Treatment accepted source"')
+    expect(html).toContain('aria-label="Collapse outcome mapping"')
     expect(html).toContain('Refresh pipelines from GHL')
     expect(html).not.toContain('Campaign reviews</h2>')
   })

@@ -98,14 +98,14 @@ export function ReviewCreateDialog({
             </div>
             <div className="grid gap-component sm:grid-cols-2">
               <ReviewTextField
-                error={fieldErrors.campaign_key ?? fieldErrors.campaignKey}
+                error={fieldErrors.external_campaign_key ?? fieldErrors.externalCampaignKey}
                 help="Matches the campaign cohort identifier used in GHL."
-                id="new-review-campaign-key"
-                label="Campaign key"
-                onChange={(value) => onChangeField('campaignKey', value)}
+                id="new-review-external-campaign-key"
+                label="External campaign key"
+                onChange={(value) => onChangeField('externalCampaignKey', value)}
                 placeholder="Reactivation2_aug2026"
                 required
-                value={draft.campaignKey}
+                value={draft.externalCampaignKey}
               />
               <ReviewTextField
                 error={fieldErrors.activity_start_date ?? fieldErrors.activityStartDate}

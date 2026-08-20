@@ -16,8 +16,21 @@ export {
 export { ChartLegend } from './ChartLegend'
 export { ChartPanel } from './ChartPanel'
 export { Checkbox } from '@/components/ui/checkbox'
+export {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 export { ChecklistItem } from './ChecklistItem'
 export { CodeValue } from './CodeValue'
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 export {
   Command,
   CommandEmpty,

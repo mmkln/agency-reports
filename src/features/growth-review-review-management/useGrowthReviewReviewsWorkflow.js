@@ -7,6 +7,7 @@ import {
   getGrowthReviewReviewOptions,
   listGrowthReviewReviews,
   updateGrowthReviewReview,
+  validateGrowthReviewReview,
 } from '@/entities/growth-review-review'
 import { syncGhlPipelines } from '@/entities/ghl-integration'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
@@ -15,12 +16,14 @@ import { useToast } from '@/shared/notifications'
 function createReviewDraft(review = null) {
   return {
     activityStartDate: review?.activityStartDate ?? '',
-    campaignKey: review?.campaignKey ?? '',
+    externalCampaignKey: review?.externalCampaignKey ?? '',
     isDefault: review?.isDefault === true,
     name: review?.name ?? '',
     pipelineId: review?.pipelineId ?? '',
+    sequenceActiveStageId: review?.sequenceActiveStageId ?? '',
+    signals: review?.signals.map((signal) => ({ ...signal })) ?? [],
     sourceConnectionId: review?.sourceConnectionId ?? '',
-    status: review?.status ?? 'active',
+    status: review?.status ?? 'draft',
   }
 }
 
@@ -49,8 +52,8 @@ function validateReviewDraft(draft) {
   if (!draft.name.trim()) {
     errors.name = 'Enter a review name.'
   }
-  if (!draft.campaignKey.trim()) {
-    errors.campaignKey = 'Enter the campaign key used in GHL.'
+  if (!draft.externalCampaignKey.trim()) {
+    errors.externalCampaignKey = 'Enter the external campaign key used in GHL.'
   }
   if (!draft.sourceConnectionId) {
     errors.sourceConnectionId = 'Choose a GHL connection.'
@@ -69,10 +72,22 @@ function normalizeFieldErrors(error) {
     return {}
   }
 
+  function formatValue(value) {
+    if (Array.isArray(value)) {
+      return formatValue(value[0] ?? '')
+    }
+    if (value && typeof value === 'object') {
+      return Object.entries(value)
+        .map(([key, message]) => `${key}: ${formatValue(message)}`)
+        .join(' ')
+    }
+    return String(value ?? '')
+  }
+
   return Object.fromEntries(
     Object.entries(detail).map(([key, value]) => [
       key,
-      Array.isArray(value) ? String(value[0] ?? '') : String(value ?? ''),
+      formatValue(value),
     ]),
   )
 }
@@ -98,6 +113,8 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const [optionsOverride, setOptionsOverride] = useState(null)
   const [pipelineSyncState, setPipelineSyncState] = useState('idle')
   const [reviewPendingArchive, setReviewPendingArchive] = useState(null)
+  const [validationResult, setValidationResult] = useState(null)
+  const [validationState, setValidationState] = useState('idle')
   const resource = useAsyncResource({
     dependencyKey: `growth-review-reviews:${workspaceId}`,
     load: () => Promise.all([
@@ -114,6 +131,9 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     pipelines: [],
     sourceConnections: [],
     statuses: [],
+    customFields: [],
+    signalKeys: [],
+    tags: [],
   }, [optionsOverride, resource.data?.options, workspaceId])
   const requestedReviewId = searchParams.get('review') ?? ''
   const selectedReview = reviews.find((review) => review.id === requestedReviewId)
@@ -139,6 +159,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setDraftOverride(null)
     setFieldErrors({})
     setOperationError('')
+    setValidationResult(null)
     updateSearchParams((nextSearchParams) => {
       nextSearchParams.set('review', reviewId)
       nextSearchParams.delete('create')
@@ -149,6 +170,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setCreateDraft(createReviewDraft())
     setFieldErrors({})
     setOperationError('')
+    setValidationResult(null)
     updateSearchParams((nextSearchParams) => nextSearchParams.set('create', 'review'))
   }
 
@@ -165,9 +187,15 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     }
 
     setFieldErrors((current) => ({ ...current, [field]: '' }))
+    setValidationResult(null)
+    const nextValue = {
+      ...reviewDraft,
+      [field]: value,
+      ...(field === 'pipelineId' ? { sequenceActiveStageId: '' } : {}),
+    }
     setDraftOverride({
       reviewId: selectedReview.id,
-      value: { ...reviewDraft, [field]: value },
+      value: nextValue,
     })
   }
 
@@ -183,7 +211,54 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       value: {
         ...reviewDraft,
         pipelineId,
+        sequenceActiveStageId: '',
         sourceConnectionId,
+      },
+    })
+  }
+
+  function addReviewSignal(key) {
+    const option = options.signalKeys.find((item) => item.value === key)
+    const nextSignal = {
+      confidence: 'medium',
+      entity: key === 'imported_candidate' ? 'contact' : 'any',
+      expectedValues: [],
+      fieldId: '',
+      fieldKey: '',
+      id: '',
+      isActive: true,
+      key,
+      label: option?.label ?? key,
+      priority: (options.signalKeys.findIndex((item) => item.value === key) + 1) * 100,
+      source: 'tag',
+    }
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: { ...reviewDraft, signals: [...reviewDraft.signals, nextSignal] },
+    })
+  }
+
+  function changeReviewSignal(index, changes) {
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: {
+        ...reviewDraft,
+        signals: reviewDraft.signals.map((signal, signalIndex) => (
+          signalIndex === index ? { ...signal, ...changes } : signal
+        )),
+      },
+    })
+  }
+
+  function removeReviewSignal(index) {
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: {
+        ...reviewDraft,
+        signals: reviewDraft.signals.filter((_signal, signalIndex) => signalIndex !== index),
       },
     })
   }
@@ -211,6 +286,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setDraftOverride(null)
     setFieldErrors({})
     setOperationError('')
+    setValidationResult(null)
   }
 
   async function reloadAndSelect(reviewId) {
@@ -288,6 +364,18 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
 
     setOperationState('saving')
     try {
+      const isActivating = (
+        selectedReview.status !== 'active'
+        && reviewDraft.status === 'active'
+      )
+      if (isActivating) {
+        await validateGrowthReviewReview(
+          apiClient,
+          workspaceId,
+          selectedReview.id,
+          reviewDraft,
+        )
+      }
       const review = await updateGrowthReviewReview(
         apiClient,
         workspaceId,
@@ -303,6 +391,32 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       toast.error('Review was not saved', getOperationError(error, 'Try again.'))
     } finally {
       setOperationState('idle')
+    }
+  }
+
+  async function validateReview() {
+    const nextErrors = validateReviewDraft(reviewDraft)
+    setFieldErrors(nextErrors)
+    setOperationError('')
+    if (!selectedReview || Object.keys(nextErrors).length > 0) {
+      return
+    }
+
+    setValidationState('validating')
+    try {
+      const result = await validateGrowthReviewReview(
+        apiClient,
+        workspaceId,
+        selectedReview.id,
+        reviewDraft,
+      )
+      setValidationResult(result)
+    } catch (error) {
+      setValidationResult(null)
+      setFieldErrors(normalizeFieldErrors(error))
+      setOperationError(getOperationError(error, 'The mappings could not be validated.'))
+    } finally {
+      setValidationState('idle')
     }
   }
 
@@ -330,9 +444,11 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   return {
+    addReviewSignal,
     changeCreateField,
     changeCreateSource,
     changeReviewField,
+    changeReviewSignal,
     changeReviewSource,
     closeCreateDialog,
     confirmArchive,
@@ -355,6 +471,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       reviewDraft.sourceConnectionId,
     ),
     requestArchive: setReviewPendingArchive,
+    removeReviewSignal,
     refreshPipelines,
     resetReviewDraft,
     resource,
@@ -364,5 +481,8 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     saveReview,
     selectedReview,
     selectReview,
+    validateReview,
+    validationResult,
+    validationState,
   }
 }
