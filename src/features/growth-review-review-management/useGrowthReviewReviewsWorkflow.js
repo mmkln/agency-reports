@@ -8,6 +8,7 @@ import {
   listGrowthReviewReviews,
   updateGrowthReviewReview,
 } from '@/entities/growth-review-review'
+import { syncGhlPipelines } from '@/entities/ghl-integration'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 import { useToast } from '@/shared/notifications'
 
@@ -94,6 +95,8 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const [fieldErrors, setFieldErrors] = useState({})
   const [operationError, setOperationError] = useState('')
   const [operationState, setOperationState] = useState('idle')
+  const [optionsOverride, setOptionsOverride] = useState(null)
+  const [pipelineSyncState, setPipelineSyncState] = useState('idle')
   const [reviewPendingArchive, setReviewPendingArchive] = useState(null)
   const resource = useAsyncResource({
     dependencyKey: `growth-review-reviews:${workspaceId}`,
@@ -103,11 +106,15 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     ]).then(([reviewData, options]) => ({ ...reviewData, options })),
   })
   const reviews = useMemo(() => resource.data?.reviews ?? [], [resource.data?.reviews])
-  const options = useMemo(() => resource.data?.options ?? {
+  const options = useMemo(() => (
+    optionsOverride?.workspaceId === workspaceId
+      ? optionsOverride.value
+      : resource.data?.options
+  ) ?? {
     pipelines: [],
     sourceConnections: [],
     statuses: [],
-  }, [resource.data?.options])
+  }, [optionsOverride, resource.data?.options, workspaceId])
   const requestedReviewId = searchParams.get('review') ?? ''
   const selectedReview = reviews.find((review) => review.id === requestedReviewId)
     ?? reviews.find((review) => review.id === resource.data?.defaultReviewId)
@@ -215,7 +222,29 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       }
       nextSearchParams.delete('create')
     })
+    setOptionsOverride(null)
     await resource.reload()
+  }
+
+  async function refreshPipelines(sourceConnectionId) {
+    if (!sourceConnectionId || pipelineSyncState === 'syncing') {
+      return
+    }
+
+    setPipelineSyncState('syncing')
+    try {
+      await syncGhlPipelines(apiClient, workspaceId, sourceConnectionId)
+      const refreshedOptions = await getGrowthReviewReviewOptions(apiClient, workspaceId)
+      setOptionsOverride({
+        value: refreshedOptions,
+        workspaceId,
+      })
+      toast.success('Pipelines updated', 'The latest GHL pipelines are now available.')
+    } catch (error) {
+      toast.error('Pipelines were not updated', getOperationError(error, 'Try again.'))
+    } finally {
+      setPipelineSyncState('idle')
+    }
   }
 
   async function createReview(event) {
@@ -316,6 +345,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     operationError,
     operationState,
     options,
+    pipelineSyncState,
     pipelinesForCreateSource: getPipelinesForSource(
       options,
       resolvedCreateDraft.sourceConnectionId,
@@ -325,6 +355,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       reviewDraft.sourceConnectionId,
     ),
     requestArchive: setReviewPendingArchive,
+    refreshPipelines,
     resetReviewDraft,
     resource,
     reviewDraft,

@@ -55,7 +55,9 @@ const workflow = {
   },
   pipelinesForCreateSource: [{ id: 'pipeline-1', name: 'Reactivation' }],
   pipelinesForReviewSource: [{ id: 'pipeline-1', name: 'Reactivation' }],
+  pipelineSyncState: 'idle',
   requestArchive: vi.fn(),
+  refreshPipelines: vi.fn(),
   resetReviewDraft: vi.fn(),
   resource: { reload: vi.fn(), status: 'ready' },
   reviewDraft: {
@@ -88,6 +90,7 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('Active')
     expect(html).not.toContain('Campaign review</span>')
     expect(html).toContain('Treatment accepted')
+    expect(html).toContain('Refresh pipelines from GHL')
     expect(html).not.toContain('Campaign reviews</h2>')
   })
 

@@ -20,6 +20,7 @@ import {
   ReviewTextField,
   SourceConnectionOptions,
 } from './ReviewFormFields'
+import { PipelineRefreshButton } from './PipelineRefreshButton'
 
 function EditorSection({ children, description, title }) {
   return (
@@ -61,12 +62,14 @@ export function ReviewEditor({
   isDirty,
   onChangeField,
   onChangeSource,
+  onRefreshPipelines,
   onReset,
   onSave,
   operationError,
   operationState,
   options,
   pipelines,
+  pipelineSyncState,
   review,
 }) {
   const isBusy = operationState !== 'idle'
@@ -157,6 +160,13 @@ export function ReviewEditor({
                 <SourceConnectionOptions connections={options.sourceConnections} />
               </ReviewSelectField>
               <ReviewSelectField
+                action={(
+                  <PipelineRefreshButton
+                    disabled={!draft.sourceConnectionId}
+                    isRefreshing={pipelineSyncState === 'syncing'}
+                    onRefresh={() => onRefreshPipelines(draft.sourceConnectionId)}
+                  />
+                )}
                 disabled={!draft.sourceConnectionId}
                 error={fieldErrors.pipeline_id ?? fieldErrors.pipelineId}
                 id="review-pipeline"

@@ -46,6 +46,7 @@ export function ReviewTextField({
 }
 
 export function ReviewSelectField({
+  action,
   children,
   disabled = false,
   error,
@@ -57,7 +58,10 @@ export function ReviewSelectField({
 }) {
   return (
     <div className="grid gap-item">
-      <Label htmlFor={id}>{label} *</Label>
+      <div className="flex min-h-control-small min-w-0 items-center justify-between gap-item">
+        <Label htmlFor={id}>{label} *</Label>
+        {action}
+      </div>
       <RadixSelect disabled={disabled} onValueChange={onValueChange} value={value}>
         <SelectTrigger aria-invalid={Boolean(error)} id={id}>
           <SelectValue placeholder={placeholder} />

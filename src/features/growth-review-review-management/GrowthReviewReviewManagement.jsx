@@ -74,12 +74,14 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           isDirty={workflow.isDirty}
           onChangeField={workflow.changeReviewField}
           onChangeSource={workflow.changeReviewSource}
+          onRefreshPipelines={workflow.refreshPipelines}
           onReset={workflow.resetReviewDraft}
           onSave={workflow.saveReview}
           operationError={workflow.operationError}
           operationState={workflow.operationState}
           options={workflow.options}
           pipelines={workflow.pipelinesForReviewSource}
+          pipelineSyncState={workflow.pipelineSyncState}
           review={workflow.selectedReview}
         />
       ) : (
@@ -98,11 +100,13 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
         onChangeField={workflow.changeCreateField}
         onChangeSource={workflow.changeCreateSource}
         onClose={workflow.closeCreateDialog}
+        onRefreshPipelines={workflow.refreshPipelines}
         onSubmit={workflow.createReview}
         operationError={workflow.operationError}
         operationState={workflow.operationState}
         options={workflow.options}
         pipelines={workflow.pipelinesForCreateSource}
+        pipelineSyncState={workflow.pipelineSyncState}
       />
 
       <ConfirmationDialog

@@ -15,6 +15,7 @@ import {
   ReviewTextField,
   SourceConnectionOptions,
 } from './ReviewFormFields'
+import { PipelineRefreshButton } from './PipelineRefreshButton'
 
 export function ReviewCreateDialog({
   draft,
@@ -23,11 +24,13 @@ export function ReviewCreateDialog({
   onChangeField,
   onChangeSource,
   onClose,
+  onRefreshPipelines,
   onSubmit,
   operationError,
   operationState,
   options,
   pipelines,
+  pipelineSyncState,
 }) {
   const isCreating = operationState === 'creating'
 
@@ -75,6 +78,13 @@ export function ReviewCreateDialog({
                 <SourceConnectionOptions connections={options.sourceConnections} />
               </ReviewSelectField>
               <ReviewSelectField
+                action={(
+                  <PipelineRefreshButton
+                    disabled={!draft.sourceConnectionId}
+                    isRefreshing={pipelineSyncState === 'syncing'}
+                    onRefresh={() => onRefreshPipelines(draft.sourceConnectionId)}
+                  />
+                )}
                 disabled={!draft.sourceConnectionId}
                 error={fieldErrors.pipeline_id ?? fieldErrors.pipelineId}
                 id="new-review-pipeline"
