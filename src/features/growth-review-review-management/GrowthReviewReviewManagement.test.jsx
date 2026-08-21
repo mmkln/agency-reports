@@ -54,6 +54,7 @@ const selectedReview = {
   }],
   sourceConnectionId: 'connection-1',
   status: 'active',
+  touchCampaignKey: 'reactivation_may_2026_touches',
 }
 
 const workflow = {
@@ -79,6 +80,7 @@ const workflow = {
     tracks: [],
     sourceConnectionId: 'connection-1',
     status: 'active',
+    touchCampaignKey: '',
   },
   createReview: vi.fn(),
   fieldErrors: {},
@@ -134,6 +136,7 @@ const workflow = {
     tracks: selectedReview.tracks,
     sourceConnectionId: 'connection-1',
     status: 'active',
+    touchCampaignKey: 'reactivation_may_2026_touches',
   },
   reviewPendingArchive: null,
   reviews: [selectedReview],
@@ -169,6 +172,8 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('1 of 1 configured')
     expect(html).toContain('aria-label="Expand tracks"')
     expect(html).toContain('Refresh pipelines from GHL')
+    expect(html).toContain('Reactivation Touch campaign key')
+    expect(html).toContain('reactivation_may_2026_touches')
     expect(html).not.toContain('Campaign reviews</h2>')
   })
 

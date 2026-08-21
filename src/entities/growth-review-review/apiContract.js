@@ -65,6 +65,8 @@ export function normalizeGrowthReviewReview(source = {}) {
       requiredCount: Number(configuration.required_count ?? configuration.requiredCount ?? 0),
       trackCount: Number(configuration.track_count ?? configuration.trackCount ?? 0),
       tracksConfigured: configuration.tracks_configured === true || configuration.tracksConfigured === true,
+      touchSourceConfigured: configuration.touch_source_configured === true
+        || configuration.touchSourceConfigured === true,
     },
     externalCampaignKey: normalizeText(source.external_campaign_key),
     createdAt: normalizeText(source.created_at ?? source.createdAt),
@@ -76,6 +78,7 @@ export function normalizeGrowthReviewReview(source = {}) {
     tracks: normalizeArray(source.tracks).map(normalizeGrowthReviewTrack),
     sourceConnectionId: normalizeText(source.source_connection_id ?? source.sourceConnectionId),
     status: normalizeText(source.status) || 'draft',
+    touchCampaignKey: normalizeText(source.touch_campaign_key ?? source.touchCampaignKey),
     updatedAt: normalizeText(source.updated_at ?? source.updatedAt),
     workspaceId: normalizeText(source.workspace_id ?? source.workspaceId),
   }
@@ -213,6 +216,7 @@ export function toGrowthReviewReviewInput(draft) {
     tracks: normalizeArray(draft.tracks).map(toGrowthReviewTrackInput),
     source_connection_id: normalizeText(draft.sourceConnectionId),
     status: normalizeText(draft.status) || 'draft',
+    touch_campaign_key: normalizeText(draft.touchCampaignKey),
   }
 }
 

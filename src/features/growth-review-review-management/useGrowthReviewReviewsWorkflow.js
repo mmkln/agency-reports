@@ -27,6 +27,7 @@ function createReviewDraft(review = null) {
     })) ?? [],
     sourceConnectionId: review?.sourceConnectionId ?? '',
     status: review?.status ?? 'draft',
+    touchCampaignKey: review?.touchCampaignKey ?? '',
   }
 }
 
@@ -63,6 +64,9 @@ function validateReviewDraft(draft) {
   }
   if (!draft.pipelineId) {
     errors.pipelineId = 'Choose the pipeline used by this campaign.'
+  }
+  if (!draft.touchCampaignKey.trim()) {
+    errors.touchCampaignKey = 'Enter the campaign key used by Reactivation Touch records.'
   }
 
   return errors

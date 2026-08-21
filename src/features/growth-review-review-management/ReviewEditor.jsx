@@ -178,7 +178,7 @@ export function ReviewEditor({
           </EditorSection>
 
           <EditorSection
-            description="This key identifies the campaign cohort in GHL."
+            description="This stable key identifies the review in the portal."
             title="Campaign identity"
           >
             <div className="max-w-xl">
@@ -194,6 +194,23 @@ export function ReviewEditor({
                 placeholder="Reactivation2_aug2026"
                 required
                 value={draft.externalCampaignKey}
+              />
+            </div>
+          </EditorSection>
+
+          <EditorSection
+            description="Connect this review to the matching Reactivation Touch records in GHL."
+            title="Activity source"
+          >
+            <div className="max-w-xl">
+              <ReviewTextField
+                error={fieldErrors.touch_campaign_key ?? fieldErrors.touchCampaignKey}
+                id="review-touch-campaign-key"
+                label="Reactivation Touch campaign key"
+                onChange={(value) => onChangeField('touchCampaignKey', value)}
+                placeholder="reactivation2_aug2026_veneers"
+                required
+                value={draft.touchCampaignKey}
               />
             </div>
           </EditorSection>

@@ -18,8 +18,10 @@ describe('growth review review API contract', () => {
           is_complete: false,
           missing_keys: ['sms_reply_channel', 'email_reply_channel'],
           required_count: 9,
+          touch_source_configured: true,
         },
         external_campaign_key: 'reactivation_august_2026',
+        touch_campaign_key: 'reactivation_august_2026_touches',
         id: 'review-1',
         is_default: true,
         name: 'August review',
@@ -62,11 +64,13 @@ describe('growth review review API contract', () => {
         isComplete: false,
         missingKeys: ['sms_reply_channel', 'email_reply_channel'],
         requiredCount: 9,
+        touchSourceConfigured: true,
       },
       externalCampaignKey: 'reactivation_august_2026',
       isDefault: true,
       pipelineId: 'pipeline-1',
       sourceConnectionId: 'source-1',
+      touchCampaignKey: 'reactivation_august_2026_touches',
     })
     expect(result.reviews[0].signals[0]).toMatchObject({
       expectedValues: ['reactivation_august_2026'],
@@ -134,6 +138,7 @@ describe('growth review review API contract', () => {
       }],
       sourceConnectionId: 'source-1',
       status: 'active',
+      touchCampaignKey: ' reactivation_august_2026_touches ',
     })).toEqual({
       activity_start_date: '2026-08-01',
       external_campaign_key: 'reactivation_august_2026',
@@ -169,6 +174,7 @@ describe('growth review review API contract', () => {
       }],
       source_connection_id: 'source-1',
       status: 'active',
+      touch_campaign_key: 'reactivation_august_2026_touches',
     })
   })
 })
