@@ -251,6 +251,7 @@ export function ReactivationActivityChart({ chart }) {
               yAxisId="touches"
             />
             <YAxis
+              allowDecimals={false}
               axisLine={false}
               domain={[0, model.rightAxisMax]}
               orientation="right"
