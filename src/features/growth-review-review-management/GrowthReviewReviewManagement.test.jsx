@@ -166,6 +166,8 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('You can save partial progress')
     expect(html).toContain('aria-label="Remove Treatment accepted source"')
     expect(html).toContain('aria-label="Collapse outcome mapping"')
+    expect(html).toContain('1 of 1 configured')
+    expect(html).toContain('aria-label="Expand tracks"')
     expect(html).toContain('Refresh pipelines from GHL')
     expect(html).not.toContain('Campaign reviews</h2>')
   })

@@ -216,6 +216,7 @@ export function ReviewEditor({
           <ReviewTracksSection
             draft={draft}
             error={fieldErrors.tracks}
+            key={`${review.id}-tracks`}
             onAddSignal={onAddTrackSignal}
             onAddTrack={onAddTrack}
             onChangeSignal={onChangeTrackSignal}
