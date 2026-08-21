@@ -8,6 +8,7 @@ import {
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
 } from './adminWorkspacePaths'
 
 export const clientWorkspaceSections = [
@@ -30,6 +31,13 @@ export const clientWorkspaceSections = [
         label: 'Data',
         route: ROUTE_PATHS.agencyWorkspaceData,
         to: getWorkspaceDataSourcesPath,
+      },
+      {
+        id: 'tag-catalog',
+        iconName: 'tag',
+        label: 'Tag Catalog',
+        route: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+        to: getWorkspaceTagCatalogPath,
       },
       {
         id: 'review-setup',

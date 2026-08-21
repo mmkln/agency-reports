@@ -9,12 +9,14 @@ import {
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
 } from './index'
 
 describe('admin workspace paths', () => {
   it('builds canonical agency workspace paths', () => {
     expect(getWorkspaceSetupPath('workspace_1')).toBe('/agency/workspaces/workspace_1/setup')
     expect(getWorkspaceDataSourcesPath('workspace_1')).toBe('/agency/workspaces/workspace_1/data')
+    expect(getWorkspaceTagCatalogPath('workspace_1')).toBe('/agency/workspaces/workspace_1/tag-catalog')
     expect(getWorkspaceReviewSetupPath('workspace_1')).toBe('/agency/workspaces/workspace_1/review-setup')
     expect(getWorkspaceReviewPath('workspace_1')).toBe('/agency/workspaces/workspace_1/review')
     expect(getWorkspaceExecutivePath('workspace_1')).toBe('/agency/workspaces/workspace_1/executive')
@@ -29,6 +31,7 @@ describe('admin workspace paths', () => {
     expect(tabHrefs).toEqual([
       '/agency/workspaces/workspace_1/setup',
       '/agency/workspaces/workspace_1/data',
+      '/agency/workspaces/workspace_1/tag-catalog',
       '/agency/workspaces/workspace_1/review-setup',
       '/agency/workspaces/workspace_1/access',
       '/agency/workspaces/workspace_1/review',

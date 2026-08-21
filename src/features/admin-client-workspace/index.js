@@ -17,6 +17,7 @@ export {
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
   resolveRouteWorkspaceId,
 } from './model'
 export { useAdminRouteClient } from './useAdminRouteClient'

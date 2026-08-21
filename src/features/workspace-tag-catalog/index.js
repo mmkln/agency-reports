@@ -1,0 +1,1 @@
+export { WorkspaceTagCatalog } from './WorkspaceTagCatalog'

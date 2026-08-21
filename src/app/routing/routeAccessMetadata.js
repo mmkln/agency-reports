@@ -114,6 +114,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-workspace-tag-catalog',
+    path: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
+      scope: WORKSPACE,
+    },
+  },
+  {
     id: 'agency-workspace-review-setup',
     path: ROUTE_PATHS.agencyWorkspaceReviewSetup,
     access: {

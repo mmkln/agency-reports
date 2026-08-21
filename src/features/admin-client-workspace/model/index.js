@@ -6,6 +6,7 @@ export {
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
   resolveRouteWorkspaceId,
 } from './adminWorkspacePaths'
 export {

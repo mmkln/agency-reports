@@ -10,6 +10,7 @@ import { AgencyWorkspaceExecutivePage } from '../../pages/agency/workspace-execu
 import { AgencyWorkspaceReviewPage } from '../../pages/agency/workspace-review/AgencyWorkspaceReviewPage'
 import { AgencyWorkspaceReviewSetupPage } from '../../pages/agency/workspace-review-setup/AgencyWorkspaceReviewSetupPage'
 import { AgencyWorkspaceSetupPage } from '../../pages/agency/workspace-setup/AgencyWorkspaceSetupPage'
+import { AgencyWorkspaceTagCatalogPage } from '../../pages/agency/workspace-tag-catalog/AgencyWorkspaceTagCatalogPage'
 import { AdminClientDetailPage } from '../../pages/admin/client-detail/AdminClientDetailPage'
 import { AdminClientsPage } from '../../pages/admin/clients/AdminClientsPage'
 import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClientAccessPage'
@@ -52,6 +53,7 @@ export const AgencyWorkspaceExecutivePageRoute = withPageProps(AgencyWorkspaceEx
 export const AgencyWorkspaceReviewPageRoute = withPageProps(AgencyWorkspaceReviewPage, undefined)
 export const AgencyWorkspaceReviewSetupPageRoute = withPageProps(AgencyWorkspaceReviewSetupPage, undefined)
 export const AgencyWorkspaceSetupPageRoute = withPageProps(AgencyWorkspaceSetupPage, undefined)
+export const AgencyWorkspaceTagCatalogPageRoute = withPageProps(AgencyWorkspaceTagCatalogPage, undefined)
 export const AdminClientAccessPageRoute = withPageProps(AdminClientAccessPage, undefined)
 export const AdminClientDetailPageRoute = withPageProps(AdminClientDetailPage, undefined)
 export const AdminClientsPageRoute = withPageProps(AdminClientsPage, undefined)

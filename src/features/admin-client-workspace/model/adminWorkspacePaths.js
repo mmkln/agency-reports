@@ -5,6 +5,7 @@ import {
   getAgencyWorkspaceReviewPath,
   getAgencyWorkspaceReviewSetupPath,
   getAgencyWorkspaceSetupPath,
+  getAgencyWorkspaceTagCatalogPath,
 } from '../../../domain/navigation/routePaths'
 
 function getWorkspaceId(workspaceOrId) {
@@ -17,6 +18,10 @@ export function getWorkspaceSetupPath(workspaceOrId) {
 
 export function getWorkspaceDataSourcesPath(workspaceOrId) {
   return getAgencyWorkspaceDataPath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceTagCatalogPath(workspaceOrId) {
+  return getAgencyWorkspaceTagCatalogPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewPath(workspaceOrId) {

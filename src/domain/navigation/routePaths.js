@@ -8,6 +8,7 @@ export const ROUTE_PATHS = Object.freeze({
   agencyWorkspaceDetail: '/agency/workspaces/:workspaceId',
   agencyWorkspaceSetup: '/agency/workspaces/:workspaceId/setup',
   agencyWorkspaceData: '/agency/workspaces/:workspaceId/data',
+  agencyWorkspaceTagCatalog: '/agency/workspaces/:workspaceId/tag-catalog',
   agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
   agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
   agencyWorkspaceExecutive: '/agency/workspaces/:workspaceId/executive',
@@ -52,6 +53,10 @@ export function getAgencyWorkspaceSetupPath(workspaceId) {
 
 export function getAgencyWorkspaceDataPath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceData, { workspaceId })
+}
+
+export function getAgencyWorkspaceTagCatalogPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceTagCatalog, { workspaceId })
 }
 
 export function getAgencyWorkspaceReviewSetupPath(workspaceId) {
