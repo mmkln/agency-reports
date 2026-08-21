@@ -27,6 +27,7 @@ function normalizeTagUsage(source = {}) {
 
 function normalizeSourceTag(source = {}) {
   return {
+    description: normalizeText(source.description),
     externalId: normalizeText(source.external_id ?? source.externalId),
     id: normalizeText(source.id),
     name: normalizeText(source.name),

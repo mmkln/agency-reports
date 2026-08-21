@@ -28,6 +28,7 @@ export function filterSourceTags(tags, query) {
 
   return tags.filter((tag) => [
     tag.name,
+    tag.description,
     tag.externalId,
     tag.sourceConnection?.externalAccountId,
     ...tag.usages.flatMap((usage) => [usage.campaignName, usage.signalLabel]),

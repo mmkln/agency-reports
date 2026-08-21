@@ -11,6 +11,7 @@ describe('source tag catalog API contract', () => {
         provider: 'ghl',
       }],
       tags: [{
+        description: 'Starts the configured reactivation sequence.',
         external_id: 'tag-1',
         id: 'definition-1',
         name: 'Reactivation Sequence Started',
@@ -37,6 +38,7 @@ describe('source tag catalog API contract', () => {
       provider: 'ghl',
     })
     expect(result.tags[0]).toMatchObject({
+      description: 'Starts the configured reactivation sequence.',
       externalId: 'tag-1',
       name: 'Reactivation Sequence Started',
       updatedAt: '2026-08-21T10:00:00Z',
