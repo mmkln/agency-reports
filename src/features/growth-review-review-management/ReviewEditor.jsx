@@ -21,6 +21,7 @@ import {
 } from './ReviewFormFields'
 import { PipelineRefreshButton } from './PipelineRefreshButton'
 import { ReviewMappingsSection } from './ReviewMappingsSection'
+import { ReviewTracksSection } from './ReviewTracksSection'
 
 function EditorSection({ children, description, title }) {
   return (
@@ -41,10 +42,16 @@ export function ReviewEditor({
   headerAction,
   isDirty,
   onAddSignal,
+  onAddTrack,
+  onAddTrackSignal,
   onChangeField,
   onChangeSignal,
+  onChangeTrack,
+  onChangeTrackSignal,
   onChangeSource,
   onRemoveSignal,
+  onRemoveTrack,
+  onRemoveTrackSignal,
   onRefreshPipelines,
   onRefreshTags,
   onReset,
@@ -204,6 +211,19 @@ export function ReviewEditor({
             validationResult={validationResult}
             validationState={validationState}
             tagSyncState={tagSyncState}
+          />
+
+          <ReviewTracksSection
+            draft={draft}
+            error={fieldErrors.tracks}
+            onAddSignal={onAddTrackSignal}
+            onAddTrack={onAddTrack}
+            onChangeSignal={onChangeTrackSignal}
+            onChangeTrack={onChangeTrack}
+            onRemoveSignal={onRemoveTrackSignal}
+            onRemoveTrack={onRemoveTrack}
+            options={options}
+            validationResult={validationResult}
           />
 
           <ReviewFieldError>{fieldErrors.detail}</ReviewFieldError>

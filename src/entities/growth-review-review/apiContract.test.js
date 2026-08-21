@@ -36,6 +36,17 @@ describe('growth review review API contract', () => {
           priority: 100,
           source: 'tag',
         }],
+        tracks: [{
+          id: 'track-a',
+          key: 'A',
+          label: 'Track A',
+          priority: 100,
+          signals: [{
+            entity: 'contact',
+            expected_values: ['reactivation_august_track_a'],
+            source: 'tag',
+          }],
+        }],
         source_connection_id: 'source-1',
         status: 'active',
         workspace_id: 'workspace-1',
@@ -62,6 +73,11 @@ describe('growth review review API contract', () => {
       isActive: true,
       label: 'Campaign cohort',
       source: 'tag',
+    })
+    expect(result.reviews[0].tracks[0]).toMatchObject({
+      key: 'A',
+      label: 'Track A',
+      signals: [{ expectedValues: ['reactivation_august_track_a'] }],
     })
   })
 
@@ -106,6 +122,16 @@ describe('growth review review API contract', () => {
         priority: 100,
         source: 'tag',
       }],
+      tracks: [{
+        key: 'A',
+        label: 'Track A',
+        priority: 100,
+        signals: [{
+          entity: 'contact',
+          expectedValues: ['reactivation_august_track_a'],
+          source: 'tag',
+        }],
+      }],
       sourceConnectionId: 'source-1',
       status: 'active',
     })).toEqual({
@@ -125,6 +151,21 @@ describe('growth review review API contract', () => {
         label: 'Campaign cohort',
         priority: 100,
         source: 'tag',
+      }],
+      tracks: [{
+        is_active: true,
+        key: 'A',
+        label: 'Track A',
+        priority: 100,
+        signals: [{
+          entity: 'contact',
+          expected_values: ['reactivation_august_track_a'],
+          field_id: '',
+          field_key: '',
+          is_active: true,
+          priority: 0,
+          source: 'tag',
+        }],
       }],
       source_connection_id: 'source-1',
       status: 'active',

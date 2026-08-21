@@ -73,10 +73,16 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           )}
           isDirty={workflow.isDirty}
           onAddSignal={workflow.addReviewSignal}
+          onAddTrack={workflow.addReviewTrack}
+          onAddTrackSignal={workflow.addReviewTrackSignal}
           onChangeField={workflow.changeReviewField}
           onChangeSignal={workflow.changeReviewSignal}
+          onChangeTrack={workflow.changeReviewTrack}
+          onChangeTrackSignal={workflow.changeReviewTrackSignal}
           onChangeSource={workflow.changeReviewSource}
           onRemoveSignal={workflow.removeReviewSignal}
+          onRemoveTrack={workflow.removeReviewTrack}
+          onRemoveTrackSignal={workflow.removeReviewTrackSignal}
           onRefreshPipelines={workflow.refreshPipelines}
           onRefreshTags={workflow.refreshTags}
           onReset={workflow.resetReviewDraft}

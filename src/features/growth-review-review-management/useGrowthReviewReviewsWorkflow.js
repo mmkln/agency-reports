@@ -21,6 +21,10 @@ function createReviewDraft(review = null) {
     name: review?.name ?? '',
     pipelineId: review?.pipelineId ?? '',
     signals: review?.signals.map((signal) => ({ ...signal })) ?? [],
+    tracks: review?.tracks.map((track) => ({
+      ...track,
+      signals: track.signals.map((signal) => ({ ...signal })),
+    })) ?? [],
     sourceConnectionId: review?.sourceConnectionId ?? '',
     status: review?.status ?? 'draft',
   }
@@ -261,6 +265,92 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     })
   }
 
+  function addReviewTrack() {
+    const usedKeys = new Set(reviewDraft.tracks.map((track) => track.key))
+    let number = reviewDraft.tracks.length + 1
+    while (usedKeys.has(`track-${number}`)) {
+      number += 1
+    }
+    const track = {
+      id: '',
+      isActive: true,
+      key: `track-${number}`,
+      label: `Track ${number}`,
+      priority: reviewDraft.tracks.length * 100,
+      signals: [{
+        entity: 'contact',
+        expectedValues: [],
+        fieldId: '',
+        fieldKey: '',
+        id: '',
+        isActive: true,
+        priority: 0,
+        source: 'tag',
+      }],
+    }
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: { ...reviewDraft, tracks: [...reviewDraft.tracks, track] },
+    })
+  }
+
+  function changeReviewTrack(index, changes) {
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: {
+        ...reviewDraft,
+        tracks: reviewDraft.tracks.map((track, trackIndex) => (
+          trackIndex === index ? { ...track, ...changes } : track
+        )),
+      },
+    })
+  }
+
+  function changeReviewTrackSignal(trackIndex, signalIndex, changes) {
+    const track = reviewDraft.tracks[trackIndex]
+    changeReviewTrack(trackIndex, {
+      signals: track.signals.map((signal, index) => (
+        index === signalIndex ? { ...signal, ...changes } : signal
+      )),
+    })
+  }
+
+  function addReviewTrackSignal(trackIndex) {
+    const track = reviewDraft.tracks[trackIndex]
+    changeReviewTrack(trackIndex, {
+      signals: [...track.signals, {
+        entity: 'contact',
+        expectedValues: [],
+        fieldId: '',
+        fieldKey: '',
+        id: '',
+        isActive: true,
+        priority: track.signals.length * 100,
+        source: 'tag',
+      }],
+    })
+  }
+
+  function removeReviewTrackSignal(trackIndex, signalIndex) {
+    const track = reviewDraft.tracks[trackIndex]
+    changeReviewTrack(trackIndex, {
+      signals: track.signals.filter((_signal, index) => index !== signalIndex),
+    })
+  }
+
+  function removeReviewTrack(index) {
+    setValidationResult(null)
+    setDraftOverride({
+      reviewId: selectedReview.id,
+      value: {
+        ...reviewDraft,
+        tracks: reviewDraft.tracks.filter((_track, trackIndex) => trackIndex !== index),
+      },
+    })
+  }
+
   function changeCreateField(field, value) {
     setFieldErrors((current) => ({ ...current, [field]: '' }))
     setCreateDraft((current) => ({ ...current, [field]: value }))
@@ -463,11 +553,15 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   return {
+    addReviewTrack,
+    addReviewTrackSignal,
     addReviewSignal,
     changeCreateField,
     changeCreateSource,
     changeReviewField,
     changeReviewSignal,
+    changeReviewTrack,
+    changeReviewTrackSignal,
     changeReviewSource,
     closeCreateDialog,
     confirmArchive,
@@ -491,6 +585,8 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     ),
     requestArchive: setReviewPendingArchive,
     removeReviewSignal,
+    removeReviewTrack,
+    removeReviewTrackSignal,
     refreshPipelines,
     refreshTags,
     resetReviewDraft,

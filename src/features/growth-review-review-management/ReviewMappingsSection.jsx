@@ -105,9 +105,9 @@ function MatchingValuesInput({ id, onCommit, value }) {
   )
 }
 
-function SignalMappingRow({
+export function SignalMappingRow({
   customFields,
-  index,
+  idPrefix,
   mapping,
   onChange,
   onRemove,
@@ -120,7 +120,7 @@ function SignalMappingRow({
   }))
 
   function changeSource(source) {
-    onChange(index, {
+    onChange({
       entity: source === 'custom_field' ? '' : mapping.entity,
       expectedValues: [],
       fieldId: '',
@@ -131,7 +131,7 @@ function SignalMappingRow({
 
   function changeCustomField(fieldId) {
     const field = customFields.find((option) => option.id === fieldId)
-    onChange(index, {
+    onChange({
       entity: field?.entity ?? 'opportunity',
       fieldId,
       fieldKey: field?.fieldKey ?? '',
@@ -141,7 +141,7 @@ function SignalMappingRow({
   return (
     <div className="grid gap-component bg-block-subtle px-component py-item sm:grid-cols-[minmax(8rem,0.7fr)_minmax(9rem,0.8fr)_minmax(12rem,1.5fr)_auto] sm:items-end">
       <MappingSelect
-        id={`review-signal-${index}-source`}
+        id={`${idPrefix}-source`}
         label="Source"
         onValueChange={changeSource}
         value={mapping.source}
@@ -152,9 +152,9 @@ function SignalMappingRow({
 
       {mapping.source === 'tag' ? (
         <MappingSelect
-          id={`review-signal-${index}-entity`}
+          id={`${idPrefix}-entity`}
           label="Entity"
-          onValueChange={(entity) => onChange(index, { entity })}
+          onValueChange={(entity) => onChange({ entity })}
           value={mapping.entity}
         >
           {ENTITY_OPTIONS.map((option) => (
@@ -173,9 +173,9 @@ function SignalMappingRow({
       {mapping.source === 'tag' ? (
         <MappingCombobox
           emptyMessage="No tags found."
-          id={`review-signal-${index}-tag`}
+          id={`${idPrefix}-tag`}
           label="GHL tag"
-          onValueChange={(value) => onChange(index, { expectedValues: [value] })}
+          onValueChange={(value) => onChange({ expectedValues: [value] })}
           options={tags}
           placeholder="Search tags"
           value={mapping.expectedValues[0] ?? ''}
@@ -184,7 +184,7 @@ function SignalMappingRow({
         <div className="grid gap-component sm:grid-cols-2">
           <MappingCombobox
             emptyMessage="No custom fields found."
-            id={`review-signal-${index}-field`}
+            id={`${idPrefix}-field`}
             label="GHL custom field"
             onValueChange={changeCustomField}
             options={customFieldOptions}
@@ -192,10 +192,10 @@ function SignalMappingRow({
             value={mapping.fieldId}
           />
           <div className="grid gap-item">
-            <Label htmlFor={`review-signal-${index}-values`}>Matching values</Label>
+            <Label htmlFor={`${idPrefix}-values`}>Matching values</Label>
             <MatchingValuesInput
-              id={`review-signal-${index}-values`}
-              onCommit={(values) => onChange(index, { expectedValues: values })}
+              id={`${idPrefix}-values`}
+              onCommit={(values) => onChange({ expectedValues: values })}
               value={expectedValues}
             />
           </div>
@@ -204,8 +204,8 @@ function SignalMappingRow({
 
       <TooltipIconButton
         className="self-end text-text-secondary hover:text-destructive"
-        label={`Remove ${mapping.label} source`}
-        onClick={() => onRemove(index)}
+        label={`Remove ${mapping.label || 'mapping'} source`}
+        onClick={onRemove}
         size="md"
       >
         <Icon name="trash" size={16} />
@@ -340,11 +340,11 @@ export function ReviewMappingsSection({
                   {mappings.map(({ index, mapping }) => (
                     <SignalMappingRow
                       customFields={customFields}
-                      index={index}
+                      idPrefix={`review-signal-${index}`}
                       key={mapping.id || `${mapping.key}-${index}`}
                       mapping={mapping}
-                      onChange={onChange}
-                      onRemove={onRemove}
+                      onChange={(changes) => onChange(index, changes)}
+                      onRemove={() => onRemove(index)}
                       tags={tags}
                     />
                   ))}
