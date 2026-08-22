@@ -3,8 +3,20 @@ import { Link } from 'react-router-dom'
 
 import { Icon } from '../../shared/icons'
 import { Button, ErrorBlock, Input } from '../../shared/ui'
+import { OneTimeCodeInput } from './OneTimeCodeInput'
 
 const DEFAULT_EMAIL_CODE_DETAIL = 'If an account exists for this email, a sign-in code has been sent.'
+
+function maskEmail(email) {
+  const [localPart, domainPart] = String(email ?? '').split('@')
+
+  if (!localPart || !domainPart) {
+    return String(email ?? '')
+  }
+
+  const maskedLocal = localPart.length <= 1 ? '*' : `${localPart[0]}***`
+  return `${maskedLocal}@${domainPart}`
+}
 
 function AuthInput({ error = '', iconName, label, ...props }) {
   return (
@@ -119,34 +131,37 @@ function EmailCodeLoginForm({
   const [code, setCode] = useState('')
   const sending = status === 'sending'
   const verifying = status === 'verifying'
+  const isCodeComplete = code.length === 6
 
   if (step === 'code') {
     return (
       <form className="grid gap-component" onSubmit={(event) => {
         event.preventDefault()
+        if (!isCodeComplete) {
+          return
+        }
+
         onVerifyCode({ code: code.trim(), email: email.trim() })
       }}>
-        <AuthInput
-          autoComplete="one-time-code"
-          iconName="lock"
-          inputMode="numeric"
-          label="Code"
-          maxLength={6}
-          name="code"
-          onChange={(event) => setCode(event.target.value)}
-          pattern="[0-9]{6}"
-          placeholder="Code"
-          required
+        <div className="grid gap-item">
+          <p className="text-ui text-text-secondary">
+            Sent to <span className="font-medium text-text-primary">{maskEmail(email)}</span>
+          </p>
+          {detail ? <p className="text-label font-normal text-text-muted">{detail}</p> : null}
+        </div>
+
+        <OneTimeCodeInput
+          autoFocus
+          disabled={verifying}
+          onChange={setCode}
           value={code}
         />
-
-        {detail ? <p className="text-ui text-text-secondary">{detail}</p> : null}
 
         <div className="flex flex-col-reverse gap-control sm:flex-row sm:justify-end">
           <Button disabled={verifying} onClick={onUseAnotherEmail} type="button" variant="secondary">
             Use another email
           </Button>
-          <Button disabled={verifying} type="submit">
+          <Button disabled={!isCodeComplete || verifying} type="submit">
             {verifying ? 'Checking...' : 'Continue'}
           </Button>
         </div>
@@ -157,6 +172,7 @@ function EmailCodeLoginForm({
   return (
     <form className="grid gap-component" onSubmit={(event) => {
       event.preventDefault()
+      setCode('')
       onRequestCode({ email: email.trim() })
     }}>
       <AuthInput
