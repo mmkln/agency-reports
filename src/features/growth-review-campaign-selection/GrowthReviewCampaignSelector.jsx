@@ -12,6 +12,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Skeleton,
 } from '@/shared/ui'
 
 function formatCampaignDate(value) {
@@ -51,13 +52,37 @@ function CampaignTitle({ campaign, className, isLoading }) {
 export function GrowthReviewCampaignSelector({
   campaigns = [],
   className = '',
+  error = '',
   isLoading = false,
+  onRetry,
   onSelect,
   selectedCampaign,
+  status = 'loading',
   titleClassName = 'text-body font-semibold text-text-primary',
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const isPending = isLoading || status === 'loading'
   const hasChoices = campaigns.length > 1
+
+  if (isPending && !selectedCampaign) {
+    return <Skeleton aria-label="Loading campaigns" className={cn('h-8 w-56', className)} />
+  }
+
+  if (status === 'error') {
+    return (
+      <Button
+        className={cn('h-8 w-fit px-item text-label', className)}
+        onClick={onRetry}
+        size="sm"
+        title={error || undefined}
+        type="button"
+        variant="ghost"
+      >
+        <Icon name="refreshCw" size={14} />
+        Reload campaigns
+      </Button>
+    )
+  }
 
   if (!hasChoices) {
     return (
@@ -92,7 +117,7 @@ export function GrowthReviewCampaignSelector({
           aria-expanded={isOpen}
           aria-label={triggerLabel}
           className={cn(
-            '-mx-item h-auto max-w-full justify-start rounded-control px-item py-tag text-left hover:bg-control-hover',
+            '-mx-item h-auto w-fit max-w-title justify-start rounded-control px-item py-tag text-left hover:bg-control-hover',
             titleClassName,
             className,
           )}
@@ -104,7 +129,7 @@ export function GrowthReviewCampaignSelector({
           <Icon className="text-text-quaternary" name="chevronDown" size={16} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-tag">
+      <PopoverContent align="start" className="w-popover p-tag">
         <Command className="rounded-island bg-transparent">
           <CommandList>
             {isLoading ? (

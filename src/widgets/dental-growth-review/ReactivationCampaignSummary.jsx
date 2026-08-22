@@ -1,12 +1,6 @@
 import { forwardRef } from 'react'
 
 import { Icon } from '@/shared/icons'
-import {
-  Button,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui'
 
 import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
 import { reactivationText } from './reactivationTypography'
@@ -103,96 +97,8 @@ const cardToneByKey = {
 }
 
 const BOOKED_EXPECTED_VALUE_CARD_KEY = 'booked_expected_value'
-const SEQUENCE_STARTED_STAGE_KEY = 'sequence_started'
 const HIDDEN_ACTIVITY_CARD_KEYS = new Set(['duration', 'patients'])
 const LABELED_ACTIVITY_CARD_KEYS = new Set(['negative_replies', 'opt_out_patients'])
-
-const refreshStatusLabel = {
-  already_running: 'Already running',
-  completed: 'Updated',
-  failed: 'Failed',
-  idle: 'Ready',
-  pending: 'Waiting',
-  queued: 'Queued',
-  running: 'Updating',
-  skipped: 'Skipped',
-  sync_already_running: 'Already running',
-}
-
-const refreshStatusClass = {
-  already_running: 'text-premium-blue',
-  completed: 'text-success',
-  failed: 'text-destructive',
-  pending: 'text-text-quaternary',
-  queued: 'text-premium-blue',
-  running: 'text-premium-blue',
-  skipped: 'text-text-muted',
-  sync_already_running: 'text-premium-blue',
-}
-
-function formatPeriodDate(value) {
-  if (!value) {
-    return ''
-  }
-
-  const date = new Date(`${String(value).slice(0, 10)}T00:00:00.000Z`)
-
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-
-  return date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
-}
-
-function formatPeriodRange(period) {
-  const start = formatPeriodDate(period?.start ?? period?.period_start)
-  const end = formatPeriodDate(period?.end ?? period?.period_end)
-
-  if (!start || !end) {
-    return ''
-  }
-
-  return `${start} – ${end}`
-}
-
-function formatUpdatedAt(value) {
-  if (!value) {
-    return 'Data update pending'
-  }
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return 'Data update pending'
-  }
-
-  return `Data updated ${date.toLocaleString('en-US', {
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })}`
-}
-
-function getRefreshButtonLabel(refresh) {
-  if (refresh?.isRefreshing) {
-    return 'Updating'
-  }
-
-  if (refresh?.status === 'already_running') {
-    return 'Refresh'
-  }
-
-  if (refresh?.status === 'failed') {
-    return 'Retry'
-  }
-
-  return 'Refresh'
-}
 
 function formatCardValue(card) {
   if (card.key === BOOKED_EXPECTED_VALUE_CARD_KEY) {
@@ -270,12 +176,6 @@ function getActivityCardCaption(card) {
 
 function findCardByKey(cards, key) {
   return cards.find((card) => card.key === key) ?? null
-}
-
-function getSequenceStartedCount(funnelChart) {
-  const stage = funnelChart?.stages?.find((item) => item.stage_id === SEQUENCE_STARTED_STAGE_KEY)
-
-  return Number(stage?.stage_count ?? 0)
 }
 
 function formatCohortPercent(value) {
@@ -362,82 +262,6 @@ const ActivityCard = forwardRef(function ActivityCard({
   )
 })
 
-function RefreshStepStatus({ step }) {
-  const status = step.status || 'pending'
-  const label = refreshStatusLabel[status] ?? status
-  const toneClass = refreshStatusClass[status] ?? 'text-text-muted'
-  const detail = step.detail || step.errorMessage || ''
-
-  return (
-    <li className="flex items-start justify-between gap-component">
-      <span className="min-w-0">
-        <span className="block truncate text-label font-medium text-text-secondary">
-          {step.label}
-        </span>
-        {detail ? (
-          <span className="mt-1 block text-caption font-normal leading-snug text-text-muted">
-            {detail}
-          </span>
-        ) : null}
-      </span>
-      <span className={`shrink-0 text-label font-semibold ${toneClass}`}>
-        {label}
-      </span>
-    </li>
-  )
-}
-
-function RefreshStatusPopover({ refresh }) {
-  const steps = refresh?.refreshRun?.steps ?? []
-  const hasSteps = steps.length > 0
-  const isRefreshing = refresh?.isRefreshing
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          className="h-8 rounded-control px-3 text-label"
-          onClick={refresh?.startRefresh}
-          size="sm"
-          type="button"
-          variant="secondary"
-        >
-          <Icon name={isRefreshing ? 'clock' : 'refreshCw'} size={14} />
-          {getRefreshButtonLabel(refresh)}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <div>
-          <p className="text-ui font-semibold text-text-primary">
-            {isRefreshing ? 'Updating Growth Review' : 'Data refresh'}
-          </p>
-          <p className="mt-tag text-label font-normal text-text-muted">
-            Source data sync and dashboard calculation run on the backend.
-          </p>
-        </div>
-
-        {hasSteps ? (
-          <ul className="mt-component grid gap-control">
-            {steps.map((step) => (
-              <RefreshStepStatus key={step.key || step.id} step={step} />
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-component rounded-control bg-fill-secondary px-control py-item text-label text-text-muted">
-            No refresh has been run in this session.
-          </p>
-        )}
-
-        {refresh?.error ? (
-          <p className="mt-control rounded-control bg-destructive/10 px-control py-item text-label font-medium text-destructive">
-            {refresh.error}
-          </p>
-        ) : null}
-      </PopoverContent>
-    </Popover>
-  )
-}
-
 const HERO_CARD_KEYS = ['actual_bookings', 'bookings']
 const PATIENT_REPLIES_CARD_ID = 'patient-replies'
 const REPLY_TO_BOOKING_CARD_ID = 'reply-to-booking'
@@ -515,14 +339,8 @@ function BookedExpectedValueCard({ card }) {
 }
 
 export function ReactivationCampaignSummary({
-  campaign,
-  campaignSelector,
   chart,
   funnelChart,
-  period,
-  refresh,
-  secondaryAction,
-  updatedAt,
 }) {
   if (!chart?.available) {
     return null
@@ -543,71 +361,31 @@ export function ReactivationCampaignSummary({
     && card !== bookedExpectedValueCard
   ))
   const cohortCount = Number(funnelChart?.stages?.[0]?.stage_count ?? 0)
-  const sequenceStartedCount = getSequenceStartedCount(funnelChart)
   const bookingsCount = Number(heroCard?.value ?? 0)
   const bookedPercent = heroCard && cohortCount > 0
     ? formatCohortPercent((bookingsCount / cohortCount) * 100)
     : ''
   const weeklyDelta = getRecentBookingsDelta(chart.series)
-  const periodRange = formatPeriodRange(period)
-  const cohortLabel = cohortCount > 0
-    ? `${cohortCount.toLocaleString('en-US')} patients in cohort`
-    : ''
-  const sequenceStartedLabel = sequenceStartedCount > 0
-    ? `${sequenceStartedCount.toLocaleString('en-US')} started sequence`
-    : ''
 
   return (
-    <section className="grid gap-control">
-      <header className="flex flex-wrap items-start justify-between gap-control">
-        <div className="min-w-0">
-          {campaignSelector ?? (
-            <h2 className={reactivationText.sectionTitle}>
-              {campaign?.name || 'Reactivation campaign'}
-            </h2>
-          )}
-          {periodRange || cohortLabel ? (
-            <div className={`mt-tag grid gap-1 ${reactivationText.updatedMeta}`}>
-              {periodRange ? <p>{periodRange}</p> : null}
-              {cohortLabel ? (
-                <p>
-                  <span>{cohortLabel}</span>
-                  {sequenceStartedLabel ? (
-                    <>
-                      <span> · </span>
-                      <span>{sequenceStartedLabel}</span>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-control">
-          <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
-          {refresh ? <RefreshStatusPopover refresh={refresh} /> : null}
-          {secondaryAction}
-        </div>
-      </header>
-      <div className="grid gap-control md:grid-cols-2 xl:grid-cols-4">
-        {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
-        {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
-        <ReactivationCampaignKpiCards
-          funnelChart={funnelChart}
-          includeIds={[PATIENT_REPLIES_CARD_ID]}
-        />
-        {activityCards.length ? (
-          <>
-            <ReactivationCampaignKpiCards
-              funnelChart={funnelChart}
-              includeIds={[REPLY_TO_BOOKING_CARD_ID]}
-            />
-            {activityCards.map((card) => (
-              <ActivityCard card={card} key={card.key || card.label} />
-            ))}
-          </>
-        ) : null}
-      </div>
+    <section className="grid gap-control md:grid-cols-2 xl:grid-cols-4">
+      {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
+      {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
+      <ReactivationCampaignKpiCards
+        funnelChart={funnelChart}
+        includeIds={[PATIENT_REPLIES_CARD_ID]}
+      />
+      {activityCards.length ? (
+        <>
+          <ReactivationCampaignKpiCards
+            funnelChart={funnelChart}
+            includeIds={[REPLY_TO_BOOKING_CARD_ID]}
+          />
+          {activityCards.map((card) => (
+            <ActivityCard card={card} key={card.key || card.label} />
+          ))}
+        </>
+      ) : null}
     </section>
   )
 }

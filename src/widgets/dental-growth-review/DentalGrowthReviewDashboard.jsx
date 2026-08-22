@@ -7,6 +7,7 @@ import {
 } from '@/features/growth-review-layout'
 import { Icon } from '@/shared/icons'
 import { Button, SectionRailNav } from '@/shared/ui'
+import { GrowthReviewCampaignContextToolbar } from './GrowthReviewCampaignContextToolbar'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
 import { renderGrowthReviewDashboardWidget } from './dashboardWidgetRegistry'
 import { buildTrackPerformanceModel } from './reactivationTrackPerformanceModel'
@@ -80,11 +81,6 @@ export function DentalGrowthReviewDashboard({
     onSaved: onLayoutSaved,
     workspaceId,
   })
-
-  if (page.status === 'error' || !page.period) {
-    return <DentalGrowthReviewState onRetry={onRetry} page={page} />
-  }
-
   const funnelChart = page.charts?.funnel ?? null
   const funnelStages = page.charts?.funnel?.stages ?? []
   const acceptedTreatmentValueBreakdown = page.charts?.acceptedTreatmentValueBreakdown ?? null
@@ -108,6 +104,28 @@ export function DentalGrowthReviewDashboard({
       Customize
     </Button>
   ) : null
+  const campaignContextToolbar = (
+    <GrowthReviewCampaignContextToolbar
+      campaign={page.campaign}
+      campaignSelector={campaignSelector}
+      funnelChart={funnelChart}
+      period={page.charts?.period ?? page.period}
+      refresh={refresh}
+      secondaryAction={layoutAction}
+      updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
+    />
+  )
+
+  if (page.status === 'error' || !page.period) {
+    return (
+      <div className="grid gap-component">
+        {campaignContextToolbar}
+        <DentalGrowthReviewState onRetry={onRetry} page={page} />
+        <GrowthReviewLayoutModal editor={layoutEditor} />
+      </div>
+    )
+  }
+
   const renderedWidgets = (page.layout?.items ?? [])
     .map((item) => ({
       item,
@@ -135,17 +153,12 @@ export function DentalGrowthReviewDashboard({
     <>
       <SectionRailNav items={sectionNavItems} />
 
-      <section className="scroll-mt-24" id={SUMMARY_SECTION_ID}>
+      <section className="grid scroll-mt-24 gap-component" id={SUMMARY_SECTION_ID}>
+        {campaignContextToolbar}
         <ReactivationCampaignSummary
           acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
-          campaign={page.campaign}
-          campaignSelector={campaignSelector}
           chart={reactivationActivity}
           funnelChart={funnelChart}
-          period={page.charts?.period ?? page.period}
-          refresh={refresh}
-          secondaryAction={layoutAction}
-          updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
         />
       </section>
 

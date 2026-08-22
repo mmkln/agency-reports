@@ -53,9 +53,12 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
         campaignSelector={(
           <GrowthReviewCampaignSelector
             campaigns={campaignSelection.campaigns}
+            error={campaignSelection.error}
             isLoading={campaignSelection.isLoading}
+            onRetry={campaignSelection.reload}
             onSelect={campaignSelection.selectCampaign}
             selectedCampaign={campaignSelection.selectedCampaign ?? page.campaign}
+            status={campaignSelection.status}
           />
         )}
         funnelEmptyAction={funnelEmptyAction}
