@@ -88,11 +88,15 @@ async function readJsonResponse(response) {
 }
 
 function getDefaultErrorMessage(status, payload) {
-  if (payload?.detail) {
+  if (typeof payload?.message === 'string' && payload.message.trim()) {
+    return payload.message
+  }
+
+  if (typeof payload?.detail === 'string' && payload.detail.trim()) {
     return payload.detail
   }
 
-  if (payload?.error) {
+  if (typeof payload?.error === 'string' && payload.error.trim()) {
     return payload.error
   }
 

@@ -6,6 +6,7 @@ import {
   createGrowthReviewReview,
   getGrowthReviewReviewOptions,
   listGrowthReviewReviews,
+  normalizeGrowthReviewReviewValidationIssues,
   updateGrowthReviewReview,
   validateGrowthReviewReview,
 } from '@/entities/growth-review-review'
@@ -122,6 +123,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const [tagSyncState, setTagSyncState] = useState('idle')
   const [reviewPendingArchive, setReviewPendingArchive] = useState(null)
   const [validationResult, setValidationResult] = useState(null)
+  const [validationIssues, setValidationIssues] = useState([])
   const [validationState, setValidationState] = useState('idle')
   const resource = useAsyncResource({
     dependencyKey: `growth-review-reviews:${workspaceId}`,
@@ -157,6 +159,11 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     createReviewDraft(selectedReview),
   )
 
+  function clearValidation() {
+    setValidationResult(null)
+    setValidationIssues([])
+  }
+
   function updateSearchParams(update) {
     const nextSearchParams = new URLSearchParams(searchParams)
     update(nextSearchParams)
@@ -167,7 +174,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setDraftOverride(null)
     setFieldErrors({})
     setOperationError('')
-    setValidationResult(null)
+    clearValidation()
     updateSearchParams((nextSearchParams) => {
       nextSearchParams.set('review', reviewId)
       nextSearchParams.delete('create')
@@ -178,7 +185,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setCreateDraft(createReviewDraft())
     setFieldErrors({})
     setOperationError('')
-    setValidationResult(null)
+    clearValidation()
     updateSearchParams((nextSearchParams) => nextSearchParams.set('create', 'review'))
   }
 
@@ -195,7 +202,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     }
 
     setFieldErrors((current) => ({ ...current, [field]: '' }))
-    setValidationResult(null)
+    clearValidation()
     const nextValue = {
       ...reviewDraft,
       [field]: value,
@@ -238,7 +245,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       priority: (options.signalKeys.findIndex((item) => item.value === key) + 1) * 100,
       source: 'tag',
     }
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: { ...reviewDraft, signals: [...reviewDraft.signals, nextSignal] },
@@ -246,7 +253,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   function changeReviewSignal(index, changes) {
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: {
@@ -259,7 +266,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   function removeReviewSignal(index) {
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: {
@@ -292,7 +299,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
         source: 'tag',
       }],
     }
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: { ...reviewDraft, tracks: [...reviewDraft.tracks, track] },
@@ -300,7 +307,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   function changeReviewTrack(index, changes) {
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: {
@@ -345,7 +352,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   }
 
   function removeReviewTrack(index) {
-    setValidationResult(null)
+    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
       value: {
@@ -378,7 +385,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     setDraftOverride(null)
     setFieldErrors({})
     setOperationError('')
-    setValidationResult(null)
+    clearValidation()
   }
 
   async function reloadAndSelect(reviewId) {
@@ -524,10 +531,15 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
         reviewDraft,
       )
       setValidationResult(result)
+      setValidationIssues([])
     } catch (error) {
       setValidationResult(null)
-      setFieldErrors(normalizeFieldErrors(error))
-      setOperationError(getOperationError(error, 'The mappings could not be validated.'))
+      const issues = normalizeGrowthReviewReviewValidationIssues(error?.payload)
+      setValidationIssues(issues)
+      if (issues.length === 0) {
+        setFieldErrors(normalizeFieldErrors(error))
+        setOperationError(getOperationError(error, 'The mappings could not be validated.'))
+      }
     } finally {
       setValidationState('idle')
     }
@@ -603,6 +615,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     selectReview,
     validateReview,
     validationResult,
+    validationIssues,
     validationState,
     tagSyncState,
   }

@@ -22,6 +22,7 @@ import {
 import { PipelineRefreshButton } from './PipelineRefreshButton'
 import { ReviewMappingsSection } from './ReviewMappingsSection'
 import { ReviewTracksSection } from './ReviewTracksSection'
+import { findValidationIssueMessage } from './validationIssues'
 
 function EditorSection({ children, description, title }) {
   return (
@@ -65,6 +66,7 @@ export function ReviewEditor({
   review,
   tagSyncState,
   validationResult,
+  validationIssues = [],
   validationState,
 }) {
   const isBusy = operationState !== 'idle'
@@ -147,7 +149,9 @@ export function ReviewEditor({
           >
             <div className="grid gap-component sm:grid-cols-2">
               <ReviewSelectField
-                error={fieldErrors.source_connection_id ?? fieldErrors.sourceConnectionId}
+                error={fieldErrors.source_connection_id
+                  ?? fieldErrors.sourceConnectionId
+                  ?? findValidationIssueMessage(validationIssues, 'source_connection_id')}
                 id="review-source"
                 label="Source connection"
                 onValueChange={onChangeSource}
@@ -165,7 +169,9 @@ export function ReviewEditor({
                   />
                 )}
                 disabled={!draft.sourceConnectionId}
-                error={fieldErrors.pipeline_id ?? fieldErrors.pipelineId}
+                error={fieldErrors.pipeline_id
+                  ?? fieldErrors.pipelineId
+                  ?? findValidationIssueMessage(validationIssues, 'pipeline_id')}
                 id="review-pipeline"
                 label="Pipeline"
                 onValueChange={(value) => onChangeField('pipelineId', value)}
@@ -184,7 +190,9 @@ export function ReviewEditor({
             <div className="max-w-xl">
               <ReviewTextField
                 disabled={review.status !== 'draft'}
-                error={fieldErrors.external_campaign_key ?? fieldErrors.externalCampaignKey}
+                error={fieldErrors.external_campaign_key
+                  ?? fieldErrors.externalCampaignKey
+                  ?? findValidationIssueMessage(validationIssues, 'external_campaign_key')}
                 help={review.status === 'draft'
                   ? 'Stable identifier for this external GHL campaign.'
                   : 'The external campaign key is locked after activation.'}
@@ -204,7 +212,9 @@ export function ReviewEditor({
           >
             <div className="max-w-xl">
               <ReviewTextField
-                error={fieldErrors.touch_campaign_key ?? fieldErrors.touchCampaignKey}
+                error={fieldErrors.touch_campaign_key
+                  ?? fieldErrors.touchCampaignKey
+                  ?? findValidationIssueMessage(validationIssues, 'touch_campaign_key')}
                 id="review-touch-campaign-key"
                 label="Reactivation Touch campaign key"
                 onChange={(value) => onChangeField('touchCampaignKey', value)}
@@ -226,6 +236,7 @@ export function ReviewEditor({
             options={options}
             signalError={fieldErrors.signals}
             validationResult={validationResult}
+            validationIssues={validationIssues}
             validationState={validationState}
             tagSyncState={tagSyncState}
           />
@@ -242,6 +253,7 @@ export function ReviewEditor({
             onRemoveTrack={onRemoveTrack}
             options={options}
             validationResult={validationResult}
+            validationIssues={validationIssues}
           />
 
           <ReviewFieldError>{fieldErrors.detail}</ReviewFieldError>

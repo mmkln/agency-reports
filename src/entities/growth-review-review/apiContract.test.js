@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   normalizeGrowthReviewReviewOptionsPayload,
+  normalizeGrowthReviewReviewValidationIssues,
   normalizeGrowthReviewReviewsPayload,
   toGrowthReviewReviewInput,
 } from './apiContract'
@@ -176,5 +177,21 @@ describe('growth review review API contract', () => {
       status: 'active',
       touch_campaign_key: 'reactivation_august_2026_touches',
     })
+  })
+
+  it('normalizes structured validation issues without flattening field paths', () => {
+    expect(normalizeGrowthReviewReviewValidationIssues({
+      issues: [{
+        code: 'tag_not_found',
+        message: 'This GHL tag is no longer available.',
+        meta: { missing_values: ['missing-tag'] },
+        path: 'tracks.1.signals.0.expected_values',
+      }],
+    })).toEqual([{
+      code: 'tag_not_found',
+      message: 'This GHL tag is no longer available.',
+      meta: { missing_values: ['missing-tag'] },
+      path: 'tracks.1.signals.0.expected_values',
+    }])
   })
 })

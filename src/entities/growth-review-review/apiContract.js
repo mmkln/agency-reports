@@ -247,3 +247,14 @@ export function normalizeGrowthReviewReviewValidation(payload = {}) {
     valid: validation.valid === true,
   }
 }
+
+export function normalizeGrowthReviewReviewValidationIssues(payload = {}) {
+  return normalizeArray(payload.issues).map((issue) => ({
+    code: normalizeText(issue.code),
+    message: normalizeText(issue.message),
+    meta: issue.meta && typeof issue.meta === 'object' && !Array.isArray(issue.meta)
+      ? issue.meta
+      : {},
+    path: normalizeText(issue.path),
+  })).filter((issue) => issue.path && issue.message)
+}

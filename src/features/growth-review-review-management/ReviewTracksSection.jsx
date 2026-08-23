@@ -12,6 +12,10 @@ import {
 } from '@/shared/ui'
 
 import { SignalMappingRow } from './ReviewMappingsSection'
+import {
+  findValidationIssueMessage,
+  findValidationIssuesForPath,
+} from './validationIssues'
 
 function isConfiguredSignal(signal) {
   if (signal.isActive === false || !signal.expectedValues.length) {
@@ -41,6 +45,7 @@ export function ReviewTracksSection({
   onRemoveTrack,
   options,
   validationResult,
+  validationIssues = [],
 }) {
   const configuredCount = useMemo(
     () => draft.tracks.filter(isConfiguredTrack).length,
@@ -48,7 +53,10 @@ export function ReviewTracksSection({
   )
   const isComplete = draft.tracks.length > 0 && configuredCount === draft.tracks.length
   const [isOpen, setIsOpen] = useState(!isComplete)
-  const tracksOpen = isOpen || Boolean(error)
+  const trackValidationPresent = validationIssues.some((issue) => (
+    issue.path === 'tracks' || issue.path.startsWith('tracks.')
+  ))
+  const tracksOpen = isOpen || Boolean(error) || trackValidationPresent
   const tags = (options.tags ?? []).filter(
     (tag) => tag.sourceConnectionId === draft.sourceConnectionId,
   )
@@ -58,6 +66,7 @@ export function ReviewTracksSection({
   const validationByKey = Object.fromEntries(
     (validationResult?.tracks?.items ?? []).map((track) => [track.key, track.matchCount]),
   )
+  const sectionIssues = findValidationIssuesForPath(validationIssues, 'tracks')
 
   return (
     <Collapsible
@@ -138,6 +147,20 @@ export function ReviewTracksSection({
                   {track.signals.map((signal, signalIndex) => (
                     <SignalMappingRow
                       customFields={customFields}
+                      errors={{
+                        entity: findValidationIssueMessage(
+                          validationIssues,
+                          `tracks.${trackIndex}.signals.${signalIndex}.entity`,
+                        ),
+                        field: findValidationIssueMessage(
+                          validationIssues,
+                          `tracks.${trackIndex}.signals.${signalIndex}.field_id`,
+                        ),
+                        values: findValidationIssueMessage(
+                          validationIssues,
+                          `tracks.${trackIndex}.signals.${signalIndex}.expected_values`,
+                        ),
+                      }}
                       idPrefix={`review-track-${trackIndex}-signal-${signalIndex}`}
                       key={signal.id || `${track.key}-${signalIndex}`}
                       mapping={{ ...signal, label: track.label }}
@@ -155,6 +178,11 @@ export function ReviewTracksSection({
         )}
 
         {error ? <p className="text-label text-destructive">{error}</p> : null}
+        {sectionIssues.map((issue) => (
+          <p className="text-label text-destructive" key={`${issue.code}-${issue.message}`}>
+            {issue.message}
+          </p>
+        ))}
         {validationResult?.tracks ? (
           <p className="text-label text-text-muted">
             {validationResult.tracks.cohortCount} cohort contacts · 0 unassigned · 0 conflicts

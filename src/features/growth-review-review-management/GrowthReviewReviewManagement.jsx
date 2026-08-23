@@ -96,6 +96,7 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           review={workflow.selectedReview}
           tagSyncState={workflow.tagSyncState}
           validationResult={workflow.validationResult}
+          validationIssues={workflow.validationIssues}
           validationState={workflow.validationState}
         />
       ) : (

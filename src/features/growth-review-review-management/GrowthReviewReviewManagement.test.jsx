@@ -145,6 +145,7 @@ const workflow = {
   selectedReview,
   validateReview: vi.fn(),
   validationResult: null,
+  validationIssues: [],
   validationState: 'idle',
 }
 
@@ -193,6 +194,28 @@ describe('GrowthReviewReviewManagement', () => {
     } finally {
       workflow.reviews = previousReviews
       workflow.selectedReview = previousSelectedReview
+    }
+  })
+
+  it('renders a validation issue under the affected mapping field', () => {
+    const previousIssues = workflow.validationIssues
+    workflow.validationIssues = [{
+      code: 'tag_not_found',
+      message: 'This GHL tag is no longer available.',
+      meta: {},
+      path: 'signals.0.expected_values',
+    }]
+
+    try {
+      const html = renderToStaticMarkup(
+        <GrowthReviewReviewManagement apiClient={{}} workspaceId="workspace-1" />,
+      )
+
+      expect(html).toContain('This GHL tag is no longer available.')
+      expect(html).toContain('aria-invalid="true"')
+      expect(html).not.toContain('[object Object]')
+    } finally {
+      workflow.validationIssues = previousIssues
     }
   })
 })
