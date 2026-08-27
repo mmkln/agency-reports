@@ -1,4 +1,5 @@
 import {
+  EmptyState,
   Table,
   TableBody,
   TableCell,
@@ -196,20 +197,22 @@ export function AcceptedTreatmentValueBreakdown({ chart }) {
   const rows = chart.summary?.rows ?? []
   const currency = chart.currency || 'USD'
 
-  if (!cards.length && !rows.length) {
-    return null
-  }
-
   return (
     <ReactivationChartPanel
       subtitle="Paid revenue, open balance, and projected value for accepted treatments."
       title="Accepted Treatment Value Breakdown"
     >
-      <FinancialSummary cards={cards} currency={currency} />
-
-      {rows.length ? (
-        <PatientsValueTable cards={cards} currency={currency} rawTotals={rawTotals} rows={rows} />
-      ) : null}
+      {rows.length === 0 ? (
+        <EmptyState
+          className="items-center bg-transparent py-card text-center"
+          title="No accepted treatments this period"
+        />
+      ) : (
+        <>
+          <FinancialSummary cards={cards} currency={currency} />
+          <PatientsValueTable cards={cards} currency={currency} rawTotals={rawTotals} rows={rows} />
+        </>
+      )}
     </ReactivationChartPanel>
   )
 }
