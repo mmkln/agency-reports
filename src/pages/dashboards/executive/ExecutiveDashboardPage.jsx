@@ -23,6 +23,16 @@ export function ExecutiveDashboardPage({ routeParams = {}, runtime }) {
   return (
     <PageShell className="pb-section pt-card" width="wide">
       <ExecutiveDashboard page={executiveDashboard.page} />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-10 grid place-items-center"
+      >
+        <div className="select-none scale-125 text-center text-display uppercase text-text-primary opacity-10 sm:scale-150">
+          <div>In Development</div>
+          <div>Sample Data</div>
+        </div>
+      </div>
     </PageShell>
   )
 }
