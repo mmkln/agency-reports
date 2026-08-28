@@ -28,7 +28,7 @@ export function ExecutiveDashboardPage({ routeParams = {}, runtime }) {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-10 grid place-items-center"
       >
-        <div className="select-none scale-125 text-center text-display uppercase text-destructive opacity-15 sm:scale-150">
+        <div className="select-none text-center text-5xl leading-none tracking-normal uppercase text-destructive opacity-15 sm:text-8xl">
           <div>In Development</div>
           <div>Sample Data</div>
         </div>
