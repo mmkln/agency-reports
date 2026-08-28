@@ -56,27 +56,21 @@ function GrowthReviewUpdateAction({ refresh, secondaryAction }) {
   )
 }
 
-function canViewerCustomizeGrowthReviewLayout(viewer) {
-  return (viewer?.agencyMemberships ?? []).some((membership) => (
-    membership.status === 'active'
-    && (membership.capabilities ?? []).includes('integrations.manage')
-  ))
-}
-
 export function DentalGrowthReviewDashboard({
   acceptedTreatmentDrilldown,
   apiClient,
+  campaignId,
   campaignSelector,
   funnelEmptyAction,
   onLayoutSaved,
   onRetry,
   page,
   refresh,
-  viewer,
   workspaceId,
 }) {
   const layoutEditor = useGrowthReviewLayoutEditor({
     apiClient,
+    campaignId,
     layout: page.layout,
     onSaved: onLayoutSaved,
     workspaceId,
@@ -88,7 +82,7 @@ export function DentalGrowthReviewDashboard({
   const reactivationActivity = page.charts?.reactivationActivity ?? null
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
-  const canCustomizeLayout = canViewerCustomizeGrowthReviewLayout(viewer)
+  const canCustomizeLayout = page.permissions?.canCustomizeLayout === true
   const lifecycleEmptyAction = (
     <GrowthReviewUpdateAction
       refresh={refresh}
@@ -127,6 +121,7 @@ export function DentalGrowthReviewDashboard({
   }
 
   const renderedWidgets = (page.layout?.items ?? [])
+    .filter((item) => item.isVisible !== false)
     .map((item) => ({
       item,
       widget: renderGrowthReviewDashboardWidget(item.widgetKey, {

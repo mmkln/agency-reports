@@ -1,440 +1,91 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
-import { Icon } from '@/shared/icons'
-import {
-  Button,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  Input,
-  Label,
-  RadixSelect,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  TooltipIconButton,
-} from '@/shared/ui'
-
+import { OutcomeMappingRow } from './OutcomeMappingRow'
 import {
   findRequiredMappingIssue,
   findValidationIssueMessage,
 } from './validationIssues'
 
-const ENTITY_OPTIONS = [
-  { label: 'Contact', value: 'contact' },
-  { label: 'Opportunity', value: 'opportunity' },
-  { label: 'Contact or opportunity', value: 'any' },
-]
-
-function MappingSelect({ children, error, id, label, onValueChange, placeholder, value }) {
-  const errorId = error ? `${id}-error` : undefined
-  return (
-    <div className="grid gap-item">
-      <Label htmlFor={id}>{label}</Label>
-      <RadixSelect onValueChange={onValueChange} value={value}>
-        <SelectTrigger
-          aria-describedby={errorId}
-          aria-invalid={Boolean(error)}
-          id={id}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>{children}</SelectContent>
-      </RadixSelect>
-      {error ? (
-        <p className="text-label text-destructive" id={errorId}>{error}</p>
-      ) : null}
-    </div>
-  )
-}
-
-function MappingCombobox({
-  emptyMessage,
-  error,
-  id,
-  label,
-  onValueChange,
-  options,
-  placeholder,
-  value,
-}) {
-  const selectedOption = options.find((option) => option.value === value) ?? null
-  const errorId = error ? `${id}-error` : undefined
-
-  return (
-    <div className="grid gap-item">
-      <Label htmlFor={id}>{label}</Label>
-      <Combobox
-        items={options}
-        onValueChange={(option) => onValueChange(option?.value ?? '')}
-        value={selectedOption}
-      >
-        <ComboboxInput
-          aria-describedby={errorId}
-          aria-invalid={Boolean(error)}
-          id={id}
-          placeholder={placeholder}
-          showClear
-        />
-        <ComboboxContent>
-          <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
-          <ComboboxList>
-            {(option) => (
-              <ComboboxItem key={option.value} value={option}>
-                {option.label}
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-      {error ? (
-        <p className="text-label text-destructive" id={errorId}>{error}</p>
-      ) : null}
-    </div>
-  )
-}
-
-function parseMatchingValues(value) {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
-
-function MatchingValuesInput({ error, id, onCommit, value }) {
-  const [draftValue, setDraftValue] = useState(null)
-  const displayedValue = draftValue ?? value
-
-  function changeValue(event) {
-    const nextValue = event.target.value
-    setDraftValue(nextValue)
-    onCommit(parseMatchingValues(nextValue))
-  }
-
-  return (
-    <Input
-      aria-describedby={error ? `${id}-error` : undefined}
-      aria-invalid={Boolean(error)}
-      id={id}
-      onBlur={() => setDraftValue(null)}
-      onChange={changeValue}
-      placeholder="Value 1, Value 2"
-      value={displayedValue}
-    />
-  )
-}
-
-export function SignalMappingRow({
-  customFields,
-  errors = {},
-  idPrefix,
-  mapping,
-  onChange,
-  onRemove,
-  tags,
-}) {
-  const expectedValues = mapping.expectedValues.join(', ')
-  const customFieldOptions = customFields.map((field) => ({
-    label: field.label,
-    value: field.id,
-  }))
-
-  function changeSource(source) {
-    onChange({
-      entity: source === 'custom_field' ? '' : mapping.entity,
-      expectedValues: [],
-      fieldId: '',
-      fieldKey: '',
-      source,
-    })
-  }
-
-  function changeCustomField(fieldId) {
-    const field = customFields.find((option) => option.id === fieldId)
-    onChange({
-      entity: field?.entity ?? 'opportunity',
-      fieldId,
-      fieldKey: field?.fieldKey ?? '',
-    })
-  }
-
-  return (
-    <div className="grid gap-component bg-block-subtle px-component py-item sm:grid-cols-[minmax(8rem,0.7fr)_minmax(9rem,0.8fr)_minmax(12rem,1.5fr)_auto] sm:items-end">
-      <MappingSelect
-        id={`${idPrefix}-source`}
-        label="Source"
-        onValueChange={changeSource}
-        value={mapping.source}
-      >
-        <SelectItem value="tag">Tag</SelectItem>
-        <SelectItem value="custom_field">Custom field</SelectItem>
-      </MappingSelect>
-
-      {mapping.source === 'tag' ? (
-        <MappingSelect
-          error={errors.entity}
-          id={`${idPrefix}-entity`}
-          label="Entity"
-          onValueChange={(entity) => onChange({ entity })}
-          value={mapping.entity}
-        >
-          {ENTITY_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-          ))}
-        </MappingSelect>
-      ) : (
-        <div className="grid gap-item">
-          <Label>Entity</Label>
-          <div className="flex min-h-target items-center text-ui text-text-secondary">
-            {ENTITY_OPTIONS.find((option) => option.value === mapping.entity)?.label}
-          </div>
-        </div>
-      )}
-
-      {mapping.source === 'tag' ? (
-        <MappingCombobox
-          emptyMessage="No tags found."
-          error={errors.values}
-          id={`${idPrefix}-tag`}
-          label="GHL tag"
-          onValueChange={(value) => onChange({ expectedValues: [value] })}
-          options={tags}
-          placeholder="Search tags"
-          value={mapping.expectedValues[0] ?? ''}
-        />
-      ) : (
-        <div className="grid gap-component sm:grid-cols-2">
-          <MappingCombobox
-            emptyMessage="No custom fields found."
-            error={errors.field}
-            id={`${idPrefix}-field`}
-            label="GHL custom field"
-            onValueChange={changeCustomField}
-            options={customFieldOptions}
-            placeholder="Search custom fields"
-            value={mapping.fieldId}
-          />
-          <div className="grid gap-item">
-            <Label htmlFor={`${idPrefix}-values`}>Matching values</Label>
-            <MatchingValuesInput
-              error={errors.values}
-              id={`${idPrefix}-values`}
-              onCommit={(values) => onChange({ expectedValues: values })}
-              value={expectedValues}
-            />
-            {errors.values ? (
-              <p className="text-label text-destructive" id={`${idPrefix}-values-error`}>
-                {errors.values}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      <TooltipIconButton
-        className="self-end text-text-secondary hover:text-destructive"
-        label={`Remove ${mapping.label || 'mapping'} source`}
-        onClick={onRemove}
-        size="md"
-      >
-        <Icon name="trash" size={16} />
-      </TooltipIconButton>
-    </div>
-  )
-}
-
-function isConfiguredMapping(mapping) {
-  if (mapping.isActive === false || !mapping.expectedValues.length) {
-    return false
-  }
-  if (mapping.source === 'tag') {
-    return Boolean(mapping.entity)
-  }
-  if (mapping.source === 'custom_field') {
-    return Boolean(mapping.entity && (mapping.fieldId || mapping.fieldKey))
-  }
-  return false
-}
-
 export function ReviewMappingsSection({
   draft,
-  onAdd,
-  onChange,
-  onRemove,
-  onRefreshTags,
+  onReplace,
   options,
   validationResult,
   validationIssues = [],
-  validationState,
-  onValidate,
   signalError,
-  tagSyncState,
 }) {
-  const requiredKeys = useMemo(
-    () => (options.signalKeys ?? []).filter((signalKey) => signalKey.required),
-    [options.signalKeys],
-  )
-  const configuredKeys = useMemo(() => new Set(
-    draft.signals
-      .filter(isConfiguredMapping)
-      .map((mapping) => mapping.key),
-  ), [draft.signals])
-  const configuredCount = requiredKeys.filter((signalKey) => (
-    configuredKeys.has(signalKey.value)
-  )).length
-  const isComplete = configuredCount === requiredKeys.length
-  const [isOpen, setIsOpen] = useState(!isComplete)
-  const tags = (options.tags ?? []).filter((tag) => tag.sourceConnectionId === draft.sourceConnectionId)
+  const [expandedKey, setExpandedKey] = useState('')
+  const tags = (options.tags ?? []).filter((tag) => (
+    tag.sourceConnectionId === draft.sourceConnectionId
+  ))
   const customFields = (options.customFields ?? []).filter((field) => (
     field.sourceConnectionId === draft.sourceConnectionId
   ))
   const validationByKey = Object.fromEntries(
     (validationResult?.signals ?? []).map((result) => [result.key, result.matchCount]),
   )
-  const mappingIssues = validationIssues.filter((issue) => (
-    issue.path === 'signals' || issue.path.startsWith('signals.')
-  ))
-  const mappingsOpen = isOpen || Boolean(signalError) || mappingIssues.length > 0
 
   return (
-    <Collapsible
-      className="grid gap-component border-t border-separator pt-card"
-      onOpenChange={setIsOpen}
-      open={mappingsOpen}
-    >
-      <div className="flex items-center justify-between gap-component">
-        <span className="grid min-w-0 gap-tag">
-          <span className="text-ui font-semibold text-text-primary">Outcome mapping</span>
-          <span className="text-label font-normal text-text-muted">
-            {configuredCount} of {requiredKeys.length} configured
-            {isComplete ? ' · Ready' : ' · Setup incomplete'}
-          </span>
-        </span>
-        <div className="flex items-center gap-item">
-          <Button
-            disabled={!draft.sourceConnectionId || tagSyncState === 'syncing'}
-            icon={(
-              <Icon
-                className={tagSyncState === 'syncing' ? 'animate-spin' : ''}
-                name="refreshCw"
-                size={15}
-              />
-            )}
-            onClick={onRefreshTags}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {tagSyncState === 'syncing' ? 'Refreshing...' : 'Refresh tags'}
-          </Button>
-          <CollapsibleTrigger asChild>
-            <TooltipIconButton
-              label={mappingsOpen ? 'Collapse outcome mapping' : 'Expand outcome mapping'}
-              size="md"
-            >
-              <Icon
-                className={`transition-transform duration-motion-fast ${mappingsOpen ? 'rotate-180' : ''}`}
-                name="chevronDown"
-                size={18}
-              />
-            </TooltipIconButton>
-          </CollapsibleTrigger>
-        </div>
+    <section className="grid gap-component border-t border-separator pt-card">
+      <div className="grid gap-tag">
+        <h3 className="text-ui font-semibold text-text-primary">Reporting outcomes</h3>
+        <p className="text-ui text-text-muted">
+          Choose the GHL signal that identifies each campaign outcome.
+        </p>
       </div>
 
-      <CollapsibleContent className="grid gap-card">
-        <p className="text-ui text-text-muted">
-          Map each reporting concept to the exact GHL tag or custom field used by this campaign.
-          {' '}You can save partial progress and finish the remaining mappings later.
-        </p>
-        <div className="grid gap-card">
-        {(options.signalKeys ?? []).map((signalKey) => {
-          const mappings = draft.signals
-            .map((mapping, index) => ({ index, mapping }))
+      <div className="overflow-hidden rounded-control bg-block-subtle">
+        {(options.signalKeys ?? []).map((signalKey, index) => {
+          const entries = draft.signals
+            .map((mapping, mappingIndex) => ({ mapping, mappingIndex }))
             .filter(({ mapping }) => mapping.key === signalKey.value)
+          const mappings = entries.map(({ mapping }) => mapping)
           const requiredIssue = findRequiredMappingIssue(validationIssues, signalKey.value)
+          const fieldIssue = entries
+            .flatMap(({ mappingIndex }) => validationIssues.filter((issue) => (
+              issue.path === `signals.${mappingIndex}`
+              || issue.path.startsWith(`signals.${mappingIndex}.`)
+            )))
+            .at(0)
+          const rowIssue = requiredIssue || fieldIssue
+          const mappingErrors = entries.map(({ mappingIndex }) => ({
+            field: findValidationIssueMessage(validationIssues, `signals.${mappingIndex}.field_id`),
+            values: findValidationIssueMessage(validationIssues, `signals.${mappingIndex}.expected_values`),
+          }))
 
           return (
-            <section className="grid gap-item" key={signalKey.value}>
-              <div className="flex items-center justify-between gap-component">
-                <div className="min-w-0">
-                  <h4 className="text-ui font-medium text-text-primary">{signalKey.label}</h4>
-                  {validationByKey[signalKey.value] !== undefined ? (
-                    <p className="text-label text-text-muted">
-                      {validationByKey[signalKey.value]} matching contacts
-                    </p>
-                  ) : null}
-                  {requiredIssue ? (
-                    <p className="text-label text-destructive">{requiredIssue.message}</p>
-                  ) : null}
-                </div>
-                <Button onClick={() => onAdd(signalKey.value)} size="sm" type="button" variant="outline">
-                  Add source
-                </Button>
-              </div>
-              {mappings.length > 0 ? (
-                <div className="grid gap-tag overflow-hidden rounded-control">
-                  {mappings.map(({ index, mapping }) => (
-                    <SignalMappingRow
-                      customFields={customFields}
-                      errors={{
-                        entity: findValidationIssueMessage(
-                          validationIssues,
-                          `signals.${index}.entity`,
-                        ),
-                        field: findValidationIssueMessage(
-                          validationIssues,
-                          `signals.${index}.field_id`,
-                        ),
-                        values: findValidationIssueMessage(
-                          validationIssues,
-                          `signals.${index}.expected_values`,
-                        ),
-                      }}
-                      idPrefix={`review-signal-${index}`}
-                      key={mapping.id || `${mapping.key}-${index}`}
-                      mapping={mapping}
-                      onChange={(changes) => onChange(index, changes)}
-                      onRemove={() => onRemove(index)}
-                      tags={tags}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-ui text-text-muted">No source configured.</p>
-              )}
-            </section>
+            <div
+              className={index < options.signalKeys.length - 1 ? 'border-b border-separator' : ''}
+              key={signalKey.value}
+            >
+              <OutcomeMappingRow
+                customFields={customFields}
+                error={rowIssue?.message}
+                errors={mappingErrors}
+                isOpen={expandedKey === signalKey.value}
+                mappingKey={signalKey.value}
+                mappings={mappings}
+                matchCount={validationByKey[signalKey.value]}
+                onCommit={(mappingKey, nextMappings) => onReplace(
+                  mappingKey,
+                  nextMappings.map((mapping) => ({
+                    ...mapping,
+                    confidence: mapping.confidence || 'medium',
+                    isActive: mapping.isActive !== false,
+                    key: mappingKey,
+                    label: signalKey.label,
+                  })),
+                )}
+                onOpenChange={(open) => setExpandedKey(open ? signalKey.value : '')}
+                tags={tags}
+                title={signalKey.label}
+              />
+            </div>
           )
         })}
-        </div>
+      </div>
 
-        <div className="flex items-center justify-between gap-component border-t border-separator pt-component">
-          <div className="min-w-0">
-            <p className={signalError ? 'text-label text-destructive' : 'text-label text-text-muted'}>
-              {signalError || (mappingIssues.length > 0
-                ? 'Fix the highlighted mappings and validate again.'
-                : validationResult?.valid
-                ? 'Mappings are valid.'
-                : 'Validate before activating this review.')}
-            </p>
-          </div>
-          <Button
-            disabled={validationState === 'validating'}
-            onClick={onValidate}
-            type="button"
-            variant="outline"
-          >
-            {validationState === 'validating' ? 'Validating...' : 'Validate mappings'}
-          </Button>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+      {signalError ? <p className="text-label text-destructive">{signalError}</p> : null}
+    </section>
   )
 }

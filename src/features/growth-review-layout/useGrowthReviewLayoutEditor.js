@@ -1,13 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
 
-import {
-  DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS,
-  normalizeGrowthReviewDashboardLayout,
-} from '@/entities/dental-growth-review'
+import { normalizeGrowthReviewDashboardLayout } from '@/entities/dental-growth-review'
 import { updateGrowthReviewDashboardLayout } from '@/domain/services/growthReviewApiReadService'
 
 function cloneItems(items = []) {
   return items.map((item, index) => ({
+    isVisible: item.isVisible !== false,
     label: item.label,
     position: (index + 1) * 10,
     widgetKey: item.widgetKey,
@@ -27,6 +25,7 @@ function moveItem(items, fromIndex, toIndex) {
 
 export function useGrowthReviewLayoutEditor({
   apiClient,
+  campaignId,
   layout,
   onSaved,
   workspaceId,
@@ -67,10 +66,40 @@ export function useGrowthReviewLayoutEditor({
     })
   }, [])
 
-  const resetToDefault = useCallback(() => {
-    setDraftItems(cloneItems(DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS))
-    setError('')
+  const setVisibility = useCallback((widgetKey, isVisible) => {
+    setDraftItems((currentItems) => currentItems.map((item) => (
+      item.widgetKey === widgetKey
+        ? { ...item, isVisible }
+        : item
+    )))
   }, [])
+
+  const resetToDefault = useCallback(async () => {
+    if (!apiClient || !workspaceId || !campaignId) {
+      return null
+    }
+
+    setIsSaving(true)
+    setError('')
+
+    try {
+      const savedLayout = await updateGrowthReviewDashboardLayout({
+        apiClient,
+        campaignId,
+        reset: true,
+        workspaceId,
+      })
+
+      setIsOpen(false)
+      await onSaved?.(savedLayout)
+      return savedLayout
+    } catch (requestError) {
+      setError(requestError?.message || 'Could not restore the default review layout.')
+      return null
+    } finally {
+      setIsSaving(false)
+    }
+  }, [apiClient, campaignId, onSaved, workspaceId])
 
   const save = useCallback(async () => {
     if (!apiClient || !workspaceId) {
@@ -83,6 +112,7 @@ export function useGrowthReviewLayoutEditor({
     try {
       const savedLayout = await updateGrowthReviewDashboardLayout({
         apiClient,
+        campaignId,
         items: draftItems,
         workspaceId,
       })
@@ -96,7 +126,7 @@ export function useGrowthReviewLayoutEditor({
     } finally {
       setIsSaving(false)
     }
-  }, [apiClient, draftItems, onSaved, workspaceId])
+  }, [apiClient, campaignId, draftItems, onSaved, workspaceId])
 
   return {
     close,
@@ -109,5 +139,6 @@ export function useGrowthReviewLayoutEditor({
     open,
     resetToDefault,
     save,
+    setVisibility,
   }
 }

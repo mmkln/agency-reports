@@ -332,6 +332,9 @@ export async function getGrowthReviewDashboardPageFromApi({
     period: readModel.period,
     periodOptions: periodOptions.periodOptions,
     layout: charts.layout,
+    permissions: {
+      canCustomizeLayout: payload?.permissions?.can_customize_layout === true,
+    },
     preset,
     previousPeriod: null,
     reason: null,
@@ -346,6 +349,7 @@ export async function getGrowthReviewDashboardPageFromApi({
 
 export async function updateGrowthReviewDashboardLayout({
   apiClient,
+  campaignId,
   items,
   reset = false,
   workspaceId,
@@ -354,11 +358,17 @@ export async function updateGrowthReviewDashboardLayout({
     throw new Error('workspaceId is required to update Growth Review layout.')
   }
 
+  if (!campaignId) {
+    throw new Error('campaignId is required to update Growth Review layout.')
+  }
+
   const payload = await apiClient.request(`/api/workspaces/${workspaceId}/growth-review/layout/`, {
     body: reset
-      ? { reset: true }
+      ? { campaign_id: campaignId, reset: true }
       : {
+        campaign_id: campaignId,
         items: items.map((item, index) => ({
+          is_visible: item.isVisible !== false,
           position: (index + 1) * 10,
           widget_key: item.widgetKey ?? item.widget_key,
         })),

@@ -512,12 +512,12 @@ function normalizeBookedAppointmentsByReplyChannel(chart = {}) {
 }
 
 export const DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS = [
-  { label: 'Accepted Treatment Value Breakdown', widgetKey: 'accepted_treatment_value_breakdown' },
-  { label: 'Reactivation Activity', widgetKey: 'reactivation_activity' },
-  { label: 'Breakdown by Track', widgetKey: 'booked_appointments_by_reply_channel' },
-  { label: 'Weekly Activity', widgetKey: 'weekly_track_activity' },
-  { label: 'Bookings by Track', widgetKey: 'bookings_by_track' },
-  { label: 'Reactivation Lifecycle', widgetKey: 'reactivation_lifecycle' },
+  { isVisible: true, label: 'Accepted Treatment Value Breakdown', widgetKey: 'accepted_treatment_value_breakdown' },
+  { isVisible: true, label: 'Reactivation Activity', widgetKey: 'reactivation_activity' },
+  { isVisible: true, label: 'Breakdown by Track', widgetKey: 'booked_appointments_by_reply_channel' },
+  { isVisible: true, label: 'Weekly Activity', widgetKey: 'weekly_track_activity' },
+  { isVisible: true, label: 'Bookings by Track', widgetKey: 'bookings_by_track' },
+  { isVisible: true, label: 'Reactivation Lifecycle', widgetKey: 'reactivation_lifecycle' },
 ]
 
 function normalizeLayoutItem(item = {}, index = 0) {
@@ -525,6 +525,7 @@ function normalizeLayoutItem(item = {}, index = 0) {
   const widgetKey = normalizeText(source.widget_key ?? source.widgetKey ?? source.key)
 
   return {
+    isVisible: source.is_visible !== false && source.isVisible !== false,
     label: normalizeText(source.label),
     position: Number(source.position ?? (index + 1) * 10),
     widgetKey,
@@ -542,6 +543,7 @@ export function normalizeGrowthReviewDashboardLayout(layout = {}) {
     }))
 
   return {
+    campaignId: normalizeText(source.campaign_id ?? source.campaignId),
     dashboardType: normalizeText(source.dashboard_type ?? source.dashboardType) || 'growth_review_reactivation',
     isDefault: source.is_default === true || source.isDefault === true,
     items,

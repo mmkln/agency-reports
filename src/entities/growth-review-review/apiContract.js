@@ -6,10 +6,15 @@ function normalizeArray(value) {
   return Array.isArray(value) ? value : []
 }
 
+function normalizeMappingEntity(source, entity) {
+  return source === 'tag' ? 'contact' : normalizeText(entity)
+}
+
 export function normalizeGrowthReviewReviewSignal(source = {}) {
+  const mappingSource = normalizeText(source.source)
   return {
     confidence: normalizeText(source.confidence) || 'medium',
-    entity: normalizeText(source.entity),
+    entity: normalizeMappingEntity(mappingSource, source.entity),
     expectedValues: normalizeArray(source.expected_values)
       .map(normalizeText)
       .filter(Boolean),
@@ -20,20 +25,21 @@ export function normalizeGrowthReviewReviewSignal(source = {}) {
     key: normalizeText(source.key),
     label: normalizeText(source.label),
     priority: Number.isFinite(Number(source.priority)) ? Number(source.priority) : 0,
-    source: normalizeText(source.source),
+    source: mappingSource,
   }
 }
 
 function normalizeGrowthReviewTrackSignal(source = {}) {
+  const mappingSource = normalizeText(source.source)
   return {
-    entity: normalizeText(source.entity),
+    entity: normalizeMappingEntity(mappingSource, source.entity),
     expectedValues: normalizeArray(source.expected_values).map(normalizeText).filter(Boolean),
     fieldId: normalizeText(source.field_id),
     fieldKey: normalizeText(source.field_key),
     id: normalizeText(source.id),
     isActive: source.is_active !== false,
     priority: Number.isFinite(Number(source.priority)) ? Number(source.priority) : 0,
-    source: normalizeText(source.source),
+    source: mappingSource,
   }
 }
 
@@ -45,6 +51,7 @@ function normalizeGrowthReviewTrack(source = {}) {
     label: normalizeText(source.label),
     priority: Number.isFinite(Number(source.priority)) ? Number(source.priority) : 0,
     signals: normalizeArray(source.signals).map(normalizeGrowthReviewTrackSignal),
+    touchTrackValue: normalizeText(source.touch_track_value ?? source.touchTrackValue),
   }
 }
 
@@ -139,6 +146,14 @@ function normalizeTag(source = {}) {
   }
 }
 
+function normalizeTouchTrackOption(source = {}) {
+  return {
+    label: normalizeText(source.label),
+    sourceConnectionId: normalizeText(source.source_connection_id ?? source.sourceConnectionId),
+    value: normalizeText(source.value),
+  }
+}
+
 function normalizeSignalKey(source = {}) {
   return {
     label: normalizeText(source.label),
@@ -165,13 +180,17 @@ export function normalizeGrowthReviewReviewOptionsPayload(payload = {}) {
       .map(normalizeSourceConnection),
     statuses: normalizeArray(options.statuses).map(normalizeStatus),
     tags: normalizeArray(options.tags).map(normalizeTag),
+    touchTrackOptions: normalizeArray(
+      options.reactivation_touch_track_options ?? options.touchTrackOptions,
+    ).map(normalizeTouchTrackOption),
   }
 }
 
 function toGrowthReviewSignalInput(signal) {
+  const source = normalizeText(signal.source)
   return {
     confidence: normalizeText(signal.confidence) || 'medium',
-    entity: normalizeText(signal.entity),
+    entity: normalizeMappingEntity(source, signal.entity),
     expected_values: normalizeArray(signal.expectedValues).map(normalizeText).filter(Boolean),
     field_id: normalizeText(signal.fieldId),
     field_key: normalizeText(signal.fieldKey),
@@ -179,19 +198,20 @@ function toGrowthReviewSignalInput(signal) {
     key: normalizeText(signal.key),
     label: normalizeText(signal.label),
     priority: Number.isFinite(Number(signal.priority)) ? Number(signal.priority) : 0,
-    source: normalizeText(signal.source),
+    source,
   }
 }
 
 function toGrowthReviewTrackSignalInput(signal) {
+  const source = normalizeText(signal.source)
   return {
-    entity: normalizeText(signal.entity),
+    entity: normalizeMappingEntity(source, signal.entity),
     expected_values: normalizeArray(signal.expectedValues).map(normalizeText).filter(Boolean),
     field_id: normalizeText(signal.fieldId),
     field_key: normalizeText(signal.fieldKey),
     is_active: signal.isActive !== false,
     priority: Number.isFinite(Number(signal.priority)) ? Number(signal.priority) : 0,
-    source: normalizeText(signal.source),
+    source,
   }
 }
 
@@ -202,6 +222,7 @@ function toGrowthReviewTrackInput(track) {
     label: normalizeText(track.label),
     priority: Number.isFinite(Number(track.priority)) ? Number(track.priority) : 0,
     signals: normalizeArray(track.signals).map(toGrowthReviewTrackSignalInput),
+    touch_track_value: normalizeText(track.touchTrackValue),
   }
 }
 

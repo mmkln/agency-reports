@@ -43,6 +43,7 @@ const selectedReview = {
     key: 'A',
     label: 'Track A',
     priority: 100,
+    touchTrackValue: 'a',
     signals: [{
       entity: 'contact',
       expectedValues: ['reactivation_track_a'],
@@ -59,14 +60,9 @@ const selectedReview = {
 
 const workflow = {
   addReviewTrack: vi.fn(),
-  addReviewTrackSignal: vi.fn(),
-  addReviewSignal: vi.fn(),
   changeCreateField: vi.fn(),
   changeCreateSource: vi.fn(),
   changeReviewField: vi.fn(),
-  changeReviewSignal: vi.fn(),
-  changeReviewTrack: vi.fn(),
-  changeReviewTrackSignal: vi.fn(),
   changeReviewSource: vi.fn(),
   closeCreateDialog: vi.fn(),
   confirmArchive: vi.fn(),
@@ -110,7 +106,14 @@ const workflow = {
       { label: 'Completed', value: 'completed' },
       { label: 'Archived', value: 'archived' },
     ],
-    tags: [{ label: 'Treatment accepted', sourceConnectionId: 'connection-1', value: 'treatment accepted' }],
+    tags: [
+      { label: 'Sequence started', sourceConnectionId: 'connection-1', value: 'reactivation2_sequence_started' },
+      { label: 'Treatment accepted', sourceConnectionId: 'connection-1', value: 'treatment accepted' },
+      { label: 'Track A', sourceConnectionId: 'connection-1', value: 'reactivation_track_a' },
+    ],
+    touchTrackOptions: [
+      { label: 'A', sourceConnectionId: 'connection-1', value: 'a' },
+    ],
   },
   pipelinesForCreateSource: [{ id: 'pipeline-1', name: 'Reactivation', stages: [] }],
   pipelinesForReviewSource: [{
@@ -120,10 +123,11 @@ const workflow = {
   }],
   pipelineSyncState: 'idle',
   requestArchive: vi.fn(),
-  removeReviewSignal: vi.fn(),
   removeReviewTrack: vi.fn(),
-  removeReviewTrackSignal: vi.fn(),
+  replaceReviewSignals: vi.fn(),
   refreshPipelines: vi.fn(),
+  refreshTags: vi.fn(),
+  refreshTouchTrackOptions: vi.fn(),
   resetReviewDraft: vi.fn(),
   resource: { reload: vi.fn(), status: 'ready' },
   reviewDraft: {
@@ -143,10 +147,11 @@ const workflow = {
   saveReview: vi.fn(),
   selectReview: vi.fn(),
   selectedReview,
-  validateReview: vi.fn(),
+  tagSyncState: 'idle',
+  touchTrackOptionSyncState: 'idle',
+  updateReviewTrack: vi.fn(),
   validationResult: null,
   validationIssues: [],
-  validationState: 'idle',
 }
 
 vi.mock('./useGrowthReviewReviewsWorkflow', () => ({
@@ -163,16 +168,13 @@ describe('GrowthReviewReviewManagement', () => {
     expect(html).toContain('Active')
     expect(html).not.toContain('Campaign review</span>')
     expect(html).toContain('Treatment accepted')
-    expect(html).toContain('Search tags')
-    expect(html).toContain('Search custom fields')
-    expect(html).toContain('2 of 3 configured')
     expect(html).toContain('Sequence started')
-    expect(html).toContain('You can save partial progress')
-    expect(html).toContain('aria-label="Remove Treatment accepted source"')
-    expect(html).toContain('aria-label="Collapse outcome mapping"')
-    expect(html).toContain('1 of 1 configured')
-    expect(html).toContain('aria-label="Expand tracks"')
-    expect(html).toContain('Refresh pipelines from GHL')
+    expect(html).toContain('Contact tag')
+    expect(html).toContain('Choose source')
+    expect(html).toContain('Sequence started')
+    expect(html).not.toContain('Setup incomplete')
+    expect(html).not.toContain('Not checked')
+    expect(html).toContain('Refresh GHL options')
     expect(html).toContain('Reactivation Touch campaign key')
     expect(html).toContain('reactivation_may_2026_touches')
     expect(html).not.toContain('Campaign reviews</h2>')

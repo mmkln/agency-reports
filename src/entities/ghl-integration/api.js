@@ -11,3 +11,10 @@ export function syncGhlTags(apiClient, workspaceId, sourceConnectionId) {
     {},
   )
 }
+
+export function syncGhlReactivationTouchSchema(apiClient, workspaceId, sourceConnectionId) {
+  return apiClient.post(
+    `/api/workspaces/${workspaceId}/source-connections/${sourceConnectionId}/ghl/reactivation-touch/schema/sync/`,
+    {},
+  )
+}

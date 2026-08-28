@@ -7,7 +7,9 @@ export function findValidationIssueMessage(issues, path) {
 }
 
 export function findValidationIssuesForPath(issues, path) {
-  return issues.filter((issue) => issue.path === path)
+  return issues.filter((issue) => (
+    issue.path === path || issue.path.startsWith(`${path}.`)
+  ))
 }
 
 export function findRequiredMappingIssue(issues, signalKey) {

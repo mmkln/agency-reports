@@ -1,194 +1,121 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
-import { Icon } from '@/shared/icons'
-import {
-  Button,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-  Input,
-  Label,
-  TooltipIconButton,
-} from '@/shared/ui'
+import { Button } from '@/shared/ui'
 
-import { SignalMappingRow } from './ReviewMappingsSection'
+import { TrackMappingRow } from './TrackMappingRow'
 import {
   findValidationIssueMessage,
   findValidationIssuesForPath,
 } from './validationIssues'
 
-function isConfiguredSignal(signal) {
-  if (signal.isActive === false || !signal.expectedValues.length) {
-    return false
-  }
-  if (signal.source === 'tag') {
-    return Boolean(signal.entity)
-  }
-  if (signal.source === 'custom_field') {
-    return Boolean(signal.entity && (signal.fieldId || signal.fieldKey))
-  }
-  return false
-}
-
-function isConfiguredTrack(track) {
-  return Boolean(track.label.trim()) && track.signals.some(isConfiguredSignal)
-}
-
 export function ReviewTracksSection({
   draft,
   error,
-  onAddSignal,
   onAddTrack,
-  onChangeSignal,
-  onChangeTrack,
-  onRemoveSignal,
   onRemoveTrack,
+  onUpdateTrack,
   options,
   validationResult,
   validationIssues = [],
 }) {
-  const configuredCount = useMemo(
-    () => draft.tracks.filter(isConfiguredTrack).length,
-    [draft.tracks],
-  )
-  const isComplete = draft.tracks.length > 0 && configuredCount === draft.tracks.length
-  const [isOpen, setIsOpen] = useState(!isComplete)
-  const trackValidationPresent = validationIssues.some((issue) => (
-    issue.path === 'tracks' || issue.path.startsWith('tracks.')
+  const [expandedTrackIndex, setExpandedTrackIndex] = useState(null)
+  const tags = (options.tags ?? []).filter((tag) => (
+    tag.sourceConnectionId === draft.sourceConnectionId
   ))
-  const tracksOpen = isOpen || Boolean(error) || trackValidationPresent
-  const tags = (options.tags ?? []).filter(
-    (tag) => tag.sourceConnectionId === draft.sourceConnectionId,
-  )
-  const customFields = (options.customFields ?? []).filter(
-    (field) => field.sourceConnectionId === draft.sourceConnectionId,
-  )
+  const customFields = (options.customFields ?? []).filter((field) => (
+    field.sourceConnectionId === draft.sourceConnectionId
+  ))
+  const touchTrackOptions = (options.touchTrackOptions ?? []).filter((option) => (
+    option.sourceConnectionId === draft.sourceConnectionId
+  ))
   const validationByKey = Object.fromEntries(
     (validationResult?.tracks?.items ?? []).map((track) => [track.key, track.matchCount]),
   )
-  const sectionIssues = findValidationIssuesForPath(validationIssues, 'tracks')
+  const sectionIssues = validationIssues.filter((issue) => issue.path === 'tracks')
+
+  function addTrack() {
+    setExpandedTrackIndex(draft.tracks.length)
+    onAddTrack()
+  }
 
   return (
-    <Collapsible
-      className="grid gap-component border-t border-separator pt-card"
-      onOpenChange={setIsOpen}
-      open={tracksOpen}
-    >
-      <div className="flex items-center justify-between gap-component">
-        <span className="grid min-w-0 gap-tag">
-          <span className="text-ui font-semibold text-text-primary">Tracks</span>
-          <span className="text-label font-normal text-text-muted">
-            {configuredCount} of {draft.tracks.length} configured
-            {isComplete ? ' · Ready' : ' · Setup incomplete'}
-          </span>
-        </span>
-        <div className="flex items-center gap-item">
-          <Button onClick={onAddTrack} size="sm" type="button" variant="outline">
-            Add track
-          </Button>
-          <CollapsibleTrigger asChild>
-            <TooltipIconButton
-              label={tracksOpen ? 'Collapse tracks' : 'Expand tracks'}
-              size="md"
-            >
-              <Icon
-                className={`transition-transform duration-motion-fast ${tracksOpen ? 'rotate-180' : ''}`}
-                name="chevronDown"
-                size={18}
-              />
-            </TooltipIconButton>
-          </CollapsibleTrigger>
-        </div>
+    <section className="grid gap-component border-t border-separator pt-card">
+      <div className="grid gap-tag">
+        <h3 className="text-ui font-semibold text-text-primary">Tracks</h3>
+        <p className="text-ui text-text-muted">
+          Define the contact signal used to assign each campaign track.
+        </p>
       </div>
 
-      <CollapsibleContent className="grid gap-card">
-        <p className="text-ui text-text-muted">
-          Define the tracks used by this campaign and the exact GHL signal for each one.
-        </p>
+      {draft.tracks.length ? (
+        <div className="overflow-hidden rounded-control bg-block-subtle">
+          {draft.tracks.map((track, trackIndex) => {
+            const trackIssue = findValidationIssuesForPath(
+              validationIssues,
+              `tracks.${trackIndex}`,
+            ).at(0)
+            const mappingErrors = track.signals.map((_signal, signalIndex) => ({
+              field: findValidationIssueMessage(
+                validationIssues,
+                `tracks.${trackIndex}.signals.${signalIndex}.field_id`,
+              ),
+              values: findValidationIssueMessage(
+                validationIssues,
+                `tracks.${trackIndex}.signals.${signalIndex}.expected_values`,
+              ),
+            }))
 
-        {draft.tracks.length ? (
-          <div className="grid gap-card">
-            {draft.tracks.map((track, trackIndex) => (
-              <div className="grid gap-component" key={track.id || track.key}>
-                <div className="flex items-end gap-component">
-                  <div className="grid min-w-0 flex-1 gap-item">
-                    <Label htmlFor={`review-track-${trackIndex}-label`}>Track name</Label>
-                    <Input
-                      id={`review-track-${trackIndex}-label`}
-                      onChange={(event) => onChangeTrack(trackIndex, { label: event.target.value })}
-                      placeholder="Track A"
-                      value={track.label}
-                    />
-                  </div>
-                  {validationByKey[track.key] !== undefined ? (
-                    <p className="pb-item text-label text-text-muted">
-                      {validationByKey[track.key]} matching contacts
-                    </p>
-                  ) : null}
-                  <Button
-                    onClick={() => onAddSignal(trackIndex)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    Add source
-                  </Button>
-                  <TooltipIconButton
-                    className="text-text-secondary hover:text-destructive"
-                    label={`Remove ${track.label}`}
-                    onClick={() => onRemoveTrack(trackIndex)}
-                    size="md"
-                  >
-                    <Icon name="trash" size={16} />
-                  </TooltipIconButton>
-                </div>
-
-                <div className="grid gap-tag overflow-hidden rounded-control">
-                  {track.signals.map((signal, signalIndex) => (
-                    <SignalMappingRow
-                      customFields={customFields}
-                      errors={{
-                        entity: findValidationIssueMessage(
-                          validationIssues,
-                          `tracks.${trackIndex}.signals.${signalIndex}.entity`,
-                        ),
-                        field: findValidationIssueMessage(
-                          validationIssues,
-                          `tracks.${trackIndex}.signals.${signalIndex}.field_id`,
-                        ),
-                        values: findValidationIssueMessage(
-                          validationIssues,
-                          `tracks.${trackIndex}.signals.${signalIndex}.expected_values`,
-                        ),
-                      }}
-                      idPrefix={`review-track-${trackIndex}-signal-${signalIndex}`}
-                      key={signal.id || `${track.key}-${signalIndex}`}
-                      mapping={{ ...signal, label: track.label }}
-                      onChange={(changes) => onChangeSignal(trackIndex, signalIndex, changes)}
-                      onRemove={() => onRemoveSignal(trackIndex, signalIndex)}
-                      tags={tags}
-                    />
-                  ))}
-                </div>
+            return (
+              <div
+                className={trackIndex < draft.tracks.length - 1 ? 'border-b border-separator' : ''}
+                key={track.id || track.key}
+              >
+                <TrackMappingRow
+                  customFields={customFields}
+                  error={trackIssue?.message}
+                  errors={{
+                    label: findValidationIssueMessage(
+                      validationIssues,
+                      `tracks.${trackIndex}.label`,
+                    ),
+                    mappings: mappingErrors,
+                    touchTrackValue: findValidationIssueMessage(
+                      validationIssues,
+                      `tracks.${trackIndex}.touch_track_value`,
+                    ),
+                  }}
+                  isOpen={expandedTrackIndex === trackIndex}
+                  matchCount={validationByKey[track.key]}
+                  onCommit={(nextTrack) => onUpdateTrack(trackIndex, nextTrack)}
+                  onDelete={() => {
+                    onRemoveTrack(trackIndex)
+                    setExpandedTrackIndex(null)
+                  }}
+                  onOpenChange={(open) => setExpandedTrackIndex(open ? trackIndex : null)}
+                  tags={tags}
+                  track={track}
+                  touchTrackOptions={touchTrackOptions}
+                />
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-ui text-text-muted">No tracks configured.</p>
-        )}
+            )
+          })}
+        </div>
+      ) : (
+        <p className="text-ui text-text-muted">No tracks configured.</p>
+      )}
 
-        {error ? <p className="text-label text-destructive">{error}</p> : null}
-        {sectionIssues.map((issue) => (
-          <p className="text-label text-destructive" key={`${issue.code}-${issue.message}`}>
-            {issue.message}
-          </p>
-        ))}
-        {validationResult?.tracks ? (
-          <p className="text-label text-text-muted">
-            {validationResult.tracks.cohortCount} cohort contacts · 0 unassigned · 0 conflicts
-          </p>
-        ) : null}
-      </CollapsibleContent>
-    </Collapsible>
+      <div>
+        <Button onClick={addTrack} size="sm" type="button" variant="ghost">
+          Add track
+        </Button>
+      </div>
+
+      {error ? <p className="text-label text-destructive">{error}</p> : null}
+      {sectionIssues.map((issue) => (
+        <p className="text-label text-destructive" key={`${issue.code}-${issue.message}`}>
+          {issue.message}
+        </p>
+      ))}
+    </section>
   )
 }

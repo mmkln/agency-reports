@@ -28,7 +28,7 @@ describe('growth review review API contract', () => {
         name: 'August review',
         pipeline_id: 'pipeline-1',
         signals: [{
-          entity: 'contact',
+          entity: 'opportunity',
           expected_values: ['reactivation_august_2026'],
           field_id: '',
           field_key: '',
@@ -44,8 +44,9 @@ describe('growth review review API contract', () => {
           key: 'A',
           label: 'Track A',
           priority: 100,
+          touch_track_value: 'a',
           signals: [{
-            entity: 'contact',
+            entity: 'any',
             expected_values: ['reactivation_august_track_a'],
             source: 'tag',
           }],
@@ -75,6 +76,7 @@ describe('growth review review API contract', () => {
     })
     expect(result.reviews[0].signals[0]).toMatchObject({
       expectedValues: ['reactivation_august_2026'],
+      entity: 'contact',
       isActive: true,
       label: 'Campaign cohort',
       source: 'tag',
@@ -82,7 +84,8 @@ describe('growth review review API contract', () => {
     expect(result.reviews[0].tracks[0]).toMatchObject({
       key: 'A',
       label: 'Track A',
-      signals: [{ expectedValues: ['reactivation_august_track_a'] }],
+      touchTrackValue: 'a',
+      signals: [{ entity: 'contact', expectedValues: ['reactivation_august_track_a'] }],
     })
   })
 
@@ -97,6 +100,11 @@ describe('growth review review API contract', () => {
           stages: [],
         }],
         signal_keys: [{ label: 'Campaign cohort', required: true, value: 'imported_candidate' }],
+        reactivation_touch_track_options: [{
+          label: 'A',
+          source_connection_id: 'source-1',
+          value: 'a',
+        }],
         source_connections: [{
           external_account_id: 'ghl-location',
           id: 'source-1',
@@ -110,6 +118,11 @@ describe('growth review review API contract', () => {
     expect(result.sourceConnections[0].externalAccountId).toBe('ghl-location')
     expect(result.pipelines[0].sourceConnectionId).toBe('source-1')
     expect(result.statuses).toEqual([{ label: 'Active', value: 'active' }])
+    expect(result.touchTrackOptions).toEqual([{
+      label: 'A',
+      sourceConnectionId: 'source-1',
+      value: 'a',
+    }])
   })
 
   it('serializes the editable review contract', () => {
@@ -120,7 +133,7 @@ describe('growth review review API contract', () => {
       name: ' August review ',
       pipelineId: 'pipeline-1',
       signals: [{
-        entity: 'contact',
+        entity: 'opportunity',
         expectedValues: ['reactivation_august_2026'],
         key: 'imported_candidate',
         label: 'Campaign cohort',
@@ -131,8 +144,9 @@ describe('growth review review API contract', () => {
         key: 'A',
         label: 'Track A',
         priority: 100,
+        touchTrackValue: 'a',
         signals: [{
-          entity: 'contact',
+          entity: 'any',
           expectedValues: ['reactivation_august_track_a'],
           source: 'tag',
         }],
@@ -163,6 +177,7 @@ describe('growth review review API contract', () => {
         key: 'A',
         label: 'Track A',
         priority: 100,
+        touch_track_value: 'a',
         signals: [{
           entity: 'contact',
           expected_values: ['reactivation_august_track_a'],

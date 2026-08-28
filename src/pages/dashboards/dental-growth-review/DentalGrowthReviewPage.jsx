@@ -50,6 +50,7 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
       <DentalGrowthReviewDashboard
         acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
         apiClient={runtime.apiClient}
+        campaignId={selectedCampaignId}
         campaignSelector={(
           <GrowthReviewCampaignSelector
             campaigns={campaignSelection.campaigns}
@@ -66,7 +67,6 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
         onRetry={growthReview.reload}
         page={page}
         refresh={refresh}
-        viewer={runtime.viewer}
         workspaceId={growthReview.workspaceId}
       />
     </PageShell>

@@ -19,17 +19,20 @@ import {
   ReviewTextField,
   SourceConnectionOptions,
 } from './ReviewFormFields'
-import { PipelineRefreshButton } from './PipelineRefreshButton'
 import { ReviewMappingsSection } from './ReviewMappingsSection'
 import { ReviewTracksSection } from './ReviewTracksSection'
+import { SourceOptionsMenu } from './SourceOptionsMenu'
 import { findValidationIssueMessage } from './validationIssues'
 
-function EditorSection({ children, description, title }) {
+function EditorSection({ action, children, description, title }) {
   return (
     <section className="grid gap-component border-t border-separator pt-card first:border-t-0 first:pt-0">
-      <div className="grid gap-tag">
-        <h3 className="text-ui font-semibold text-text-primary">{title}</h3>
-        {description ? <p className="text-ui text-text-muted">{description}</p> : null}
+      <div className="flex items-start justify-between gap-component">
+        <div className="grid gap-tag">
+          <h3 className="text-ui font-semibold text-text-primary">{title}</h3>
+          {description ? <p className="text-ui text-text-muted">{description}</p> : null}
+        </div>
+        {action}
       </div>
       {children}
     </section>
@@ -42,22 +45,17 @@ export function ReviewEditor({
   header,
   headerAction,
   isDirty,
-  onAddSignal,
   onAddTrack,
-  onAddTrackSignal,
   onChangeField,
-  onChangeSignal,
-  onChangeTrack,
-  onChangeTrackSignal,
   onChangeSource,
-  onRemoveSignal,
   onRemoveTrack,
-  onRemoveTrackSignal,
+  onReplaceSignals,
   onRefreshPipelines,
   onRefreshTags,
+  onRefreshTouchTrackOptions,
   onReset,
   onSave,
-  onValidate,
+  onUpdateTrack,
   operationError,
   operationState,
   options,
@@ -65,9 +63,9 @@ export function ReviewEditor({
   pipelineSyncState,
   review,
   tagSyncState,
+  touchTrackOptionSyncState,
   validationResult,
   validationIssues = [],
-  validationState,
 }) {
   const isBusy = operationState !== 'idle'
   const isArchived = review.status === 'archived'
@@ -144,6 +142,19 @@ export function ReviewEditor({
           </EditorSection>
 
           <EditorSection
+            action={(
+              <SourceOptionsMenu
+                disabled={!draft.sourceConnectionId}
+                onRefreshPipelines={() => onRefreshPipelines(draft.sourceConnectionId)}
+                onRefreshTags={() => onRefreshTags(draft.sourceConnectionId)}
+                onRefreshTouchTrackOptions={() => onRefreshTouchTrackOptions(
+                  draft.sourceConnectionId,
+                )}
+                pipelineSyncState={pipelineSyncState}
+                tagSyncState={tagSyncState}
+                touchTrackOptionSyncState={touchTrackOptionSyncState}
+              />
+            )}
             description="The review reads an existing campaign from this GHL location and pipeline."
             title="GHL source"
           >
@@ -161,13 +172,6 @@ export function ReviewEditor({
                 <SourceConnectionOptions connections={options.sourceConnections} />
               </ReviewSelectField>
               <ReviewSelectField
-                action={(
-                  <PipelineRefreshButton
-                    disabled={!draft.sourceConnectionId}
-                    isRefreshing={pipelineSyncState === 'syncing'}
-                    onRefresh={() => onRefreshPipelines(draft.sourceConnectionId)}
-                  />
-                )}
                 disabled={!draft.sourceConnectionId}
                 error={fieldErrors.pipeline_id
                   ?? fieldErrors.pipelineId
@@ -228,29 +232,20 @@ export function ReviewEditor({
           <ReviewMappingsSection
             draft={draft}
             key={review.id}
-            onAdd={onAddSignal}
-            onChange={onChangeSignal}
-            onRemove={onRemoveSignal}
-            onRefreshTags={() => onRefreshTags(draft.sourceConnectionId)}
-            onValidate={onValidate}
+            onReplace={onReplaceSignals}
             options={options}
             signalError={fieldErrors.signals}
             validationResult={validationResult}
             validationIssues={validationIssues}
-            validationState={validationState}
-            tagSyncState={tagSyncState}
           />
 
           <ReviewTracksSection
             draft={draft}
             error={fieldErrors.tracks}
             key={`${review.id}-tracks`}
-            onAddSignal={onAddTrackSignal}
             onAddTrack={onAddTrack}
-            onChangeSignal={onChangeTrackSignal}
-            onChangeTrack={onChangeTrack}
-            onRemoveSignal={onRemoveTrackSignal}
             onRemoveTrack={onRemoveTrack}
+            onUpdateTrack={onUpdateTrack}
             options={options}
             validationResult={validationResult}
             validationIssues={validationIssues}

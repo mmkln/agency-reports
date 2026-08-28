@@ -72,22 +72,17 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
             />
           )}
           isDirty={workflow.isDirty}
-          onAddSignal={workflow.addReviewSignal}
           onAddTrack={workflow.addReviewTrack}
-          onAddTrackSignal={workflow.addReviewTrackSignal}
           onChangeField={workflow.changeReviewField}
-          onChangeSignal={workflow.changeReviewSignal}
-          onChangeTrack={workflow.changeReviewTrack}
-          onChangeTrackSignal={workflow.changeReviewTrackSignal}
           onChangeSource={workflow.changeReviewSource}
-          onRemoveSignal={workflow.removeReviewSignal}
           onRemoveTrack={workflow.removeReviewTrack}
-          onRemoveTrackSignal={workflow.removeReviewTrackSignal}
+          onReplaceSignals={workflow.replaceReviewSignals}
           onRefreshPipelines={workflow.refreshPipelines}
           onRefreshTags={workflow.refreshTags}
+          onRefreshTouchTrackOptions={workflow.refreshTouchTrackOptions}
           onReset={workflow.resetReviewDraft}
           onSave={workflow.saveReview}
-          onValidate={workflow.validateReview}
+          onUpdateTrack={workflow.updateReviewTrack}
           operationError={workflow.operationError}
           operationState={workflow.operationState}
           options={workflow.options}
@@ -95,9 +90,9 @@ export function GrowthReviewReviewManagement({ apiClient, workspaceId }) {
           pipelineSyncState={workflow.pipelineSyncState}
           review={workflow.selectedReview}
           tagSyncState={workflow.tagSyncState}
+          touchTrackOptionSyncState={workflow.touchTrackOptionSyncState}
           validationResult={workflow.validationResult}
           validationIssues={workflow.validationIssues}
-          validationState={workflow.validationState}
         />
       ) : (
         <EmptyState

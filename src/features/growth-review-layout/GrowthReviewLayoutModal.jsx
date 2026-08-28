@@ -6,6 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Switch,
 } from '@/shared/ui'
 
 function MoveButton({
@@ -55,10 +56,16 @@ export function GrowthReviewLayoutModal({ editor }) {
                 className="flex min-h-target items-center justify-between gap-control border-b border-separator py-item last:border-b-0"
                 key={item.widgetKey}
               >
-                <span className="min-w-0 text-ui font-medium text-text-primary">
+                <span className={`min-w-0 text-ui font-medium ${item.isVisible ? 'text-text-primary' : 'text-text-muted'}`}>
                   {item.label}
                 </span>
                 <span className="flex shrink-0 items-center gap-tag">
+                  <Switch
+                    aria-label={`${item.isVisible ? 'Hide' : 'Show'} ${item.label}`}
+                    checked={item.isVisible}
+                    disabled={editor.isSaving}
+                    onCheckedChange={(checked) => editor.setVisibility(item.widgetKey, checked)}
+                  />
                   <MoveButton
                     disabled={isFirst || editor.isSaving}
                     direction="up"
@@ -90,7 +97,7 @@ export function GrowthReviewLayoutModal({ editor }) {
             type="button"
             variant="ghost"
           >
-            Reset Order
+            Restore Defaults
           </Button>
           <div className="flex items-center gap-control">
             <Button

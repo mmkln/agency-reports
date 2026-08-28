@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import {
@@ -10,9 +10,15 @@ import {
   updateGrowthReviewReview,
   validateGrowthReviewReview,
 } from '@/entities/growth-review-review'
-import { syncGhlPipelines, syncGhlTags } from '@/entities/ghl-integration'
+import {
+  syncGhlPipelines,
+  syncGhlReactivationTouchSchema,
+  syncGhlTags,
+} from '@/entities/ghl-integration'
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 import { useToast } from '@/shared/notifications'
+
+import { isConfiguredMapping } from './mappingRuleModel'
 
 function createReviewDraft(review = null) {
   return {
@@ -110,6 +116,30 @@ function getOperationError(error, fallback) {
   return error?.message || fallback
 }
 
+function canValidateMappings(draft, options) {
+  const requiredKeys = (options.signalKeys ?? [])
+    .filter((signalKey) => signalKey.required)
+    .map((signalKey) => signalKey.value)
+  const configuredKeys = new Set(
+    draft.signals.filter(isConfiguredMapping).map((signal) => signal.key),
+  )
+
+  return Boolean(
+    draft.name.trim()
+    && draft.externalCampaignKey.trim()
+    && draft.sourceConnectionId
+    && draft.pipelineId
+    && draft.touchCampaignKey.trim()
+    && requiredKeys.every((key) => configuredKeys.has(key))
+    && draft.tracks.length
+    && draft.tracks.every((track) => (
+      track.label.trim()
+      && track.touchTrackValue?.trim()
+      && track.signals.some(isConfiguredMapping)
+    )),
+  )
+}
+
 export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -120,11 +150,12 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   const [operationState, setOperationState] = useState('idle')
   const [optionsOverride, setOptionsOverride] = useState(null)
   const [pipelineSyncState, setPipelineSyncState] = useState('idle')
+  const [touchTrackOptionSyncState, setTouchTrackOptionSyncState] = useState('idle')
   const [tagSyncState, setTagSyncState] = useState('idle')
   const [reviewPendingArchive, setReviewPendingArchive] = useState(null)
   const [validationResult, setValidationResult] = useState(null)
   const [validationIssues, setValidationIssues] = useState([])
-  const [validationState, setValidationState] = useState('idle')
+  const validationRequestId = useRef(0)
   const resource = useAsyncResource({
     dependencyKey: `growth-review-reviews:${workspaceId}`,
     load: () => Promise.all([
@@ -144,6 +175,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     customFields: [],
     signalKeys: [],
     tags: [],
+    touchTrackOptions: [],
   }, [optionsOverride, resource.data?.options, workspaceId])
   const requestedReviewId = searchParams.get('review') ?? ''
   const selectedReview = reviews.find((review) => review.id === requestedReviewId)
@@ -160,8 +192,39 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
   )
 
   function clearValidation() {
+    validationRequestId.current += 1
     setValidationResult(null)
     setValidationIssues([])
+  }
+
+  async function validateMappings(candidateDraft) {
+    if (!selectedReview || !canValidateMappings(candidateDraft, options)) {
+      clearValidation()
+      return
+    }
+
+    const requestId = validationRequestId.current + 1
+    validationRequestId.current = requestId
+
+    try {
+      const result = await validateGrowthReviewReview(
+        apiClient,
+        workspaceId,
+        selectedReview.id,
+        candidateDraft,
+      )
+      if (validationRequestId.current !== requestId) {
+        return
+      }
+      setValidationResult(result)
+      setValidationIssues([])
+    } catch (error) {
+      if (validationRequestId.current !== requestId) {
+        return
+      }
+      setValidationResult(null)
+      setValidationIssues(normalizeGrowthReviewReviewValidationIssues(error?.payload))
+    }
   }
 
   function updateSearchParams(update) {
@@ -230,50 +293,24 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     })
   }
 
-  function addReviewSignal(key) {
-    const option = options.signalKeys.find((item) => item.value === key)
-    const nextSignal = {
-      confidence: 'medium',
-      entity: key === 'imported_candidate' ? 'contact' : 'any',
-      expectedValues: [],
-      fieldId: '',
-      fieldKey: '',
-      id: '',
-      isActive: true,
-      key,
-      label: option?.label ?? key,
-      priority: (options.signalKeys.findIndex((item) => item.value === key) + 1) * 100,
-      source: 'tag',
+  function replaceReviewSignals(key, signals) {
+    const basePriority = (options.signalKeys.findIndex((item) => item.value === key) + 1) * 100
+    const nextDraft = {
+      ...reviewDraft,
+      signals: [
+        ...reviewDraft.signals.filter((signal) => signal.key !== key),
+        ...signals.map((signal, index) => ({
+          ...signal,
+          key,
+          priority: basePriority + index,
+        })),
+      ],
     }
-    clearValidation()
     setDraftOverride({
       reviewId: selectedReview.id,
-      value: { ...reviewDraft, signals: [...reviewDraft.signals, nextSignal] },
+      value: nextDraft,
     })
-  }
-
-  function changeReviewSignal(index, changes) {
-    clearValidation()
-    setDraftOverride({
-      reviewId: selectedReview.id,
-      value: {
-        ...reviewDraft,
-        signals: reviewDraft.signals.map((signal, signalIndex) => (
-          signalIndex === index ? { ...signal, ...changes } : signal
-        )),
-      },
-    })
-  }
-
-  function removeReviewSignal(index) {
-    clearValidation()
-    setDraftOverride({
-      reviewId: selectedReview.id,
-      value: {
-        ...reviewDraft,
-        signals: reviewDraft.signals.filter((_signal, signalIndex) => signalIndex !== index),
-      },
-    })
+    void validateMappings(nextDraft)
   }
 
   function addReviewTrack() {
@@ -288,6 +325,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       key: `track-${number}`,
       label: `Track ${number}`,
       priority: reviewDraft.tracks.length * 100,
+      touchTrackValue: '',
       signals: [{
         entity: 'contact',
         expectedValues: [],
@@ -306,49 +344,27 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     })
   }
 
-  function changeReviewTrack(index, changes) {
-    clearValidation()
+  function updateReviewTrack(index, nextTrack) {
+    const nextDraft = {
+      ...reviewDraft,
+      tracks: reviewDraft.tracks.map((track, trackIndex) => (
+        trackIndex === index
+          ? {
+            ...nextTrack,
+            priority: track.priority,
+            signals: nextTrack.signals.map((signal, signalIndex) => ({
+              ...signal,
+              priority: signalIndex * 100,
+            })),
+          }
+          : track
+      )),
+    }
     setDraftOverride({
       reviewId: selectedReview.id,
-      value: {
-        ...reviewDraft,
-        tracks: reviewDraft.tracks.map((track, trackIndex) => (
-          trackIndex === index ? { ...track, ...changes } : track
-        )),
-      },
+      value: nextDraft,
     })
-  }
-
-  function changeReviewTrackSignal(trackIndex, signalIndex, changes) {
-    const track = reviewDraft.tracks[trackIndex]
-    changeReviewTrack(trackIndex, {
-      signals: track.signals.map((signal, index) => (
-        index === signalIndex ? { ...signal, ...changes } : signal
-      )),
-    })
-  }
-
-  function addReviewTrackSignal(trackIndex) {
-    const track = reviewDraft.tracks[trackIndex]
-    changeReviewTrack(trackIndex, {
-      signals: [...track.signals, {
-        entity: 'contact',
-        expectedValues: [],
-        fieldId: '',
-        fieldKey: '',
-        id: '',
-        isActive: true,
-        priority: track.signals.length * 100,
-        source: 'tag',
-      }],
-    })
-  }
-
-  function removeReviewTrackSignal(trackIndex, signalIndex) {
-    const track = reviewDraft.tracks[trackIndex]
-    changeReviewTrack(trackIndex, {
-      signals: track.signals.filter((_signal, index) => index !== signalIndex),
-    })
+    void validateMappings(nextDraft)
   }
 
   function removeReviewTrack(index) {
@@ -443,6 +459,33 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     }
   }
 
+  async function refreshTouchTrackOptions(sourceConnectionId) {
+    if (!sourceConnectionId || touchTrackOptionSyncState === 'syncing') {
+      return
+    }
+
+    setTouchTrackOptionSyncState('syncing')
+    try {
+      await syncGhlReactivationTouchSchema(apiClient, workspaceId, sourceConnectionId)
+      const refreshedOptions = await getGrowthReviewReviewOptions(apiClient, workspaceId)
+      setOptionsOverride({
+        value: refreshedOptions,
+        workspaceId,
+      })
+      toast.success(
+        'Activity options updated',
+        'The latest Reactivation Touch values are now available.',
+      )
+    } catch (error) {
+      toast.error(
+        'Activity options were not updated',
+        getOperationError(error, 'Try again.'),
+      )
+    } finally {
+      setTouchTrackOptionSyncState('idle')
+    }
+  }
+
   async function createReview(event) {
     event.preventDefault()
     const nextErrors = validateReviewDraft(resolvedCreateDraft)
@@ -484,11 +527,7 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
 
     setOperationState('saving')
     try {
-      const isActivating = (
-        selectedReview.status !== 'active'
-        && reviewDraft.status === 'active'
-      )
-      if (isActivating) {
+      if (reviewDraft.status === 'active') {
         await validateGrowthReviewReview(
           apiClient,
           workspaceId,
@@ -506,42 +545,15 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       await reloadAndSelect(review.id)
       toast.success('Review saved', `${review.name} was updated.`)
     } catch (error) {
-      setFieldErrors(normalizeFieldErrors(error))
-      setOperationError(getOperationError(error, 'The review could not be saved.'))
-      toast.error('Review was not saved', getOperationError(error, 'Try again.'))
-    } finally {
-      setOperationState('idle')
-    }
-  }
-
-  async function validateReview() {
-    const nextErrors = validateReviewDraft(reviewDraft)
-    setFieldErrors(nextErrors)
-    setOperationError('')
-    if (!selectedReview || Object.keys(nextErrors).length > 0) {
-      return
-    }
-
-    setValidationState('validating')
-    try {
-      const result = await validateGrowthReviewReview(
-        apiClient,
-        workspaceId,
-        selectedReview.id,
-        reviewDraft,
-      )
-      setValidationResult(result)
-      setValidationIssues([])
-    } catch (error) {
-      setValidationResult(null)
       const issues = normalizeGrowthReviewReviewValidationIssues(error?.payload)
       setValidationIssues(issues)
       if (issues.length === 0) {
         setFieldErrors(normalizeFieldErrors(error))
-        setOperationError(getOperationError(error, 'The mappings could not be validated.'))
+        setOperationError(getOperationError(error, 'The review could not be saved.'))
       }
+      toast.error('Review was not saved', getOperationError(error, 'Try again.'))
     } finally {
-      setValidationState('idle')
+      setOperationState('idle')
     }
   }
 
@@ -570,14 +582,9 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
 
   return {
     addReviewTrack,
-    addReviewTrackSignal,
-    addReviewSignal,
     changeCreateField,
     changeCreateSource,
     changeReviewField,
-    changeReviewSignal,
-    changeReviewTrack,
-    changeReviewTrackSignal,
     changeReviewSource,
     closeCreateDialog,
     confirmArchive,
@@ -600,11 +607,11 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
       reviewDraft.sourceConnectionId,
     ),
     requestArchive: setReviewPendingArchive,
-    removeReviewSignal,
     removeReviewTrack,
-    removeReviewTrackSignal,
+    replaceReviewSignals,
     refreshPipelines,
     refreshTags,
+    refreshTouchTrackOptions,
     resetReviewDraft,
     resource,
     reviewDraft,
@@ -613,10 +620,10 @@ export function useGrowthReviewReviewsWorkflow({ apiClient, workspaceId }) {
     saveReview,
     selectedReview,
     selectReview,
-    validateReview,
+    updateReviewTrack,
     validationResult,
     validationIssues,
-    validationState,
     tagSyncState,
+    touchTrackOptionSyncState,
   }
 }
