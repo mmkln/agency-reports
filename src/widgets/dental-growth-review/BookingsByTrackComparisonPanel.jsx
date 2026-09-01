@@ -156,7 +156,7 @@ export function BookingsByTrackComparisonPanel({
 
   return (
     <ReactivationChartPanel
-      chartKey="bookings_by_track"
+      explanationKey="chart.bookings_by_track"
       explanation={explanation}
       explanationEditor={explanationEditor}
       subtitle="Select a table column to compare track distribution."

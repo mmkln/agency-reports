@@ -42,7 +42,7 @@ function normalizeMetricSource(value) {
   return Array.isArray(value) ? value.join(', ') : normalizeText(value)
 }
 
-function normalizeChartExplanation(source = {}, chartKey = '') {
+function normalizeDashboardExplanation(source = {}, explanationKey = '') {
   const value = isPlainObject(source) ? source : {}
 
   return {
@@ -50,9 +50,16 @@ function normalizeChartExplanation(source = {}, chartKey = '') {
     calculationExplanation: normalizeText(
       value.calculation_explanation ?? value.calculationExplanation,
     ),
-    chartKey: normalizeText(value.chart_key ?? value.chartKey ?? chartKey),
     definition: normalizeText(value.definition),
+    explanationKey: normalizeText(
+      value.explanation_key
+      ?? value.explanationKey
+      ?? value.chart_key
+      ?? value.chartKey
+      ?? explanationKey,
+    ),
     isCustomized: value.is_customized === true || value.isCustomized === true,
+    kind: normalizeText(value.kind) || 'chart',
     label: normalizeText(value.label),
     source: normalizeMetricSource(value.source),
     updatedAt: normalizeText(value.updated_at ?? value.updatedAt),
@@ -60,13 +67,13 @@ function normalizeChartExplanation(source = {}, chartKey = '') {
   }
 }
 
-export function normalizeGrowthReviewChartExplanations(value = {}) {
+export function normalizeGrowthReviewDashboardExplanations(value = {}) {
   const source = isPlainObject(value) ? value : {}
 
   return Object.fromEntries(
-    Object.entries(source).map(([chartKey, explanation]) => [
-      chartKey,
-      normalizeChartExplanation(explanation, chartKey),
+    Object.entries(source).map(([explanationKey, explanation]) => [
+      explanationKey,
+      normalizeDashboardExplanation(explanation, explanationKey),
     ]),
   )
 }

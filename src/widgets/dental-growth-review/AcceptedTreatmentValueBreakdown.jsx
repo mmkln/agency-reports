@@ -199,7 +199,7 @@ export function AcceptedTreatmentValueBreakdown({ chart, explanation, explanatio
 
   return (
     <ReactivationChartPanel
-      chartKey="accepted_treatment_value_breakdown"
+      explanationKey="chart.accepted_treatment_value"
       explanation={explanation}
       explanationEditor={explanationEditor}
       subtitle="Paid revenue, open balance, and projected value for accepted treatments."

@@ -63,7 +63,7 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
           />
         )}
         funnelEmptyAction={funnelEmptyAction}
-        onChartExplanationSaved={growthReview.reload}
+        onDashboardExplanationSaved={growthReview.reload}
         onLayoutSaved={growthReview.reload}
         onRetry={growthReview.reload}
         page={page}

@@ -124,7 +124,7 @@ export function BookedAppointmentsByReplyChannel({ chart, explanation, explanati
 
   return (
     <ReactivationChartPanel
-      chartKey="booked_appointments_by_reply_channel"
+      explanationKey="chart.reply_channel_breakdown"
       explanation={explanation}
       explanationEditor={explanationEditor}
       title="Breakdown by Track"

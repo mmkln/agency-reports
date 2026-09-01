@@ -62,7 +62,7 @@ export function DentalGrowthReviewDashboard({
   campaignId,
   campaignSelector,
   funnelEmptyAction,
-  onChartExplanationSaved,
+  onDashboardExplanationSaved,
   onLayoutSaved,
   onRetry,
   page,
@@ -84,11 +84,11 @@ export function DentalGrowthReviewDashboard({
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
   const canCustomizeLayout = page.permissions?.canCustomizeLayout === true
-  const chartExplanationEditor = {
+  const dashboardExplanationEditor = {
     apiClient,
     campaignId,
-    canEdit: page.permissions?.canEditChartExplanations === true,
-    onSaved: onChartExplanationSaved,
+    canEdit: page.permissions?.canEditDashboardExplanations === true,
+    onSaved: onDashboardExplanationSaved,
     workspaceId,
   }
   const lifecycleEmptyAction = (
@@ -135,8 +135,8 @@ export function DentalGrowthReviewDashboard({
       widget: renderGrowthReviewDashboardWidget(item.widgetKey, {
         acceptedTreatmentValueBreakdown,
         bookedAppointmentsByReplyChannel,
-        chartExplanationEditor,
-        chartExplanations: page.chartExplanations,
+        dashboardExplanationEditor,
+        dashboardExplanations: page.dashboardExplanations,
         funnelChart,
         funnelStages,
         lifecycleEmptyAction,
@@ -163,6 +163,8 @@ export function DentalGrowthReviewDashboard({
         <ReactivationCampaignSummary
           acceptedTreatmentDrilldown={acceptedTreatmentDrilldown}
           chart={reactivationActivity}
+          explanationEditor={dashboardExplanationEditor}
+          explanations={page.dashboardExplanations}
           funnelChart={funnelChart}
         />
       </section>

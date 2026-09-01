@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  normalizeGrowthReviewChartExplanations,
+  normalizeGrowthReviewDashboardExplanations,
   normalizeGrowthReviewDashboardLayout,
 } from './apiContract'
 
@@ -30,27 +30,29 @@ describe('normalizeGrowthReviewDashboardLayout', () => {
   })
 })
 
-describe('normalizeGrowthReviewChartExplanations', () => {
+describe('normalizeGrowthReviewDashboardExplanations', () => {
   it('normalizes campaign-specific explanation metadata', () => {
-    const explanations = normalizeGrowthReviewChartExplanations({
-      reactivation_activity: {
+    const explanations = normalizeGrowthReviewDashboardExplanations({
+      'summary.booked_appointments': {
         additional_note: 'Campaign-specific context',
         calculation_explanation: 'Count actual touches by execution date.',
-        chart_key: 'reactivation_activity',
+        explanation_key: 'summary.booked_appointments',
         definition: 'Actual campaign activity.',
         is_customized: true,
+        kind: 'metric',
         label: 'Reactivation Activity',
         source: 'GHL Reactivation Touch',
         updated_at: '2026-09-01T10:00:00Z',
       },
     })
 
-    expect(explanations.reactivation_activity).toEqual({
+    expect(explanations['summary.booked_appointments']).toEqual({
       additionalNote: 'Campaign-specific context',
       calculationExplanation: 'Count actual touches by execution date.',
-      chartKey: 'reactivation_activity',
       definition: 'Actual campaign activity.',
+      explanationKey: 'summary.booked_appointments',
       isCustomized: true,
+      kind: 'metric',
       label: 'Reactivation Activity',
       source: 'GHL Reactivation Touch',
       updatedAt: '2026-09-01T10:00:00Z',

@@ -1,12 +1,12 @@
 import { Panel, PanelBody } from '@/shared/ui'
-import { ChartExplanationPopover } from '@/features/growth-review-chart-explanation'
+import { DashboardExplanationPopover } from '@/features/growth-review-dashboard-explanation'
 
 import { reactivationChartLayout } from './reactivationChartTheme'
 import { reactivationText } from './reactivationTypography'
 
 export function ReactivationChartPanel({
   children,
-  chartKey,
+  explanationKey,
   explanation,
   explanationEditor,
   footer,
@@ -21,12 +21,12 @@ export function ReactivationChartPanel({
           <div className="min-w-0">
             <div className="flex items-center gap-tag">
               <h3 className={reactivationText.sectionTitle}>{title}</h3>
-              {chartKey && explanation ? (
-                <ChartExplanationPopover
+              {explanationKey && explanation ? (
+                <DashboardExplanationPopover
                   {...explanationEditor}
-                  chartKey={chartKey}
+                  explanationKey={explanationKey}
                   explanation={explanation}
-                  key={`${explanationEditor?.campaignId ?? ''}:${chartKey}`}
+                  key={`${explanationEditor?.campaignId ?? ''}:${explanationKey}`}
                 />
               ) : null}
             </div>

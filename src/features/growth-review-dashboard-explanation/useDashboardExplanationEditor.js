@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 
 import {
-  resetGrowthReviewChartExplanation,
-  updateGrowthReviewChartExplanation,
+  resetGrowthReviewDashboardExplanation,
+  updateGrowthReviewDashboardExplanation,
 } from '@/domain/services/growthReviewApiReadService'
 
 function createDraft(explanation = {}) {
@@ -19,10 +19,10 @@ function draftsMatch(left, right) {
     && left.definition === right.definition
 }
 
-export function useChartExplanationEditor({
+export function useDashboardExplanationEditor({
   apiClient,
   campaignId,
-  chartKey,
+  explanationKey,
   explanation,
   onSaved,
   workspaceId,
@@ -71,10 +71,10 @@ export function useChartExplanationEditor({
     setError('')
 
     try {
-      const saved = await updateGrowthReviewChartExplanation({
+      const saved = await updateGrowthReviewDashboardExplanation({
         apiClient,
         campaignId,
-        chartKey,
+        explanationKey,
         explanation: draft,
         workspaceId,
       })
@@ -84,7 +84,7 @@ export function useChartExplanationEditor({
       await onSaved?.(saved)
       return saved
     } catch (requestError) {
-      setError(requestError?.message || 'Could not save this chart explanation.')
+      setError(requestError?.message || 'Could not save this dashboard explanation.')
       return null
     } finally {
       setIsSaving(false)
@@ -96,10 +96,10 @@ export function useChartExplanationEditor({
     setError('')
 
     try {
-      const saved = await resetGrowthReviewChartExplanation({
+      const saved = await resetGrowthReviewDashboardExplanation({
         apiClient,
         campaignId,
-        chartKey,
+        explanationKey,
         workspaceId,
       })
       setSavedExplanation(saved)

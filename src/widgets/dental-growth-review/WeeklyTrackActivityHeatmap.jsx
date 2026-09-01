@@ -139,7 +139,7 @@ export function WeeklyTrackActivityHeatmap({ explanation, explanationEditor, sec
 
   return (
     <ReactivationChartPanel
-      chartKey="weekly_track_activity"
+      explanationKey="chart.weekly_track_activity"
       explanation={explanation}
       explanationEditor={explanationEditor}
       subtitle={model.subtitle}

@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui'
 
-import { useChartExplanationEditor } from './useChartExplanationEditor'
+import { useDashboardExplanationEditor } from './useDashboardExplanationEditor'
 
 function ExplanationSection({ children, label }) {
   if (!children) {
@@ -47,24 +47,30 @@ function ExplanationField({ label, maxLength, onChange, value }) {
   )
 }
 
-export function ChartExplanationPopover({
+export function DashboardExplanationPopover({
   apiClient,
   campaignId,
   canEdit = false,
-  chartKey,
+  explanationKey,
   explanation,
   onSaved,
+  triggerSize = 'sm',
   workspaceId,
 }) {
-  const editor = useChartExplanationEditor({
+  const editor = useDashboardExplanationEditor({
     apiClient,
     campaignId,
-    chartKey,
+    explanationKey,
     explanation,
     onSaved,
     workspaceId,
   })
   const current = editor.currentExplanation ?? explanation
+  const subject = current?.kind === 'metric'
+    ? 'metric'
+    : current?.kind === 'section'
+      ? 'section'
+      : 'chart'
 
   if (!current?.definition && !current?.calculationExplanation && !current?.source) {
     return null
@@ -76,15 +82,15 @@ export function ChartExplanationPopover({
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <IconButton
-              aria-label={`About ${current.label || 'this chart'}`}
+              aria-label={`About ${current.label || `this ${subject}`}`}
               className="text-text-quaternary hover:text-text-secondary"
-              size="sm"
+              size={triggerSize}
             >
-              <Icon name="infoCircle" size={15} />
+              <Icon name="infoCircle" size={triggerSize === 'xs' ? 13 : 15} />
             </IconButton>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent>About this chart</TooltipContent>
+        <TooltipContent>{`About this ${subject}`}</TooltipContent>
       </Tooltip>
 
       <PopoverContent
@@ -101,7 +107,7 @@ export function ChartExplanationPopover({
           <div className="grid gap-component">
             <div className="flex items-center justify-between gap-control">
               <div className="min-w-0">
-                <p className="text-ui font-semibold text-text-primary">About this chart</p>
+                <p className="text-ui font-semibold text-text-primary">{`About this ${subject}`}</p>
                 <p className="mt-tag truncate text-label text-text-muted">{current.label}</p>
               </div>
               {canEdit ? (
@@ -131,7 +137,7 @@ export function ChartExplanationPopover({
             </div>
 
             <ExplanationField
-              label="What this chart shows"
+              label={`What this ${subject} shows`}
               maxLength={500}
               onChange={(value) => editor.updateField('definition', value)}
               value={editor.draft.definition}

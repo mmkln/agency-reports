@@ -3,6 +3,7 @@ import { forwardRef } from 'react'
 import { Icon } from '@/shared/icons'
 
 import { ReactivationCampaignKpiCards } from './ReactivationCampaignKpiCards'
+import { CampaignMetricExplanation } from './CampaignMetricExplanation'
 import { reactivationText } from './reactivationTypography'
 
 const cardToneClass = {
@@ -146,6 +147,17 @@ function getCardTitle(card) {
   return cardTitleByKey[card.key] ?? card.label
 }
 
+const explanationKeyByCardKey = {
+  actual_bookings: 'summary.booked_appointments',
+  bookings: 'summary.booked_appointments',
+  booked_expected_value: 'summary.booked_expected_value',
+  emails_sent: 'summary.emails_sent',
+  manager_calls: 'summary.manager_calls',
+  negative_replies: 'summary.negative_replies',
+  opt_out_patients: 'summary.opt_out_patients',
+  sms_sent: 'summary.sms_sent',
+}
+
 function formatCardCaption(card) {
   const caption = String(card.caption || cardCaptionByKey[card.key] || '').trim()
   if (!caption) {
@@ -195,6 +207,8 @@ function buildActivityCards({ cards }) {
 const ActivityCard = forwardRef(function ActivityCard({
   card,
   className = '',
+  explanationEditor,
+  explanations,
   isInteractive = false,
   ...triggerProps
 }, ref) {
@@ -207,7 +221,8 @@ const ActivityCard = forwardRef(function ActivityCard({
   const iconSizeClass = label ? 'size-9' : 'size-8'
   const iconSize = label ? 17 : 15
   const labeledValueClass = 'mt-micro text-[26px] font-semibold leading-[30px] tabular-nums text-text-primary'
-  const labeledCaptionClass = 'mt-tag truncate text-label font-medium text-text-muted'
+  const labeledCaptionClass = 'truncate text-label font-medium text-text-muted'
+  const explanationKey = explanationKeyByCardKey[card.key]
   const content = (
     <>
       <span className={`inline-flex ${iconSizeClass} shrink-0 items-center justify-center rounded-control ${classes.icon}`}>
@@ -216,15 +231,31 @@ const ActivityCard = forwardRef(function ActivityCard({
 
       <div className="min-w-0 flex-1 text-left">
         {label ? (
-          <p className="truncate text-label font-semibold text-text-primary">{label}</p>
+          <div className="flex min-w-0 items-center gap-tag">
+            <p className="truncate text-label font-semibold text-text-primary">{label}</p>
+            <CampaignMetricExplanation
+              explanationEditor={explanationEditor}
+              explanationKey={explanationKey}
+              explanations={explanations}
+            />
+          </div>
         ) : null}
         <p className={label ? labeledValueClass : valueClass}>
           {formatCardValue(card)}
         </p>
         {caption ? (
-          <p className={label ? labeledCaptionClass : `mt-tag truncate ${captionClass}`} title={`${getCardTitle(card)}: ${caption}`}>
-            {caption}
-          </p>
+          <div className="mt-tag flex min-w-0 items-center gap-tag">
+            <p className={label ? labeledCaptionClass : `truncate ${captionClass}`} title={`${getCardTitle(card)}: ${caption}`}>
+              {caption}
+            </p>
+            {!label ? (
+              <CampaignMetricExplanation
+                explanationEditor={explanationEditor}
+                explanationKey={explanationKey}
+                explanations={explanations}
+              />
+            ) : null}
+          </div>
         ) : null}
       </div>
 
@@ -296,7 +327,13 @@ function getRecentBookingsDelta(series = [], days = 7) {
   return Math.max(0, Number(lastPoint.cumulativeBookings ?? 0) - baseline)
 }
 
-function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
+function HeroBookingsCard({
+  bookedPercent,
+  card,
+  explanationEditor,
+  explanations,
+  weeklyDelta,
+}) {
   const context = [
     bookedPercent ? `${bookedPercent} of cohort` : '',
     weeklyDelta > 0 ? `+${weeklyDelta.toLocaleString('en-US')} this week` : '',
@@ -308,7 +345,14 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
         <Icon name="calendar" size={19} />
       </span>
       <div className="min-w-0">
-        <p className={reactivationText.metricLabel}>Booked appointments</p>
+        <div className="flex items-center gap-tag">
+          <p className={reactivationText.metricLabel}>Booked appointments</p>
+          <CampaignMetricExplanation
+            explanationEditor={explanationEditor}
+            explanationKey="summary.booked_appointments"
+            explanations={explanations}
+          />
+        </div>
         <p className="mt-tag flex flex-wrap items-baseline gap-x-2">
           <span className="text-[40px] font-semibold leading-[42px] tracking-normal tabular-nums text-success">
             {formatCardValue(card)}
@@ -322,14 +366,21 @@ function HeroBookingsCard({ bookedPercent, card, weeklyDelta }) {
   )
 }
 
-function BookedExpectedValueCard({ card }) {
+function BookedExpectedValueCard({ card, explanationEditor, explanations }) {
   return (
     <article className="flex min-h-[92px] items-center gap-3 rounded-block bg-block px-4 py-3 shadow-block">
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-control bg-success-muted text-success">
         <Icon name="dollarSign" size={19} />
       </span>
       <div className="min-w-0">
-        <p className={reactivationText.metricLabel}>Booked expected value</p>
+        <div className="flex items-center gap-tag">
+          <p className={reactivationText.metricLabel}>Booked expected value</p>
+          <CampaignMetricExplanation
+            explanationEditor={explanationEditor}
+            explanationKey="summary.booked_expected_value"
+            explanations={explanations}
+          />
+        </div>
         <p className="mt-tag text-[30px] font-semibold leading-[34px] tracking-normal tabular-nums text-success">
           {formatCardValue(card)}
         </p>
@@ -340,6 +391,8 @@ function BookedExpectedValueCard({ card }) {
 
 export function ReactivationCampaignSummary({
   chart,
+  explanationEditor,
+  explanations,
   funnelChart,
 }) {
   if (!chart?.available) {
@@ -369,20 +422,43 @@ export function ReactivationCampaignSummary({
 
   return (
     <section className="grid gap-control md:grid-cols-2 xl:grid-cols-4">
-      {heroCard ? <HeroBookingsCard bookedPercent={bookedPercent} card={heroCard} weeklyDelta={weeklyDelta} /> : null}
-      {bookedExpectedValueCard ? <BookedExpectedValueCard card={bookedExpectedValueCard} /> : null}
+      {heroCard ? (
+        <HeroBookingsCard
+          bookedPercent={bookedPercent}
+          card={heroCard}
+          explanationEditor={explanationEditor}
+          explanations={explanations}
+          weeklyDelta={weeklyDelta}
+        />
+      ) : null}
+      {bookedExpectedValueCard ? (
+        <BookedExpectedValueCard
+          card={bookedExpectedValueCard}
+          explanationEditor={explanationEditor}
+          explanations={explanations}
+        />
+      ) : null}
       <ReactivationCampaignKpiCards
+        explanationEditor={explanationEditor}
+        explanations={explanations}
         funnelChart={funnelChart}
         includeIds={[PATIENT_REPLIES_CARD_ID]}
       />
       {activityCards.length ? (
         <>
           <ReactivationCampaignKpiCards
+            explanationEditor={explanationEditor}
+            explanations={explanations}
             funnelChart={funnelChart}
             includeIds={[REPLY_TO_BOOKING_CARD_ID]}
           />
           {activityCards.map((card) => (
-            <ActivityCard card={card} key={card.key || card.label} />
+            <ActivityCard
+              card={card}
+              explanationEditor={explanationEditor}
+              explanations={explanations}
+              key={card.key || card.label}
+            />
           ))}
         </>
       ) : null}

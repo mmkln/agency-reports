@@ -3,9 +3,10 @@ import { cn } from '@/lib/utils'
 
 import { useInspectorId } from './inspectorId'
 
-const sizeClassName = {
-  md: 'h-target w-target',
-  sm: 'h-control-small w-control-small',
+const buttonSize = {
+  md: 'icon',
+  sm: 'icon-sm',
+  xs: 'icon-xs',
 }
 
 const variantClassName = {
@@ -29,10 +30,9 @@ export function IconButton({
       className={cn(
         'rounded-full focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-muted',
         variantClassName[variant],
-        sizeClassName[size],
         className,
       )}
-      size="icon"
+      size={buttonSize[size] ?? buttonSize.md}
       type={type}
       variant={variant}
       {...props}

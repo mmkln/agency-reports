@@ -3,7 +3,7 @@ import {
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
   normalizeGrowthReviewDashboardLayout,
-  normalizeGrowthReviewChartExplanations,
+  normalizeGrowthReviewDashboardExplanations,
   normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
   normalizeGrowthReviewWeeklyReportingReadModel,
@@ -325,7 +325,9 @@ export async function getGrowthReviewDashboardPageFromApi({
     campaign: normalizeCampaignMetadata(payload),
     campaignId: campaignId || payload?.campaign?.id || '',
     charts,
-    chartExplanations: normalizeGrowthReviewChartExplanations(payload?.chart_explanations),
+    dashboardExplanations: normalizeGrowthReviewDashboardExplanations(
+      payload?.dashboard_explanations ?? payload?.chart_explanations,
+    ),
     client: {
       id: workspaceId,
       name: payload?.workspace?.name ?? payload?.client?.name ?? 'Workspace',
@@ -336,8 +338,9 @@ export async function getGrowthReviewDashboardPageFromApi({
     layout: charts.layout,
     permissions: {
       canCustomizeLayout: payload?.permissions?.can_customize_layout === true,
-      canEditChartExplanations:
-        payload?.permissions?.can_edit_chart_explanations === true,
+      canEditDashboardExplanations:
+        payload?.permissions?.can_edit_dashboard_explanations === true
+        || payload?.permissions?.can_edit_chart_explanations === true,
     },
     preset,
     previousPeriod: null,
@@ -351,19 +354,19 @@ export async function getGrowthReviewDashboardPageFromApi({
   }
 }
 
-export async function updateGrowthReviewChartExplanation({
+export async function updateGrowthReviewDashboardExplanation({
   apiClient,
   campaignId,
-  chartKey,
+  explanationKey,
   explanation,
   workspaceId,
 }) {
-  if (!workspaceId || !campaignId || !chartKey) {
-    throw new Error('Workspace, campaign, and chart are required to update an explanation.')
+  if (!workspaceId || !campaignId || !explanationKey) {
+    throw new Error('Workspace, campaign, and dashboard item are required to update an explanation.')
   }
 
   const payload = await apiClient.request(
-    `/api/workspaces/${workspaceId}/growth-review/chart-explanations/${encodeURIComponent(chartKey)}/`,
+    `/api/workspaces/${workspaceId}/growth-review/dashboard-explanations/${encodeURIComponent(explanationKey)}/`,
     {
       body: {
         additional_note: explanation.additionalNote,
@@ -375,30 +378,30 @@ export async function updateGrowthReviewChartExplanation({
     },
   )
 
-  return normalizeGrowthReviewChartExplanations({
-    [chartKey]: payload.explanation,
-  })[chartKey]
+  return normalizeGrowthReviewDashboardExplanations({
+    [explanationKey]: payload.explanation,
+  })[explanationKey]
 }
 
-export async function resetGrowthReviewChartExplanation({
+export async function resetGrowthReviewDashboardExplanation({
   apiClient,
   campaignId,
-  chartKey,
+  explanationKey,
   workspaceId,
 }) {
-  if (!workspaceId || !campaignId || !chartKey) {
-    throw new Error('Workspace, campaign, and chart are required to reset an explanation.')
+  if (!workspaceId || !campaignId || !explanationKey) {
+    throw new Error('Workspace, campaign, and dashboard item are required to reset an explanation.')
   }
 
   const query = new URLSearchParams({ campaign_id: campaignId })
   const payload = await apiClient.request(
-    `/api/workspaces/${workspaceId}/growth-review/chart-explanations/${encodeURIComponent(chartKey)}/?${query}`,
+    `/api/workspaces/${workspaceId}/growth-review/dashboard-explanations/${encodeURIComponent(explanationKey)}/?${query}`,
     { method: 'DELETE' },
   )
 
-  return normalizeGrowthReviewChartExplanations({
-    [chartKey]: payload.explanation,
-  })[chartKey]
+  return normalizeGrowthReviewDashboardExplanations({
+    [explanationKey]: payload.explanation,
+  })[explanationKey]
 }
 
 export async function updateGrowthReviewDashboardLayout({

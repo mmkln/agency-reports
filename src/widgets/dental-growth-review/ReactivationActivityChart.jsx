@@ -202,7 +202,7 @@ export function ReactivationActivityChart({ chart, explanation, explanationEdito
 
   return (
     <ReactivationChartPanel
-      chartKey="reactivation_activity"
+      explanationKey="chart.reactivation_activity"
       explanation={explanation}
       explanationEditor={explanationEditor}
       rightSlot={legend}

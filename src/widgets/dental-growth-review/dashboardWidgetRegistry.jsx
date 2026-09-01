@@ -14,13 +14,26 @@ export const growthReviewDashboardWidgetKeys = {
   weeklyTrackActivity: 'weekly_track_activity',
 }
 
+const explanationKeyByWidgetKey = {
+  [growthReviewDashboardWidgetKeys.acceptedTreatmentValueBreakdown]: 'chart.accepted_treatment_value',
+  [growthReviewDashboardWidgetKeys.bookedAppointmentsByReplyChannel]: 'chart.reply_channel_breakdown',
+  [growthReviewDashboardWidgetKeys.bookingsByTrack]: 'chart.bookings_by_track',
+  [growthReviewDashboardWidgetKeys.reactivationActivity]: 'chart.reactivation_activity',
+  [growthReviewDashboardWidgetKeys.reactivationLifecycle]: 'chart.reactivation_lifecycle',
+  [growthReviewDashboardWidgetKeys.weeklyTrackActivity]: 'chart.weekly_track_activity',
+}
+
+function getWidgetExplanation(context, widgetKey) {
+  return context.dashboardExplanations?.[explanationKeyByWidgetKey[widgetKey]]
+}
+
 export function renderGrowthReviewDashboardWidget(widgetKey, context) {
   if (widgetKey === growthReviewDashboardWidgetKeys.acceptedTreatmentValueBreakdown) {
     return (
       <AcceptedTreatmentValueBreakdown
         chart={context.acceptedTreatmentValueBreakdown}
-        explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.acceptedTreatmentValueBreakdown]}
-        explanationEditor={context.chartExplanationEditor}
+        explanation={getWidgetExplanation(context, widgetKey)}
+        explanationEditor={context.dashboardExplanationEditor}
       />
     )
   }
@@ -29,8 +42,8 @@ export function renderGrowthReviewDashboardWidget(widgetKey, context) {
     return (
       <ReactivationActivityChart
         chart={context.reactivationActivity}
-        explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.reactivationActivity]}
-        explanationEditor={context.chartExplanationEditor}
+        explanation={getWidgetExplanation(context, widgetKey)}
+        explanationEditor={context.dashboardExplanationEditor}
       />
     )
   }
@@ -39,8 +52,8 @@ export function renderGrowthReviewDashboardWidget(widgetKey, context) {
     return (
       <BookedAppointmentsByReplyChannel
         chart={context.bookedAppointmentsByReplyChannel}
-        explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.bookedAppointmentsByReplyChannel]}
-        explanationEditor={context.chartExplanationEditor}
+        explanation={getWidgetExplanation(context, widgetKey)}
+        explanationEditor={context.dashboardExplanationEditor}
       />
     )
   }
@@ -48,8 +61,8 @@ export function renderGrowthReviewDashboardWidget(widgetKey, context) {
   if (widgetKey === growthReviewDashboardWidgetKeys.weeklyTrackActivity) {
     return (
       <WeeklyTrackActivityHeatmap
-        explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.weeklyTrackActivity]}
-        explanationEditor={context.chartExplanationEditor}
+        explanation={getWidgetExplanation(context, widgetKey)}
+        explanationEditor={context.dashboardExplanationEditor}
         section={context.weeklyActivity}
       />
     )
@@ -59,8 +72,8 @@ export function renderGrowthReviewDashboardWidget(widgetKey, context) {
     return context.trackPerformance
       ? (
           <BookingsByTrackComparisonPanel
-            explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.bookingsByTrack]}
-            explanationEditor={context.chartExplanationEditor}
+            explanation={getWidgetExplanation(context, widgetKey)}
+            explanationEditor={context.dashboardExplanationEditor}
             funnelChart={context.funnelChart}
           />
         )
@@ -71,8 +84,8 @@ export function renderGrowthReviewDashboardWidget(widgetKey, context) {
     return (
       <FunnelView
         emptyAction={context.lifecycleEmptyAction}
-        explanation={context.chartExplanations?.[growthReviewDashboardWidgetKeys.reactivationLifecycle]}
-        explanationEditor={context.chartExplanationEditor}
+        explanation={getWidgetExplanation(context, widgetKey)}
+        explanationEditor={context.dashboardExplanationEditor}
         funnel={context.funnelStages}
         funnelChart={context.funnelChart}
       />
