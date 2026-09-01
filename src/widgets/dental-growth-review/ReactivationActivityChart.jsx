@@ -183,7 +183,7 @@ function createWeekTickLabel(weekTicks) {
   }
 }
 
-export function ReactivationActivityChart({ chart }) {
+export function ReactivationActivityChart({ chart, explanation, explanationEditor }) {
   const model = buildActivityChartModel(chart)
 
   if (!model) {
@@ -202,6 +202,9 @@ export function ReactivationActivityChart({ chart }) {
 
   return (
     <ReactivationChartPanel
+      chartKey="reactivation_activity"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
       rightSlot={legend}
       title={model.title}
     >

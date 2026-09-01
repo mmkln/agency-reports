@@ -1023,6 +1023,8 @@ export function BookingsByTrackPanel({ funnelChart = null }) {
 
 export function FunnelView({
   emptyAction,
+  explanation,
+  explanationEditor,
   funnel,
   funnelChart = null,
   sidePanel = null,
@@ -1060,6 +1062,9 @@ export function FunnelView({
       hasSidePanel ? 'xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.72fr)]' : ''
     }`}>
       <ReactivationChartPanel
+        chartKey="reactivation_lifecycle"
+        explanation={explanation}
+        explanationEditor={explanationEditor}
         rightSlot={hasSegmentControls ? (
           <FunnelSegmentSwitcher
             activeSegmentKey={resolvedActiveSegmentKey}

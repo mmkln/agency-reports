@@ -109,7 +109,7 @@ function ReplyChannelRow({ maxTotal, row }) {
   )
 }
 
-export function BookedAppointmentsByReplyChannel({ chart }) {
+export function BookedAppointmentsByReplyChannel({ chart, explanation, explanationEditor }) {
   if (!chart?.available) {
     return null
   }
@@ -124,6 +124,9 @@ export function BookedAppointmentsByReplyChannel({ chart }) {
 
   return (
     <ReactivationChartPanel
+      chartKey="booked_appointments_by_reply_channel"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
       title="Breakdown by Track"
     >
       <div className="overflow-hidden rounded-control border border-separator">

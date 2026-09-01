@@ -3,6 +3,7 @@ import {
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
   normalizeGrowthReviewDashboardLayout,
+  normalizeGrowthReviewChartExplanations,
   normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
   normalizeGrowthReviewWeeklyReportingReadModel,
@@ -324,6 +325,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     campaign: normalizeCampaignMetadata(payload),
     campaignId: campaignId || payload?.campaign?.id || '',
     charts,
+    chartExplanations: normalizeGrowthReviewChartExplanations(payload?.chart_explanations),
     client: {
       id: workspaceId,
       name: payload?.workspace?.name ?? payload?.client?.name ?? 'Workspace',
@@ -334,6 +336,8 @@ export async function getGrowthReviewDashboardPageFromApi({
     layout: charts.layout,
     permissions: {
       canCustomizeLayout: payload?.permissions?.can_customize_layout === true,
+      canEditChartExplanations:
+        payload?.permissions?.can_edit_chart_explanations === true,
     },
     preset,
     previousPeriod: null,
@@ -345,6 +349,56 @@ export async function getGrowthReviewDashboardPageFromApi({
     weeklyReporting,
     zones: mapZoneState(preset),
   }
+}
+
+export async function updateGrowthReviewChartExplanation({
+  apiClient,
+  campaignId,
+  chartKey,
+  explanation,
+  workspaceId,
+}) {
+  if (!workspaceId || !campaignId || !chartKey) {
+    throw new Error('Workspace, campaign, and chart are required to update an explanation.')
+  }
+
+  const payload = await apiClient.request(
+    `/api/workspaces/${workspaceId}/growth-review/chart-explanations/${encodeURIComponent(chartKey)}/`,
+    {
+      body: {
+        additional_note: explanation.additionalNote,
+        calculation_explanation: explanation.calculationExplanation,
+        campaign_id: campaignId,
+        definition: explanation.definition,
+      },
+      method: 'PUT',
+    },
+  )
+
+  return normalizeGrowthReviewChartExplanations({
+    [chartKey]: payload.explanation,
+  })[chartKey]
+}
+
+export async function resetGrowthReviewChartExplanation({
+  apiClient,
+  campaignId,
+  chartKey,
+  workspaceId,
+}) {
+  if (!workspaceId || !campaignId || !chartKey) {
+    throw new Error('Workspace, campaign, and chart are required to reset an explanation.')
+  }
+
+  const query = new URLSearchParams({ campaign_id: campaignId })
+  const payload = await apiClient.request(
+    `/api/workspaces/${workspaceId}/growth-review/chart-explanations/${encodeURIComponent(chartKey)}/?${query}`,
+    { method: 'DELETE' },
+  )
+
+  return normalizeGrowthReviewChartExplanations({
+    [chartKey]: payload.explanation,
+  })[chartKey]
 }
 
 export async function updateGrowthReviewDashboardLayout({

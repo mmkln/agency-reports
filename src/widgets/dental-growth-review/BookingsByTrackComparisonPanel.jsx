@@ -1,15 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 
-import { Panel, PanelBody } from '@/shared/ui'
-
 import {
   buildBookingsByTrackComparisonModel,
   formatTrackMetricValue,
   trackMetricColumns,
 } from './bookingsByTrackComparisonModel'
 import { reactivationColors, reactivationTrackColors } from './reactivationChartTheme'
-import { reactivationText } from './reactivationTypography'
+import { ReactivationChartPanel } from './ReactivationChartPanel'
 
 const DEFAULT_SELECTED_COLUMN = 'booked'
 
@@ -136,7 +134,11 @@ function TrackMetricTable({
   )
 }
 
-export function BookingsByTrackComparisonPanel({ funnelChart = null }) {
+export function BookingsByTrackComparisonPanel({
+  explanation,
+  explanationEditor,
+  funnelChart = null,
+}) {
   const [selectedColumnKey, setSelectedColumnKey] = useState(DEFAULT_SELECTED_COLUMN)
   const model = useMemo(() => buildBookingsByTrackComparisonModel({
     colorsByTrack: {
@@ -153,24 +155,21 @@ export function BookingsByTrackComparisonPanel({ funnelChart = null }) {
   const chart = model.getChartRows(selectedColumnKey)
 
   return (
-    <Panel>
-      <PanelBody className="p-6">
-        <div>
-          <h3 className={reactivationText.sectionTitle}>Bookings by Track</h3>
-          <p className={`mt-1 ${reactivationText.sectionSubtitle}`}>
-            Select a table column to compare track distribution.
-          </p>
-        </div>
-
-        <div className="mt-6 grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
-          <TrackMetricDonut chart={chart} />
-          <TrackMetricTable
-            model={model}
-            onSelectColumn={setSelectedColumnKey}
-            selectedColumnKey={selectedColumnKey}
-          />
-        </div>
-      </PanelBody>
-    </Panel>
+    <ReactivationChartPanel
+      chartKey="bookings_by_track"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
+      subtitle="Select a table column to compare track distribution."
+      title="Bookings by Track"
+    >
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
+        <TrackMetricDonut chart={chart} />
+        <TrackMetricTable
+          model={model}
+          onSelectColumn={setSelectedColumnKey}
+          selectedColumnKey={selectedColumnKey}
+        />
+      </div>
+    </ReactivationChartPanel>
   )
 }

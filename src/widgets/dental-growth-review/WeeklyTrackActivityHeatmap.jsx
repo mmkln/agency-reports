@@ -130,7 +130,7 @@ function IntensityLegend({ channels }) {
   )
 }
 
-export function WeeklyTrackActivityHeatmap({ section }) {
+export function WeeklyTrackActivityHeatmap({ explanation, explanationEditor, section }) {
   const model = buildWeeklyTrackActivityModel(section)
 
   if (!model) {
@@ -139,6 +139,9 @@ export function WeeklyTrackActivityHeatmap({ section }) {
 
   return (
     <ReactivationChartPanel
+      chartKey="weekly_track_activity"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
       subtitle={model.subtitle}
       title={model.title}
     >

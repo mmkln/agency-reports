@@ -42,6 +42,35 @@ function normalizeMetricSource(value) {
   return Array.isArray(value) ? value.join(', ') : normalizeText(value)
 }
 
+function normalizeChartExplanation(source = {}, chartKey = '') {
+  const value = isPlainObject(source) ? source : {}
+
+  return {
+    additionalNote: normalizeText(value.additional_note ?? value.additionalNote),
+    calculationExplanation: normalizeText(
+      value.calculation_explanation ?? value.calculationExplanation,
+    ),
+    chartKey: normalizeText(value.chart_key ?? value.chartKey ?? chartKey),
+    definition: normalizeText(value.definition),
+    isCustomized: value.is_customized === true || value.isCustomized === true,
+    label: normalizeText(value.label),
+    source: normalizeMetricSource(value.source),
+    updatedAt: normalizeText(value.updated_at ?? value.updatedAt),
+    updatedBy: normalizeText(value.updated_by ?? value.updatedBy),
+  }
+}
+
+export function normalizeGrowthReviewChartExplanations(value = {}) {
+  const source = isPlainObject(value) ? value : {}
+
+  return Object.fromEntries(
+    Object.entries(source).map(([chartKey, explanation]) => [
+      chartKey,
+      normalizeChartExplanation(explanation, chartKey),
+    ]),
+  )
+}
+
 function normalizeMetricSeriesPoints(source = {}) {
   return normalizeArray(source.points ?? source.series).filter(isPlainObject)
 }

@@ -187,7 +187,7 @@ function PatientsValueTable({ currency, rows, cards, rawTotals }) {
   )
 }
 
-export function AcceptedTreatmentValueBreakdown({ chart }) {
+export function AcceptedTreatmentValueBreakdown({ chart, explanation, explanationEditor }) {
   if (!chart?.available) {
     return null
   }
@@ -199,6 +199,9 @@ export function AcceptedTreatmentValueBreakdown({ chart }) {
 
   return (
     <ReactivationChartPanel
+      chartKey="accepted_treatment_value_breakdown"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
       subtitle="Paid revenue, open balance, and projected value for accepted treatments."
       title="Accepted Treatment Value Breakdown"
     >

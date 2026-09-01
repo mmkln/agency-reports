@@ -1356,6 +1356,17 @@ export const iconRegistry = {
       />
     ),
   },
+  infoCircle: {
+    defaultSize: 16,
+    viewBox: '0 0 16 16',
+    paths: (
+      <>
+        <circle cx="8" cy="8" fill="none" r="6" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M8 7.15v4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.25" />
+        <circle cx="8" cy="4.65" fill="currentColor" r=".75" />
+      </>
+    ),
+  },
   google: {
     defaultSize: 14,
     viewBox: '0 0 14 14',
