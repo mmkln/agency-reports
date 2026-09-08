@@ -373,6 +373,8 @@ export async function updateGrowthReviewDashboardExplanation({
         calculation_explanation: explanation.calculationExplanation,
         campaign_id: campaignId,
         definition: explanation.definition,
+        label: explanation.label,
+        source: explanation.source,
       },
       method: 'PUT',
     },

@@ -4,6 +4,7 @@ import { Icon } from '@/shared/icons'
 import {
   Button,
   IconButton,
+  Input,
   Label,
   Popover,
   PopoverContent,
@@ -38,6 +39,22 @@ function ExplanationField({ label, maxLength, onChange, value }) {
       <Label htmlFor={controlId}>{label}</Label>
       <Textarea
         className="min-h-20 resize-none"
+        id={controlId}
+        maxLength={maxLength}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      />
+    </div>
+  )
+}
+
+function ExplanationInputField({ label, maxLength, onChange, value }) {
+  const controlId = useId()
+
+  return (
+    <div className="grid gap-item">
+      <Label htmlFor={controlId}>{label}</Label>
+      <Input
         id={controlId}
         maxLength={maxLength}
         onChange={(event) => onChange(event.target.value)}
@@ -131,10 +148,14 @@ export function DashboardExplanationPopover({
           </div>
         ) : (
           <div className="grid gap-component">
-            <div>
-              <p className="text-ui font-semibold text-text-primary">Edit explanation</p>
-              <p className="mt-tag truncate text-label text-text-muted">{current.label}</p>
-            </div>
+            <p className="text-ui font-semibold text-text-primary">Edit explanation</p>
+
+            <ExplanationInputField
+              label="Display name"
+              maxLength={120}
+              onChange={(value) => editor.updateField('label', value)}
+              value={editor.draft.label}
+            />
 
             <ExplanationField
               label={`What this ${subject} shows`}
@@ -154,13 +175,12 @@ export function DashboardExplanationPopover({
               onChange={(value) => editor.updateField('additionalNote', value)}
               value={editor.draft.additionalNote}
             />
-
-            {current.source ? (
-              <div className="grid gap-tag">
-                <p className="text-label font-semibold text-text-primary">Source</p>
-                <p className="text-label text-text-muted">{current.source} · Managed by system</p>
-              </div>
-            ) : null}
+            <ExplanationField
+              label="Source"
+              maxLength={500}
+              onChange={(value) => editor.updateField('source', value)}
+              value={editor.draft.source}
+            />
 
             {editor.error ? (
               <p className="text-label text-destructive" role="alert">{editor.error}</p>

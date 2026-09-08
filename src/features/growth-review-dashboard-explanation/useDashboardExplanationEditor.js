@@ -10,6 +10,8 @@ function createDraft(explanation = {}) {
     additionalNote: explanation.additionalNote ?? '',
     calculationExplanation: explanation.calculationExplanation ?? '',
     definition: explanation.definition ?? '',
+    label: explanation.label ?? '',
+    source: explanation.source ?? '',
   }
 }
 
@@ -17,6 +19,8 @@ function draftsMatch(left, right) {
   return left.additionalNote === right.additionalNote
     && left.calculationExplanation === right.calculationExplanation
     && left.definition === right.definition
+    && left.label === right.label
+    && left.source === right.source
 }
 
 export function useDashboardExplanationEditor({
