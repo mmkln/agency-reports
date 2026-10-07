@@ -34,15 +34,15 @@ describe('plugin authorization request', () => {
     })
   })
 
-  it('accepts the legacy Codex client during migration', () => {
-    expect(parsePluginAuthorizationRequest(validRequest({
-      client_id: 'alpine-growth-review-codex',
-    }))).toHaveProperty('request.client_id', 'alpine-growth-review-codex')
-  })
-
   it('rejects an unregistered redirect', () => {
     expect(parsePluginAuthorizationRequest(validRequest({
       redirect_uri: 'https://attacker.example/callback',
+    }))).toHaveProperty('error')
+  })
+
+  it('rejects the retired Codex client identifier', () => {
+    expect(parsePluginAuthorizationRequest(validRequest({
+      client_id: 'alpine-growth-review-codex',
     }))).toHaveProperty('error')
   })
 

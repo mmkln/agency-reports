@@ -74,13 +74,6 @@ describe('getPostLoginHref', () => {
     })).toBe('/portal/growth-review?clientId=workspace_1')
   })
 
-  it('normalizes the legacy Codex connection route without losing OAuth parameters', () => {
-    expect(getPostLoginHref({
-      nextHref: '/connect/codex?client_id=plugin-client&state=expected-state',
-      viewer: createViewer(),
-    })).toBe('/connect/assistant?client_id=plugin-client&state=expected-state')
-  })
-
   it('falls back when next href targets a denied workspace', () => {
     expect(getPostLoginHref({
       nextHref: '/portal/growth-review?clientId=workspace_2',
