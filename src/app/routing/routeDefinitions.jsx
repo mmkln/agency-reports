@@ -10,6 +10,7 @@ import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-grow
 import { ExecutiveDashboardPageHeader } from '../../pages/dashboards/executive/ExecutiveDashboardPageHeader'
 import { ForgotPasswordPage } from '../../pages/auth/forgot-password/ForgotPasswordPage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
+import { PluginConnectPage } from '../../pages/auth/plugin-connect/PluginConnectPage'
 import { ResetPasswordPage } from '../../pages/auth/reset-password/ResetPasswordPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
 import { AuthLayout } from '../layout/AuthLayout'
@@ -103,6 +104,15 @@ export const routeDefinitions = [
     access: routeAccessMetadataById.login.access,
     showInNav: false,
     element: <LoginPage />,
+  },
+  {
+    path: '/connect/codex',
+    id: 'plugin-connect',
+    label: 'Connect Codex',
+    layout: 'auth',
+    access: routeAccessMetadataById['plugin-connect'].access,
+    showInNav: false,
+    element: <PluginConnectPage />,
   },
   {
     path: '/access-denied',

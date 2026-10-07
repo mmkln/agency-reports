@@ -47,6 +47,12 @@ export const routeAccessMetadata = Object.freeze([
     access: { scope: PUBLIC },
   },
   {
+    id: 'plugin-connect',
+    layout: 'auth',
+    path: '/connect/codex',
+    access: { scope: ACCOUNT },
+  },
+  {
     id: 'access-denied',
     layout: 'auth',
     path: '/access-denied',
