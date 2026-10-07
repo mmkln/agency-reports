@@ -49,7 +49,7 @@ export const routeAccessMetadata = Object.freeze([
   {
     id: 'plugin-connect',
     layout: 'auth',
-    path: '/connect/codex',
+    path: ROUTE_PATHS.pluginConnect,
     access: { scope: ACCOUNT },
   },
   {

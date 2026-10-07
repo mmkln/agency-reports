@@ -1,4 +1,5 @@
 export const ROUTE_PATHS = Object.freeze({
+  pluginConnect: '/connect/assistant',
   accountSettings: '/account/settings',
 
   agencyClients: '/agency/clients',
@@ -24,6 +25,7 @@ export const ROUTE_PATHS = Object.freeze({
 })
 
 export const LEGACY_ROUTE_REDIRECTS = Object.freeze({
+  '/connect/codex': ROUTE_PATHS.pluginConnect,
   '/admin/clients': ROUTE_PATHS.agencyClients,
   '/admin/workspaces': ROUTE_PATHS.agencyWorkspaces,
   '/admin/client-access': ROUTE_PATHS.agencyClientAccess,

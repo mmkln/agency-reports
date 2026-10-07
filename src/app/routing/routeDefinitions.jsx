@@ -106,9 +106,9 @@ export const routeDefinitions = [
     element: <LoginPage />,
   },
   {
-    path: '/connect/codex',
+    path: ROUTE_PATHS.pluginConnect,
     id: 'plugin-connect',
-    label: 'Connect Codex',
+    label: 'Connect AI assistant',
     layout: 'auth',
     access: routeAccessMetadataById['plugin-connect'].access,
     showInNav: false,

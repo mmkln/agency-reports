@@ -1,7 +1,8 @@
-export const PLUGIN_CLIENT_ID = 'alpine-growth-review-codex'
+export const PLUGIN_CLIENT_ID = 'alpine-growth-review-assistant'
 export const PLUGIN_REDIRECT_URI = 'http://127.0.0.1:53682/callback'
 export const PLUGIN_SCOPE = 'growth_review.assistant'
 
+const LEGACY_PLUGIN_CLIENT_IDS = new Set(['alpine-growth-review-codex'])
 const PKCE_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43,128}$/
 
 export function parsePluginAuthorizationRequest(searchParams) {
@@ -14,7 +15,10 @@ export function parsePluginAuthorizationRequest(searchParams) {
     state: searchParams.get('state') ?? '',
   }
 
-  if (request.client_id !== PLUGIN_CLIENT_ID || request.redirect_uri !== PLUGIN_REDIRECT_URI) {
+  const isRegisteredClient = request.client_id === PLUGIN_CLIENT_ID
+    || LEGACY_PLUGIN_CLIENT_IDS.has(request.client_id)
+
+  if (!isRegisteredClient || request.redirect_uri !== PLUGIN_REDIRECT_URI) {
     return { error: 'This connection request did not come from the Alpine Growth Review plugin.' }
   }
   if (

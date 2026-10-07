@@ -41,9 +41,9 @@ export function PluginAuthorizationPanel({ apiClient, requestResult, viewer }) {
               <Icon name="shieldCheck" size={22} />
             </span>
             <div className="grid gap-micro">
-              <h1 className="text-heading font-semibold text-text-primary">Connect Alpine Growth Review to Codex</h1>
+              <h1 className="text-heading font-semibold text-text-primary">Connect your AI assistant</h1>
               <p className="text-body text-text-secondary">
-                Codex will receive read-only access to Growth Review data available to your account.
+                Allow this assistant to securely access the Growth Review data available to your account.
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ export function PluginAuthorizationPanel({ apiClient, requestResult, viewer }) {
               </div>
 
               <div className="grid gap-item">
-                <p className="text-ui font-semibold text-text-primary">Codex will be able to</p>
+                <p className="text-ui font-semibold text-text-primary">This assistant will be able to</p>
                 <ul className="grid gap-item text-ui text-text-secondary">
                   <li className="flex gap-item"><Icon name="check" size={16} /> Inspect review setup and mappings</li>
                   <li className="flex gap-item"><Icon name="check" size={16} /> Read refresh status and calculated dashboards</li>
