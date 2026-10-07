@@ -1,6 +1,6 @@
 export const PLUGIN_CLIENT_ID = 'alpine-growth-review-assistant'
 export const PLUGIN_REDIRECT_URI = 'http://127.0.0.1:53682/callback'
-export const PLUGIN_SCOPE = 'growth_review.assistant'
+export const PLUGIN_SCOPE = 'growth_review.assistant growth_review.assistant.manage'
 
 const PKCE_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43,128}$/
 
