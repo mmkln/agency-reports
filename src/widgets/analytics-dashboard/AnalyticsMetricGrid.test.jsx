@@ -48,6 +48,15 @@ describe('AnalyticsMetricGrid', () => {
             unit: 'percent',
             value: 23.5,
           },
+          {
+            comparison: { delta: 2, label: 'vs previous period' },
+            key: 'leads.active_nurture',
+            label: 'Active nurture',
+            presentation: { icon_name: 'messageSquare', tone: 'info' },
+            supporting: { kind: 'text', label: 'sequences, call queue, STN' },
+            unit: 'count',
+            value: 11,
+          },
         ]}
       />,
     )
@@ -58,8 +67,9 @@ describe('AnalyticsMetricGrid', () => {
     expect(html).toContain('Showed')
     expect(html).toContain('77% of booked')
     expect(html).toContain('4 of 17 leads booked')
+    expect(html).toContain('sequences, call queue, STN')
     expect(html).toContain('bg-success-muted')
     expect(html).toContain('bg-premium-blue/10')
-    expect(html.match(/<svg/g)).toHaveLength(4)
+    expect(html.match(/<svg/g)).toHaveLength(5)
   })
 })

@@ -37,6 +37,9 @@ function formatSupporting(metric) {
   if (supporting.kind === 'fraction') {
     return `${numerator.toLocaleString()} of ${denominator.toLocaleString()} ${supporting.label ?? ''}`.trim()
   }
+  if (supporting.kind === 'text') {
+    return supporting.label ?? ''
+  }
 
   return formatComparison(metric)
 }
