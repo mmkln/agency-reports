@@ -1,6 +1,11 @@
 export const PLUGIN_CLIENT_ID = 'alpine-growth-review-assistant'
 export const PLUGIN_REDIRECT_URI = 'http://127.0.0.1:53682/callback'
-export const PLUGIN_SCOPE = 'growth_review.assistant growth_review.assistant.manage'
+export const PLUGIN_SCOPE = [
+  'growth_review.assistant',
+  'growth_review.assistant.manage',
+  'analytics.dashboards.read',
+  'analytics.dashboards.manage',
+].join(' ')
 
 const PKCE_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43,128}$/
 
@@ -15,7 +20,7 @@ export function parsePluginAuthorizationRequest(searchParams) {
   }
 
   if (request.client_id !== PLUGIN_CLIENT_ID || request.redirect_uri !== PLUGIN_REDIRECT_URI) {
-    return { error: 'This connection request did not come from the Alpine Growth Review plugin.' }
+    return { error: 'This connection request did not come from the Alpine Analytics plugin.' }
   }
   if (
     request.code_challenge_method !== 'S256'

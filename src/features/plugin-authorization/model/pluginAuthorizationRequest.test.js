@@ -46,6 +46,12 @@ describe('plugin authorization request', () => {
     }))).toHaveProperty('error')
   })
 
+  it('rejects the previous scope set without analytics dashboard access', () => {
+    expect(parsePluginAuthorizationRequest(validRequest({
+      scope: 'growth_review.assistant growth_review.assistant.manage',
+    }))).toHaveProperty('error')
+  })
+
   it('rejects the retired Codex client identifier', () => {
     expect(parsePluginAuthorizationRequest(validRequest({
       client_id: 'alpine-growth-review-codex',

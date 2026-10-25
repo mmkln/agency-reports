@@ -43,7 +43,7 @@ export function PluginAuthorizationPanel({ apiClient, requestResult, viewer }) {
             <div className="grid gap-micro">
               <h1 className="text-heading font-semibold text-text-primary">Connect your AI assistant</h1>
               <p className="text-body text-text-secondary">
-                Allow this assistant to securely access and manage Growth Review configuration for your account.
+                Allow this assistant to securely manage Growth Reviews and analytics dashboards for your account.
               </p>
             </div>
           </div>
@@ -70,6 +70,7 @@ export function PluginAuthorizationPanel({ apiClient, requestResult, viewer }) {
                   <li className="flex gap-item"><Icon name="check" size={16} /> Inspect review setup and mappings</li>
                   <li className="flex gap-item"><Icon name="check" size={16} /> Read refresh status and calculated dashboards</li>
                   <li className="flex gap-item"><Icon name="check" size={16} /> Create or update campaign reviews when you ask</li>
+                  <li className="flex gap-item"><Icon name="check" size={16} /> Create analytics dashboards from approved definitions when you ask</li>
                   <li className="flex gap-item"><Icon name="check" size={16} /> Sync GHL options and start refreshes when you ask</li>
                   <li className="flex gap-item"><Icon name="check" size={16} /> Access only workspaces already available to you</li>
                 </ul>
