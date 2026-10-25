@@ -1,5 +1,4 @@
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { MetricGrid, MetricTile } from '@/shared/ui'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 
@@ -23,34 +22,53 @@ function formatComparison(metric) {
   return `${delta > 0 ? '+' : '-'}${formatted} ${metric.comparison?.label ?? ''}`.trim()
 }
 
+function formatSupporting(metric) {
+  const supporting = metric.supporting
+  if (!supporting) {
+    return formatComparison(metric)
+  }
+
+  const numerator = Number(supporting.numerator ?? 0)
+  const denominator = Number(supporting.denominator ?? 0)
+  if (supporting.kind === 'percentage') {
+    const percentage = denominator > 0 ? Math.round((numerator / denominator) * 100) : 0
+    return `${percentage}% ${supporting.label ?? ''}`.trim()
+  }
+  if (supporting.kind === 'fraction') {
+    return `${numerator.toLocaleString()} of ${denominator.toLocaleString()} ${supporting.label ?? ''}`.trim()
+  }
+
+  return formatComparison(metric)
+}
+
 export function AnalyticsMetricGrid({ metrics = [] }) {
   return (
-    <section className="grid grid-cols-1 gap-component md:grid-cols-2 xl:grid-cols-4">
+    <MetricGrid variant="comfortable">
       {metrics.map((metric) => {
         const delta = Number(metric.comparison?.delta ?? 0)
+        const helperTone = metric.supporting
+          ? 'muted'
+          : delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'muted'
+        const label = metric.presentation?.label ?? metric.label
 
         return (
-          <Card key={metric.key} size="sm">
-            <CardHeader>
-              <CardTitle className="text-label font-normal text-text-secondary">{metric.label}</CardTitle>
-              <CardAction>
-                <AnalyticsExplanationPopover explanation={metric.explanation} label={metric.label} />
-              </CardAction>
-            </CardHeader>
-            <CardContent className="grid gap-item">
-              <p className="text-data tabular-nums text-text-primary">{formatMetricValue(metric)}</p>
-              <p className={cn(
-                'text-label font-normal',
-                delta > 0 && 'text-success-foreground',
-                delta < 0 && 'text-destructive',
-                delta === 0 && 'text-text-muted',
-              )}>
-                {formatComparison(metric)}
-              </p>
-            </CardContent>
-          </Card>
+          <MetricTile
+            action={(
+              <AnalyticsExplanationPopover explanation={metric.explanation} label={label} />
+            )}
+            helper={formatSupporting(metric)}
+            helperTone={helperTone}
+            id={`analytics-metric-${metric.key}`}
+            iconName={metric.presentation?.icon_name}
+            key={metric.key}
+            label={label}
+            tone={metric.presentation?.tone ?? 'neutral'}
+            value={formatMetricValue(metric)}
+            valueTone={metric.presentation?.value_tone}
+            variant="standard"
+          />
         )
       })}
-    </section>
+    </MetricGrid>
   )
 }
