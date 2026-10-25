@@ -14,6 +14,8 @@ export {
   getClientWorkspaceSidebarItems,
   getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
+  getWorkspaceExecutivePath,
+  getWorkspaceLeadReportPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,

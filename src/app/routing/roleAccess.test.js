@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
 import { routeAccessMetadataById } from './routeAccessMetadata'
 import { canAccessRouteWithContext, filterRoutesForNavigation, NAVIGATION_SCOPES } from './roleAccess'
 
@@ -117,6 +118,33 @@ describe('canAccessRouteWithContext', () => {
       routeParams: { workspaceId: WORKSPACE_ID },
     })).toBe(true)
     expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-executive'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('allows the weekly lead report only for the requested dashboard workspace', () => {
+    const viewer = createViewer({
+      workspaceCapabilities: [WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS],
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-lead-report'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-lead-report'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('requires a managed workspace relationship for agency lead report access', () => {
+    const viewer = createViewer({
+      agencyCapabilities: [AGENCY_CAPABILITIES.VIEW_DASHBOARDS],
+      managedWorkspaceId: WORKSPACE_ID,
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-lead-report'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-lead-report'], {
       routeParams: { workspaceId: OTHER_WORKSPACE_ID },
     })).toBe(false)
   })

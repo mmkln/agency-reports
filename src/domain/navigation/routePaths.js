@@ -12,14 +12,17 @@ export const ROUTE_PATHS = Object.freeze({
   agencyWorkspaceTagCatalog: '/agency/workspaces/:workspaceId/tag-catalog',
   agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
   agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
+  agencyWorkspaceLeadReport: '/agency/workspaces/:workspaceId/lead-report',
   agencyWorkspaceExecutive: '/agency/workspaces/:workspaceId/executive',
   agencyWorkspaceAccess: '/agency/workspaces/:workspaceId/access',
 
   portalHome: '/portal',
   portalGrowthReview: '/portal/growth-review',
+  portalLeadReport: '/portal/lead-report',
   portalExecutive: '/portal/executive',
   portalWorkspaceDetail: '/portal/workspaces/:workspaceId',
   portalWorkspaceReview: '/portal/workspaces/:workspaceId/review',
+  portalWorkspaceLeadReport: '/portal/workspaces/:workspaceId/lead-report',
   portalWorkspaceExecutive: '/portal/workspaces/:workspaceId/executive',
   portalSettings: '/portal/settings',
 })
@@ -68,6 +71,10 @@ export function getAgencyWorkspaceReviewPath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceReview, { workspaceId })
 }
 
+export function getAgencyWorkspaceLeadReportPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceLeadReport, { workspaceId })
+}
+
 export function getAgencyWorkspaceExecutivePath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceExecutive, { workspaceId })
 }
@@ -78,6 +85,10 @@ export function getAgencyWorkspaceAccessPath(workspaceId) {
 
 export function getPortalWorkspaceReviewPath(workspaceId) {
   return buildPath(ROUTE_PATHS.portalWorkspaceReview, { workspaceId })
+}
+
+export function getPortalWorkspaceLeadReportPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.portalWorkspaceLeadReport, { workspaceId })
 }
 
 export function getPortalWorkspaceExecutivePath(workspaceId) {

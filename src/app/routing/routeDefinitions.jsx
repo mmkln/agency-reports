@@ -8,6 +8,7 @@ import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPa
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
 import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
 import { ExecutiveDashboardPageHeader } from '../../pages/dashboards/executive/ExecutiveDashboardPageHeader'
+import { WeeklyLeadReportPageHeader } from '../../pages/dashboards/weekly-lead-report/WeeklyLeadReportPageHeader'
 import { ForgotPasswordPage } from '../../pages/auth/forgot-password/ForgotPasswordPage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { PluginConnectPage } from '../../pages/auth/plugin-connect/PluginConnectPage'
@@ -23,6 +24,7 @@ import {
   AgencyWorkspaceAccessPageRoute,
   AgencyWorkspaceDataPageRoute,
   AgencyWorkspaceExecutivePageRoute,
+  AgencyWorkspaceLeadReportPageRoute,
   AgencyWorkspaceReviewPageRoute,
   AgencyWorkspaceReviewSetupPageRoute,
   AgencyWorkspaceSetupPageRoute,
@@ -34,7 +36,9 @@ import {
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
   ExecutiveDashboardPageRoute,
+  WeeklyLeadReportPageRoute,
   PortalWorkspaceExecutivePageRoute,
+  PortalWorkspaceLeadReportPageRoute,
   PortalWorkspaceReviewPageRoute,
 } from './RoutePages'
 import { useAuth } from '../providers/auth/useAuth'
@@ -274,6 +278,19 @@ export const routeDefinitions = [
     element: <AgencyWorkspaceExecutivePageRoute />,
   },
   {
+    path: ROUTE_PATHS.agencyWorkspaceLeadReport,
+    id: 'agency-workspace-lead-report',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['agency-workspace-lead-report'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'barChart',
+    showInNav: false,
+    element: <AgencyWorkspaceLeadReportPageRoute />,
+  },
+  {
     path: ROUTE_PATHS.agencyWorkspaceAccess,
     id: 'agency-workspace-access',
     activeNavigationId: 'admin-workspaces',
@@ -336,6 +353,21 @@ export const routeDefinitions = [
     element: <PortalWorkspaceExecutivePageRoute />,
   },
   {
+    path: ROUTE_PATHS.portalWorkspaceLeadReport,
+    id: 'portal-workspace-lead-report',
+    activeNavigationId: 'weekly-lead-report',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['portal-workspace-lead-report'].access,
+    contentWidth: 'content',
+    header: WeeklyLeadReportPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Lead Report',
+    navigationScope: CLIENT_PORTAL,
+    showInNav: false,
+    element: <PortalWorkspaceLeadReportPageRoute />,
+  },
+  {
     path: ROUTE_PATHS.portalGrowthReview,
     id: 'dental-growth-review',
     label: 'Growth Review',
@@ -360,8 +392,22 @@ export const routeDefinitions = [
     iconName: 'barChart',
     navLabel: 'Executive',
     navigationScope: CLIENT_PORTAL,
-    navOrder: 11,
+    navOrder: 12,
     element: <ExecutiveDashboardPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalLeadReport,
+    id: 'weekly-lead-report',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['weekly-lead-report'].access,
+    contentWidth: 'content',
+    header: WeeklyLeadReportPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Lead Report',
+    navigationScope: CLIENT_PORTAL,
+    navOrder: 11,
+    element: <WeeklyLeadReportPageRoute />,
   },
   {
     path: ROUTE_PATHS.portalSettings,

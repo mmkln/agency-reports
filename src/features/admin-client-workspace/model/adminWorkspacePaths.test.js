@@ -6,6 +6,7 @@ import {
   getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
   getWorkspaceExecutivePath,
+  getWorkspaceLeadReportPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
@@ -19,6 +20,7 @@ describe('admin workspace paths', () => {
     expect(getWorkspaceTagCatalogPath('workspace_1')).toBe('/agency/workspaces/workspace_1/tag-catalog')
     expect(getWorkspaceReviewSetupPath('workspace_1')).toBe('/agency/workspaces/workspace_1/review-setup')
     expect(getWorkspaceReviewPath('workspace_1')).toBe('/agency/workspaces/workspace_1/review')
+    expect(getWorkspaceLeadReportPath('workspace_1')).toBe('/agency/workspaces/workspace_1/lead-report')
     expect(getWorkspaceExecutivePath('workspace_1')).toBe('/agency/workspaces/workspace_1/executive')
     expect(getWorkspaceAccessPath('workspace_1')).toBe('/agency/workspaces/workspace_1/access')
   })
@@ -35,6 +37,7 @@ describe('admin workspace paths', () => {
       '/agency/workspaces/workspace_1/review-setup',
       '/agency/workspaces/workspace_1/access',
       '/agency/workspaces/workspace_1/review',
+      '/agency/workspaces/workspace_1/lead-report',
       '/agency/workspaces/workspace_1/executive',
     ])
     expect(tabHrefs.some((href) => href.startsWith('/portal/'))).toBe(false)

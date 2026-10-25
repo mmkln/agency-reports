@@ -144,6 +144,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-workspace-lead-report',
+    path: ROUTE_PATHS.agencyWorkspaceLeadReport,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+    },
+  },
+  {
     id: 'agency-workspace-executive',
     path: ROUTE_PATHS.agencyWorkspaceExecutive,
     access: {
@@ -181,6 +189,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'portal-workspace-lead-report',
+    path: ROUTE_PATHS.portalWorkspaceLeadReport,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
+    },
+  },
+  {
     id: 'portal-workspace-executive',
     path: ROUTE_PATHS.portalWorkspaceExecutive,
     access: {
@@ -195,6 +211,15 @@ export const routeAccessMetadata = Object.freeze([
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
       workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+    },
+  },
+  {
+    id: 'weekly-lead-report',
+    path: ROUTE_PATHS.portalLeadReport,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
     },
   },
   {

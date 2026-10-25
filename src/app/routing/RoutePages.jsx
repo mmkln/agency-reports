@@ -7,6 +7,7 @@ import { AccountSettingsPage } from '../../pages/account/settings/AccountSetting
 import { AgencyWorkspaceAccessPage } from '../../pages/agency/workspace-access/AgencyWorkspaceAccessPage'
 import { AgencyWorkspaceDataPage } from '../../pages/agency/workspace-data/AgencyWorkspaceDataPage'
 import { AgencyWorkspaceExecutivePage } from '../../pages/agency/workspace-executive/AgencyWorkspaceExecutivePage'
+import { AgencyWorkspaceLeadReportPage } from '../../pages/agency/workspace-lead-report/AgencyWorkspaceLeadReportPage'
 import { AgencyWorkspaceReviewPage } from '../../pages/agency/workspace-review/AgencyWorkspaceReviewPage'
 import { AgencyWorkspaceReviewSetupPage } from '../../pages/agency/workspace-review-setup/AgencyWorkspaceReviewSetupPage'
 import { AgencyWorkspaceSetupPage } from '../../pages/agency/workspace-setup/AgencyWorkspaceSetupPage'
@@ -17,7 +18,9 @@ import { AdminClientAccessPage } from '../../pages/admin/client-access/AdminClie
 import { AdminWorkspacesPage } from '../../pages/admin/workspaces/AdminWorkspacesPage'
 import { ClientSettingsPage } from '../../pages/client/settings/ClientSettingsPage'
 import { ExecutiveDashboardPage } from '../../pages/dashboards/executive'
+import { WeeklyLeadReportPage } from '../../pages/dashboards/weekly-lead-report'
 import { PortalWorkspaceExecutivePage } from '../../pages/portal/workspace-executive/PortalWorkspaceExecutivePage'
+import { PortalWorkspaceLeadReportPage } from '../../pages/portal/workspace-lead-report/PortalWorkspaceLeadReportPage'
 import { PortalWorkspaceReviewPage } from '../../pages/portal/workspace-review/PortalWorkspaceReviewPage'
 
 const LoadingFallback = () => <div className="p-6 text-ui text-text-muted">Loading...</div>
@@ -50,6 +53,7 @@ export const AccountSettingsPageRoute = withPageProps(AccountSettingsPage, undef
 export const AgencyWorkspaceAccessPageRoute = withPageProps(AgencyWorkspaceAccessPage, undefined)
 export const AgencyWorkspaceDataPageRoute = withPageProps(AgencyWorkspaceDataPage, undefined)
 export const AgencyWorkspaceExecutivePageRoute = withPageProps(AgencyWorkspaceExecutivePage, undefined)
+export const AgencyWorkspaceLeadReportPageRoute = withPageProps(AgencyWorkspaceLeadReportPage, undefined)
 export const AgencyWorkspaceReviewPageRoute = withPageProps(AgencyWorkspaceReviewPage, undefined)
 export const AgencyWorkspaceReviewSetupPageRoute = withPageProps(AgencyWorkspaceReviewSetupPage, undefined)
 export const AgencyWorkspaceSetupPageRoute = withPageProps(AgencyWorkspaceSetupPage, undefined)
@@ -61,5 +65,7 @@ export const AdminWorkspacesPageRoute = withPageProps(AdminWorkspacesPage, undef
 export const ClientSettingsPageRoute = withPageProps(ClientSettingsPage, undefined)
 export const DentalGrowthReviewPageRoute = withPageProps(DentalGrowthReviewPage, undefined)
 export const ExecutiveDashboardPageRoute = withPageProps(ExecutiveDashboardPage, undefined)
+export const WeeklyLeadReportPageRoute = withPageProps(WeeklyLeadReportPage, undefined)
 export const PortalWorkspaceExecutivePageRoute = withPageProps(PortalWorkspaceExecutivePage, undefined)
+export const PortalWorkspaceLeadReportPageRoute = withPageProps(PortalWorkspaceLeadReportPage, undefined)
 export const PortalWorkspaceReviewPageRoute = withPageProps(PortalWorkspaceReviewPage, undefined)

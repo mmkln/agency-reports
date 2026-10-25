@@ -5,6 +5,7 @@ import {
   getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
   getWorkspaceExecutivePath,
+  getWorkspaceLeadReportPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
@@ -60,6 +61,14 @@ export const clientWorkspaceSections = [
         label: 'Review',
         route: ROUTE_PATHS.agencyWorkspaceReview,
         to: getWorkspaceReviewPath,
+      },
+      {
+        group: 'review',
+        id: 'lead-report',
+        iconName: 'barChart',
+        label: 'Lead Report',
+        route: ROUTE_PATHS.agencyWorkspaceLeadReport,
+        to: getWorkspaceLeadReportPath,
       },
       {
         group: 'review',
