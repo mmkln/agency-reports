@@ -17,7 +17,7 @@ describe('analytics dashboard contract', () => {
           label: 'Total leads',
         },
       },
-      permissions: { can_edit_explanations: true },
+      permissions: { can_edit_explanations: true, can_manage_settings: true },
       widgets: [{
         data: [{
           drilldown: {
@@ -39,7 +39,7 @@ describe('analytics dashboard contract', () => {
       explanations: {
         'leads.created': { explanationKey: 'leads.created', label: 'Total leads' },
       },
-      permissions: { canEditExplanations: true },
+      permissions: { canEditExplanations: true, canManageSettings: true },
       snapshotId: 'snapshot-1',
       status: 'completed',
       widgets: [{
@@ -64,6 +64,24 @@ describe('analytics dashboard contract', () => {
       period: { end: '2026-10-25', start: '2026-10-19' },
       widgets: [{ id: 'unsafe', type: 'javascript' }],
     })).toThrow('unsupported widget')
+  })
+
+  it('accepts the backend-owned booking activity widget type', () => {
+    const dashboard = normalizeAnalyticsDashboard({
+      dashboard: { key: 'weekly-lead-report' },
+      period: { end: '2026-10-25', start: '2026-10-19' },
+      widgets: [{
+        data: { rows: [], summary: {}, total: 0, totals: {} },
+        id: 'bookings-by-channel',
+        title: 'Bookings by Channel',
+        type: 'booking_activity',
+      }],
+    })
+
+    expect(dashboard.widgets[0]).toMatchObject({
+      id: 'bookings-by-channel',
+      type: 'booking_activity',
+    })
   })
 
   it('recognizes terminal refresh states', () => {

@@ -13,6 +13,11 @@ function dashboardSettingsPath(workspaceId, dashboardKey) {
   return `${dashboardPath(workspaceId, dashboardKey)}settings/`
 }
 
+function dashboardsPath(workspaceId) {
+  if (!workspaceId) throw new Error('Workspace id is required.')
+  return `/api/workspaces/${workspaceId}/analytics/dashboards/`
+}
+
 function dashboardExplanationPath(workspaceId, dashboardKey, explanationKey) {
   if (!explanationKey) throw new Error('Explanation key is required.')
   return `${dashboardPath(workspaceId, dashboardKey)}explanations/${encodeURIComponent(explanationKey)}/`
@@ -64,15 +69,46 @@ export async function getAnalyticsDashboardSettingsFromApi({
 export async function updateAnalyticsDashboardSettingsFromApi({
   apiClient,
   dashboardKey,
+  hiddenMetricKeys,
+  hiddenWidgetIds,
   lifecycleStageIds,
   pipelineIds,
   workspaceId,
 }) {
-  const payload = await apiClient.patch(dashboardSettingsPath(workspaceId, dashboardKey), {
-    lifecycle_stage_ids: lifecycleStageIds,
-    pipeline_ids: pipelineIds,
+  const payload = await apiClient.request(dashboardSettingsPath(workspaceId, dashboardKey), {
+    body: {
+      hidden_metric_keys: hiddenMetricKeys,
+      hidden_widget_ids: hiddenWidgetIds,
+      lifecycle_stage_ids: lifecycleStageIds,
+      pipeline_ids: pipelineIds,
+    },
+    method: 'PATCH',
   })
   return payload.settings
+}
+
+export async function getAnalyticsDashboardProvisioningOptionsFromApi({ apiClient, workspaceId }) {
+  const [definitionsPayload, connectionsPayload] = await Promise.all([
+    apiClient.get(`/api/workspaces/${workspaceId}/analytics/dashboard-definitions/`),
+    apiClient.get(`/api/workspaces/${workspaceId}/source-connections/`),
+  ])
+  return {
+    definitions: definitionsPayload.definitions ?? [],
+    sourceConnections: connectionsPayload.source_connections ?? [],
+  }
+}
+
+export async function createAnalyticsDashboardFromApi({
+  apiClient,
+  definitionKey,
+  sourceConnectionId,
+  workspaceId,
+}) {
+  const payload = await apiClient.post(dashboardsPath(workspaceId), {
+    definition_key: definitionKey,
+    source_connection_id: sourceConnectionId,
+  })
+  return payload.dashboard
 }
 
 export async function updateAnalyticsDashboardExplanation({

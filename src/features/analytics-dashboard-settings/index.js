@@ -1,1 +1,1 @@
-export { AnalyticsDashboardSettingsSheet } from './AnalyticsDashboardSettingsSheet'
+export { AnalyticsDashboardSettingsDialog } from './AnalyticsDashboardSettingsDialog'

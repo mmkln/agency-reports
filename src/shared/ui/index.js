@@ -99,6 +99,14 @@ export { NativeSelect, NativeSelect as Select } from './NativeSelect'
 export { NumberField } from './NumberField'
 export { OverlayBody, OverlayFooter, OverlayHeader } from './Overlay'
 export { FoundationPageHeader } from './FoundationPageHeader'
+export {
+  FullscreenDialog,
+  FullscreenDialogBody,
+  FullscreenDialogContent,
+  FullscreenDialogFooter,
+  FullscreenDialogHeader,
+  FullscreenDialogTrigger,
+} from './FullscreenDialog'
 export { PageHeader } from './PageHeader'
 export { PagePrimaryAction } from './PagePrimaryAction'
 export { PageShell } from './PageShell'

@@ -2,7 +2,8 @@ import { useState } from 'react'
 
 import { useAnalyticsDashboardReadModel } from '@/features/analytics-dashboard-data'
 import { useAnalyticsDashboardExplanationActions } from '@/features/analytics-dashboard-explanation'
-import { AnalyticsDashboardSettingsSheet } from '@/features/analytics-dashboard-settings'
+import { AnalyticsDashboardSetupState } from '@/features/analytics-dashboard-provisioning'
+import { AnalyticsDashboardSettingsDialog } from '@/features/analytics-dashboard-settings'
 import { WORKSPACE_CAPABILITIES } from '@/entities/workspace-membership'
 import {
   AnalyticsDashboardRenderer,
@@ -35,6 +36,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
   const workspaceId = routeParams.workspaceId ?? routeParams.clientId ?? runtime.defaultClientId ?? runtime.viewer?.activeWorkspaceId
   const [periodType, setPeriodType] = useState('week')
   const [periodEnd, setPeriodEnd] = useState(getDefaultPeriodEnd)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const readModel = useAnalyticsDashboardReadModel({
     dashboardKey: DASHBOARD_KEY,
     periodEnd,
@@ -56,6 +58,23 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
       <PageShell className="pb-section pt-card" width="wide">
         <Skeleton className="h-20 w-full" />
         <Skeleton className="min-h-96 w-full" />
+      </PageShell>
+    )
+  }
+
+  if (readModel.isUnconfigured) {
+    return (
+      <PageShell className="pb-section pt-card" width="wide">
+        <AnalyticsDashboardSetupState
+          canManage={canManageSettings}
+          dashboardKey={DASHBOARD_KEY}
+          onCreated={async () => {
+            await readModel.reload()
+            setSettingsOpen(true)
+          }}
+          runtime={runtime}
+          workspaceId={workspaceId}
+        />
       </PageShell>
     )
   }
@@ -83,10 +102,12 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
         periodType={periodType}
         refresh={readModel.refresh}
         refreshError={readModel.refreshError}
-        settingsAction={canManageSettings ? (
-          <AnalyticsDashboardSettingsSheet
+        settingsAction={dashboard.permissions?.canManageSettings ? (
+          <AnalyticsDashboardSettingsDialog
             dashboardKey={DASHBOARD_KEY}
+            onOpenChange={setSettingsOpen}
             onSaved={readModel.runRefresh}
+            open={settingsOpen}
             runtime={runtime}
             workspaceId={workspaceId}
           />

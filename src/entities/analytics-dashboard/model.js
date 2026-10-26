@@ -1,6 +1,14 @@
 import { normalizeDashboardExplanations } from '@/entities/dashboard-explanation'
 
-const SUPPORTED_WIDGET_TYPES = new Set(['metric_grid', 'funnel', 'breakdown', 'trend', 'table', 'heatmap'])
+const SUPPORTED_WIDGET_TYPES = new Set([
+  'metric_grid',
+  'funnel',
+  'breakdown',
+  'trend',
+  'table',
+  'heatmap',
+  'booking_activity',
+])
 
 function normalizeMetric(metric) {
   const drilldown = metric?.drilldown
@@ -57,6 +65,7 @@ export function normalizeAnalyticsDashboard(payload) {
     sourceWatermarks: payload.source_watermarks ?? {},
     permissions: {
       canEditExplanations: payload.permissions?.can_edit_explanations === true,
+      canManageSettings: payload.permissions?.can_manage_settings === true,
     },
     snapshotId: payload.snapshot_id ?? null,
     status: payload.status ?? 'not_calculated',

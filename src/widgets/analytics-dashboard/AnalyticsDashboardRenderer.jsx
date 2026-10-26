@@ -1,12 +1,14 @@
 import { UnavailableState } from '@/shared/ui'
 
 import { AnalyticsBreakdownWidget } from './AnalyticsBreakdownWidget'
+import { AnalyticsBookingActivityWidget } from './AnalyticsBookingActivityWidget'
 import { AnalyticsFunnelWidget } from './AnalyticsFunnelWidget'
 import { AnalyticsMetricGrid } from './AnalyticsMetricGrid'
 import { AnalyticsSegmentedTableWidget } from './AnalyticsSegmentedTableWidget'
 import { AnalyticsTrendWidget } from './AnalyticsTrendWidget'
 
 const WIDGET_RENDERERS = {
+  booking_activity: AnalyticsBookingActivityWidget,
   breakdown: AnalyticsBreakdownWidget,
   funnel: AnalyticsFunnelWidget,
   metric_grid: ({ data, ...props }) => (

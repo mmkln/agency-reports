@@ -82,6 +82,7 @@ export function useAnalyticsDashboardReadModel({
   return {
     ...resource,
     dashboard: resource.data,
+    isUnconfigured: resource.status === 'error' && resource.errorInfo?.kind === 'not-found',
     isRefreshing: Boolean(refresh && !isAnalyticsRefreshFinished(refresh)),
     refresh,
     refreshError,

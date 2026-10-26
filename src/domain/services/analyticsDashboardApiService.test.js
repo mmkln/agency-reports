@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  createAnalyticsDashboardFromApi,
   getAnalyticsDashboardFromApi,
+  getAnalyticsDashboardProvisioningOptionsFromApi,
   getAnalyticsDashboardSettingsFromApi,
   refreshAnalyticsDashboardFromApi,
   resetAnalyticsDashboardExplanation,
@@ -59,7 +61,7 @@ describe('analyticsDashboardApiService', () => {
     }
     const apiClient = {
       get: vi.fn().mockResolvedValue({ settings }),
-      patch: vi.fn().mockResolvedValue({ settings }),
+      request: vi.fn().mockResolvedValue({ settings }),
     }
 
     const loaded = await getAnalyticsDashboardSettingsFromApi({
@@ -72,21 +74,59 @@ describe('analyticsDashboardApiService', () => {
       dashboardKey: 'weekly-lead-report',
       lifecycleStageIds: settings.lifecycle_stage_ids,
       pipelineIds: settings.pipeline_ids,
+      hiddenMetricKeys: ['appointments.showed'],
+      hiddenWidgetIds: ['weekly-activity'],
       workspaceId: 'workspace-1',
     })
 
     expect(apiClient.get).toHaveBeenCalledWith(
       '/api/workspaces/workspace-1/analytics/dashboards/weekly-lead-report/settings/',
     )
-    expect(apiClient.patch).toHaveBeenCalledWith(
+    expect(apiClient.request).toHaveBeenCalledWith(
       '/api/workspaces/workspace-1/analytics/dashboards/weekly-lead-report/settings/',
       {
-        lifecycle_stage_ids: settings.lifecycle_stage_ids,
-        pipeline_ids: settings.pipeline_ids,
+        body: {
+          hidden_metric_keys: ['appointments.showed'],
+          hidden_widget_ids: ['weekly-activity'],
+          lifecycle_stage_ids: settings.lifecycle_stage_ids,
+          pipeline_ids: settings.pipeline_ids,
+        },
+        method: 'PATCH',
       },
     )
     expect(loaded).toEqual(settings)
     expect(updated).toEqual(settings)
+  })
+
+  it('loads provisioning options and creates a dashboard through collection APIs', async () => {
+    const apiClient = {
+      get: vi.fn()
+        .mockResolvedValueOnce({ definitions: [{ key: 'weekly_lead_report' }] })
+        .mockResolvedValueOnce({ source_connections: [{ id: 'connection-1' }] }),
+      post: vi.fn().mockResolvedValue({ dashboard: { dashboard_key: 'weekly-lead-report' } }),
+    }
+
+    const options = await getAnalyticsDashboardProvisioningOptionsFromApi({
+      apiClient,
+      workspaceId: 'workspace-1',
+    })
+    const dashboard = await createAnalyticsDashboardFromApi({
+      apiClient,
+      definitionKey: 'weekly_lead_report',
+      sourceConnectionId: 'connection-1',
+      workspaceId: 'workspace-1',
+    })
+
+    expect(options.definitions).toEqual([{ key: 'weekly_lead_report' }])
+    expect(options.sourceConnections).toEqual([{ id: 'connection-1' }])
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/api/workspaces/workspace-1/analytics/dashboards/',
+      {
+        definition_key: 'weekly_lead_report',
+        source_connection_id: 'connection-1',
+      },
+    )
+    expect(dashboard.dashboard_key).toBe('weekly-lead-report')
   })
 
   it('updates and resets dashboard-owned explanations', async () => {
