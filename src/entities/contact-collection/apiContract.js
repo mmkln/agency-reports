@@ -6,6 +6,7 @@ function normalizeItem(item) {
   return {
     contact: {
       externalId: normalizeText(item?.contact?.external_id),
+      externalUrl: normalizeText(item?.contact?.external_url),
       name: normalizeText(item?.contact?.name),
     },
     context: {

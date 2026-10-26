@@ -13,7 +13,11 @@ describe('contact collection API contract', () => {
         unique_contacts: 1,
       },
       items: [{
-        contact: { external_id: 'contact-1', name: 'Lauren Dwyer' },
+        contact: {
+          external_id: 'contact-1',
+          external_url: 'https://app.gohighlevel.com/v2/location/location-1/contacts/detail/contact-1',
+          name: 'Lauren Dwyer',
+        },
         context: { external_id: 'opportunity-1', label: 'Veneers', type: 'opportunity' },
         details: [{ key: 'patient_type', label: 'Patient type', value: 'New' }],
         id: 'opportunity:opportunity-1',
@@ -25,7 +29,11 @@ describe('contact collection API contract', () => {
     })).toEqual({
       grain: 'opportunity',
       items: [{
-        contact: { externalId: 'contact-1', name: 'Lauren Dwyer' },
+        contact: {
+          externalId: 'contact-1',
+          externalUrl: 'https://app.gohighlevel.com/v2/location/location-1/contacts/detail/contact-1',
+          name: 'Lauren Dwyer',
+        },
         context: { externalId: 'opportunity-1', label: 'Veneers', type: 'opportunity' },
         details: [{ key: 'patient_type', label: 'Patient type', value: 'New' }],
         id: 'opportunity:opportunity-1',
