@@ -1,1 +1,1 @@
-export { DashboardExplanationPopover } from './DashboardExplanationPopover'
+export { useGrowthReviewDashboardExplanationActions } from './useGrowthReviewDashboardExplanationActions'

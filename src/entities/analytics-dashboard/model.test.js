@@ -8,12 +8,53 @@ describe('analytics dashboard contract', () => {
       calculated_at: '2026-10-25T10:00:00Z',
       dashboard: { config_version: 1, key: 'weekly-lead-report', title: 'Weekly Lead Report' },
       period: { end: '2026-10-25', start: '2026-10-19', timezone: 'UTC', type: 'week' },
+      snapshot_id: 'snapshot-1',
       status: 'completed',
-      widgets: [{ data: [{ key: 'leads.created', value: 12 }], id: 'overview', title: 'At a glance', type: 'metric_grid' }],
+      explanations: {
+        'leads.created': {
+          definition: 'Leads created in the selected period.',
+          explanation_key: 'leads.created',
+          label: 'Total leads',
+        },
+      },
+      permissions: { can_edit_explanations: true },
+      widgets: [{
+        data: [{
+          drilldown: {
+            endpoint: '/api/workspaces/workspace-1/analytics/drilldown/',
+            key: 'leads.created',
+            label: 'View leads',
+            title: 'Total leads',
+            type: 'contact_collection',
+          },
+          key: 'leads.created',
+          value: 12,
+        }],
+        id: 'overview',
+        title: 'At a glance',
+        type: 'metric_grid',
+      }],
     })).toMatchObject({
       dashboard: { key: 'weekly-lead-report' },
+      explanations: {
+        'leads.created': { explanationKey: 'leads.created', label: 'Total leads' },
+      },
+      permissions: { canEditExplanations: true },
+      snapshotId: 'snapshot-1',
       status: 'completed',
-      widgets: [{ id: 'overview', type: 'metric_grid' }],
+      widgets: [{
+        data: [{
+          drilldown: {
+            endpoint: '/api/workspaces/workspace-1/analytics/drilldown/',
+            key: 'leads.created',
+            label: 'View leads',
+            title: 'Total leads',
+            type: 'contact_collection',
+          },
+        }],
+        id: 'overview',
+        type: 'metric_grid',
+      }],
     })
   })
 

@@ -5,6 +5,7 @@ import {
   GrowthReviewLayoutModal,
   useGrowthReviewLayoutEditor,
 } from '@/features/growth-review-layout'
+import { useGrowthReviewDashboardExplanationActions } from '@/features/growth-review-dashboard-explanation'
 import { Icon } from '@/shared/icons'
 import { Button, SectionRailNav } from '@/shared/ui'
 import { GrowthReviewCampaignContextToolbar } from './GrowthReviewCampaignContextToolbar'
@@ -84,12 +85,15 @@ export function DentalGrowthReviewDashboard({
   const trackPerformance = buildTrackPerformanceModel(funnelChart)
   const weeklyActivity = page.weeklyReporting?.section1Activity ?? null
   const canCustomizeLayout = page.permissions?.canCustomizeLayout === true
-  const dashboardExplanationEditor = {
+  const dashboardExplanationActions = useGrowthReviewDashboardExplanationActions({
     apiClient,
     campaignId,
-    canEdit: page.permissions?.canEditDashboardExplanations === true,
     onSaved: onDashboardExplanationSaved,
     workspaceId,
+  })
+  const dashboardExplanationEditor = {
+    ...dashboardExplanationActions,
+    canEdit: page.permissions?.canEditDashboardExplanations === true,
   }
   const lifecycleEmptyAction = (
     <GrowthReviewUpdateAction

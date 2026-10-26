@@ -1,10 +1,20 @@
 import { MetricGrid, MetricTile } from '@/shared/ui'
+import { ContactCollectionAction } from '@/features/view-contact-collection'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
+
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  currency: 'USD',
+  maximumFractionDigits: 0,
+  style: 'currency',
+})
 
 function formatMetricValue(metric) {
   if (metric.unit === 'percent') {
     return `${Number(metric.value).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
+  }
+  if (metric.unit === 'currency') {
+    return currencyFormatter.format(Number(metric.value) || 0)
   }
 
   return Number(metric.value).toLocaleString()
@@ -14,7 +24,9 @@ function formatComparison(metric) {
   const delta = Number(metric.comparison?.delta ?? 0)
   const formatted = metric.unit === 'percent'
     ? `${Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 1 })} pp`
-    : Math.abs(delta).toLocaleString()
+    : metric.unit === 'currency'
+      ? currencyFormatter.format(Math.abs(delta))
+      : Math.abs(delta).toLocaleString()
 
   if (delta === 0) {
     return `No change ${metric.comparison?.label ?? ''}`.trim()
@@ -44,7 +56,13 @@ function formatSupporting(metric) {
   return formatComparison(metric)
 }
 
-export function AnalyticsMetricGrid({ metrics = [] }) {
+export function AnalyticsMetricGrid({
+  explanationEditor,
+  explanations,
+  metrics = [],
+  period,
+  runtime,
+}) {
   return (
     <MetricGrid variant="comfortable">
       {metrics.map((metric) => {
@@ -57,7 +75,20 @@ export function AnalyticsMetricGrid({ metrics = [] }) {
         return (
           <MetricTile
             action={(
-              <AnalyticsExplanationPopover explanation={metric.explanation} label={label} />
+              <span className="flex items-center gap-micro">
+                <AnalyticsExplanationPopover
+                  explanationEditor={explanationEditor}
+                  explanationKey={metric.explanation_key ?? metric.key}
+                  explanations={explanations}
+                />
+                {metric.drilldown ? (
+                  <ContactCollectionAction
+                    descriptor={metric.drilldown}
+                    period={period}
+                    runtime={runtime}
+                  />
+                ) : null}
+              </span>
             )}
             helper={formatSupporting(metric)}
             helperTone={helperTone}

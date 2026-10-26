@@ -49,6 +49,7 @@ describe('normalizeGrowthReviewDashboardExplanations', () => {
     expect(explanations['summary.booked_appointments']).toEqual({
       additionalNote: 'Campaign-specific context',
       calculationExplanation: 'Count actual touches by execution date.',
+      dateField: '',
       definition: 'Actual campaign activity.',
       explanationKey: 'summary.booked_appointments',
       isCustomized: true,

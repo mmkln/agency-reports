@@ -1,6 +1,9 @@
 import { useState } from 'react'
 
 import { useAnalyticsDashboardReadModel } from '@/features/analytics-dashboard-data'
+import { useAnalyticsDashboardExplanationActions } from '@/features/analytics-dashboard-explanation'
+import { AnalyticsDashboardSettingsSheet } from '@/features/analytics-dashboard-settings'
+import { WORKSPACE_CAPABILITIES } from '@/entities/workspace-membership'
 import {
   AnalyticsDashboardRenderer,
   WeeklyLeadReportContextToolbar,
@@ -39,6 +42,15 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
     runtime,
     workspaceId,
   })
+  const canManageSettings = runtime.viewer?.capabilities?.includes(
+    WORKSPACE_CAPABILITIES.MANAGE_INTEGRATIONS,
+  )
+  const explanationActions = useAnalyticsDashboardExplanationActions({
+    apiClient: runtime.apiClient,
+    dashboardKey: DASHBOARD_KEY,
+    onSaved: readModel.reload,
+    workspaceId,
+  })
   if (readModel.status === 'loading') {
     return (
       <PageShell className="pb-section pt-card" width="wide">
@@ -71,6 +83,14 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
         periodType={periodType}
         refresh={readModel.refresh}
         refreshError={readModel.refreshError}
+        settingsAction={canManageSettings ? (
+          <AnalyticsDashboardSettingsSheet
+            dashboardKey={DASHBOARD_KEY}
+            onSaved={readModel.runRefresh}
+            runtime={runtime}
+            workspaceId={workspaceId}
+          />
+        ) : null}
         title={dashboard.dashboard.title}
       />
 
@@ -86,7 +106,16 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
           title="This report has not been calculated yet"
         />
       ) : (
-        <AnalyticsDashboardRenderer widgets={dashboard.widgets} />
+        <AnalyticsDashboardRenderer
+          explanationEditor={{
+            ...explanationActions,
+            canEdit: dashboard.permissions?.canEditExplanations === true,
+          }}
+          explanations={dashboard.explanations}
+          period={dashboard.period}
+          runtime={runtime}
+          widgets={dashboard.widgets}
+        />
       )}
     </PageShell>
   )

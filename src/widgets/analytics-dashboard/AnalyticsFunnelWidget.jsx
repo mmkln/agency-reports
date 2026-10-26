@@ -1,14 +1,22 @@
-import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
-import { Panel, PanelBody, PanelHeader } from '@/shared/ui'
+import { Panel, PanelBody } from '@/shared/ui'
 
-export function AnalyticsFunnelWidget({ data, title }) {
+import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
+
+export function AnalyticsFunnelWidget({
+  data,
+  explanationEditor,
+  explanations,
+  title,
+}) {
   const stages = data?.stages ?? []
   const firstValue = stages[0]?.value ?? 0
 
   return (
     <Panel>
-      <PanelHeader
-        action={<AnalyticsExplanationPopover explanation={data?.explanation} label={title} />}
+      <AnalyticsWidgetHeader
+        explanationEditor={explanationEditor}
+        explanationKey={data?.explanation_key ?? data?.key}
+        explanations={explanations}
         title={title}
       />
       <PanelBody>

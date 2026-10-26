@@ -3,16 +3,26 @@ import { UnavailableState } from '@/shared/ui'
 import { AnalyticsBreakdownWidget } from './AnalyticsBreakdownWidget'
 import { AnalyticsFunnelWidget } from './AnalyticsFunnelWidget'
 import { AnalyticsMetricGrid } from './AnalyticsMetricGrid'
+import { AnalyticsSegmentedTableWidget } from './AnalyticsSegmentedTableWidget'
 import { AnalyticsTrendWidget } from './AnalyticsTrendWidget'
 
 const WIDGET_RENDERERS = {
   breakdown: AnalyticsBreakdownWidget,
   funnel: AnalyticsFunnelWidget,
-  metric_grid: ({ data }) => <AnalyticsMetricGrid metrics={data} />,
+  metric_grid: ({ data, ...props }) => (
+    <AnalyticsMetricGrid metrics={data} {...props} />
+  ),
+  table: AnalyticsSegmentedTableWidget,
   trend: AnalyticsTrendWidget,
 }
 
-export function AnalyticsDashboardRenderer({ widgets = [] }) {
+export function AnalyticsDashboardRenderer({
+  explanationEditor,
+  explanations,
+  period,
+  runtime,
+  widgets = [],
+}) {
   return (
     <div className="grid gap-card">
       {widgets.map((widget) => {
@@ -28,7 +38,17 @@ export function AnalyticsDashboardRenderer({ widgets = [] }) {
           )
         }
 
-        return <Widget data={widget.data} key={widget.id} title={widget.title} />
+        return (
+          <Widget
+            data={widget.data}
+            explanationEditor={explanationEditor}
+            explanations={explanations}
+            key={widget.id}
+            period={period}
+            runtime={runtime}
+            title={widget.title}
+          />
+        )
       })}
     </div>
   )

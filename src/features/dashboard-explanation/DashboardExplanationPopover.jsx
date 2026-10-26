@@ -19,9 +19,7 @@ import {
 import { useDashboardExplanationEditor } from './useDashboardExplanationEditor'
 
 function ExplanationSection({ children, label }) {
-  if (!children) {
-    return null
-  }
+  if (!children) return null
 
   return (
     <section className="grid gap-tag">
@@ -33,7 +31,6 @@ function ExplanationSection({ children, label }) {
 
 function ExplanationField({ label, maxLength, onChange, value }) {
   const controlId = useId()
-
   return (
     <div className="grid gap-item">
       <Label htmlFor={controlId}>{label}</Label>
@@ -50,7 +47,6 @@ function ExplanationField({ label, maxLength, onChange, value }) {
 
 function ExplanationInputField({ label, maxLength, onChange, value }) {
   const controlId = useId()
-
   return (
     <div className="grid gap-item">
       <Label htmlFor={controlId}>{label}</Label>
@@ -65,33 +61,30 @@ function ExplanationInputField({ label, maxLength, onChange, value }) {
 }
 
 export function DashboardExplanationPopover({
-  apiClient,
-  campaignId,
   canEdit = false,
-  explanationKey,
   explanation,
-  onSaved,
+  explanationKey,
+  onReset,
+  onSave,
   triggerSize = 'sm',
-  workspaceId,
 }) {
   const editor = useDashboardExplanationEditor({
-    apiClient,
-    campaignId,
-    explanationKey,
     explanation,
-    onSaved,
-    workspaceId,
+    explanationKey,
+    onReset,
+    onSave,
   })
   const current = editor.currentExplanation ?? explanation
   const subject = current?.kind === 'metric'
     ? 'metric'
-    : current?.kind === 'section'
-      ? 'section'
-      : 'chart'
+    : current?.kind === 'section' ? 'section' : 'chart'
 
-  if (!current?.definition && !current?.calculationExplanation && !current?.source) {
-    return null
-  }
+  if (
+    !current?.definition
+    && !current?.calculationExplanation
+    && !current?.source
+    && !current?.dateField
+  ) return null
 
   return (
     <Popover onOpenChange={editor.setOpen} open={editor.isOpen}>
@@ -139,24 +132,19 @@ export function DashboardExplanationPopover({
               {current.calculationExplanation}
             </ExplanationSection>
             <ExplanationSection label="Additional note">{current.additionalNote}</ExplanationSection>
-            {current.source ? (
-              <>
-                <Separator />
-                <ExplanationSection label="Source">{current.source}</ExplanationSection>
-              </>
-            ) : null}
+            {current.source || current.dateField ? <Separator /> : null}
+            <ExplanationSection label="Source">{current.source}</ExplanationSection>
+            <ExplanationSection label="Date basis">{current.dateField}</ExplanationSection>
           </div>
         ) : (
           <div className="grid gap-component">
             <p className="text-ui font-semibold text-text-primary">Edit explanation</p>
-
             <ExplanationInputField
               label="Display name"
               maxLength={120}
               onChange={(value) => editor.updateField('label', value)}
               value={editor.draft.label}
             />
-
             <ExplanationField
               label={`What this ${subject} shows`}
               maxLength={500}
@@ -181,11 +169,12 @@ export function DashboardExplanationPopover({
               onChange={(value) => editor.updateField('source', value)}
               value={editor.draft.source}
             />
-
+            {current.dateField ? (
+              <p className="text-label text-text-muted">Date basis: {current.dateField}</p>
+            ) : null}
             {editor.error ? (
               <p className="text-label text-destructive" role="alert">{editor.error}</p>
             ) : null}
-
             <div className="flex items-center justify-between gap-control pt-tag">
               <Button
                 disabled={editor.isSaving || !current.isCustomized}

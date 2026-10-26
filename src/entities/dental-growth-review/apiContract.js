@@ -5,6 +5,7 @@ import {
   DENTAL_GROWTH_REVIEW_STATUSES,
   normalizeDentalGrowthReviewPeriod,
 } from './model'
+import { normalizeDashboardExplanations } from '@/entities/dashboard-explanation'
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -42,40 +43,8 @@ function normalizeMetricSource(value) {
   return Array.isArray(value) ? value.join(', ') : normalizeText(value)
 }
 
-function normalizeDashboardExplanation(source = {}, explanationKey = '') {
-  const value = isPlainObject(source) ? source : {}
-
-  return {
-    additionalNote: normalizeText(value.additional_note ?? value.additionalNote),
-    calculationExplanation: normalizeText(
-      value.calculation_explanation ?? value.calculationExplanation,
-    ),
-    definition: normalizeText(value.definition),
-    explanationKey: normalizeText(
-      value.explanation_key
-      ?? value.explanationKey
-      ?? value.chart_key
-      ?? value.chartKey
-      ?? explanationKey,
-    ),
-    isCustomized: value.is_customized === true || value.isCustomized === true,
-    kind: normalizeText(value.kind) || 'chart',
-    label: normalizeText(value.label),
-    source: normalizeMetricSource(value.source),
-    updatedAt: normalizeText(value.updated_at ?? value.updatedAt),
-    updatedBy: normalizeText(value.updated_by ?? value.updatedBy),
-  }
-}
-
 export function normalizeGrowthReviewDashboardExplanations(value = {}) {
-  const source = isPlainObject(value) ? value : {}
-
-  return Object.fromEntries(
-    Object.entries(source).map(([explanationKey, explanation]) => [
-      explanationKey,
-      normalizeDashboardExplanation(explanation, explanationKey),
-    ]),
-  )
+  return normalizeDashboardExplanations(value)
 }
 
 function normalizeMetricSeriesPoints(source = {}) {

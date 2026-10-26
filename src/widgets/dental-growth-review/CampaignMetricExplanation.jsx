@@ -1,4 +1,4 @@
-import { DashboardExplanationPopover } from '@/features/growth-review-dashboard-explanation'
+import { DashboardExplanationPopover } from '@/features/dashboard-explanation'
 
 export function CampaignMetricExplanation({
   explanationEditor,

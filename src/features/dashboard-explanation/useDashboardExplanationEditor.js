@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react'
 
-import {
-  resetGrowthReviewDashboardExplanation,
-  updateGrowthReviewDashboardExplanation,
-} from '@/domain/services/growthReviewApiReadService'
-
 function createDraft(explanation = {}) {
   return {
     additionalNote: explanation.additionalNote ?? '',
@@ -24,12 +19,10 @@ function draftsMatch(left, right) {
 }
 
 export function useDashboardExplanationEditor({
-  apiClient,
-  campaignId,
-  explanationKey,
   explanation,
-  onSaved,
-  workspaceId,
+  explanationKey,
+  onReset,
+  onSave,
 }) {
   const [savedExplanation, setSavedExplanation] = useState(null)
   const [draft, setDraft] = useState(() => createDraft(explanation))
@@ -42,9 +35,7 @@ export function useDashboardExplanationEditor({
   const isDirty = !draftsMatch(draft, initialDraft)
 
   function setOpen(nextOpen) {
-    if (!nextOpen && mode === 'edit' && isDirty) {
-      return
-    }
+    if (!nextOpen && mode === 'edit' && isDirty) return
 
     setIsOpen(nextOpen)
     if (!nextOpen) {
@@ -73,19 +64,12 @@ export function useDashboardExplanationEditor({
   async function save() {
     setIsSaving(true)
     setError('')
-
     try {
-      const saved = await updateGrowthReviewDashboardExplanation({
-        apiClient,
-        campaignId,
-        explanationKey,
-        explanation: draft,
-        workspaceId,
-      })
+      const saved = await onSave?.({ explanation: draft, explanationKey })
+      if (!saved) throw new Error('Could not save this dashboard explanation.')
       setSavedExplanation(saved)
       setDraft(createDraft(saved))
       setMode('view')
-      await onSaved?.(saved)
       return saved
     } catch (requestError) {
       setError(requestError?.message || 'Could not save this dashboard explanation.')
@@ -98,18 +82,12 @@ export function useDashboardExplanationEditor({
   async function reset() {
     setIsSaving(true)
     setError('')
-
     try {
-      const saved = await resetGrowthReviewDashboardExplanation({
-        apiClient,
-        campaignId,
-        explanationKey,
-        workspaceId,
-      })
+      const saved = await onReset?.({ explanationKey })
+      if (!saved) throw new Error('Could not restore the default explanation.')
       setSavedExplanation(saved)
       setDraft(createDraft(saved))
       setMode('view')
-      await onSaved?.(saved)
       return saved
     } catch (requestError) {
       setError(requestError?.message || 'Could not restore the default explanation.')

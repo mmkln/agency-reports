@@ -193,6 +193,7 @@ export function WeeklyLeadReportContextToolbar({
   periodType,
   refresh,
   refreshError,
+  settingsAction,
   title,
 }) {
   return (
@@ -210,6 +211,7 @@ export function WeeklyLeadReportContextToolbar({
 
       <div className="flex shrink-0 flex-wrap items-center gap-control">
         <p className="text-label font-medium text-text-muted">{formatUpdatedAt(calculatedAt)}</p>
+        {settingsAction}
         <AnalyticsRefreshControl
           isRefreshing={isRefreshing}
           onRefresh={onRefresh}

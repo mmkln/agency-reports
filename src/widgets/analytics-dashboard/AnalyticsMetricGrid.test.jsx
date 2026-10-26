@@ -49,6 +49,15 @@ describe('AnalyticsMetricGrid', () => {
             value: 23.5,
           },
           {
+            comparison: { delta: 14317, label: 'vs previous period' },
+            key: 'leads.expected_value',
+            label: 'Expected value',
+            presentation: { icon_name: 'dollarSign', tone: 'positive' },
+            supporting: { denominator: 17, kind: 'fraction', label: 'contacts with value', numerator: 4 },
+            unit: 'currency',
+            value: 14317,
+          },
+          {
             comparison: { delta: 2, label: 'vs previous period' },
             key: 'leads.active_nurture',
             label: 'Active nurture',
@@ -67,9 +76,61 @@ describe('AnalyticsMetricGrid', () => {
     expect(html).toContain('Showed')
     expect(html).toContain('77% of booked')
     expect(html).toContain('4 of 17 leads booked')
+    expect(html).toContain('Expected value')
+    expect(html).toContain('$14,317')
+    expect(html).toContain('4 of 17 contacts with value')
     expect(html).toContain('sequences, call queue, STN')
     expect(html).toContain('bg-success-muted')
     expect(html).toContain('bg-premium-blue/10')
-    expect(html.match(/<svg/g)).toHaveLength(5)
+    expect(html.match(/<svg/g)).toHaveLength(6)
+  })
+
+  it('renders a contact collection action from the backend descriptor', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsMetricGrid
+        metrics={[{
+          drilldown: {
+            endpoint: '/api/workspaces/workspace-1/analytics/drilldown/',
+            key: 'leads.created',
+            label: 'View leads',
+            title: 'Total leads',
+            type: 'contact_collection',
+          },
+          key: 'leads.created',
+          label: 'Total leads',
+          unit: 'count',
+          value: 17,
+        }]}
+        period={{ end: '2026-10-25', start: '2026-10-19', timezone: 'UTC' }}
+        runtime={{ apiClient: {} }}
+      />,
+    )
+
+    expect(html).toContain('aria-label="View leads"')
+  })
+
+  it('renders a dashboard-managed explanation for a hero metric', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsMetricGrid
+        explanations={{
+          'leads.created': {
+            calculationExplanation: 'Count the lead cohort once.',
+            definition: 'Leads created in the reporting period.',
+            explanationKey: 'leads.created',
+            kind: 'metric',
+            label: 'Total leads',
+            source: 'GHL opportunities',
+          },
+        }}
+        metrics={[{
+          key: 'leads.created',
+          label: 'Total leads',
+          unit: 'count',
+          value: 17,
+        }]}
+      />,
+    )
+
+    expect(html).toContain('aria-label="About Total leads"')
   })
 })

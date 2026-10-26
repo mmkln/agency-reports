@@ -1,5 +1,5 @@
 import { Panel, PanelBody } from '@/shared/ui'
-import { DashboardExplanationPopover } from '@/features/growth-review-dashboard-explanation'
+import { DashboardExplanationPopover } from '@/features/dashboard-explanation'
 
 import { reactivationChartLayout } from './reactivationChartTheme'
 import { reactivationText } from './reactivationTypography'
