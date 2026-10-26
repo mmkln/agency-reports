@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui'
+import { ContactCollectionAction } from '@/features/view-contact-collection'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
@@ -55,6 +56,7 @@ function MetricLabel({
 }
 
 function SummaryMetric({
+  action,
   explanationEditor,
   explanationKey,
   explanations,
@@ -64,15 +66,18 @@ function SummaryMetric({
 }) {
   return (
     <div className="min-w-0 bg-block px-component py-component">
-      <p className="text-ui text-text-muted">
-        <MetricLabel
-          explanationEditor={explanationEditor}
-          explanationKey={explanationKey}
-          explanations={explanations}
-        >
-          {label}
-        </MetricLabel>
-      </p>
+      <div className="flex min-h-control-sm items-center justify-between gap-item">
+        <p className="text-ui text-text-muted">
+          <MetricLabel
+            explanationEditor={explanationEditor}
+            explanationKey={explanationKey}
+            explanations={explanations}
+          >
+            {label}
+          </MetricLabel>
+        </p>
+        {action}
+      </div>
       <p className="mt-micro text-data tabular-nums text-text-primary">
         {Number(value ?? 0).toLocaleString()}
       </p>
@@ -115,6 +120,7 @@ export function AnalyticsBookingActivityWidget({
   explanationEditor,
   explanations,
   period,
+  runtime,
   title,
 }) {
   const rows = data?.rows ?? []
@@ -127,6 +133,7 @@ export function AnalyticsBookingActivityWidget({
   const upcomingHelper = showPending
     ? `scheduled, not yet seen · ${Number(summary.pending).toLocaleString()} pending outcome`
     : 'scheduled, not yet seen'
+  const upcomingDrilldown = data?.drilldowns?.upcoming
 
   return (
     <Panel>
@@ -162,6 +169,13 @@ export function AnalyticsBookingActivityWidget({
             value={summary.cancelled}
           />
           <SummaryMetric
+            action={upcomingDrilldown && Number(summary.upcoming ?? 0) > 0 ? (
+              <ContactCollectionAction
+                descriptor={upcomingDrilldown}
+                period={period}
+                runtime={runtime}
+              />
+            ) : null}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.upcoming`}
             explanations={explanations}

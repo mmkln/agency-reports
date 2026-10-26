@@ -75,20 +75,22 @@ export function AnalyticsMetricGrid({
         return (
           <MetricTile
             action={(
-              <span className="flex items-center gap-micro">
+              <>
                 <AnalyticsExplanationPopover
                   explanationEditor={explanationEditor}
                   explanationKey={metric.explanation_key ?? metric.key}
                   explanations={explanations}
                 />
                 {metric.drilldown ? (
-                  <ContactCollectionAction
-                    descriptor={metric.drilldown}
-                    period={period}
-                    runtime={runtime}
-                  />
+                  <span className="ml-auto">
+                    <ContactCollectionAction
+                      descriptor={metric.drilldown}
+                      period={period}
+                      runtime={runtime}
+                    />
+                  </span>
                 ) : null}
-              </span>
+              </>
             )}
             helper={formatSupporting(metric)}
             helperTone={helperTone}

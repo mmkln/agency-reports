@@ -10,21 +10,41 @@ const SUPPORTED_WIDGET_TYPES = new Set([
   'booking_activity',
 ])
 
+function normalizeDrilldown(drilldown) {
+  return drilldown?.type === 'contact_collection'
+    && drilldown?.key
+    && String(drilldown?.endpoint ?? '').startsWith('/api/')
+    ? {
+        endpoint: drilldown.endpoint,
+        key: drilldown.key,
+        label: drilldown.label ?? 'View contacts',
+        title: drilldown.title ?? drilldown.label ?? 'Contacts',
+        type: drilldown.type,
+      }
+    : null
+}
+
 function normalizeMetric(metric) {
-  const drilldown = metric?.drilldown
   return {
     ...metric,
-    drilldown: drilldown?.type === 'contact_collection'
-      && drilldown?.key
-      && String(drilldown?.endpoint ?? '').startsWith('/api/')
-      ? {
-          endpoint: drilldown.endpoint,
-          key: drilldown.key,
-          label: drilldown.label ?? 'View contacts',
-          title: drilldown.title ?? drilldown.label ?? 'Contacts',
-          type: drilldown.type,
-        }
-      : null,
+    drilldown: normalizeDrilldown(metric?.drilldown),
+  }
+}
+
+function normalizeBookingActivityData(data) {
+  if (!data || typeof data !== 'object') {
+    return data ?? null
+  }
+  const upcoming = normalizeDrilldown(data.drilldowns?.upcoming)
+  if (!upcoming) {
+    return data
+  }
+  return {
+    ...data,
+    drilldowns: {
+      ...data.drilldowns,
+      upcoming,
+    },
   }
 }
 
@@ -36,7 +56,9 @@ function normalizeWidget(widget) {
   return {
     data: widget.type === 'metric_grid' && Array.isArray(widget.data)
       ? widget.data.map(normalizeMetric)
-      : widget.data ?? null,
+      : widget.type === 'booking_activity'
+        ? normalizeBookingActivityData(widget.data)
+        : widget.data ?? null,
     id: widget.id,
     title: widget.title ?? '',
     type: widget.type,

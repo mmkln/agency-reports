@@ -17,11 +17,13 @@ import { useContactCollection } from './useContactCollection'
 
 function collectionSummary(collection) {
   if (!collection) {
-    return 'Leads included in this metric.'
+    return 'Records included in this metric.'
   }
-  const leadLabel = collection.totalRecords === 1 ? 'lead' : 'leads'
+  const itemLabel = collection.totalRecords === 1
+    ? collection.itemLabel
+    : collection.itemLabelPlural
   const contactLabel = collection.uniqueContacts === 1 ? 'contact' : 'contacts'
-  return `${collection.totalRecords.toLocaleString()} ${leadLabel} from ${collection.uniqueContacts.toLocaleString()} ${contactLabel}`
+  return `${collection.totalRecords.toLocaleString()} ${itemLabel} from ${collection.uniqueContacts.toLocaleString()} ${contactLabel}`
 }
 
 function CollectionLoadingState() {
@@ -73,9 +75,9 @@ export function ContactCollectionDialog({ descriptor, onOpenChange, open, period
           {state.status === 'ready' && collection?.items.length === 0 ? (
             <EmptyState
               className="min-h-72 rounded-none bg-transparent px-panel py-card"
-              description={state.query ? 'Try another name, email, phone, or opportunity.' : 'No contact records are included in this metric.'}
-              iconName="users"
-              title={state.query ? 'No matching contacts' : 'No contacts to show'}
+              description={state.query ? 'Try another name, email, or phone.' : `No ${collection.itemLabelPlural} are included in this metric.`}
+              iconName={collection.grain === 'appointment' ? 'calendar' : 'users'}
+              title={state.query ? 'No matching contacts' : `No ${collection.itemLabelPlural} to show`}
             />
           ) : null}
           {state.status === 'ready' && collection?.items.length ? (
@@ -89,7 +91,7 @@ export function ContactCollectionDialog({ descriptor, onOpenChange, open, period
               canNextPage={pagination.page < pagination.totalPages}
               canPreviousPage={pagination.page > 1}
               endItem={endItem}
-              itemLabel="leads"
+              itemLabel={collection.itemLabelPlural}
               nextPage={() => state.setPage(pagination.page + 1)}
               pageSize={pagination.pageSize}
               pageSizeOptions={[10, 25, 50]}

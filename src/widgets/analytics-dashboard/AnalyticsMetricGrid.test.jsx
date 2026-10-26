@@ -107,6 +107,7 @@ describe('AnalyticsMetricGrid', () => {
     )
 
     expect(html).toContain('aria-label="View leads"')
+    expect(html).toContain('class="ml-auto"')
   })
 
   it('renders a dashboard-managed explanation for a hero metric', () => {

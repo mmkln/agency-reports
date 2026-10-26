@@ -71,7 +71,21 @@ describe('analytics dashboard contract', () => {
       dashboard: { key: 'weekly-lead-report' },
       period: { end: '2026-10-25', start: '2026-10-19' },
       widgets: [{
-        data: { rows: [], summary: {}, total: 0, totals: {} },
+        data: {
+          drilldowns: {
+            upcoming: {
+              endpoint: '/api/workspaces/workspace-1/upcoming/',
+              key: 'bookings.by_channel.upcoming',
+              label: 'View upcoming appointments',
+              title: 'Upcoming appointments',
+              type: 'contact_collection',
+            },
+          },
+          rows: [],
+          summary: {},
+          total: 0,
+          totals: {},
+        },
         id: 'bookings-by-channel',
         title: 'Bookings by Channel',
         type: 'booking_activity',
@@ -79,6 +93,15 @@ describe('analytics dashboard contract', () => {
     })
 
     expect(dashboard.widgets[0]).toMatchObject({
+      data: {
+        drilldowns: {
+          upcoming: {
+            endpoint: '/api/workspaces/workspace-1/upcoming/',
+            key: 'bookings.by_channel.upcoming',
+            type: 'contact_collection',
+          },
+        },
+      },
       id: 'bookings-by-channel',
       type: 'booking_activity',
     })

@@ -1,14 +1,13 @@
 import { Icon } from '@/shared/icons'
 
-function formatOccurredAt(value, timezone) {
+function formatOccurredAt(value, timezone, includeTime) {
   if (!value) {
     return ''
   }
-  return new Intl.DateTimeFormat('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: timezone || 'UTC',
-  }).format(new Date(value))
+  const options = includeTime
+    ? { dateStyle: 'medium', timeStyle: 'short', timeZone: timezone || 'UTC' }
+    : { day: 'numeric', month: 'short', timeZone: timezone || 'UTC' }
+  return new Intl.DateTimeFormat('en-US', options).format(new Date(value))
 }
 
 function normalizeComparableText(value) {
@@ -25,7 +24,9 @@ export function ContactCollectionListItem({ item, timezone }) {
     ? ''
     : item.context.label
   const context = [contextLabel, item.source.label].filter(Boolean).join(' · ')
-  const externalUrl = item.contact.externalUrl
+  const externalUrl = item.destination?.url || item.contact.externalUrl
+  const externalLabel = item.destination?.label || `Open ${contactLabel} in GoHighLevel`
+  const includeTime = item.context.type === 'appointment'
 
   const rowContent = (
     <>
@@ -38,7 +39,7 @@ export function ContactCollectionListItem({ item, timezone }) {
       <div className="flex shrink-0 items-center gap-item">
         {item.occurredAt ? (
           <time className="whitespace-nowrap text-label text-text-muted" dateTime={item.occurredAt}>
-            {formatOccurredAt(item.occurredAt, timezone)}
+            {formatOccurredAt(item.occurredAt, timezone, includeTime)}
           </time>
         ) : null}
         {externalUrl ? (
@@ -56,7 +57,7 @@ export function ContactCollectionListItem({ item, timezone }) {
     <li>
       {externalUrl ? (
         <a
-          aria-label={`Open ${contactLabel} in GoHighLevel`}
+          aria-label={externalLabel}
           className="group flex min-h-target items-start justify-between gap-control px-panel py-item no-underline transition-colors duration-motion-fast ease-motion-standard hover:bg-control-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/35"
           href={externalUrl}
           rel="noreferrer"

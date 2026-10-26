@@ -14,6 +14,11 @@ function normalizeItem(item) {
       label: normalizeText(item?.context?.label),
       type: normalizeText(item?.context?.type),
     },
+    destination: {
+      label: normalizeText(item?.destination?.label),
+      type: normalizeText(item?.destination?.type),
+      url: normalizeText(item?.destination?.url),
+    },
     details: Array.isArray(item?.details)
       ? item.details.map((detail) => ({
           key: normalizeText(detail?.key),
@@ -42,6 +47,8 @@ export function normalizeContactCollection(payload) {
 
   return {
     grain: normalizeText(payload.collection.grain),
+    itemLabel: normalizeText(payload.collection.item_label) || 'record',
+    itemLabelPlural: normalizeText(payload.collection.item_label_plural) || 'records',
     items: Array.isArray(payload.items) ? payload.items.map(normalizeItem) : [],
     key: payload.collection.key,
     pagination: {

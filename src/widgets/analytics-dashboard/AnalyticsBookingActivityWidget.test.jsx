@@ -9,6 +9,15 @@ describe('AnalyticsBookingActivityWidget', () => {
       <AnalyticsBookingActivityWidget
         data={{
           explanation_key: 'bookings.by_channel',
+          drilldowns: {
+            upcoming: {
+              endpoint: '/api/workspaces/workspace-1/upcoming/',
+              key: 'bookings.by_channel.upcoming',
+              label: 'View upcoming appointments',
+              title: 'Upcoming appointments',
+              type: 'contact_collection',
+            },
+          },
           key: 'bookings.by_channel',
           note: 'Bookings made during the selected period.',
           rows: [
@@ -89,6 +98,12 @@ describe('AnalyticsBookingActivityWidget', () => {
     expect(html).toContain('aria-label="About Showed"')
     expect(html).toContain('aria-label="About Cancelled"')
     expect(html).toContain('aria-label="About Upcoming"')
+    expect(html).toContain('aria-label="View upcoming appointments"')
+    const upcomingLabelIndex = html.indexOf('>Upcoming<button')
+    const upcomingActionIndex = html.indexOf('aria-label="View upcoming appointments"')
+    const upcomingHelperIndex = html.indexOf('scheduled, not yet seen')
+    expect(upcomingActionIndex).toBeGreaterThan(upcomingLabelIndex)
+    expect(upcomingActionIndex).toBeLessThan(upcomingHelperIndex)
   })
 
   it('shows pending outcomes only when they exist', () => {
