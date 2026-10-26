@@ -10,6 +10,27 @@ describe('AnalyticsBookingActivityWidget', () => {
         data={{
           explanation_key: 'bookings.by_channel',
           drilldowns: {
+            booked: {
+              endpoint: '/api/workspaces/workspace-1/booked/',
+              key: 'bookings.by_channel.booked',
+              label: 'View booked appointments',
+              title: 'Booked appointments',
+              type: 'contact_collection',
+            },
+            showed: {
+              endpoint: '/api/workspaces/workspace-1/showed/',
+              key: 'bookings.by_channel.showed',
+              label: 'View showed appointments',
+              title: 'Showed appointments',
+              type: 'contact_collection',
+            },
+            cancelled: {
+              endpoint: '/api/workspaces/workspace-1/cancelled/',
+              key: 'bookings.by_channel.cancelled',
+              label: 'View cancelled appointments',
+              title: 'Cancelled appointments',
+              type: 'contact_collection',
+            },
             upcoming: {
               endpoint: '/api/workspaces/workspace-1/upcoming/',
               key: 'bookings.by_channel.upcoming',
@@ -26,7 +47,7 @@ describe('AnalyticsBookingActivityWidget', () => {
               key: 'meta',
               label: 'Meta Ads',
               tone: 'accent',
-              values: { cancelled: 0, no_show: 0, pending: 0, showed: 4, upcoming: 1 },
+              values: { cancelled: 1, no_show: 0, pending: 0, showed: 3, upcoming: 1 },
             },
             {
               booked: 2,
@@ -44,15 +65,15 @@ describe('AnalyticsBookingActivityWidget', () => {
           ],
           summary: {
             booked: 7,
-            cancelled: 0,
+            cancelled: 1,
             from_earlier_leads: 3,
             from_new_leads: 4,
             pending: 0,
-            showed: 6,
+            showed: 5,
             upcoming: 1,
           },
           total: 7,
-          totals: { cancelled: 0, no_show: 0, pending: 0, showed: 6, upcoming: 1 },
+          totals: { cancelled: 1, no_show: 0, pending: 0, showed: 5, upcoming: 1 },
         }}
         explanations={{
           'bookings.by_channel': {
@@ -98,6 +119,9 @@ describe('AnalyticsBookingActivityWidget', () => {
     expect(html).toContain('aria-label="About Showed"')
     expect(html).toContain('aria-label="About Cancelled"')
     expect(html).toContain('aria-label="About Upcoming"')
+    expect(html).toContain('aria-label="View booked appointments"')
+    expect(html).toContain('aria-label="View showed appointments"')
+    expect(html).toContain('aria-label="View cancelled appointments"')
     expect(html).toContain('aria-label="View upcoming appointments"')
     const upcomingLabelIndex = html.indexOf('>Upcoming<button')
     const upcomingActionIndex = html.indexOf('aria-label="View upcoming appointments"')

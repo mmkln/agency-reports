@@ -73,6 +73,27 @@ describe('analytics dashboard contract', () => {
       widgets: [{
         data: {
           drilldowns: {
+            booked: {
+              endpoint: '/api/workspaces/workspace-1/booked/',
+              key: 'bookings.by_channel.booked',
+              label: 'View booked appointments',
+              title: 'Booked appointments',
+              type: 'contact_collection',
+            },
+            showed: {
+              endpoint: '/api/workspaces/workspace-1/showed/',
+              key: 'bookings.by_channel.showed',
+              label: 'View showed appointments',
+              title: 'Showed appointments',
+              type: 'contact_collection',
+            },
+            cancelled: {
+              endpoint: '/api/workspaces/workspace-1/cancelled/',
+              key: 'bookings.by_channel.cancelled',
+              label: 'View cancelled appointments',
+              title: 'Cancelled appointments',
+              type: 'contact_collection',
+            },
             upcoming: {
               endpoint: '/api/workspaces/workspace-1/upcoming/',
               key: 'bookings.by_channel.upcoming',
@@ -95,6 +116,21 @@ describe('analytics dashboard contract', () => {
     expect(dashboard.widgets[0]).toMatchObject({
       data: {
         drilldowns: {
+          booked: {
+            endpoint: '/api/workspaces/workspace-1/booked/',
+            key: 'bookings.by_channel.booked',
+            type: 'contact_collection',
+          },
+          showed: {
+            endpoint: '/api/workspaces/workspace-1/showed/',
+            key: 'bookings.by_channel.showed',
+            type: 'contact_collection',
+          },
+          cancelled: {
+            endpoint: '/api/workspaces/workspace-1/cancelled/',
+            key: 'bookings.by_channel.cancelled',
+            type: 'contact_collection',
+          },
           upcoming: {
             endpoint: '/api/workspaces/workspace-1/upcoming/',
             key: 'bookings.by_channel.upcoming',

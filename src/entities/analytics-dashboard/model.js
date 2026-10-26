@@ -35,16 +35,15 @@ function normalizeBookingActivityData(data) {
   if (!data || typeof data !== 'object') {
     return data ?? null
   }
-  const upcoming = normalizeDrilldown(data.drilldowns?.upcoming)
-  if (!upcoming) {
-    return data
-  }
+  const drilldowns = Object.fromEntries(
+    Object.entries(data.drilldowns ?? {})
+      .map(([key, descriptor]) => [key, normalizeDrilldown(descriptor)])
+      .filter(([, descriptor]) => descriptor),
+  )
+
   return {
     ...data,
-    drilldowns: {
-      ...data.drilldowns,
-      upcoming,
-    },
+    drilldowns,
   }
 }
 

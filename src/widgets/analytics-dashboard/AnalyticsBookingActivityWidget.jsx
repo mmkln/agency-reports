@@ -133,7 +133,20 @@ export function AnalyticsBookingActivityWidget({
   const upcomingHelper = showPending
     ? `scheduled, not yet seen · ${Number(summary.pending).toLocaleString()} pending outcome`
     : 'scheduled, not yet seen'
-  const upcomingDrilldown = data?.drilldowns?.upcoming
+
+  function drilldownAction(key, value) {
+    const descriptor = data?.drilldowns?.[key]
+    if (!descriptor || Number(value ?? 0) <= 0) {
+      return null
+    }
+    return (
+      <ContactCollectionAction
+        descriptor={descriptor}
+        period={period}
+        runtime={runtime}
+      />
+    )
+  }
 
   return (
     <Panel>
@@ -147,6 +160,7 @@ export function AnalyticsBookingActivityWidget({
       <PanelBody className="pt-item">
         <div className="grid gap-px overflow-hidden rounded-block border border-separator bg-separator sm:grid-cols-2 xl:grid-cols-4">
           <SummaryMetric
+            action={drilldownAction('booked', summary.booked)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.booked`}
             explanations={explanations}
@@ -155,6 +169,7 @@ export function AnalyticsBookingActivityWidget({
             value={summary.booked}
           />
           <SummaryMetric
+            action={drilldownAction('showed', summary.showed)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.showed`}
             explanations={explanations}
@@ -162,6 +177,7 @@ export function AnalyticsBookingActivityWidget({
             value={summary.showed}
           />
           <SummaryMetric
+            action={drilldownAction('cancelled', summary.cancelled)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.cancelled`}
             explanations={explanations}
@@ -169,13 +185,7 @@ export function AnalyticsBookingActivityWidget({
             value={summary.cancelled}
           />
           <SummaryMetric
-            action={upcomingDrilldown && Number(summary.upcoming ?? 0) > 0 ? (
-              <ContactCollectionAction
-                descriptor={upcomingDrilldown}
-                period={period}
-                runtime={runtime}
-              />
-            ) : null}
+            action={drilldownAction('upcoming', summary.upcoming)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.upcoming`}
             explanations={explanations}
