@@ -49,13 +49,12 @@ describe('AnalyticsMetricGrid', () => {
             value: 23.5,
           },
           {
-            comparison: { delta: 14317, label: 'vs previous period' },
-            key: 'leads.expected_value',
-            label: 'Expected value',
-            presentation: { icon_name: 'dollarSign', tone: 'positive' },
-            supporting: { denominator: 17, kind: 'fraction', label: 'contacts with value', numerator: 4 },
-            unit: 'currency',
-            value: 14317,
+            key: 'leads.in_sequence',
+            label: 'In Sequence',
+            presentation: { icon_name: 'messageSquare', tone: 'info', value_tone: 'neutral' },
+            supporting: { kind: 'text', label: 'currently active across configured sequences' },
+            unit: 'count',
+            value: 14,
           },
           {
             comparison: { delta: 2, label: 'vs previous period' },
@@ -76,9 +75,8 @@ describe('AnalyticsMetricGrid', () => {
     expect(html).toContain('Showed')
     expect(html).toContain('77% of booked')
     expect(html).toContain('4 of 17 leads booked')
-    expect(html).toContain('Expected value')
-    expect(html).toContain('$14,317')
-    expect(html).toContain('4 of 17 contacts with value')
+    expect(html).toContain('In Sequence')
+    expect(html).toContain('currently active across configured sequences')
     expect(html).toContain('sequences, call queue, STN')
     expect(html).toContain('bg-success-muted')
     expect(html).toContain('bg-premium-blue/10')

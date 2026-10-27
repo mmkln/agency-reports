@@ -17,6 +17,7 @@ import { DashboardSectionsSection } from './DashboardSectionsSection'
 import { DashboardSourceSummary } from './DashboardSourceSummary'
 import { LeadCohortSection } from './LeadCohortSection'
 import { LifecycleStageMappingSection } from './LifecycleStageMappingSection'
+import { SequenceTagsSection } from './SequenceTagsSection'
 import { useAnalyticsDashboardSettings } from './useAnalyticsDashboardSettings'
 
 export function AnalyticsDashboardSettingsDialog({
@@ -37,6 +38,9 @@ export function AnalyticsDashboardSettingsDialog({
     workspaceId,
   })
   const isBusy = settings.status === 'loading' || settings.status === 'saving'
+  const isInSequenceVisible = settings.overviewMetrics.some(
+    (metric) => metric.id === 'leads.in_sequence' && metric.isVisible,
+  )
 
   const handleSave = async () => {
     const saved = await settings.save()
@@ -74,6 +78,11 @@ export function AnalyticsDashboardSettingsDialog({
                   pipelineIds={settings.pipelineIds}
                   pipelineOptions={settings.pipelineOptions}
                 />
+                <SequenceTagsSection
+                  onChange={settings.setSequenceActiveTagNames}
+                  tagNames={settings.sequenceActiveTagNames}
+                  tagOptions={settings.sequenceTagOptions}
+                />
                 <LifecycleStageMappingSection
                   onChange={settings.setStageAssignment}
                   selectedPipelines={settings.selectedPipelines}
@@ -103,7 +112,12 @@ export function AnalyticsDashboardSettingsDialog({
             Cancel
           </Button>
           <Button
-            disabled={isBusy || settings.pipelineIds.length === 0 || settings.visibleItemCount === 0}
+            disabled={
+              isBusy
+              || settings.pipelineIds.length === 0
+              || (isInSequenceVisible && settings.sequenceActiveTagNames.length === 0)
+              || settings.visibleItemCount === 0
+            }
             onClick={handleSave}
             type="button"
           >

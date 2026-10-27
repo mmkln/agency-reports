@@ -42,6 +42,12 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
     overviewMetrics: normalizeVisibilityItems(settings.overview_metrics),
     pipelineIds: Array.isArray(settings.pipeline_ids) ? settings.pipeline_ids : [],
     pipelineOptions: Array.isArray(settings.pipeline_options) ? settings.pipeline_options : [],
+    sequenceActiveTagNames: Array.isArray(settings.sequence_active_tag_names)
+      ? settings.sequence_active_tag_names
+      : [],
+    sequenceTagOptions: Array.isArray(settings.sequence_tag_options)
+      ? settings.sequence_tag_options
+      : [],
     sections: normalizeVisibilityItems(settings.sections),
     sourceConnection: settings.source_connection
       ? {

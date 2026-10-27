@@ -81,6 +81,10 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     })
   }, [])
 
+  const setSequenceActiveTagNames = useCallback((sequenceActiveTagNames) => {
+    setState((current) => ({ ...current, sequenceActiveTagNames }))
+  }, [])
+
   const setVisibility = useCallback((collectionKey, itemId, isVisible) => {
     setState((current) => ({
       ...current,
@@ -107,6 +111,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
         hiddenWidgetIds: hiddenIdsFromVisibility(state.sections),
         lifecycleStageIds: lifecycleGroupsFromAssignments(state.stageAssignments),
         pipelineIds: state.pipelineIds,
+        sequenceActiveTagNames: state.sequenceActiveTagNames,
         workspaceId,
       })
       setState({ ...normalizeAnalyticsDashboardSettings(settings), error: '', status: 'ready' })
@@ -120,6 +125,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     runtime.apiClient,
     state.overviewMetrics,
     state.pipelineIds,
+    state.sequenceActiveTagNames,
     state.sections,
     state.stageAssignments,
     visibleItemCount,
@@ -132,6 +138,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     save,
     selectedPipelines,
     setPipelineIds,
+    setSequenceActiveTagNames,
     setStageAssignment,
     setVisibility,
     unmappedStageCount,

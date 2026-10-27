@@ -34,6 +34,10 @@ describe('analytics dashboard settings model', () => {
         { is_visible: false, key: 'appointments.showed', label: 'Showed' },
       ],
       sections: [{ id: 'activity', is_visible: false, label: 'Weekly Activity' }],
+      sequence_active_tag_names: ['$199_oct2026_active'],
+      sequence_tag_options: [
+        { label: '$199_oct2026_active', value: '$199_oct2026_active' },
+      ],
       source_connection: {
         external_account_id: 'location-1',
         id: 'connection-1',
@@ -43,6 +47,10 @@ describe('analytics dashboard settings model', () => {
     })
 
     expect(settings.sourceConnection.externalAccountId).toBe('location-1')
+    expect(settings.sequenceActiveTagNames).toEqual(['$199_oct2026_active'])
+    expect(settings.sequenceTagOptions).toEqual([
+      { label: '$199_oct2026_active', value: '$199_oct2026_active' },
+    ])
     expect(hiddenIdsFromVisibility(settings.overviewMetrics)).toEqual(['appointments.showed'])
     expect(hiddenIdsFromVisibility(settings.sections)).toEqual(['activity'])
   })
