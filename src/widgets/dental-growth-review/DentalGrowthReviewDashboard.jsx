@@ -63,8 +63,8 @@ export function DentalGrowthReviewDashboard({
   campaignId,
   campaignSelector,
   funnelEmptyAction,
+  onCustomizationSaved,
   onDashboardExplanationSaved,
-  onLayoutSaved,
   onRetry,
   page,
   refresh,
@@ -73,8 +73,9 @@ export function DentalGrowthReviewDashboard({
   const layoutEditor = useGrowthReviewLayoutEditor({
     apiClient,
     campaignId,
+    campaignName: page.campaign?.name,
     layout: page.layout,
-    onSaved: onLayoutSaved,
+    onSaved: onCustomizationSaved,
     workspaceId,
   })
   const funnelChart = page.charts?.funnel ?? null

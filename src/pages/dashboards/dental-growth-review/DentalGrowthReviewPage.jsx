@@ -37,6 +37,13 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
   })
   const page = growthReview.page
 
+  async function reloadReviewCustomization() {
+    await Promise.all([
+      growthReview.reload(),
+      campaignSelection.reload(),
+    ])
+  }
+
   if (growthReview.status === 'loading' || !page) {
     return (
       <PageShell className="pb-section pt-card" width="wide">
@@ -63,8 +70,8 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
           />
         )}
         funnelEmptyAction={funnelEmptyAction}
+        onCustomizationSaved={reloadReviewCustomization}
         onDashboardExplanationSaved={growthReview.reload}
-        onLayoutSaved={growthReview.reload}
         onRetry={growthReview.reload}
         page={page}
         refresh={refresh}

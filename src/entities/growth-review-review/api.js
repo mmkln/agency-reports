@@ -33,6 +33,13 @@ export function updateGrowthReviewReview(apiClient, workspaceId, reviewId, draft
   }).then((payload) => normalizeGrowthReviewReview(payload.review))
 }
 
+export function updateGrowthReviewReviewName(apiClient, workspaceId, reviewId, name) {
+  return apiClient.request(`${reviewsPath(workspaceId)}${reviewId}/`, {
+    body: { name: String(name ?? '').trim() },
+    method: 'PATCH',
+  }).then((payload) => normalizeGrowthReviewReview(payload.review))
+}
+
 export function validateGrowthReviewReview(apiClient, workspaceId, reviewId, draft) {
   return apiClient.post(
     `${reviewsPath(workspaceId)}validate/`,

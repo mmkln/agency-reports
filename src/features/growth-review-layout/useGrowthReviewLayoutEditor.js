@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 
 import { normalizeGrowthReviewDashboardLayout } from '@/entities/dental-growth-review'
+import { updateGrowthReviewReviewName } from '@/entities/growth-review-review'
 import { updateGrowthReviewDashboardLayout } from '@/domain/services/growthReviewApiReadService'
 
 function cloneItems(items = []) {
@@ -26,6 +27,7 @@ function moveItem(items, fromIndex, toIndex) {
 export function useGrowthReviewLayoutEditor({
   apiClient,
   campaignId,
+  campaignName,
   layout,
   onSaved,
   workspaceId,
@@ -34,23 +36,34 @@ export function useGrowthReviewLayoutEditor({
     () => normalizeGrowthReviewDashboardLayout(layout),
     [layout],
   )
+  const normalizedCampaignName = String(campaignName ?? '').trim()
+  const [draftName, setDraftName] = useState(normalizedCampaignName)
   const [draftItems, setDraftItems] = useState(() => cloneItems(normalizedLayout.items))
   const [error, setError] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [nameError, setNameError] = useState('')
 
   const open = useCallback(() => {
+    setDraftName(normalizedCampaignName)
     setDraftItems(cloneItems(normalizedLayout.items))
     setError('')
+    setNameError('')
     setIsOpen(true)
-  }, [normalizedLayout.items])
+  }, [normalizedCampaignName, normalizedLayout.items])
 
   const close = useCallback(() => {
     if (!isSaving) {
       setIsOpen(false)
       setError('')
+      setNameError('')
     }
   }, [isSaving])
+
+  const setName = useCallback((name) => {
+    setDraftName(name)
+    setNameError('')
+  }, [])
 
   const moveUp = useCallback((widgetKey) => {
     setDraftItems((currentItems) => {
@@ -102,43 +115,71 @@ export function useGrowthReviewLayoutEditor({
   }, [apiClient, campaignId, onSaved, workspaceId])
 
   const save = useCallback(async () => {
-    if (!apiClient || !workspaceId) {
+    if (!apiClient || !workspaceId || !campaignId) {
+      return null
+    }
+
+    const nextName = draftName.trim()
+    if (!nextName) {
+      setNameError('Review name is required.')
       return null
     }
 
     setIsSaving(true)
     setError('')
+    setNameError('')
 
     try {
-      const savedLayout = await updateGrowthReviewDashboardLayout({
-        apiClient,
-        campaignId,
-        items: draftItems,
-        workspaceId,
-      })
+      const [savedLayout] = await Promise.all([
+        updateGrowthReviewDashboardLayout({
+          apiClient,
+          campaignId,
+          items: draftItems,
+          workspaceId,
+        }),
+        nextName === normalizedCampaignName
+          ? Promise.resolve(null)
+          : updateGrowthReviewReviewName(
+            apiClient,
+            workspaceId,
+            campaignId,
+            nextName,
+          ),
+      ])
 
       setIsOpen(false)
       await onSaved?.(savedLayout)
       return savedLayout
     } catch (requestError) {
-      setError(requestError?.message || 'Could not save review layout.')
+      setError(requestError?.message || 'Could not save review customization.')
       return null
     } finally {
       setIsSaving(false)
     }
-  }, [apiClient, campaignId, draftItems, onSaved, workspaceId])
+  }, [
+    apiClient,
+    campaignId,
+    draftItems,
+    draftName,
+    normalizedCampaignName,
+    onSaved,
+    workspaceId,
+  ])
 
   return {
     close,
     draftItems,
+    draftName,
     error,
     isOpen,
     isSaving,
     moveDown,
     moveUp,
+    nameError,
     open,
     resetToDefault,
     save,
+    setName,
     setVisibility,
   }
 }

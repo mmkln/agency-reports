@@ -6,6 +6,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
   Switch,
 } from '@/shared/ui'
 
@@ -46,7 +48,24 @@ export function GrowthReviewLayoutModal({ editor }) {
           <DialogTitle>Customize Review</DialogTitle>
         </DialogHeader>
 
+        <div className="grid gap-item">
+          <Label htmlFor="growth-review-name">Review name</Label>
+          <Input
+            aria-invalid={Boolean(editor.nameError)}
+            disabled={editor.isSaving}
+            id="growth-review-name"
+            maxLength={255}
+            onChange={(event) => editor.setName(event.target.value)}
+            required
+            value={editor.draftName}
+          />
+          {editor.nameError ? (
+            <p className="text-label text-destructive" role="alert">{editor.nameError}</p>
+          ) : null}
+        </div>
+
         <div className="grid gap-tag">
+          <h3 className="text-ui font-semibold text-text-primary">Dashboard sections</h3>
           {editor.draftItems.map((item, index) => {
             const isFirst = index === 0
             const isLast = index === editor.draftItems.length - 1
@@ -109,7 +128,7 @@ export function GrowthReviewLayoutModal({ editor }) {
               Cancel
             </Button>
             <Button
-              disabled={editor.isSaving}
+              disabled={editor.isSaving || !editor.draftName.trim()}
               onClick={editor.save}
               type="button"
             >

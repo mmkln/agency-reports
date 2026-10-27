@@ -39,7 +39,6 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
   return {
     dashboardKey: settings.dashboard_key ?? '',
     definitionKey: settings.definition_key ?? '',
-    title: settings.title ?? '',
     overviewMetrics: normalizeVisibilityItems(settings.overview_metrics),
     pipelineIds: Array.isArray(settings.pipeline_ids) ? settings.pipeline_ids : [],
     pipelineOptions: Array.isArray(settings.pipeline_options) ? settings.pipeline_options : [],

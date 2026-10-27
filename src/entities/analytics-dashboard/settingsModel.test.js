@@ -29,7 +29,6 @@ describe('analytics dashboard settings model', () => {
   it('normalizes source and visibility settings', () => {
     const settings = normalizeAnalyticsDashboardSettings({
       dashboard_key: 'weekly-lead-report',
-      title: 'Weekly Lead Performance',
       overview_metrics: [
         { is_visible: true, key: 'leads.created', label: 'Total leads' },
         { is_visible: false, key: 'appointments.showed', label: 'Showed' },
@@ -48,7 +47,6 @@ describe('analytics dashboard settings model', () => {
     })
 
     expect(settings.sourceConnection.externalAccountId).toBe('location-1')
-    expect(settings.title).toBe('Weekly Lead Performance')
     expect(settings.sequenceActiveTagNames).toEqual(['$199_oct2026_active'])
     expect(settings.sequenceTagOptions).toEqual([
       { label: '$199_oct2026_active', value: '$199_oct2026_active' },

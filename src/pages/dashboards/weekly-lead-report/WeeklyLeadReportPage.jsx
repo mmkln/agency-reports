@@ -106,10 +106,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
           <AnalyticsDashboardSettingsDialog
             dashboardKey={DASHBOARD_KEY}
             onOpenChange={setSettingsOpen}
-            onSaved={async ({ refreshRequired }) => {
-              await readModel.reload()
-              if (refreshRequired) await readModel.runRefresh()
-            }}
+            onSaved={readModel.runRefresh}
             open={settingsOpen}
             runtime={runtime}
             workspaceId={workspaceId}

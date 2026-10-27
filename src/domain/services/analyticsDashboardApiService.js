@@ -74,7 +74,6 @@ export async function updateAnalyticsDashboardSettingsFromApi({
   lifecycleStageIds,
   pipelineIds,
   sequenceActiveTagNames,
-  title,
   workspaceId,
 }) {
   const payload = await apiClient.request(dashboardSettingsPath(workspaceId, dashboardKey), {
@@ -84,14 +83,10 @@ export async function updateAnalyticsDashboardSettingsFromApi({
       lifecycle_stage_ids: lifecycleStageIds,
       pipeline_ids: pipelineIds,
       sequence_active_tag_names: sequenceActiveTagNames,
-      title,
     },
     method: 'PATCH',
   })
-  return {
-    refreshRequired: payload.refresh_required === true,
-    settings: payload.settings,
-  }
+  return payload.settings
 }
 
 export async function getAnalyticsDashboardProvisioningOptionsFromApi({ apiClient, workspaceId }) {
