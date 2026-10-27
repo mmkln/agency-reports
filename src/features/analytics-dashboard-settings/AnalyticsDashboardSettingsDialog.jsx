@@ -13,6 +13,7 @@ import {
   Skeleton,
 } from '@/shared/ui'
 
+import { DashboardDetailsSection } from './DashboardDetailsSection'
 import { DashboardSectionsSection } from './DashboardSectionsSection'
 import { DashboardSourceSummary } from './DashboardSourceSummary'
 import { LeadCohortSection } from './LeadCohortSection'
@@ -43,10 +44,10 @@ export function AnalyticsDashboardSettingsDialog({
   )
 
   const handleSave = async () => {
-    const saved = await settings.save()
-    if (!saved) return
+    const result = await settings.save()
+    if (!result) return
     setOpen(false)
-    await onSaved?.()
+    await onSaved?.(result)
   }
 
   return (
@@ -73,6 +74,10 @@ export function AnalyticsDashboardSettingsDialog({
             <div className="grid gap-card xl:grid-cols-settings">
               <div className="grid content-start gap-card">
                 {settings.error ? <ErrorBlock>{settings.error}</ErrorBlock> : null}
+                <DashboardDetailsSection
+                  onTitleChange={settings.setTitle}
+                  title={settings.title}
+                />
                 <LeadCohortSection
                   onChange={settings.setPipelineIds}
                   pipelineIds={settings.pipelineIds}
@@ -114,6 +119,7 @@ export function AnalyticsDashboardSettingsDialog({
           <Button
             disabled={
               isBusy
+              || !settings.title.trim()
               || settings.pipelineIds.length === 0
               || (isInSequenceVisible && settings.sequenceActiveTagNames.length === 0)
               || settings.visibleItemCount === 0

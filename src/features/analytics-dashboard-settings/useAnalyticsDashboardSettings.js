@@ -85,6 +85,10 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     setState((current) => ({ ...current, sequenceActiveTagNames }))
   }, [])
 
+  const setTitle = useCallback((title) => {
+    setState((current) => ({ ...current, title }))
+  }, [])
+
   const setVisibility = useCallback((collectionKey, itemId, isVisible) => {
     setState((current) => ({
       ...current,
@@ -95,6 +99,13 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
   }, [])
 
   const save = useCallback(async () => {
+    if (!state.title.trim()) {
+      setState((current) => ({
+        ...current,
+        error: 'Dashboard name is required.',
+      }))
+      return null
+    }
     if (!visibleItemCount) {
       setState((current) => ({
         ...current,
@@ -104,7 +115,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     }
     setState((current) => ({ ...current, error: '', status: 'saving' }))
     try {
-      const settings = await updateAnalyticsDashboardSettingsFromApi({
+      const result = await updateAnalyticsDashboardSettingsFromApi({
         apiClient: runtime.apiClient,
         dashboardKey,
         hiddenMetricKeys: hiddenIdsFromVisibility(state.overviewMetrics),
@@ -112,10 +123,15 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
         lifecycleStageIds: lifecycleGroupsFromAssignments(state.stageAssignments),
         pipelineIds: state.pipelineIds,
         sequenceActiveTagNames: state.sequenceActiveTagNames,
+        title: state.title.trim(),
         workspaceId,
       })
-      setState({ ...normalizeAnalyticsDashboardSettings(settings), error: '', status: 'ready' })
-      return true
+      setState({
+        ...normalizeAnalyticsDashboardSettings(result.settings),
+        error: '',
+        status: 'ready',
+      })
+      return { refreshRequired: result.refreshRequired }
     } catch (error) {
       setState((current) => ({ ...current, error: error.message, status: 'error' }))
       return false
@@ -128,6 +144,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     state.sequenceActiveTagNames,
     state.sections,
     state.stageAssignments,
+    state.title,
     visibleItemCount,
     workspaceId,
   ])
@@ -140,6 +157,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     setPipelineIds,
     setSequenceActiveTagNames,
     setStageAssignment,
+    setTitle,
     setVisibility,
     unmappedStageCount,
     visibleItemCount,

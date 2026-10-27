@@ -61,7 +61,7 @@ describe('analyticsDashboardApiService', () => {
     }
     const apiClient = {
       get: vi.fn().mockResolvedValue({ settings }),
-      request: vi.fn().mockResolvedValue({ settings }),
+      request: vi.fn().mockResolvedValue({ refresh_required: false, settings }),
     }
 
     const loaded = await getAnalyticsDashboardSettingsFromApi({
@@ -75,6 +75,7 @@ describe('analyticsDashboardApiService', () => {
       lifecycleStageIds: settings.lifecycle_stage_ids,
       pipelineIds: settings.pipeline_ids,
       sequenceActiveTagNames: ['$199_oct2026_active'],
+      title: 'Weekly Lead Performance',
       hiddenMetricKeys: ['appointments.showed'],
       hiddenWidgetIds: ['weekly-activity'],
       workspaceId: 'workspace-1',
@@ -92,12 +93,13 @@ describe('analyticsDashboardApiService', () => {
           lifecycle_stage_ids: settings.lifecycle_stage_ids,
           pipeline_ids: settings.pipeline_ids,
           sequence_active_tag_names: ['$199_oct2026_active'],
+          title: 'Weekly Lead Performance',
         },
         method: 'PATCH',
       },
     )
     expect(loaded).toEqual(settings)
-    expect(updated).toEqual(settings)
+    expect(updated).toEqual({ refreshRequired: false, settings })
   })
 
   it('loads provisioning options and creates a dashboard through collection APIs', async () => {
