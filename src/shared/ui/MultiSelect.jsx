@@ -45,7 +45,7 @@ export function MultiSelect({
         <Button
           id={inspectorId}
           className={cn(
-            'w-full justify-between rounded-control border border-control-border bg-control text-left text-ui text-text-primary shadow-none hover:bg-control-hover',
+            'min-w-0 w-full justify-between rounded-control border border-control-border bg-control text-left text-ui text-text-primary shadow-none hover:bg-control-hover',
             size === 'compact'
               ? 'h-control-small px-item py-tag text-label'
               : 'h-target px-component py-item',
@@ -56,7 +56,7 @@ export function MultiSelect({
           type="button"
           variant="ghost"
         >
-          <span className="truncate">
+          <span className="min-w-0 flex-1 truncate">
             {selectedLabels.length ? selectedLabels.join(', ') : placeholder}
           </span>
           <ChevronsUpDown className="ml-item h-4 w-4 shrink-0 opacity-50" />

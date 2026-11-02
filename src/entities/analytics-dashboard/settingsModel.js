@@ -45,10 +45,16 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
     sequenceActiveTagNames: Array.isArray(settings.sequence_active_tag_names)
       ? settings.sequence_active_tag_names
       : [],
-    sequenceTagOptions: Array.isArray(settings.sequence_tag_options)
-      ? settings.sequence_tag_options
-      : [],
     sections: normalizeVisibilityItems(settings.sections),
+    sourceMappings: Array.isArray(settings.source_mappings)
+      ? settings.source_mappings.map((mapping) => ({
+          detail: mapping.detail ?? '',
+          key: mapping.key ?? '',
+          label: mapping.label ?? mapping.key ?? '',
+          priority: mapping.priority ?? 0,
+          tagNames: Array.isArray(mapping.tag_names) ? mapping.tag_names : [],
+        }))
+      : [],
     sourceConnection: settings.source_connection
       ? {
           externalAccountId: settings.source_connection.external_account_id ?? '',
@@ -58,6 +64,11 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
         }
       : null,
     stageAssignments: stageAssignmentsFromGroups(settings.lifecycle_stage_ids),
+    tagOptions: Array.isArray(settings.tag_options)
+      ? settings.tag_options
+      : Array.isArray(settings.sequence_tag_options)
+        ? settings.sequence_tag_options
+        : [],
   }
 }
 

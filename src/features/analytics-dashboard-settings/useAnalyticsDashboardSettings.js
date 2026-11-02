@@ -85,6 +85,15 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     setState((current) => ({ ...current, sequenceActiveTagNames }))
   }, [])
 
+  const setSourceMappingTagNames = useCallback((mappingKey, tagNames) => {
+    setState((current) => ({
+      ...current,
+      sourceMappings: current.sourceMappings.map((mapping) => (
+        mapping.key === mappingKey ? { ...mapping, tagNames } : mapping
+      )),
+    }))
+  }, [])
+
   const setVisibility = useCallback((collectionKey, itemId, isVisible) => {
     setState((current) => ({
       ...current,
@@ -112,6 +121,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
         lifecycleStageIds: lifecycleGroupsFromAssignments(state.stageAssignments),
         pipelineIds: state.pipelineIds,
         sequenceActiveTagNames: state.sequenceActiveTagNames,
+        sourceMappings: state.sourceMappings,
         workspaceId,
       })
       setState({ ...normalizeAnalyticsDashboardSettings(settings), error: '', status: 'ready' })
@@ -127,6 +137,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     state.pipelineIds,
     state.sequenceActiveTagNames,
     state.sections,
+    state.sourceMappings,
     state.stageAssignments,
     visibleItemCount,
     workspaceId,
@@ -139,6 +150,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     selectedPipelines,
     setPipelineIds,
     setSequenceActiveTagNames,
+    setSourceMappingTagNames,
     setStageAssignment,
     setVisibility,
     unmappedStageCount,

@@ -74,6 +74,7 @@ export async function updateAnalyticsDashboardSettingsFromApi({
   lifecycleStageIds,
   pipelineIds,
   sequenceActiveTagNames,
+  sourceMappings,
   workspaceId,
 }) {
   const payload = await apiClient.request(dashboardSettingsPath(workspaceId, dashboardKey), {
@@ -83,6 +84,10 @@ export async function updateAnalyticsDashboardSettingsFromApi({
       lifecycle_stage_ids: lifecycleStageIds,
       pipeline_ids: pipelineIds,
       sequence_active_tag_names: sequenceActiveTagNames,
+      source_mappings: sourceMappings.map(({ key, tagNames }) => ({
+        key,
+        tag_names: tagNames,
+      })),
     },
     method: 'PATCH',
   })

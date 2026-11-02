@@ -75,6 +75,12 @@ describe('analyticsDashboardApiService', () => {
       lifecycleStageIds: settings.lifecycle_stage_ids,
       pipelineIds: settings.pipeline_ids,
       sequenceActiveTagNames: ['$199_oct2026_active'],
+      sourceMappings: [
+        {
+          key: 'meta',
+          tagNames: ['$199_fb_ads_campaign_oct2026'],
+        },
+      ],
       hiddenMetricKeys: ['appointments.showed'],
       hiddenWidgetIds: ['weekly-activity'],
       workspaceId: 'workspace-1',
@@ -92,6 +98,12 @@ describe('analyticsDashboardApiService', () => {
           lifecycle_stage_ids: settings.lifecycle_stage_ids,
           pipeline_ids: settings.pipeline_ids,
           sequence_active_tag_names: ['$199_oct2026_active'],
+          source_mappings: [
+            {
+              key: 'meta',
+              tag_names: ['$199_fb_ads_campaign_oct2026'],
+            },
+          ],
         },
         method: 'PATCH',
       },
