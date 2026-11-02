@@ -74,7 +74,7 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('Meta Ads')
     expect(html).toContain('$199 Offer · Veteran Offer 2')
     expect(html).toContain('53%')
-    expect(html).toContain('border-block')
+    expect(html).not.toContain('Lead source distribution')
     expect(html).toContain('aria-label="About Lead Volume and Sources"')
     expect(html).toContain('aria-label="About New patients"')
     expect(html).toContain('aria-label="About Returning patients"')

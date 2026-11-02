@@ -70,30 +70,6 @@ function SummaryMetric({
   )
 }
 
-function SourceDistributionBar({ rows, total }) {
-  return (
-    <div
-      aria-label="Lead source distribution"
-      className="flex h-2.5 w-full overflow-hidden rounded-full bg-fill-secondary"
-      role="img"
-    >
-      {total > 0 ? rows.map((row) => (
-        row.value > 0 ? (
-          <span
-            aria-label={`${row.label}: ${row.value}`}
-            className="border-r-2 border-block last:border-r-0"
-            key={row.key}
-            style={{
-              backgroundColor: getAnalyticsToneColor(row.tone),
-              width: `${row.percentage}%`,
-            }}
-          />
-        ) : null
-      )) : null}
-    </div>
-  )
-}
-
 function SourceRow({ row }) {
   const detail = formatSourceDetails(row.details)
 
@@ -179,8 +155,7 @@ export function AnalyticsBreakdownWidget({
         </div>
 
         <div className="mt-component">
-          <SourceDistributionBar rows={rows} total={total} />
-          <ul className="mt-item">
+          <ul>
             {rows.map((row) => <SourceRow key={row.key} row={row} />)}
           </ul>
         </div>
