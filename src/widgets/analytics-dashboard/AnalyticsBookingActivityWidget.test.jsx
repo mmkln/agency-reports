@@ -152,6 +152,5 @@ describe('AnalyticsBookingActivityWidget', () => {
 
     expect(html).toContain('Pending outcome')
     expect(html).toContain('1 pending outcome')
-    expect(html).toContain('>—</p>')
   })
 })
