@@ -63,7 +63,13 @@ function SummaryMetric({
   helper,
   label,
   value,
+  zeroAsDash = false,
 }) {
+  const numericValue = Number(value ?? 0)
+  const displayValue = zeroAsDash && numericValue === 0
+    ? '—'
+    : numericValue.toLocaleString()
+
   return (
     <div className="min-w-0 bg-block px-component py-component">
       <div className="flex min-h-control-sm items-center justify-between gap-item">
@@ -79,7 +85,7 @@ function SummaryMetric({
         {action}
       </div>
       <p className="mt-micro text-data tabular-nums text-text-primary">
-        {Number(value ?? 0).toLocaleString()}
+        {displayValue}
       </p>
       {helper ? (
         <p className="mt-micro truncate text-ui text-text-muted" title={helper}>
@@ -192,6 +198,7 @@ export function AnalyticsBookingActivityWidget({
             helper={upcomingHelper}
             label="Upcoming"
             value={summary.upcoming}
+            zeroAsDash
           />
         </div>
 
