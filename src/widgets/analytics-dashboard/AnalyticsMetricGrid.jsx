@@ -56,6 +56,29 @@ function formatSupporting(metric) {
   return formatComparison(metric)
 }
 
+function formatPointInTime(metric) {
+  if (metric.temporal?.kind !== 'point_in_time') {
+    return null
+  }
+
+  const date = new Date(metric.temporal.as_of)
+  if (Number.isNaN(date.getTime())) {
+    return 'Current state'
+  }
+
+  return `As of ${date.toLocaleString('en-US', {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })}`
+}
+
+function formatMetricHelper(metric) {
+  return formatPointInTime(metric) ?? formatSupporting(metric)
+}
+
 export function AnalyticsMetricGrid({
   explanationEditor,
   explanations,
@@ -67,7 +90,7 @@ export function AnalyticsMetricGrid({
     <MetricGrid variant="comfortable">
       {metrics.map((metric) => {
         const delta = Number(metric.comparison?.delta ?? 0)
-        const helperTone = metric.supporting
+        const helperTone = metric.temporal?.kind === 'point_in_time' || metric.supporting
           ? 'muted'
           : delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'muted'
         const label = metric.presentation?.label ?? metric.label
@@ -92,7 +115,7 @@ export function AnalyticsMetricGrid({
                 ) : null}
               </>
             )}
-            helper={formatSupporting(metric)}
+            helper={formatMetricHelper(metric)}
             helperTone={helperTone}
             id={`analytics-metric-${metric.key}`}
             iconName={metric.presentation?.icon_name}

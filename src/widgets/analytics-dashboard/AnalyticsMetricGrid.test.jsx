@@ -50,9 +50,14 @@ describe('AnalyticsMetricGrid', () => {
           },
           {
             key: 'leads.in_sequence',
-            label: 'In Sequence',
-            presentation: { icon_name: 'messageSquare', tone: 'info', value_tone: 'neutral' },
-            supporting: { kind: 'text', label: 'currently active across configured sequences' },
+            label: 'Currently in sequence',
+            presentation: {
+              icon_name: 'messageSquare',
+              label: 'Currently in sequence',
+              tone: 'info',
+              value_tone: 'neutral',
+            },
+            temporal: { as_of: '2026-11-02T13:09:00Z', kind: 'point_in_time' },
             unit: 'count',
             value: 14,
           },
@@ -75,8 +80,9 @@ describe('AnalyticsMetricGrid', () => {
     expect(html).toContain('Showed')
     expect(html).toContain('77% of booked')
     expect(html).toContain('4 of 17 leads booked')
-    expect(html).toContain('In Sequence')
-    expect(html).toContain('currently active across configured sequences')
+    expect(html).toContain('Currently in sequence')
+    expect(html).toContain('As of Nov 2')
+    expect(html).not.toContain('currently active across configured sequences')
     expect(html).toContain('sequences, call queue, STN')
     expect(html).toContain('bg-success-muted')
     expect(html).toContain('bg-premium-blue/10')
