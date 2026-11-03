@@ -1,3 +1,4 @@
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 import { PanelHeader } from '@/shared/ui'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
@@ -9,11 +10,13 @@ export function AnalyticsWidgetHeader({
   title,
   trailing,
 }) {
+  const displayTitle = resolveDashboardDisplayName(explanations?.[explanationKey], title)
+
   return (
     <PanelHeader>
       <div className="flex min-w-0 items-center justify-between gap-component">
         <div className="flex min-w-0 items-center gap-tag">
-          <h2 className="truncate text-heading text-text-primary">{title}</h2>
+          <h2 className="truncate text-heading text-text-primary">{displayTitle}</h2>
           <AnalyticsExplanationPopover
             explanationEditor={explanationEditor}
             explanationKey={explanationKey}

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
-  hiddenIdsFromVisibility,
-  lifecycleGroupsFromAssignments,
+  buildAnalyticsDashboardSettingsPatch,
   normalizeAnalyticsDashboardSettings,
 } from '@/entities/analytics-dashboard'
 import {
@@ -13,6 +12,7 @@ import {
 const EMPTY_SETTINGS = normalizeAnalyticsDashboardSettings()
 
 export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, workspaceId }) {
+  const [initialSettings, setInitialSettings] = useState(EMPTY_SETTINGS)
   const [state, setState] = useState({
     ...EMPTY_SETTINGS,
     error: '',
@@ -27,7 +27,9 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
         dashboardKey,
         workspaceId,
       })
-      setState({ ...normalizeAnalyticsDashboardSettings(settings), error: '', status: 'ready' })
+      const normalized = normalizeAnalyticsDashboardSettings(settings)
+      setInitialSettings(normalized)
+      setState({ ...normalized, error: '', status: 'ready' })
     } catch (error) {
       setState((current) => ({ ...current, error: error.message, status: 'error' }))
     }
@@ -113,32 +115,30 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     }
     setState((current) => ({ ...current, error: '', status: 'saving' }))
     try {
-      const settings = await updateAnalyticsDashboardSettingsFromApi({
+      const patch = buildAnalyticsDashboardSettingsPatch(initialSettings, state)
+      if (!Object.keys(patch).length) {
+        setState((current) => ({ ...current, status: 'ready' }))
+        return { impact: 'unchanged', settings: initialSettings }
+      }
+      const payload = await updateAnalyticsDashboardSettingsFromApi({
         apiClient: runtime.apiClient,
         dashboardKey,
-        hiddenMetricKeys: hiddenIdsFromVisibility(state.overviewMetrics),
-        hiddenWidgetIds: hiddenIdsFromVisibility(state.sections),
-        lifecycleStageIds: lifecycleGroupsFromAssignments(state.stageAssignments),
-        pipelineIds: state.pipelineIds,
-        sequenceActiveTagNames: state.sequenceActiveTagNames,
-        sourceMappings: state.sourceMappings,
+        patch,
         workspaceId,
       })
-      setState({ ...normalizeAnalyticsDashboardSettings(settings), error: '', status: 'ready' })
-      return true
+      const normalized = normalizeAnalyticsDashboardSettings(payload.settings)
+      setInitialSettings(normalized)
+      setState({ ...normalized, error: '', status: 'ready' })
+      return { impact: payload.impact ?? 'unchanged', settings: normalized }
     } catch (error) {
       setState((current) => ({ ...current, error: error.message, status: 'error' }))
       return false
     }
   }, [
     dashboardKey,
+    initialSettings,
     runtime.apiClient,
-    state.overviewMetrics,
-    state.pipelineIds,
-    state.sequenceActiveTagNames,
-    state.sections,
-    state.sourceMappings,
-    state.stageAssignments,
+    state,
     visibleItemCount,
     workspaceId,
   ])

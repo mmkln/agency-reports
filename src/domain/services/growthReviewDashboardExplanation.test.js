@@ -15,6 +15,7 @@ describe('updateGrowthReviewDashboardExplanation', () => {
             definition: 'Patients with a completed booking.',
             explanation_key: 'summary.booked_appointments',
             is_customized: true,
+            is_label_customized: true,
             kind: 'metric',
             label: 'Completed bookings',
             source: 'GHL contacts and appointment records',

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 import { Panel, PanelBody } from '@/shared/ui'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
@@ -54,12 +55,17 @@ function SummaryMetric({
   label,
   value,
 }) {
+  const displayLabel = resolveDashboardDisplayName(
+    explanations?.[explanationKey],
+    label,
+  )
+
   return (
     <span className="inline-flex items-center gap-micro">
       <strong className="font-semibold text-text-primary">
         {Number(value ?? 0).toLocaleString()}
       </strong>
-      <span>{label}</span>
+      <span>{displayLabel}</span>
       <AnalyticsExplanationPopover
         explanationEditor={explanationEditor}
         explanationKey={explanationKey}

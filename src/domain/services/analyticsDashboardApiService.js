@@ -69,29 +69,14 @@ export async function getAnalyticsDashboardSettingsFromApi({
 export async function updateAnalyticsDashboardSettingsFromApi({
   apiClient,
   dashboardKey,
-  hiddenMetricKeys,
-  hiddenWidgetIds,
-  lifecycleStageIds,
-  pipelineIds,
-  sequenceActiveTagNames,
-  sourceMappings,
+  patch,
   workspaceId,
 }) {
   const payload = await apiClient.request(dashboardSettingsPath(workspaceId, dashboardKey), {
-    body: {
-      hidden_metric_keys: hiddenMetricKeys,
-      hidden_widget_ids: hiddenWidgetIds,
-      lifecycle_stage_ids: lifecycleStageIds,
-      pipeline_ids: pipelineIds,
-      sequence_active_tag_names: sequenceActiveTagNames,
-      source_mappings: sourceMappings.map(({ key, tagNames }) => ({
-        key,
-        tag_names: tagNames,
-      })),
-    },
+    body: patch,
     method: 'PATCH',
   })
-  return payload.settings
+  return payload
 }
 
 export async function getAnalyticsDashboardProvisioningOptionsFromApi({ apiClient, workspaceId }) {

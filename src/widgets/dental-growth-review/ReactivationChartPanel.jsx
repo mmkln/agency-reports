@@ -1,5 +1,6 @@
 import { Panel, PanelBody } from '@/shared/ui'
 import { DashboardExplanationPopover } from '@/features/dashboard-explanation'
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 
 import { reactivationChartLayout } from './reactivationChartTheme'
 import { reactivationText } from './reactivationTypography'
@@ -14,13 +15,15 @@ export function ReactivationChartPanel({
   subtitle,
   title,
 }) {
+  const displayTitle = resolveDashboardDisplayName(explanation, title)
+
   return (
     <Panel>
       <PanelBody className="p-6">
         <div className={reactivationChartLayout.header}>
           <div className="min-w-0">
             <div className="flex items-center gap-tag">
-              <h3 className={reactivationText.sectionTitle}>{title}</h3>
+              <h3 className={reactivationText.sectionTitle}>{displayTitle}</h3>
               {explanationKey && explanation ? (
                 <DashboardExplanationPopover
                   {...explanationEditor}

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/shared/ui'
 import { ContactCollectionAction } from '@/features/view-contact-collection'
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
@@ -42,9 +43,14 @@ function MetricLabel({
   explanationKey,
   explanations,
 }) {
+  const displayLabel = resolveDashboardDisplayName(
+    explanations?.[explanationKey],
+    children,
+  )
+
   return (
     <span className="inline-flex items-center gap-micro">
-      {children}
+      {displayLabel}
       <AnalyticsExplanationPopover
         explanationEditor={explanationEditor}
         explanationKey={explanationKey}

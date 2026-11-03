@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { isAnalyticsRefreshFinished } from '@/entities/analytics-dashboard'
 import {
@@ -9,11 +9,6 @@ import {
 import { useAsyncResource } from '@/shared/data/useAsyncResource'
 
 const POLL_INTERVAL_MS = 2000
-const POLL_LIMIT = 450
-
-function wait(milliseconds) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
-}
 
 export function useAnalyticsDashboardReadModel({
   dashboardKey,
@@ -22,8 +17,12 @@ export function useAnalyticsDashboardReadModel({
   runtime,
   workspaceId,
 }) {
-  const [refresh, setRefresh] = useState(null)
-  const [refreshError, setRefreshError] = useState('')
+  const contextKey = [dashboardKey, workspaceId, periodType, periodEnd ?? ''].join(':')
+  const [refreshState, setRefreshState] = useState({
+    contextKey,
+    error: '',
+    refresh: null,
+  })
   const resource = useAsyncResource({
     dependencyKey: [
       runtime.viewer?.userId ?? '',
@@ -41,8 +40,12 @@ export function useAnalyticsDashboardReadModel({
     }),
   })
 
+  const reload = resource.reload
+  const localRefresh = refreshState.contextKey === contextKey ? refreshState.refresh : null
+  const refreshError = refreshState.contextKey === contextKey ? refreshState.error : ''
+
   const runRefresh = useCallback(async () => {
-    setRefreshError('')
+    setRefreshState({ contextKey, error: '', refresh: null })
     try {
       const started = await refreshAnalyticsDashboardFromApi({
         apiClient: runtime.apiClient,
@@ -51,40 +54,64 @@ export function useAnalyticsDashboardReadModel({
         periodType,
         workspaceId,
       })
-      let current = started.refresh
-      setRefresh(current)
-
-      for (let attempt = 0; attempt < POLL_LIMIT && !isAnalyticsRefreshFinished(current); attempt += 1) {
-        await wait(POLL_INTERVAL_MS)
-        const payload = await getAnalyticsDashboardRefreshFromApi({
-          apiClient: runtime.apiClient,
-          refreshId: current.id,
-          workspaceId,
-        })
-        current = payload.refresh
-        setRefresh(current)
-      }
-
-      if (!isAnalyticsRefreshFinished(current)) {
-        throw new Error('Dashboard refresh is still running. Check again shortly.')
-      }
-      if (current.status === 'failed') {
-        throw new Error(current.error_message || 'Dashboard refresh failed.')
-      }
-      await resource.reload()
-      return current
+      setRefreshState({ contextKey, error: '', refresh: started.refresh })
+      return started.refresh
     } catch (error) {
-      setRefreshError(error.message)
+      setRefreshState({ contextKey, error: error.message, refresh: null })
       return null
     }
-  }, [dashboardKey, periodEnd, periodType, resource, runtime.apiClient, workspaceId])
+  }, [contextKey, dashboardKey, periodEnd, periodType, runtime.apiClient, workspaceId])
+
+  const remoteRefresh = resource.data?.activeRefresh ?? null
+  const refreshToPoll = localRefresh && !isAnalyticsRefreshFinished(localRefresh)
+    ? localRefresh
+    : remoteRefresh && !isAnalyticsRefreshFinished(remoteRefresh)
+      ? remoteRefresh
+      : null
+
+  useEffect(() => {
+    if (!refreshToPoll) return undefined
+    let cancelled = false
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const payload = await getAnalyticsDashboardRefreshFromApi({
+          apiClient: runtime.apiClient,
+          refreshId: refreshToPoll.id,
+          workspaceId,
+        })
+        if (cancelled) return
+        const current = payload.refresh
+        setRefreshState({ contextKey, error: '', refresh: current })
+        if (current.status === 'failed') {
+          setRefreshState({
+            contextKey,
+            error: current.error_message || 'Dashboard refresh failed.',
+            refresh: current,
+          })
+        } else if (isAnalyticsRefreshFinished(current)) {
+          await reload()
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setRefreshState({ contextKey, error: error.message, refresh: { ...refreshToPoll } })
+        }
+      }
+    }, POLL_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [contextKey, refreshToPoll, reload, runtime.apiClient, workspaceId])
+
+  const effectiveRefresh = localRefresh ?? remoteRefresh
 
   return {
     ...resource,
     dashboard: resource.data,
     isUnconfigured: resource.status === 'error' && resource.errorInfo?.kind === 'not-found',
-    isRefreshing: Boolean(refresh && !isAnalyticsRefreshFinished(refresh)),
-    refresh,
+    isRefreshing: Boolean(refreshToPoll),
+    refresh: effectiveRefresh,
     refreshError,
     runRefresh,
   }

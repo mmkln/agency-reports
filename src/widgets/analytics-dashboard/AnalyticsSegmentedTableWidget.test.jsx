@@ -88,4 +88,31 @@ describe('AnalyticsSegmentedTableWidget', () => {
     expect(html).toContain('aria-label="About Total bookings"')
     expect(html).toContain('aria-label="About % of total"')
   })
+
+  it('uses explanation display names for the chart, series, and columns', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsSegmentedTableWidget
+        data={{
+          key: 'leads.lifecycle_by_channel',
+          rows: [],
+          series: [{ key: 'booked', label: 'Booked', tone: 'positive' }],
+          total: 0,
+          totals: { booked: 0 },
+        }}
+        explanations={{
+          'leads.lifecycle_by_channel': { definition: 'Lead lifecycle.', isLabelCustomized: true, label: 'Lead Status by Channel' },
+          'leads.lifecycle_by_channel.booked': { definition: 'Booked leads.', isLabelCustomized: true, label: 'Converted' },
+          'leads.lifecycle_by_channel.percentage': { definition: 'Share of leads.', isLabelCustomized: true, label: 'Share' },
+          'leads.lifecycle_by_channel.total': { definition: 'All leads.', isLabelCustomized: true, label: 'Lead count' },
+        }}
+        title="Where Every Lead Stands"
+      />,
+    )
+
+    expect(html).toContain('Lead Status by Channel')
+    expect(html).toContain('Converted')
+    expect(html).toContain('Lead count')
+    expect(html).toContain('Share')
+    expect(html).not.toContain('>Where Every Lead Stands<')
+  })
 })

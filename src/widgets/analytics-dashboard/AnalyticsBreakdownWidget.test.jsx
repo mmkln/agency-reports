@@ -79,4 +79,42 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('aria-label="About New patients"')
     expect(html).toContain('aria-label="About Returning patients"')
   })
+
+  it('uses explanation display names for the chart and summary metrics', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsBreakdownWidget
+        data={{
+          key: 'leads.volume_by_source',
+          rows: [],
+          summary: { new_patient: 8, returning_patient: 2, value: 10 },
+          total: 10,
+        }}
+        explanations={{
+          'leads.volume_by_source': {
+            definition: 'Lead volume by source.',
+            isLabelCustomized: true,
+            label: 'Leads by Acquisition Channel',
+          },
+          'leads.volume_by_source.new_patient': {
+            definition: 'Leads without a patient ID.',
+            isLabelCustomized: true,
+            label: 'First-time patients',
+          },
+          'leads.volume_by_source.returning_patient': {
+            definition: 'Leads with a patient ID.',
+            isLabelCustomized: true,
+            label: 'Existing patients',
+          },
+        }}
+        title="Lead Volume and Sources"
+      />,
+    )
+
+    expect(html).toContain('Leads by Acquisition Channel')
+    expect(html).toContain('First-time patients')
+    expect(html).toContain('Existing patients')
+    expect(html).not.toContain('>Lead Volume and Sources<')
+    expect(html).not.toContain('>new patients<')
+    expect(html).not.toContain('>returning patients<')
+  })
 })

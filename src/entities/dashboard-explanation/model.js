@@ -28,6 +28,7 @@ export function normalizeDashboardExplanation(source = {}, explanationKey = '') 
       ?? explanationKey,
     ),
     isCustomized: value.is_customized === true || value.isCustomized === true,
+    isLabelCustomized: value.is_label_customized === true || value.isLabelCustomized === true,
     kind: normalizeText(value.kind) || 'chart',
     label: normalizeText(value.label),
     source: normalizeSource(value.source),
@@ -45,4 +46,12 @@ export function normalizeDashboardExplanations(value = {}) {
       normalizeDashboardExplanation(explanation, explanationKey),
     ]),
   )
+}
+
+export function resolveDashboardDisplayName(explanation, fallback = '') {
+  if (explanation?.isLabelCustomized !== true) {
+    return fallback
+  }
+
+  return normalizeText(explanation.label) || fallback
 }

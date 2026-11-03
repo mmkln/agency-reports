@@ -134,9 +134,15 @@ function RefreshStepStatus({ step }) {
   )
 }
 
-function AnalyticsRefreshControl({ isRefreshing, onRefresh, refresh, refreshError }) {
+function AnalyticsRefreshControl({ calculationStatus, isRefreshing, onRefresh, refresh, refreshError }) {
   const steps = refresh?.steps ?? []
-  const buttonLabel = isRefreshing ? 'Updating' : refresh?.status === 'failed' ? 'Retry' : 'Refresh'
+  const buttonLabel = isRefreshing
+    ? 'Updating'
+    : calculationStatus === 'stale'
+      ? 'Recalculate'
+      : refresh?.status === 'failed'
+        ? 'Retry'
+        : 'Refresh'
 
   return (
     <Popover>
@@ -183,7 +189,9 @@ function AnalyticsRefreshControl({ isRefreshing, onRefresh, refresh, refreshErro
 }
 
 export function WeeklyLeadReportContextToolbar({
+  canRefresh = true,
   calculatedAt,
+  calculationStatus,
   isRefreshing,
   onPeriodEndChange,
   onPeriodTypeChange,
@@ -212,12 +220,15 @@ export function WeeklyLeadReportContextToolbar({
       <div className="flex shrink-0 flex-wrap items-center gap-control">
         <p className="text-label font-medium text-text-muted">{formatUpdatedAt(calculatedAt)}</p>
         {settingsAction}
-        <AnalyticsRefreshControl
-          isRefreshing={isRefreshing}
-          onRefresh={onRefresh}
-          refresh={refresh}
-          refreshError={refreshError}
-        />
+        {canRefresh ? (
+          <AnalyticsRefreshControl
+            calculationStatus={calculationStatus}
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh}
+            refresh={refresh}
+            refreshError={refreshError}
+          />
+        ) : null}
       </div>
     </ContentToolbar>
   )

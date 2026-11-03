@@ -61,7 +61,13 @@ describe('analyticsDashboardApiService', () => {
     }
     const apiClient = {
       get: vi.fn().mockResolvedValue({ settings }),
-      request: vi.fn().mockResolvedValue({ settings }),
+      request: vi.fn().mockResolvedValue({ impact: 'display_only', settings }),
+    }
+    const patch = {
+      display: {
+        hidden_metric_keys: ['appointments.showed'],
+        hidden_widget_ids: ['weekly-activity'],
+      },
     }
 
     const loaded = await getAnalyticsDashboardSettingsFromApi({
@@ -72,17 +78,7 @@ describe('analyticsDashboardApiService', () => {
     const updated = await updateAnalyticsDashboardSettingsFromApi({
       apiClient,
       dashboardKey: 'weekly-lead-report',
-      lifecycleStageIds: settings.lifecycle_stage_ids,
-      pipelineIds: settings.pipeline_ids,
-      sequenceActiveTagNames: ['$199_oct2026_active'],
-      sourceMappings: [
-        {
-          key: 'meta',
-          tagNames: ['$199_fb_ads_campaign_oct2026'],
-        },
-      ],
-      hiddenMetricKeys: ['appointments.showed'],
-      hiddenWidgetIds: ['weekly-activity'],
+      patch,
       workspaceId: 'workspace-1',
     })
 
@@ -92,24 +88,12 @@ describe('analyticsDashboardApiService', () => {
     expect(apiClient.request).toHaveBeenCalledWith(
       '/api/workspaces/workspace-1/analytics/dashboards/weekly-lead-report/settings/',
       {
-        body: {
-          hidden_metric_keys: ['appointments.showed'],
-          hidden_widget_ids: ['weekly-activity'],
-          lifecycle_stage_ids: settings.lifecycle_stage_ids,
-          pipeline_ids: settings.pipeline_ids,
-          sequence_active_tag_names: ['$199_oct2026_active'],
-          source_mappings: [
-            {
-              key: 'meta',
-              tag_names: ['$199_fb_ads_campaign_oct2026'],
-            },
-          ],
-        },
+        body: patch,
         method: 'PATCH',
       },
     )
     expect(loaded).toEqual(settings)
-    expect(updated).toEqual(settings)
+    expect(updated).toEqual({ impact: 'display_only', settings })
   })
 
   it('loads provisioning options and creates a dashboard through collection APIs', async () => {

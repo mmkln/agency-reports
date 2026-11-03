@@ -70,6 +70,10 @@ export function normalizeAnalyticsDashboard(payload) {
   }
 
   return {
+    activeRefresh: payload.active_refresh ?? null,
+    calculationStatus: payload.calculation_status ?? (
+      payload.status === 'not_calculated' ? 'not_calculated' : 'current'
+    ),
     calculatedAt: payload.calculated_at ?? null,
     dashboard: {
       configVersion: payload.dashboard.config_version ?? 1,
@@ -87,6 +91,7 @@ export function normalizeAnalyticsDashboard(payload) {
     permissions: {
       canEditExplanations: payload.permissions?.can_edit_explanations === true,
       canManageSettings: payload.permissions?.can_manage_settings === true,
+      canRefresh: payload.permissions?.can_refresh === true,
     },
     snapshotId: payload.snapshot_id ?? null,
     status: payload.status ?? 'not_calculated',

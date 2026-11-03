@@ -138,4 +138,28 @@ describe('AnalyticsMetricGrid', () => {
 
     expect(html).toContain('aria-label="About Total leads"')
   })
+
+  it('uses the explanation display name for a hero metric', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsMetricGrid
+        explanations={{
+          'leads.created': {
+            definition: 'Leads created in the reporting period.',
+            isLabelCustomized: true,
+            label: 'Qualified leads',
+          },
+        }}
+        metrics={[{
+          key: 'leads.created',
+          label: 'Total leads',
+          unit: 'count',
+          value: 17,
+        }]}
+      />,
+    )
+
+    expect(html).toContain('Qualified leads')
+    expect(html).toContain('aria-label="About Qualified leads"')
+    expect(html).not.toContain('Total leads')
+  })
 })

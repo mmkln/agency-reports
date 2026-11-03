@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui'
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 
 import { AnalyticsSegmentedBar } from './AnalyticsSegmentedBar'
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
@@ -25,9 +26,14 @@ function ColumnHeading({
   explanationKey,
   explanations,
 }) {
+  const displayLabel = resolveDashboardDisplayName(
+    explanations?.[explanationKey],
+    children,
+  )
+
   return (
     <span className="inline-flex items-center justify-end gap-micro">
-      {children}
+      {displayLabel}
       <AnalyticsExplanationPopover
         explanationEditor={explanationEditor}
         explanationKey={explanationKey}

@@ -61,7 +61,7 @@ export function AnalyticsDashboardSettingsDialog({
     const saved = await settings.save()
     if (!saved) return
     setOpen(false)
-    await onSaved?.()
+    await onSaved?.(saved)
   }
 
   return (

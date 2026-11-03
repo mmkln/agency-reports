@@ -92,7 +92,9 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
   return (
     <PageShell className="pb-section pt-card" width="wide">
       <WeeklyLeadReportContextToolbar
+        canRefresh={dashboard.permissions?.canRefresh === true}
         calculatedAt={dashboard.calculatedAt}
+        calculationStatus={dashboard.calculationStatus}
         isRefreshing={readModel.isRefreshing}
         onPeriodEndChange={setPeriodEnd}
         onPeriodTypeChange={setPeriodType}
@@ -106,7 +108,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
           <AnalyticsDashboardSettingsDialog
             dashboardKey={DASHBOARD_KEY}
             onOpenChange={setSettingsOpen}
-            onSaved={readModel.runRefresh}
+            onSaved={readModel.reload}
             open={settingsOpen}
             runtime={runtime}
             workspaceId={workspaceId}
@@ -117,11 +119,11 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
 
       {dashboard.status === 'not_calculated' ? (
         <EmptyState
-          action={(
+          action={dashboard.permissions?.canRefresh ? (
             <Button disabled={readModel.isRefreshing} onClick={readModel.runRefresh} type="button">
               Calculate report
             </Button>
-          )}
+          ) : null}
           description="Sync source data and calculate this reporting period."
           iconName="barChart"
           title="This report has not been calculated yet"

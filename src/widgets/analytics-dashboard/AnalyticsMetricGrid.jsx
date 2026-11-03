@@ -1,5 +1,6 @@
 import { MetricGrid, MetricTile } from '@/shared/ui'
 import { ContactCollectionAction } from '@/features/view-contact-collection'
+import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 
@@ -93,7 +94,11 @@ export function AnalyticsMetricGrid({
         const helperTone = metric.temporal?.kind === 'point_in_time' || metric.supporting
           ? 'muted'
           : delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'muted'
-        const label = metric.presentation?.label ?? metric.label
+        const explanationKey = metric.explanation_key ?? metric.key
+        const label = resolveDashboardDisplayName(
+          explanations?.[explanationKey],
+          metric.presentation?.label ?? metric.label,
+        )
 
         return (
           <MetricTile
@@ -101,7 +106,7 @@ export function AnalyticsMetricGrid({
               <>
                 <AnalyticsExplanationPopover
                   explanationEditor={explanationEditor}
-                  explanationKey={metric.explanation_key ?? metric.key}
+                  explanationKey={explanationKey}
                   explanations={explanations}
                 />
                 {metric.drilldown ? (

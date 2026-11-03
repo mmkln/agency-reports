@@ -5,6 +5,8 @@ import { isAnalyticsRefreshFinished, normalizeAnalyticsDashboard } from './model
 describe('analytics dashboard contract', () => {
   it('normalizes a config-driven dashboard payload without metric-specific knowledge', () => {
     expect(normalizeAnalyticsDashboard({
+      active_refresh: { id: 'refresh-1', status: 'running' },
+      calculation_status: 'stale',
       calculated_at: '2026-10-25T10:00:00Z',
       dashboard: { config_version: 1, key: 'weekly-lead-report', title: 'Weekly Lead Report' },
       period: { end: '2026-10-25', start: '2026-10-19', timezone: 'UTC', type: 'week' },
@@ -17,7 +19,7 @@ describe('analytics dashboard contract', () => {
           label: 'Total leads',
         },
       },
-      permissions: { can_edit_explanations: true, can_manage_settings: true },
+      permissions: { can_edit_explanations: true, can_manage_settings: true, can_refresh: true },
       widgets: [{
         data: [{
           drilldown: {
@@ -35,11 +37,13 @@ describe('analytics dashboard contract', () => {
         type: 'metric_grid',
       }],
     })).toMatchObject({
+      activeRefresh: { id: 'refresh-1', status: 'running' },
+      calculationStatus: 'stale',
       dashboard: { key: 'weekly-lead-report' },
       explanations: {
         'leads.created': { explanationKey: 'leads.created', label: 'Total leads' },
       },
-      permissions: { canEditExplanations: true, canManageSettings: true },
+      permissions: { canEditExplanations: true, canManageSettings: true, canRefresh: true },
       snapshotId: 'snapshot-1',
       status: 'completed',
       widgets: [{

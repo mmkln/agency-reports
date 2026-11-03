@@ -153,4 +153,38 @@ describe('AnalyticsBookingActivityWidget', () => {
     expect(html).toContain('Pending outcome')
     expect(html).toContain('1 pending outcome')
   })
+
+  it('uses explanation display names for the widget and booking metrics', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsBookingActivityWidget
+        data={{
+          key: 'bookings.by_channel',
+          rows: [],
+          series: [
+            { key: 'showed', label: 'Showed', tone: 'positive' },
+            { key: 'cancelled', label: 'Cancelled', tone: 'neutral' },
+            { key: 'upcoming', label: 'Upcoming', tone: 'info' },
+          ],
+          summary: { booked: 4, cancelled: 1, showed: 2, upcoming: 1 },
+          total: 4,
+          totals: { cancelled: 1, showed: 2, upcoming: 1 },
+        }}
+        explanations={{
+          'bookings.by_channel': { definition: 'Bookings by channel.', isLabelCustomized: true, label: 'Appointments by Channel' },
+          'bookings.by_channel.booked': { definition: 'Booked appointments.', isLabelCustomized: true, label: 'All appointments' },
+          'bookings.by_channel.showed': { definition: 'Attended appointments.', isLabelCustomized: true, label: 'Attended' },
+          'bookings.by_channel.cancelled': { definition: 'Cancelled appointments.', isLabelCustomized: true, label: 'Did not proceed' },
+          'bookings.by_channel.upcoming': { definition: 'Future appointments.', isLabelCustomized: true, label: 'Scheduled ahead' },
+        }}
+        title="Bookings by Channel"
+      />,
+    )
+
+    expect(html).toContain('Appointments by Channel')
+    expect(html).toContain('All appointments')
+    expect(html).toContain('Attended')
+    expect(html).toContain('Did not proceed')
+    expect(html).toContain('Scheduled ahead')
+    expect(html).not.toContain('>Bookings by Channel<')
+  })
 })

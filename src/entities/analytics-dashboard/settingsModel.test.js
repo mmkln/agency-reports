@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildAnalyticsDashboardSettingsPatch,
   hiddenIdsFromVisibility,
   lifecycleGroupsFromAssignments,
   normalizeAnalyticsDashboardSettings,
@@ -79,5 +80,47 @@ describe('analytics dashboard settings model', () => {
     })
 
     expect(settings.tagOptions).toEqual([{ label: 'legacy', value: 'legacy' }])
+  })
+
+  it('builds a display-only patch without resubmitting calculation settings', () => {
+    const initial = normalizeAnalyticsDashboardSettings({
+      lifecycle_stage_ids: { booked: ['stage-1'] },
+      overview_metrics: [{ is_visible: true, key: 'leads.created', label: 'Total leads' }],
+      pipeline_ids: ['pipeline-1'],
+      sections: [{ id: 'activity', is_visible: true, label: 'Weekly Activity' }],
+    })
+    const current = {
+      ...initial,
+      sections: initial.sections.map((section) => ({ ...section, isVisible: false })),
+    }
+
+    expect(buildAnalyticsDashboardSettingsPatch(initial, current)).toEqual({
+      display: {
+        hidden_metric_keys: [],
+        hidden_widget_ids: ['activity'],
+      },
+    })
+  })
+
+  it('builds a calculation patch independently from display settings', () => {
+    const initial = normalizeAnalyticsDashboardSettings({
+      lifecycle_stage_ids: { booked: ['stage-1'] },
+      pipeline_ids: ['pipeline-1'],
+      source_mappings: [{ key: 'meta', tag_names: ['meta-old'] }],
+    })
+    const current = {
+      ...initial,
+      sourceMappings: initial.sourceMappings.map((mapping) => ({
+        ...mapping,
+        tagNames: ['meta-new'],
+      })),
+    }
+
+    const patch = buildAnalyticsDashboardSettingsPatch(initial, current)
+
+    expect(patch.display).toBeUndefined()
+    expect(patch.calculation.source_mappings).toEqual([
+      { key: 'meta', tag_names: ['meta-new'] },
+    ])
   })
 })

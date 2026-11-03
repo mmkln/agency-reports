@@ -75,3 +75,47 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
 export function hiddenIdsFromVisibility(items = []) {
   return items.filter((item) => !item.isVisible).map((item) => item.id)
 }
+
+function normalizedStringList(values = []) {
+  return [...values].map(String).sort((left, right) => left.localeCompare(right))
+}
+
+function displayPatchFromSettings(settings) {
+  return {
+    hidden_metric_keys: normalizedStringList(hiddenIdsFromVisibility(settings.overviewMetrics)),
+    hidden_widget_ids: normalizedStringList(hiddenIdsFromVisibility(settings.sections)),
+  }
+}
+
+function calculationPatchFromSettings(settings) {
+  const lifecycleStageIds = lifecycleGroupsFromAssignments(settings.stageAssignments)
+  return {
+    lifecycle_stage_ids: Object.fromEntries(
+      Object.entries(lifecycleStageIds).map(([key, values]) => [key, normalizedStringList(values)]),
+    ),
+    pipeline_ids: normalizedStringList(settings.pipelineIds),
+    sequence_active_tag_names: normalizedStringList(settings.sequenceActiveTagNames),
+    source_mappings: settings.sourceMappings
+      .map(({ key, tagNames }) => ({
+        key,
+        tag_names: normalizedStringList(tagNames),
+      }))
+      .sort((left, right) => left.key.localeCompare(right.key)),
+  }
+}
+
+export function buildAnalyticsDashboardSettingsPatch(initialSettings, currentSettings) {
+  const initialDisplay = displayPatchFromSettings(initialSettings)
+  const currentDisplay = displayPatchFromSettings(currentSettings)
+  const initialCalculation = calculationPatchFromSettings(initialSettings)
+  const currentCalculation = calculationPatchFromSettings(currentSettings)
+  const patch = {}
+
+  if (JSON.stringify(initialDisplay) !== JSON.stringify(currentDisplay)) {
+    patch.display = currentDisplay
+  }
+  if (JSON.stringify(initialCalculation) !== JSON.stringify(currentCalculation)) {
+    patch.calculation = currentCalculation
+  }
+  return patch
+}
