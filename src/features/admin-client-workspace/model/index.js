@@ -19,4 +19,6 @@ export {
   getClientWorkspaceSectionHref,
   getClientWorkspaceSidebarItems,
   getVisibleClientWorkspaceSections,
+  getWorkspaceActiveNavigationId,
+  getWorkspaceNavigationPages,
 } from './clientWorkspaceNavigation'

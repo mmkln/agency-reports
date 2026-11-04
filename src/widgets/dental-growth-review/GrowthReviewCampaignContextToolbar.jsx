@@ -1,5 +1,5 @@
 import { GrowthReviewRefreshControl } from '@/features/growth-review-data'
-import { ContentToolbar } from '@/shared/ui'
+import { ContentToolbar, DashboardToolbarActions } from '@/shared/ui'
 
 import { reactivationText } from './reactivationTypography'
 
@@ -76,7 +76,7 @@ export function GrowthReviewCampaignContextToolbar({
   funnelChart,
   period,
   refresh,
-  secondaryAction,
+  settingsAction,
   updatedAt,
 }) {
   const periodRange = formatPeriodRange(period)
@@ -108,11 +108,11 @@ export function GrowthReviewCampaignContextToolbar({
         ) : null}
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-control">
-        <p className={reactivationText.updatedMeta}>{formatUpdatedAt(updatedAt)}</p>
-        <GrowthReviewRefreshControl refresh={refresh} />
-        {secondaryAction}
-      </div>
+      <DashboardToolbarActions
+        refreshAction={<GrowthReviewRefreshControl refresh={refresh} />}
+        settingsAction={settingsAction}
+        updatedLabel={formatUpdatedAt(updatedAt)}
+      />
     </ContentToolbar>
   )
 }

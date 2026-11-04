@@ -11,11 +11,14 @@ import {
   getClientWorkspacePageHref,
   getClientWorkspacePageLabel,
   getVisibleClientWorkspaceSections,
+  getWorkspaceActiveNavigationId,
+  getWorkspaceNavigationPages,
 } from '../model'
 
 function WorkspaceTabs({ client, currentPage, sections }) {
   const clientId = client?.id
-  const pages = sections.flatMap((section) => section.pages)
+  const pages = getWorkspaceNavigationPages(sections)
+  const activeNavigationId = getWorkspaceActiveNavigationId(sections, currentPage)
   const settingsPages = pages.filter((page) => page.group !== 'review')
   const reviewPages = pages.filter((page) => page.group === 'review')
 
@@ -24,7 +27,7 @@ function WorkspaceTabs({ client, currentPage, sections }) {
   }
 
   function renderTab(page) {
-    const isActive = page.id === currentPage
+    const isActive = page.id === activeNavigationId
     const label = getClientWorkspacePageLabel(page, client)
 
     return (

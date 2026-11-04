@@ -37,14 +37,18 @@ export const clientWorkspaceSections = [
         id: 'tag-catalog',
         iconName: 'tag',
         label: 'Tag Catalog',
+        navigationParentId: 'data',
         route: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+        showInWorkspaceNavigation: false,
         to: getWorkspaceTagCatalogPath,
       },
       {
         id: 'review-setup',
         iconName: 'settings',
         label: 'Review Setup',
+        navigationParentId: 'review',
         route: ROUTE_PATHS.agencyWorkspaceReviewSetup,
+        showInWorkspaceNavigation: false,
         to: getWorkspaceReviewSetupPath,
       },
       {
@@ -91,6 +95,20 @@ export function getVisibleClientWorkspaceSections() {
     .filter((section) => section.pages.length > 0)
 }
 
+export function getWorkspaceNavigationPages(sections) {
+  return sections
+    .flatMap((section) => section.pages)
+    .filter((page) => page.showInWorkspaceNavigation !== false)
+}
+
+export function getWorkspaceActiveNavigationId(sections, currentPage) {
+  const currentPageConfig = sections
+    .flatMap((section) => section.pages)
+    .find((page) => page.id === currentPage)
+
+  return currentPageConfig?.navigationParentId ?? currentPage
+}
+
 export function getClientWorkspacePageLabel(page) {
   return page.label
 }
@@ -128,16 +146,20 @@ export function getClientWorkspacePageIdByRoutePath(path) {
 export function getClientWorkspaceSidebarItems(client, clientId) {
   const sections = getVisibleClientWorkspaceSections(client)
 
-  return sections.map((section) => ({
-    children: section.pages.map((page) => ({
-      iconName: page.iconName ?? section.iconName,
-      id: page.id,
-      label: getClientWorkspacePageLabel(page, client),
-      path: getClientWorkspacePageHref(page, clientId),
-      type: 'route',
-    })),
-    id: section.id,
-    label: section.label,
-    type: 'section',
-  }))
+  return sections
+    .map((section) => ({
+      children: section.pages
+        .filter((page) => page.showInWorkspaceNavigation !== false)
+        .map((page) => ({
+          iconName: page.iconName ?? section.iconName,
+          id: page.id,
+          label: getClientWorkspacePageLabel(page, client),
+          path: getClientWorkspacePageHref(page, clientId),
+          type: 'route',
+        })),
+      id: section.id,
+      label: section.label,
+      type: 'section',
+    }))
+    .filter((section) => section.children.length > 0)
 }

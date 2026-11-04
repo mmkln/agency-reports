@@ -11,6 +11,7 @@ import {
 } from '@/widgets/analytics-dashboard'
 import {
   Button,
+  DashboardSettingsMenu,
   EmptyState,
   PageShell,
   ResourceState,
@@ -37,6 +38,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
   const [periodType, setPeriodType] = useState('week')
   const [periodEnd, setPeriodEnd] = useState(getDefaultPeriodEnd)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsSection, setSettingsSection] = useState('data')
   const readModel = useAnalyticsDashboardReadModel({
     dashboardKey: DASHBOARD_KEY,
     periodEnd,
@@ -53,6 +55,12 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
     onSaved: readModel.reload,
     workspaceId,
   })
+
+  function openSettings(section) {
+    setSettingsSection(section)
+    setSettingsOpen(true)
+  }
+
   if (readModel.status === 'loading') {
     return (
       <PageShell className="pb-section pt-card" width="wide">
@@ -70,6 +78,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
           dashboardKey={DASHBOARD_KEY}
           onCreated={async () => {
             await readModel.reload()
+            setSettingsSection('data')
             setSettingsOpen(true)
           }}
           runtime={runtime}
@@ -105,13 +114,23 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
         refresh={readModel.refresh}
         refreshError={readModel.refreshError}
         settingsAction={dashboard.permissions?.canManageSettings ? (
-          <AnalyticsDashboardSettingsDialog
-            dashboardKey={DASHBOARD_KEY}
-            onOpenChange={setSettingsOpen}
-            onSaved={readModel.reload}
-            open={settingsOpen}
-            runtime={runtime}
-            workspaceId={workspaceId}
+          <DashboardSettingsMenu
+            items={[
+              {
+                description: 'Visible metrics and report sections',
+                iconName: 'layoutDashboard',
+                id: 'customize-dashboard',
+                label: 'Customize dashboard',
+                onSelect: () => openSettings('display'),
+              },
+              {
+                description: 'Lead cohort, source tags and lifecycle mapping',
+                iconName: 'database',
+                id: 'configure-report',
+                label: 'Configure data and lifecycle',
+                onSelect: () => openSettings('data'),
+              },
+            ]}
           />
         ) : null}
         title={dashboard.dashboard.title}
@@ -140,6 +159,18 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
           widgets={dashboard.widgets}
         />
       )}
+
+      {dashboard.permissions?.canManageSettings ? (
+        <AnalyticsDashboardSettingsDialog
+          dashboardKey={DASHBOARD_KEY}
+          initialSection={settingsSection}
+          onOpenChange={setSettingsOpen}
+          onSaved={readModel.reload}
+          open={settingsOpen}
+          runtime={runtime}
+          workspaceId={workspaceId}
+        />
+      ) : null}
     </PageShell>
   )
 }

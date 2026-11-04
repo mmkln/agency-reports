@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { Icon } from '@/shared/icons'
 import {
   Button,
   ErrorBlock,
@@ -10,7 +9,6 @@ import {
   FullscreenDialogContent,
   FullscreenDialogFooter,
   FullscreenDialogHeader,
-  FullscreenDialogTrigger,
   Skeleton,
 } from '@/shared/ui'
 
@@ -22,24 +20,40 @@ import { LifecycleStageMappingSection } from './LifecycleStageMappingSection'
 import { SequenceTagsSection } from './SequenceTagsSection'
 import { useAnalyticsDashboardSettings } from './useAnalyticsDashboardSettings'
 
+const settingsSectionIds = new Set(['data', 'display', 'lifecycle'])
+
+function normalizeSettingsSection(section) {
+  return settingsSectionIds.has(section) ? section : 'data'
+}
+
 export function AnalyticsDashboardSettingsDialog({
   dashboardKey,
+  initialSection = 'data',
   onOpenChange,
   onSaved,
-  open,
+  open = false,
   runtime,
   workspaceId,
 }) {
-  const [localOpen, setLocalOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('data')
-  const isOpen = open ?? localOpen
-  const setOpen = onOpenChange ?? setLocalOpen
+  const [activeSection, setActiveSection] = useState(() => normalizeSettingsSection(initialSection))
+  const isOpen = Boolean(open)
   const settings = useAnalyticsDashboardSettings({
     dashboardKey,
     open: isOpen,
     runtime,
     workspaceId,
   })
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSection(normalizeSettingsSection(initialSection))
+    }
+  }, [initialSection, isOpen])
+
+  function setOpen(nextOpen) {
+    onOpenChange?.(nextOpen)
+  }
+
   const isBusy = settings.status === 'loading' || settings.status === 'saving'
   const isInSequenceVisible = settings.overviewMetrics.some(
     (metric) => metric.id === 'leads.in_sequence' && metric.isVisible,
@@ -66,12 +80,6 @@ export function AnalyticsDashboardSettingsDialog({
 
   return (
     <FullscreenDialog onOpenChange={setOpen} open={isOpen}>
-      <FullscreenDialogTrigger asChild>
-        <Button size="sm" type="button" variant="secondary">
-          <Icon name="settings" size={14} />
-          Report settings
-        </Button>
-      </FullscreenDialogTrigger>
       <FullscreenDialogContent>
         <FullscreenDialogHeader
           description="Configure the cohort, lifecycle interpretation, and visible report content."

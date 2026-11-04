@@ -2,6 +2,7 @@ import { Icon } from '@/shared/icons'
 import {
   Button,
   ContentToolbar,
+  DashboardToolbarActions,
   Input,
   NativeSelect,
   Popover,
@@ -217,10 +218,8 @@ export function WeeklyLeadReportContextToolbar({
         />
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-control">
-        <p className="text-label font-medium text-text-muted">{formatUpdatedAt(calculatedAt)}</p>
-        {settingsAction}
-        {canRefresh ? (
+      <DashboardToolbarActions
+        refreshAction={canRefresh ? (
           <AnalyticsRefreshControl
             calculationStatus={calculationStatus}
             isRefreshing={isRefreshing}
@@ -229,7 +228,9 @@ export function WeeklyLeadReportContextToolbar({
             refreshError={refreshError}
           />
         ) : null}
-      </div>
+        settingsAction={settingsAction}
+        updatedLabel={formatUpdatedAt(calculatedAt)}
+      />
     </ContentToolbar>
   )
 }

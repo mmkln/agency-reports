@@ -13,7 +13,12 @@ import {
   DentalGrowthReviewSkeleton,
 } from '../../../widgets/dental-growth-review'
 
-export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, runtime }) {
+export function DentalGrowthReviewPage({
+  configurationHref,
+  funnelEmptyAction,
+  routeParams = {},
+  runtime,
+}) {
   const growthReview = useGrowthReviewReadModel({
     routeParams,
     runtime,
@@ -69,6 +74,7 @@ export function DentalGrowthReviewPage({ funnelEmptyAction, routeParams = {}, ru
             status={campaignSelection.status}
           />
         )}
+        configurationHref={configurationHref}
         funnelEmptyAction={funnelEmptyAction}
         onCustomizationSaved={reloadReviewCustomization}
         onDashboardExplanationSaved={growthReview.reload}

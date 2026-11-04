@@ -6,6 +6,7 @@ export {
   FieldError,
   InlineEmptyState,
   WorkspaceCard,
+  WorkspaceDataNavigation,
   WorkspaceState,
 } from './components'
 export {
@@ -20,6 +21,8 @@ export {
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
   getWorkspaceTagCatalogPath,
+  getWorkspaceActiveNavigationId,
+  getWorkspaceNavigationPages,
   resolveRouteWorkspaceId,
 } from './model'
 export { useAdminRouteClient } from './useAdminRouteClient'

@@ -61,7 +61,7 @@ describe('DentalGrowthReviewDashboard', () => {
       />,
     )
 
-    expect(html).toContain('Customize')
+    expect(html).toContain('Settings')
     expect(html).not.toContain('growth-review-reactivation_activity')
     expect(html).not.toContain('>Activity<')
   })

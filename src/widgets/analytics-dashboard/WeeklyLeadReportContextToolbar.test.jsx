@@ -17,12 +17,14 @@ describe('WeeklyLeadReportContextToolbar', () => {
         periodType="week"
         refresh={null}
         refreshError=""
+        settingsAction={<button type="button">Settings</button>}
         title="Weekly Lead Report"
       />,
     )
 
     expect(html.indexOf('Weekly Lead Report')).toBeLessThan(html.indexOf('Oct 19 – Oct 25'))
     expect(html).toContain('Data updated')
+    expect(html.indexOf('Settings')).toBeLessThan(html.indexOf('Refresh'))
     expect(html).toContain('Refresh')
     expect(html).not.toContain('border-separator')
   })

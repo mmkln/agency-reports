@@ -7,7 +7,11 @@ import {
 } from '@/features/growth-review-layout'
 import { useGrowthReviewDashboardExplanationActions } from '@/features/growth-review-dashboard-explanation'
 import { Icon } from '@/shared/icons'
-import { Button, SectionRailNav } from '@/shared/ui'
+import {
+  Button,
+  DashboardSettingsMenu,
+  SectionRailNav,
+} from '@/shared/ui'
 import { GrowthReviewCampaignContextToolbar } from './GrowthReviewCampaignContextToolbar'
 import { ReactivationCampaignSummary } from './ReactivationCampaignSummary'
 import { renderGrowthReviewDashboardWidget } from './dashboardWidgetRegistry'
@@ -62,6 +66,7 @@ export function DentalGrowthReviewDashboard({
   apiClient,
   campaignId,
   campaignSelector,
+  configurationHref,
   funnelEmptyAction,
   onCustomizationSaved,
   onDashboardExplanationSaved,
@@ -102,15 +107,26 @@ export function DentalGrowthReviewDashboard({
       secondaryAction={funnelEmptyAction}
     />
   )
-  const layoutAction = canCustomizeLayout ? (
-    <Button
-      onClick={layoutEditor.open}
-      type="button"
-      variant="secondary"
-    >
-      Customize
-    </Button>
-  ) : null
+  const settingsAction = (
+    <DashboardSettingsMenu
+      items={[
+        canCustomizeLayout ? {
+          description: 'Name, visible sections and order',
+          iconName: 'layoutDashboard',
+          id: 'customize-dashboard',
+          label: 'Customize dashboard',
+          onSelect: layoutEditor.open,
+        } : null,
+        configurationHref ? {
+          description: 'Campaign source, mappings, tracks and signals',
+          iconName: 'settings',
+          id: 'configure-campaign',
+          label: 'Configure campaign review',
+          to: configurationHref,
+        } : null,
+      ]}
+    />
+  )
   const campaignContextToolbar = (
     <GrowthReviewCampaignContextToolbar
       campaign={page.campaign}
@@ -118,7 +134,7 @@ export function DentalGrowthReviewDashboard({
       funnelChart={funnelChart}
       period={page.charts?.period ?? page.period}
       refresh={refresh}
-      secondaryAction={layoutAction}
+      settingsAction={settingsAction}
       updatedAt={page.charts?.last_synced_at || page.charts?.calculated_at}
     />
   )

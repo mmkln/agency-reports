@@ -1,4 +1,7 @@
-import { AdminClientWorkspaceFrame } from '@/features/admin-client-workspace'
+import {
+  AdminClientWorkspaceFrame,
+  WorkspaceDataNavigation,
+} from '@/features/admin-client-workspace'
 import { WorkspaceTagCatalog } from '@/features/workspace-tag-catalog'
 
 export function AgencyWorkspaceTagCatalogPage({ routeParams = {}, runtime }) {
@@ -10,10 +13,13 @@ export function AgencyWorkspaceTagCatalogPage({ routeParams = {}, runtime }) {
       width="content"
     >
       {({ workspaceId }) => (
-        <WorkspaceTagCatalog
-          apiClient={runtime.apiClient}
-          workspaceId={workspaceId}
-        />
+        <div className="grid gap-card">
+          <WorkspaceDataNavigation currentPage="tag-catalog" workspaceId={workspaceId} />
+          <WorkspaceTagCatalog
+            apiClient={runtime.apiClient}
+            workspaceId={workspaceId}
+          />
+        </div>
       )}
     </AdminClientWorkspaceFrame>
   )
