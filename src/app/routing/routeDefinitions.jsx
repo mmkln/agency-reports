@@ -14,7 +14,9 @@ import { LoginPage } from '../../pages/auth/login/LoginPage'
 import { PluginConnectPage } from '../../pages/auth/plugin-connect/PluginConnectPage'
 import { ResetPasswordPage } from '../../pages/auth/reset-password/ResetPasswordPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
+import { CampaignLevelLandingPage } from '../../pages/public/campaign-level/CampaignLevelLandingPage'
 import { AuthLayout } from '../layout/AuthLayout'
+import { siteDefinition } from '../config/siteDefinition'
 import { AuthenticatedRedirectRoute } from './AuthenticatedRedirectRoute'
 import { NAVIGATION_SCOPES, ROUTE_ACCESS_SCOPES } from './roleAccess'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -70,7 +72,9 @@ export const routeDefinitions = [
     redirectAuthenticated: routeAccessMetadataById.landing.redirectAuthenticated,
     access: routeAccessMetadataById.landing.access,
     showInNav: false,
-    element: <Navigate replace to="/login" />,
+    element: siteDefinition.landingEnabled
+      ? <CampaignLevelLandingPage />
+      : <Navigate replace to="/login" />,
   },
   {
     path: '/accept-invite',

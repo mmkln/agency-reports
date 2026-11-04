@@ -1,0 +1,9 @@
+{
+  "name": "Campaign Level",
+  "short_name": "Campaign Level",
+  "start_url": "./#/",
+  "display": "standalone",
+  "background_color": "#F5F5F7",
+  "theme_color": "#FFFFFF",
+  "icons": []
+}

@@ -7,6 +7,7 @@
     "start": "vite --mode remote",
     "start:local": "vite",
     "build": "vite build",
+    "build:campaign-level-pages": "vite build --mode campaign-level-pages",
     "build:github-pages": "vite build --mode github-pages",
     "go": "npm run build:github-pages && gh-pages -d dist",
     "lint": "eslint .",
