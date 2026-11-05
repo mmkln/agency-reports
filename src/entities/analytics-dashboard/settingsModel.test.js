@@ -30,6 +30,7 @@ describe('analytics dashboard settings model', () => {
   it('normalizes source and visibility settings', () => {
     const settings = normalizeAnalyticsDashboardSettings({
       dashboard_key: 'weekly-lead-report',
+      history_start_date: '2025-01-01',
       overview_metrics: [
         { is_visible: true, key: 'leads.created', label: 'Total leads' },
         { is_visible: false, key: 'appointments.showed', label: 'Showed' },
@@ -57,6 +58,7 @@ describe('analytics dashboard settings model', () => {
     })
 
     expect(settings.sourceConnection.externalAccountId).toBe('location-1')
+    expect(settings.historyStartDate).toBe('2025-01-01')
     expect(settings.sequenceActiveTagNames).toEqual(['$199_oct2026_active'])
     expect(settings.sourceMappings).toEqual([
       {
@@ -122,5 +124,20 @@ describe('analytics dashboard settings model', () => {
     expect(patch.calculation.source_mappings).toEqual([
       { key: 'meta', tag_names: ['meta-new'] },
     ])
+  })
+
+  it('includes reporting history in the calculation patch', () => {
+    const initial = normalizeAnalyticsDashboardSettings({
+      history_start_date: '2025-01-01',
+      lifecycle_stage_ids: {},
+      pipeline_ids: ['pipeline-1'],
+    })
+
+    const patch = buildAnalyticsDashboardSettingsPatch(initial, {
+      ...initial,
+      historyStartDate: '2024-01-01',
+    })
+
+    expect(patch.calculation.history_start_date).toBe('2024-01-01')
   })
 })

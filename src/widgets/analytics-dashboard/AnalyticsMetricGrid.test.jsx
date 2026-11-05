@@ -10,6 +10,7 @@ describe('AnalyticsMetricGrid', () => {
         metrics={[
           {
             comparison: { delta: 4, label: 'vs previous period' },
+            cumulative: { label: 'All-time', value: 142 },
             key: 'leads.created',
             label: 'New leads',
             presentation: { icon_name: 'users', tone: 'positive' },
@@ -18,6 +19,7 @@ describe('AnalyticsMetricGrid', () => {
           },
           {
             comparison: { delta: -3, label: 'vs previous period' },
+            cumulative: { label: 'All-time', value: 26 },
             key: 'appointments.booked',
             label: 'Appointments booked',
             presentation: {
@@ -75,12 +77,15 @@ describe('AnalyticsMetricGrid', () => {
     )
 
     expect(html).toContain('New leads')
+    expect(html).toContain('All-time 142')
     expect(html).toContain('Booked appointments')
+    expect(html).toContain('All-time 26')
     expect(html).toContain('29% of leads')
     expect(html).toContain('Showed')
     expect(html).toContain('77% of booked')
     expect(html).toContain('4 of 17 leads booked')
     expect(html).toContain('Currently in sequence')
+    expect(html.match(/All-time/g)).toHaveLength(2)
     expect(html).toContain('As of Nov 2')
     expect(html).not.toContain('currently active across configured sequences')
     expect(html).toContain('sequences, call queue, STN')

@@ -87,6 +87,10 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     setState((current) => ({ ...current, sequenceActiveTagNames }))
   }, [])
 
+  const setHistoryStartDate = useCallback((historyStartDate) => {
+    setState((current) => ({ ...current, historyStartDate }))
+  }, [])
+
   const setSourceMappingTagNames = useCallback((mappingKey, tagNames) => {
     setState((current) => ({
       ...current,
@@ -149,6 +153,7 @@ export function useAnalyticsDashboardSettings({ dashboardKey, open, runtime, wor
     save,
     selectedPipelines,
     setPipelineIds,
+    setHistoryStartDate,
     setSequenceActiveTagNames,
     setSourceMappingTagNames,
     setStageAssignment,

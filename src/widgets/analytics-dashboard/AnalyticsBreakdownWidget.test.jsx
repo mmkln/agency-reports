@@ -8,6 +8,15 @@ describe('AnalyticsBreakdownWidget', () => {
     const html = renderToStaticMarkup(
       <AnalyticsBreakdownWidget
         data={{
+          cumulative: {
+            label: 'All-time',
+            rows: [
+              { key: 'meta', percentage: 60, value: 30 },
+              { key: 'website', percentage: 10, value: 5 },
+            ],
+            summary: { new_patient: 40, returning_patient: 10, value: 50 },
+            total: 50,
+          },
           key: 'leads.volume_by_source',
           summary: {
             comparison: {
@@ -81,6 +90,10 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('17')
     expect(html).toContain('-1 (-5.6%)')
     expect(html).toContain('vs prior week (18)')
+    expect(html).toContain('All-time 50')
+    expect(html).toContain('All-time 40')
+    expect(html).toContain('All-time 30')
+    expect(html).toContain('All-time 60%')
     expect(html).toContain('16')
     expect(html).toContain('new patients')
     expect(html).toContain('Meta Ads')

@@ -8,6 +8,24 @@ describe('AnalyticsBookingActivityWidget', () => {
     const html = renderToStaticMarkup(
       <AnalyticsBookingActivityWidget
         data={{
+          cumulative: {
+            label: 'All-time',
+            rows: [
+              {
+                booked: 15,
+                key: 'meta',
+                values: { cancelled: 2, pending: 0, showed: 12, upcoming: 1 },
+              },
+              {
+                booked: 5,
+                key: 'google_ads',
+                values: { cancelled: 0, pending: 0, showed: 5, upcoming: 0 },
+              },
+            ],
+            summary: { booked: 20, cancelled: 2, showed: 17, upcoming: 1 },
+            total: 20,
+            totals: { cancelled: 2, pending: 0, showed: 17, upcoming: 1 },
+          },
           explanation_key: 'bookings.by_channel',
           drilldowns: {
             booked: {
@@ -110,6 +128,9 @@ describe('AnalyticsBookingActivityWidget', () => {
     expect(html).toContain('Bookings by Channel')
     expect(html).toContain('Oct 19 – Oct 25')
     expect(html).toContain('4 new · 3 from earlier leads')
+    expect(html).toContain('All-time 20')
+    expect(html).toContain('All-time 17')
+    expect(html).toContain('All-time 15')
     expect(html).not.toContain('show rate')
     expect(html).toContain('Meta Ads')
     expect(html).toContain('Google Ads')

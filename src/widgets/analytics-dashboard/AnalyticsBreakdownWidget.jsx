@@ -3,6 +3,7 @@ import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 import { Panel, PanelBody } from '@/shared/ui'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
+import { AnalyticsCumulativeValue } from './AnalyticsCumulativeValue'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
 import { getAnalyticsToneColor } from './analyticsWidgetColors'
 
@@ -22,6 +23,10 @@ function formatPeriodLabel(period) {
     return 'Year to date'
   }
   return 'Last week'
+}
+
+function cumulativeValue(cumulative, value) {
+  return cumulative ? { ...cumulative, value } : null
 }
 
 function SummaryComparison({ comparison }) {
@@ -49,6 +54,7 @@ function SummaryComparison({ comparison }) {
 }
 
 function SummaryMetric({
+  cumulative,
   explanationEditor,
   explanationKey,
   explanations,
@@ -61,17 +67,20 @@ function SummaryMetric({
   )
 
   return (
-    <span className="inline-flex items-center gap-micro">
-      <strong className="font-semibold text-text-primary">
-        {Number(value ?? 0).toLocaleString()}
-      </strong>
-      <span>{displayLabel}</span>
-      <AnalyticsExplanationPopover
-        explanationEditor={explanationEditor}
-        explanationKey={explanationKey}
-        explanations={explanations}
-        triggerSize="xs"
-      />
+    <span className="inline-grid gap-micro">
+      <span className="inline-flex items-center gap-micro">
+        <strong className="font-semibold text-text-primary">
+          {Number(value ?? 0).toLocaleString()}
+        </strong>
+        <span>{displayLabel}</span>
+        <AnalyticsExplanationPopover
+          explanationEditor={explanationEditor}
+          explanationKey={explanationKey}
+          explanations={explanations}
+          triggerSize="xs"
+        />
+      </span>
+      <AnalyticsCumulativeValue cumulative={cumulative} />
     </span>
   )
 }
@@ -81,6 +90,7 @@ function SourceRow({
   explanationKey,
   explanations,
   row,
+  cumulative,
 }) {
   const detail = formatSourceDetails(row.details)
   const displayLabel = resolveDashboardDisplayName(
@@ -119,12 +129,14 @@ function SourceRow({
           }}
         />
       </div>
-      <span className="w-10 text-right font-semibold tabular-nums text-text-primary">
-        {row.value.toLocaleString()}
-      </span>
-      <span className="w-12 text-right tabular-nums text-text-muted">
-        {formatPercent(row.percentage)}
-      </span>
+      <div className="w-16 text-right">
+        <p className="font-semibold tabular-nums text-text-primary">{row.value.toLocaleString()}</p>
+        <AnalyticsCumulativeValue cumulative={cumulative?.value} />
+      </div>
+      <div className="w-16 text-right">
+        <p className="tabular-nums text-text-muted">{formatPercent(row.percentage)}</p>
+        <AnalyticsCumulativeValue cumulative={cumulative?.percentage} unit="percent" />
+      </div>
     </li>
   )
 }
@@ -137,8 +149,17 @@ export function AnalyticsBreakdownWidget({
   title,
 }) {
   const total = Math.max(Number(data?.total) || 0, 0)
+  const cumulative = data?.cumulative
+  const cumulativeRows = new Map((cumulative?.rows ?? []).map((row) => [row.key, row]))
   const rows = (data?.rows ?? []).map((row) => ({
     ...row,
+    cumulative: (() => {
+      const cumulativeRow = cumulativeRows.get(row.key)
+      return cumulativeRow ? {
+        percentage: cumulativeValue(cumulative, cumulativeRow.percentage),
+        value: cumulativeValue(cumulative, cumulativeRow.value),
+      } : null
+    })(),
     percentage: Number(row.percentage) || 0,
     value: Math.max(Number(row.value) || 0, 0),
   }))
@@ -155,13 +176,20 @@ export function AnalyticsBreakdownWidget({
       />
       <PanelBody className="pt-item">
         <div className="flex flex-wrap items-end gap-x-component gap-y-tag">
-          <p className="text-[44px] font-semibold leading-none tabular-nums text-text-primary">
-            {Number(summary.value ?? total).toLocaleString()}
-          </p>
+          <div>
+            <p className="text-[44px] font-semibold leading-none tabular-nums text-text-primary">
+              {Number(summary.value ?? total).toLocaleString()}
+            </p>
+            <AnalyticsCumulativeValue
+              className="mt-micro"
+              cumulative={cumulativeValue(cumulative, cumulative?.summary?.value)}
+            />
+          </div>
           <SummaryComparison comparison={summary.comparison} />
         </div>
         <div className="mt-tag flex flex-wrap items-center gap-x-control gap-y-micro text-ui text-text-muted">
           <SummaryMetric
+            cumulative={cumulativeValue(cumulative, cumulative?.summary?.new_patient)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.new_patient`}
             explanations={explanations}
@@ -169,6 +197,7 @@ export function AnalyticsBreakdownWidget({
             value={summary.new_patient}
           />
           <SummaryMetric
+            cumulative={cumulativeValue(cumulative, cumulative?.summary?.returning_patient)}
             explanationEditor={explanationEditor}
             explanationKey={`${data?.key}.returning_patient`}
             explanations={explanations}
@@ -181,6 +210,7 @@ export function AnalyticsBreakdownWidget({
           <ul>
             {rows.map((row) => (
               <SourceRow
+                cumulative={row.cumulative}
                 explanationEditor={explanationEditor}
                 explanationKey={`${data?.key}.sources.${row.key}`}
                 explanations={explanations}

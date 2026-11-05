@@ -3,22 +3,10 @@ import { ContactCollectionAction } from '@/features/view-contact-collection'
 import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  currency: 'USD',
-  maximumFractionDigits: 0,
-  style: 'currency',
-})
+import { formatAnalyticsCumulativeLabel, formatAnalyticsValue } from './analyticsValueFormatting'
 
 function formatMetricValue(metric) {
-  if (metric.unit === 'percent') {
-    return `${Number(metric.value).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
-  }
-  if (metric.unit === 'currency') {
-    return currencyFormatter.format(Number(metric.value) || 0)
-  }
-
-  return Number(metric.value).toLocaleString()
+  return formatAnalyticsValue(metric.value, metric.unit)
 }
 
 function formatComparison(metric) {
@@ -26,7 +14,7 @@ function formatComparison(metric) {
   const formatted = metric.unit === 'percent'
     ? `${Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 1 })} pp`
     : metric.unit === 'currency'
-      ? currencyFormatter.format(Math.abs(delta))
+      ? formatAnalyticsValue(Math.abs(delta), 'currency')
       : Math.abs(delta).toLocaleString()
 
   if (delta === 0) {
@@ -126,6 +114,10 @@ export function AnalyticsMetricGrid({
             iconName={metric.presentation?.icon_name}
             key={metric.key}
             label={label}
+            meta={metric.cumulative ? [{
+              key: 'cumulative',
+              label: formatAnalyticsCumulativeLabel(metric.cumulative, metric.unit),
+            }] : []}
             tone={metric.presentation?.tone ?? 'neutral'}
             value={formatMetricValue(metric)}
             valueTone={metric.presentation?.value_tone}

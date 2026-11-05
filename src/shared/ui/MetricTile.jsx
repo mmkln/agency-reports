@@ -96,6 +96,7 @@ export function MetricTile({
       iconName={iconName}
       inspectorId={inspectorId}
       label={label ?? title}
+      meta={meta}
       tone={tone}
       value={value}
       valueTone={valueTone}

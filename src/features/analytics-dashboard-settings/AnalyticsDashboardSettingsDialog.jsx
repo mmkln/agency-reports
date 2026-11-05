@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import {
   Button,
@@ -17,6 +17,7 @@ import { DashboardSourceSummary } from './DashboardSourceSummary'
 import { LeadCohortSection } from './LeadCohortSection'
 import { LeadSourceMappingSection } from './LeadSourceMappingSection'
 import { LifecycleStageMappingSection } from './LifecycleStageMappingSection'
+import { ReportingHistorySection } from './ReportingHistorySection'
 import { SequenceTagsSection } from './SequenceTagsSection'
 import { useAnalyticsDashboardSettings } from './useAnalyticsDashboardSettings'
 
@@ -26,7 +27,7 @@ function normalizeSettingsSection(section) {
   return settingsSectionIds.has(section) ? section : 'data'
 }
 
-export function AnalyticsDashboardSettingsDialog({
+function AnalyticsDashboardSettingsDialogContent({
   dashboardKey,
   initialSection = 'data',
   onOpenChange,
@@ -43,12 +44,6 @@ export function AnalyticsDashboardSettingsDialog({
     runtime,
     workspaceId,
   })
-
-  useEffect(() => {
-    if (isOpen) {
-      setActiveSection(normalizeSettingsSection(initialSection))
-    }
-  }, [initialSection, isOpen])
 
   function setOpen(nextOpen) {
     onOpenChange?.(nextOpen)
@@ -109,6 +104,10 @@ export function AnalyticsDashboardSettingsDialog({
                       onChange={settings.setPipelineIds}
                       pipelineIds={settings.pipelineIds}
                       pipelineOptions={settings.pipelineOptions}
+                    />
+                    <ReportingHistorySection
+                      onChange={settings.setHistoryStartDate}
+                      value={settings.historyStartDate}
                     />
                     <LeadSourceMappingSection
                       mappings={settings.sourceMappings}
@@ -172,5 +171,15 @@ export function AnalyticsDashboardSettingsDialog({
         </FullscreenDialogFooter>
       </FullscreenDialogContent>
     </FullscreenDialog>
+  )
+}
+
+export function AnalyticsDashboardSettingsDialog(props) {
+  const section = normalizeSettingsSection(props.initialSection)
+  return (
+    <AnalyticsDashboardSettingsDialogContent
+      key={`${Boolean(props.open)}-${section}`}
+      {...props}
+    />
   )
 }

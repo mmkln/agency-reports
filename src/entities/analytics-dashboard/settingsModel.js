@@ -39,6 +39,7 @@ export function normalizeAnalyticsDashboardSettings(settings = {}) {
   return {
     dashboardKey: settings.dashboard_key ?? '',
     definitionKey: settings.definition_key ?? '',
+    historyStartDate: settings.history_start_date ?? '',
     overviewMetrics: normalizeVisibilityItems(settings.overview_metrics),
     pipelineIds: Array.isArray(settings.pipeline_ids) ? settings.pipeline_ids : [],
     pipelineOptions: Array.isArray(settings.pipeline_options) ? settings.pipeline_options : [],
@@ -90,6 +91,7 @@ function displayPatchFromSettings(settings) {
 function calculationPatchFromSettings(settings) {
   const lifecycleStageIds = lifecycleGroupsFromAssignments(settings.stageAssignments)
   return {
+    history_start_date: settings.historyStartDate ?? '',
     lifecycle_stage_ids: Object.fromEntries(
       Object.entries(lifecycleStageIds).map(([key, values]) => [key, normalizedStringList(values)]),
     ),

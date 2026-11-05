@@ -67,7 +67,21 @@ function MetricLabel({ action, children, subdued = false }) {
   )
 }
 
-function StandardMetricContent({ action, emphasis, helper, helperTitle, helperTone, label, tone, value }) {
+function MetricMeta({ meta = [] }) {
+  if (!meta.length) {
+    return null
+  }
+
+  return (
+    <div className="mt-micro grid gap-micro text-label font-medium text-text-muted">
+      {meta.map((item, index) => (
+        <p key={item.key ?? `${item.label ?? item}-${index}`}>{item.label ?? item}</p>
+      ))}
+    </div>
+  )
+}
+
+function StandardMetricContent({ action, emphasis, helper, helperTitle, helperTone, label, meta, tone, value }) {
   const isStrong = emphasis === 'strong'
 
   return (
@@ -82,6 +96,7 @@ function StandardMetricContent({ action, emphasis, helper, helperTitle, helperTo
       )}>
         {value}
       </p>
+      <MetricMeta meta={meta} />
       {helper ? (
         <p
           className={cn('mt-tag truncate text-label font-medium', helperToneClass[helperTone] ?? helperToneClass.neutral)}
@@ -156,6 +171,7 @@ export function MetricTileDashboard({
   iconName,
   inspectorId,
   label,
+  meta,
   tone,
   value,
   valueTone,
@@ -174,6 +190,7 @@ export function MetricTileDashboard({
     helperTitle,
     helperTone,
     label,
+    meta,
     tone: contentClasses,
     value,
   }
