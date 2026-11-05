@@ -59,6 +59,18 @@ describe('AnalyticsBreakdownWidget', () => {
             kind: 'metric',
             label: 'Returning patients',
           },
+          'leads.volume_by_source.sources.meta': {
+            definition: 'Leads attributed to Meta Ads.',
+            explanationKey: 'leads.volume_by_source.sources.meta',
+            kind: 'metric',
+            label: 'Meta Ads',
+          },
+          'leads.volume_by_source.sources.website': {
+            definition: 'Leads attributed to Website.',
+            explanationKey: 'leads.volume_by_source.sources.website',
+            kind: 'metric',
+            label: 'Website',
+          },
         }}
         title="Lead Volume and Sources"
       />,
@@ -78,6 +90,8 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('aria-label="About Lead Volume and Sources"')
     expect(html).toContain('aria-label="About New patients"')
     expect(html).toContain('aria-label="About Returning patients"')
+    expect(html).toContain('aria-label="About Meta Ads"')
+    expect(html).toContain('aria-label="About Website"')
   })
 
   it('uses explanation display names for the chart and summary metrics', () => {
@@ -85,7 +99,14 @@ describe('AnalyticsBreakdownWidget', () => {
       <AnalyticsBreakdownWidget
         data={{
           key: 'leads.volume_by_source',
-          rows: [],
+          rows: [{
+            details: [],
+            key: 'meta',
+            label: 'Meta Ads',
+            percentage: 100,
+            tone: 'accent',
+            value: 10,
+          }],
           summary: { new_patient: 8, returning_patient: 2, value: 10 },
           total: 10,
         }}
@@ -105,6 +126,11 @@ describe('AnalyticsBreakdownWidget', () => {
             isLabelCustomized: true,
             label: 'Existing patients',
           },
+          'leads.volume_by_source.sources.meta': {
+            definition: 'Leads attributed to Meta Ads.',
+            isLabelCustomized: true,
+            label: 'Paid Social',
+          },
         }}
         title="Lead Volume and Sources"
       />,
@@ -113,8 +139,10 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('Leads by Acquisition Channel')
     expect(html).toContain('First-time patients')
     expect(html).toContain('Existing patients')
+    expect(html).toContain('Paid Social')
     expect(html).not.toContain('>Lead Volume and Sources<')
     expect(html).not.toContain('>new patients<')
     expect(html).not.toContain('>returning patients<')
+    expect(html).not.toContain('>Meta Ads<')
   })
 })

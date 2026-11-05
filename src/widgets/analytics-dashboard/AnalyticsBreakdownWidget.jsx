@@ -76,8 +76,17 @@ function SummaryMetric({
   )
 }
 
-function SourceRow({ row }) {
+function SourceRow({
+  explanationEditor,
+  explanationKey,
+  explanations,
+  row,
+}) {
   const detail = formatSourceDetails(row.details)
+  const displayLabel = resolveDashboardDisplayName(
+    explanations?.[explanationKey],
+    row.label,
+  )
 
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-item border-t border-separator py-component md:grid-cols-[minmax(180px,1fr)_minmax(240px,3fr)_auto_auto]">
@@ -88,7 +97,15 @@ function SourceRow({ row }) {
           style={{ backgroundColor: getAnalyticsToneColor(row.tone) }}
         />
         <div className="min-w-0">
-          <p className="font-semibold text-text-primary">{row.label}</p>
+          <div className="flex min-w-0 items-center gap-micro">
+            <p className="truncate font-semibold text-text-primary">{displayLabel}</p>
+            <AnalyticsExplanationPopover
+              explanationEditor={explanationEditor}
+              explanationKey={explanationKey}
+              explanations={explanations}
+              triggerSize="xs"
+            />
+          </div>
           {detail ? <p className="truncate text-label text-text-muted" title={detail}>{detail}</p> : null}
         </div>
       </div>
@@ -162,7 +179,15 @@ export function AnalyticsBreakdownWidget({
 
         <div className="mt-component">
           <ul>
-            {rows.map((row) => <SourceRow key={row.key} row={row} />)}
+            {rows.map((row) => (
+              <SourceRow
+                explanationEditor={explanationEditor}
+                explanationKey={`${data?.key}.sources.${row.key}`}
+                explanations={explanations}
+                key={row.key}
+                row={row}
+              />
+            ))}
           </ul>
         </div>
       </PanelBody>
