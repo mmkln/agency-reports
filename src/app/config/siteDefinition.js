@@ -23,7 +23,6 @@ const alpineSite = Object.freeze({
 const campaignLevelSite = Object.freeze({
   brand: Object.freeze({
     allowInversion: false,
-    faviconUrl: campaignLevelLogoUrl,
     logoFit: 'cover',
     logoUrl: campaignLevelLogoUrl,
     name: 'Campaign Level',

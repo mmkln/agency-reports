@@ -7,13 +7,25 @@ import process from 'node:process'
 const GITHUB_PAGES_API_BASE_URL = 'https://mxllagency.pythonanywhere.com'
 const CAMPAIGN_LEVEL_PAGES_MODE = 'campaign-level-pages'
 
-function createSiteHtmlPlugin({ appName, appTitle, manifestPath }) {
+function createSiteHtmlPlugin({
+  appName,
+  appTitle,
+  appleTouchIconPath,
+  favicon96Path,
+  faviconIcoPath,
+  faviconSvgPath,
+  manifestPath,
+}) {
   return {
     name: 'site-html-metadata',
     transformIndexHtml(html) {
       return html
         .replaceAll('__APP_NAME__', appName)
         .replaceAll('__APP_TITLE__', appTitle)
+        .replaceAll('__APPLE_TOUCH_ICON_PATH__', appleTouchIconPath)
+        .replaceAll('__FAVICON_96_PATH__', favicon96Path)
+        .replaceAll('__FAVICON_ICO_PATH__', faviconIcoPath)
+        .replaceAll('__FAVICON_SVG_PATH__', faviconSvgPath)
         .replaceAll('__MANIFEST_PATH__', manifestPath)
     },
   }
@@ -42,11 +54,19 @@ export default defineConfig(({ mode }) => {
     ? {
         appName: 'Campaign Level',
         appTitle: 'Campaign Level | Client-ready campaign reporting',
+        appleTouchIconPath: 'campaign-level/apple-touch-icon.png',
+        favicon96Path: 'campaign-level/favicon-96x96.png',
+        faviconIcoPath: 'campaign-level/favicon.ico',
+        faviconSvgPath: 'campaign-level/favicon.svg',
         manifestPath: 'campaign-level.webmanifest',
       }
     : {
         appName: 'Alpine Marketing',
         appTitle: 'Client Dashboard | Alpine Marketing',
+        appleTouchIconPath: '/apple-touch-icon.png',
+        favicon96Path: '/favicon-96x96.png',
+        faviconIcoPath: '/favicon.ico',
+        faviconSvgPath: '/favicon.svg',
         manifestPath: 'site.webmanifest',
       }
   const envDefines = {
