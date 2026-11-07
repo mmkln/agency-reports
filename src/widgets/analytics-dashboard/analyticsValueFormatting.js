@@ -36,14 +36,6 @@ export function formatAnalyticsPeriodRange(period, fallback = '') {
   return start && end ? `${start} – ${end}` : fallback
 }
 
-export function formatAnalyticsValuePair(value, percentage) {
-  if (value == null || percentage == null) {
-    return '—'
-  }
-
-  return `${formatAnalyticsValue(value)} · ${formatAnalyticsValue(percentage, 'percent')}`
-}
-
 export function formatAnalyticsCumulativeLabel(cumulative, unit = 'count') {
   if (!cumulative || cumulative.value == null) {
     return null

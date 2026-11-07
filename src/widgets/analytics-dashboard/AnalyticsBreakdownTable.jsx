@@ -1,10 +1,12 @@
 import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 import { cn } from '@/lib/utils'
+import { Icon } from '@/shared/icons'
+import { TooltipIconButton } from '@/shared/ui'
 
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 import {
   formatAnalyticsPeriodRange,
-  formatAnalyticsValuePair,
+  formatAnalyticsValue,
 } from './analyticsValueFormatting'
 import { getAnalyticsToneColor } from './analyticsWidgetColors'
 
@@ -42,11 +44,29 @@ function SourceCell({ explanationEditor, explanationKey, explanations, row }) {
   )
 }
 
-function ValuePair({ label, value }) {
+function PeriodValue({ percentage, value }) {
   return (
     <div className="text-right tabular-nums" role="cell">
-      <p className="mb-micro text-label text-text-muted md:hidden">{label}</p>
-      <p className="font-semibold text-text-primary">{value}</p>
+      <p className="mb-micro text-label text-text-muted md:hidden">This period</p>
+      <div className="flex items-baseline justify-end gap-tag">
+        <strong className="font-semibold text-text-primary">
+          {formatAnalyticsValue(value)}
+        </strong>
+        <span className="text-label font-medium text-text-muted">
+          {formatAnalyticsValue(percentage, 'percent')}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function AllTimeValue({ value }) {
+  return (
+    <div className="text-right tabular-nums" role="cell">
+      <p className="mb-micro text-label text-text-muted md:hidden">All-time</p>
+      <p className="font-medium text-text-muted">
+        {value == null ? '—' : formatAnalyticsValue(value)}
+      </p>
     </div>
   )
 }
@@ -82,17 +102,12 @@ function BreakdownRow({
           }}
         />
       </div>
-      <ValuePair
-        label="Period"
-        value={formatAnalyticsValuePair(row.value, row.percentage)}
+      <PeriodValue
+        percentage={row.percentage}
+        value={row.value}
       />
       {showCumulative ? (
-        <ValuePair
-          label="All-time"
-          value={row.cumulative
-            ? formatAnalyticsValuePair(row.cumulative.value, row.cumulative.percentage)
-            : '—'}
-        />
+        <AllTimeValue value={row.cumulative?.value} />
       ) : null}
     </div>
   )
@@ -123,12 +138,20 @@ export function AnalyticsBreakdownTable({
         <div role="columnheader">Source</div>
         <div role="columnheader">Period distribution</div>
         <div className="text-right" role="columnheader">
-          <p className="font-semibold text-text-primary">Period</p>
+          <p className="font-semibold text-text-primary">This period</p>
           <p>{formatAnalyticsPeriodRange(period)}</p>
         </div>
         {showCumulative ? (
-          <div className="text-right font-semibold text-text-primary" role="columnheader">
-            {cumulativeLabel}
+          <div className="flex items-center justify-end gap-micro" role="columnheader">
+            <span className="font-semibold text-text-primary">{cumulativeLabel}</span>
+            <TooltipIconButton
+              className="text-text-quaternary hover:text-text-secondary"
+              label="About all-time values"
+              size="xs"
+              tooltipContent="Total leads across the complete available history."
+            >
+              <Icon name="infoCircle" size={13} />
+            </TooltipIconButton>
           </div>
         ) : null}
       </div>

@@ -7,16 +7,6 @@ import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 import { AnalyticsCumulativeValue } from './AnalyticsCumulativeValue'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
 
-function formatPeriodLabel(period) {
-  if (period?.type === 'month_to_date') {
-    return 'Month to date'
-  }
-  if (period?.type === 'year_to_date') {
-    return 'Year to date'
-  }
-  return 'Last week'
-}
-
 function cumulativeValue(cumulative, value) {
   return cumulative ? { ...cumulative, value } : null
 }
@@ -105,7 +95,6 @@ export function AnalyticsBreakdownWidget({
         explanationKey={data?.explanation_key ?? data?.key}
         explanations={explanations}
         title={title}
-        trailing={formatPeriodLabel(period)}
       />
       <PanelBody className="pt-item">
         <div className="flex flex-wrap items-center gap-x-component gap-y-tag">
