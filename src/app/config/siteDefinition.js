@@ -1,4 +1,5 @@
 import alpineLogoUrl from '../../assets/agency-logo.png'
+import campaignLevelDarkLogoUrl from '../../assets/campaign-level-logo-dark.svg'
 import campaignLevelLogoUrl from '../../assets/campaign-level-logo.svg'
 
 const SITE_VARIANTS = Object.freeze({
@@ -23,6 +24,7 @@ const alpineSite = Object.freeze({
 const campaignLevelSite = Object.freeze({
   brand: Object.freeze({
     allowInversion: false,
+    darkLogoUrl: campaignLevelDarkLogoUrl,
     logoFit: 'contain',
     logoUrl: campaignLevelLogoUrl,
     name: 'Campaign Level',

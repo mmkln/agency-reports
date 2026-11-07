@@ -1,5 +1,6 @@
 import { useBrand } from '../branding'
 import { getAppHref } from '../routing'
+import { useTheme } from '../theme'
 import { useInspectorId } from './inspectorId'
 
 export function BrandLogo({
@@ -12,16 +13,21 @@ export function BrandLogo({
   variant = 'interactive',
 }) {
   const brand = useBrand()
+  const { resolvedTheme } = useTheme()
   const inspectorId = useInspectorId('BrandLogo', id)
   const isStatic = variant === 'static'
   const shouldShowShadow = iconShadow ?? (!light && !isStatic)
+  const shouldUseDarkLogo = Boolean(brand.darkLogoUrl && (light || resolvedTheme === 'dark'))
   const logoSizeClass = size === 'sm' ? 'h-7 w-40' : 'h-9 w-52'
   const imageFitClass = brand.logoFit === 'cover' ? 'object-cover object-center' : 'object-contain object-left'
-  const imageToneClass = brand.allowInversion === false ? '' : (light ? 'invert' : 'dark:invert')
+  const imageToneClass = brand.allowInversion === false || shouldUseDarkLogo
+    ? ''
+    : (light ? 'invert' : 'dark:invert')
   const shadowClass = shouldShowShadow ? 'drop-shadow-[0_8px_14px_var(--premium-shadow)]' : ''
   const rootClass = isStatic ? 'flex items-center no-underline' : 'group flex cursor-pointer items-center no-underline'
   const motionClass = isStatic ? '' : 'transition-transform duration-motion-slow ease-motion-standard group-hover:scale-105'
   const resolvedHref = href.startsWith('/') ? getAppHref(href) : href
+  const resolvedLogoUrl = shouldUseDarkLogo ? brand.darkLogoUrl : brand.logoUrl
 
   return (
     <a className={`${rootClass} ${className}`.trim()} href={resolvedHref} id={inspectorId}>
@@ -32,7 +38,7 @@ export function BrandLogo({
         <img
           alt=""
           className={`h-full w-full ${imageFitClass} ${imageToneClass}`.trim()}
-          src={brand.logoUrl}
+          src={resolvedLogoUrl}
         />
       </span>
       <span className="sr-only">{brand.name}</span>
