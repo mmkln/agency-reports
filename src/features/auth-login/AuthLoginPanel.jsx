@@ -1,40 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { Icon } from '../../shared/icons'
-import { Button, ErrorBlock, Input } from '../../shared/ui'
-import { OneTimeCodeInput } from './OneTimeCodeInput'
+import { Button, ErrorBlock } from '../../shared/ui'
+import { AuthInput } from './AuthInput'
+import { EmailCodeLoginForm } from './EmailCodeLoginForm'
 
 const DEFAULT_EMAIL_CODE_DETAIL = 'If an account exists for this email, a sign-in code has been sent.'
-
-function maskEmail(email) {
-  const [localPart, domainPart] = String(email ?? '').split('@')
-
-  if (!localPart || !domainPart) {
-    return String(email ?? '')
-  }
-
-  const maskedLocal = localPart.length <= 1 ? '*' : `${localPart[0]}***`
-  return `${maskedLocal}@${domainPart}`
-}
-
-function AuthInput({ error = '', iconName, label, ...props }) {
-  return (
-    <label className="grid gap-item">
-      <span className="text-label text-text-secondary">{label}</span>
-      <span className="relative block">
-        <Icon
-          aria-hidden="true"
-          className="pointer-events-none absolute left-control top-1/2 -translate-y-1/2 text-text-muted"
-          name={iconName}
-          size={18}
-        />
-        <Input aria-invalid={error ? 'true' : undefined} className="pl-layout" {...props} />
-      </span>
-      {error ? <span className="text-label font-normal text-destructive">{error}</span> : null}
-    </label>
-  )
-}
 
 function AuthModeTabs({ mode, onChange }) {
   const items = [
@@ -118,83 +89,6 @@ function PasswordLoginForm({ email, onEmailChange, onSubmit, status }) {
   )
 }
 
-function EmailCodeLoginForm({
-  detail,
-  email,
-  onEmailChange,
-  onRequestCode,
-  onUseAnotherEmail,
-  onVerifyCode,
-  step,
-  status,
-}) {
-  const [code, setCode] = useState('')
-  const sending = status === 'sending'
-  const verifying = status === 'verifying'
-  const isCodeComplete = code.length === 6
-
-  if (step === 'code') {
-    return (
-      <form className="grid gap-component" onSubmit={(event) => {
-        event.preventDefault()
-        if (!isCodeComplete) {
-          return
-        }
-
-        onVerifyCode({ code: code.trim(), email: email.trim() })
-      }}>
-        <div className="grid gap-item">
-          <p className="text-ui text-text-secondary">
-            Sent to <span className="font-medium text-text-primary">{maskEmail(email)}</span>
-          </p>
-          {detail ? <p className="text-label font-normal text-text-muted">{detail}</p> : null}
-        </div>
-
-        <OneTimeCodeInput
-          autoFocus
-          disabled={verifying}
-          onChange={setCode}
-          value={code}
-        />
-
-        <div className="flex flex-col-reverse gap-control sm:flex-row sm:justify-end">
-          <Button disabled={verifying} onClick={onUseAnotherEmail} type="button" variant="secondary">
-            Use another email
-          </Button>
-          <Button disabled={!isCodeComplete || verifying} type="submit">
-            {verifying ? 'Checking...' : 'Continue'}
-          </Button>
-        </div>
-      </form>
-    )
-  }
-
-  return (
-    <form className="grid gap-component" onSubmit={(event) => {
-      event.preventDefault()
-      setCode('')
-      onRequestCode({ email: email.trim() })
-    }}>
-      <AuthInput
-        autoComplete="email"
-        iconName="mail"
-        inputMode="email"
-        label="Email"
-        name="email"
-        onChange={(event) => onEmailChange(event.target.value)}
-        placeholder="Email"
-        required
-        type="email"
-        value={email}
-      />
-
-      <Button className="w-full" disabled={sending} size="lg" type="submit">
-        {sending ? 'Sending...' : 'Send code'}
-      </Button>
-    </form>
-  )
-}
-
 export function AuthLoginPanel({
   initialEmail = '',
   onAuthenticated,
@@ -237,20 +131,26 @@ export function AuthLoginPanel({
       })
   }
 
-  function handleRequestCode(credentials) {
+  async function handleRequestCode(credentials) {
     setStatus('sending')
     setError('')
-    setEmailCodeDetail('')
 
-    void onEmailCodeRequest(credentials)
-      .then((payload) => {
-        setEmailCodeDetail(payload?.detail || DEFAULT_EMAIL_CODE_DETAIL)
-        setEmailCodeStep('code')
-      })
-      .catch(handleError)
-      .finally(() => {
-        setStatus('idle')
-      })
+    try {
+      const payload = await onEmailCodeRequest(credentials)
+
+      setEmailCodeDetail(payload?.detail || DEFAULT_EMAIL_CODE_DETAIL)
+      setEmailCodeStep('code')
+
+      return {
+        ok: true,
+        retryAfter: payload?.retry_after ?? 30,
+      }
+    } catch (caughtError) {
+      handleError(caughtError)
+      return { ok: false, retryAfter: 0 }
+    } finally {
+      setStatus('idle')
+    }
   }
 
   function handleVerifyCode(credentials) {
