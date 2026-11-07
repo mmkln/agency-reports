@@ -9,12 +9,8 @@ describe('WeeklyLeadReportContextToolbar', () => {
       <WeeklyLeadReportContextToolbar
         calculatedAt="2026-10-25T22:33:00Z"
         isRefreshing={false}
-        onPeriodEndChange={() => {}}
-        onPeriodTypeChange={() => {}}
         onRefresh={() => {}}
-        period={{ end: '2026-10-25', start: '2026-10-19' }}
-        periodEnd="2026-10-25"
-        periodType="week"
+        periodSelector={<button type="button">Oct 19 – Oct 25</button>}
         refresh={null}
         refreshError=""
         settingsAction={<button type="button">Settings</button>}

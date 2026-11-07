@@ -23,18 +23,28 @@ function dashboardExplanationPath(workspaceId, dashboardKey, explanationKey) {
   return `${dashboardPath(workspaceId, dashboardKey)}explanations/${encodeURIComponent(explanationKey)}/`
 }
 
+function periodRequest({ periodEnd, periodKey, periodType }) {
+  if (periodKey) {
+    return { period_key: periodKey }
+  }
+  return Object.fromEntries(
+    Object.entries({
+      period_end: periodEnd,
+      period_type: periodType,
+    }).filter(([, value]) => value),
+  )
+}
+
 export async function getAnalyticsDashboardFromApi({
   apiClient,
   dashboardKey,
   periodEnd,
+  periodKey,
   periodType,
   workspaceId,
 }) {
   const payload = await apiClient.get(dashboardPath(workspaceId, dashboardKey), {
-    query: {
-      period_end: periodEnd,
-      period_type: periodType,
-    },
+    query: periodRequest({ periodEnd, periodKey, periodType }),
   })
 
   return normalizeAnalyticsDashboard(payload)
@@ -44,13 +54,14 @@ export async function refreshAnalyticsDashboardFromApi({
   apiClient,
   dashboardKey,
   periodEnd,
+  periodKey,
   periodType,
   workspaceId,
 }) {
-  return apiClient.post(`${dashboardPath(workspaceId, dashboardKey)}refresh/`, {
-    period_end: periodEnd,
-    period_type: periodType,
-  })
+  return apiClient.post(
+    `${dashboardPath(workspaceId, dashboardKey)}refresh/`,
+    periodRequest({ periodEnd, periodKey, periodType }),
+  )
 }
 
 export async function getAnalyticsDashboardRefreshFromApi({ apiClient, refreshId, workspaceId }) {

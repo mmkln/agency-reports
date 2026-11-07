@@ -13,7 +13,7 @@ import {
 
 const payload = {
   dashboard: { key: 'weekly-lead-report', title: 'Weekly Lead Report' },
-  period: { end: '2026-10-25', start: '2026-10-19', type: 'week' },
+  period: { end: '2026-10-25', key: 'week:2026-10-19', start: '2026-10-19', type: 'week' },
   status: 'not_calculated',
   widgets: [],
 }
@@ -52,6 +52,34 @@ describe('analyticsDashboardApiService', () => {
       '/api/workspaces/workspace-1/analytics/dashboards/weekly-lead-report/refresh/',
       { period_end: '2026-10-25', period_type: 'week' },
     )
+  })
+
+  it('loads and refreshes a backend-owned canonical period key', async () => {
+    const apiClient = {
+      get: vi.fn().mockResolvedValue(payload),
+      post: vi.fn().mockResolvedValue({ refresh: { id: 'run-1' } }),
+    }
+
+    await getAnalyticsDashboardFromApi({
+      apiClient,
+      dashboardKey: 'weekly-lead-report',
+      periodKey: 'week:2026-10-19',
+      workspaceId: 'workspace-1',
+    })
+    await refreshAnalyticsDashboardFromApi({
+      apiClient,
+      dashboardKey: 'weekly-lead-report',
+      periodKey: 'week:2026-10-19',
+      workspaceId: 'workspace-1',
+    })
+
+    const endpoint = '/api/workspaces/workspace-1/analytics/dashboards/weekly-lead-report/'
+    expect(apiClient.get).toHaveBeenCalledWith(endpoint, {
+      query: { period_key: 'week:2026-10-19' },
+    })
+    expect(apiClient.post).toHaveBeenCalledWith(`${endpoint}refresh/`, {
+      period_key: 'week:2026-10-19',
+    })
   })
 
   it('loads and updates dashboard-owned settings', async () => {

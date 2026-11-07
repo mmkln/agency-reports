@@ -231,6 +231,7 @@
   --spacing-inspector: 420px;
   --spacing-menu: 160px;
   --spacing-popover: 320px;
+  --spacing-popover-wide: 460px;
   --spacing-overlay: 92vh;
   --spacing-overlay-body: calc(92vh - 168px);
   --spacing-overlay-detail-body: calc(92vh - 104px);

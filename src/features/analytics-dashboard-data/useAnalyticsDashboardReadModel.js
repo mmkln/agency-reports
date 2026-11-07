@@ -12,12 +12,11 @@ const POLL_INTERVAL_MS = 2000
 
 export function useAnalyticsDashboardReadModel({
   dashboardKey,
-  periodEnd,
-  periodType,
+  periodKey,
   runtime,
   workspaceId,
 }) {
-  const contextKey = [dashboardKey, workspaceId, periodType, periodEnd ?? ''].join(':')
+  const contextKey = [dashboardKey, workspaceId, periodKey ?? 'default'].join(':')
   const [refreshState, setRefreshState] = useState({
     contextKey,
     error: '',
@@ -28,14 +27,12 @@ export function useAnalyticsDashboardReadModel({
       runtime.viewer?.userId ?? '',
       workspaceId ?? '',
       dashboardKey,
-      periodType,
-      periodEnd ?? '',
+      periodKey ?? 'default',
     ].join(':'),
     load: () => getAnalyticsDashboardFromApi({
       apiClient: runtime.apiClient,
       dashboardKey,
-      periodEnd,
-      periodType,
+      periodKey,
       workspaceId,
     }),
   })
@@ -44,23 +41,27 @@ export function useAnalyticsDashboardReadModel({
   const localRefresh = refreshState.contextKey === contextKey ? refreshState.refresh : null
   const refreshError = refreshState.contextKey === contextKey ? refreshState.error : ''
 
-  const runRefresh = useCallback(async () => {
-    setRefreshState({ contextKey, error: '', refresh: null })
+  const effectivePeriodKey = periodKey ?? resource.data?.period?.key ?? null
+  const runRefresh = useCallback(async (requestedPeriodKey = null) => {
+    const targetPeriodKey = requestedPeriodKey ?? effectivePeriodKey
+    const targetContextKey = requestedPeriodKey
+      ? [dashboardKey, workspaceId, requestedPeriodKey].join(':')
+      : contextKey
+    setRefreshState({ contextKey: targetContextKey, error: '', refresh: null })
     try {
       const started = await refreshAnalyticsDashboardFromApi({
         apiClient: runtime.apiClient,
         dashboardKey,
-        periodEnd,
-        periodType,
+        periodKey: targetPeriodKey,
         workspaceId,
       })
-      setRefreshState({ contextKey, error: '', refresh: started.refresh })
+      setRefreshState({ contextKey: targetContextKey, error: '', refresh: started.refresh })
       return started.refresh
     } catch (error) {
-      setRefreshState({ contextKey, error: error.message, refresh: null })
+      setRefreshState({ contextKey: targetContextKey, error: error.message, refresh: null })
       return null
     }
-  }, [contextKey, dashboardKey, periodEnd, periodType, runtime.apiClient, workspaceId])
+  }, [contextKey, dashboardKey, effectivePeriodKey, runtime.apiClient, workspaceId])
 
   const remoteRefresh = resource.data?.activeRefresh ?? null
   const refreshToPoll = localRefresh && !isAnalyticsRefreshFinished(localRefresh)

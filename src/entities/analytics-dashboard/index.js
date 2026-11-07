@@ -1,4 +1,5 @@
 export { isAnalyticsRefreshFinished, normalizeAnalyticsDashboard } from './model'
+export { buildReportPeriods } from './reportPeriods'
 export {
   buildAnalyticsDashboardSettingsPatch,
   hiddenIdsFromVisibility,

@@ -3,14 +3,10 @@ import {
   Button,
   ContentToolbar,
   DashboardToolbarActions,
-  Input,
-  NativeSelect,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/shared/ui'
-
-import { formatAnalyticsPeriodRange } from './analyticsValueFormatting'
 
 const refreshStatusLabel = {
   completed: 'Updated',
@@ -49,42 +45,6 @@ function formatUpdatedAt(value) {
     month: 'short',
     year: 'numeric',
   })}`
-}
-
-function ReportingPeriodControl({ onPeriodEndChange, onPeriodTypeChange, period, periodEnd, periodType }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          aria-label="Change reporting period"
-          className="-mx-item mt-tag h-8 w-fit px-item text-label font-medium text-text-muted"
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          {formatAnalyticsPeriodRange(period, 'Choose reporting period')}
-          <Icon className="text-text-quaternary" name="chevronDown" size={14} />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
-        <p className="text-ui font-semibold text-text-primary">Reporting period</p>
-        <div className="mt-component grid gap-control">
-          <label className="grid gap-micro text-label font-medium text-text-muted">
-            Range
-            <NativeSelect value={periodType} onChange={(event) => onPeriodTypeChange(event.target.value)}>
-              <option value="week">Week</option>
-              <option value="month_to_date">Month to date</option>
-              <option value="year_to_date">Year to date</option>
-            </NativeSelect>
-          </label>
-          <label className="grid gap-micro text-label font-medium text-text-muted">
-            Period ending
-            <Input type="date" value={periodEnd} onChange={(event) => onPeriodEndChange(event.target.value)} />
-          </label>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
 }
 
 function RefreshStepStatus({ step }) {
@@ -168,12 +128,8 @@ export function WeeklyLeadReportContextToolbar({
   calculatedAt,
   calculationStatus,
   isRefreshing,
-  onPeriodEndChange,
-  onPeriodTypeChange,
   onRefresh,
-  period,
-  periodEnd,
-  periodType,
+  periodSelector,
   refresh,
   refreshError,
   settingsAction,
@@ -183,13 +139,7 @@ export function WeeklyLeadReportContextToolbar({
     <ContentToolbar className="rounded-none bg-transparent p-0 md:flex-row md:items-start md:justify-between">
       <div className="min-w-0">
         <h2 className="text-body font-semibold text-text-primary">{title}</h2>
-        <ReportingPeriodControl
-          onPeriodEndChange={onPeriodEndChange}
-          onPeriodTypeChange={onPeriodTypeChange}
-          period={period}
-          periodEnd={periodEnd}
-          periodType={periodType}
-        />
+        {periodSelector}
       </div>
 
       <DashboardToolbarActions

@@ -64,6 +64,42 @@ function normalizeWidget(widget) {
   }
 }
 
+function normalizePeriodItem(item) {
+  if (!item?.key || !item?.type || !item?.start || !item?.end) {
+    return null
+  }
+
+  return {
+    calculatedAt: item.calculated_at ?? null,
+    calculationStatus: item.calculation_status ?? item.status ?? 'not_calculated',
+    end: item.end,
+    key: item.key,
+    snapshotId: item.snapshot_id ?? null,
+    start: item.start,
+    status: item.status ?? 'not_calculated',
+    type: item.type,
+  }
+}
+
+function normalizePeriodCatalog(catalog) {
+  const types = Array.isArray(catalog?.types)
+    ? catalog.types
+        .filter((item) => item?.key && item?.label)
+        .map((item) => ({ key: item.key, label: item.label }))
+    : []
+
+  return {
+    currentDate: catalog?.current_date ?? null,
+    defaultPeriodKey: catalog?.default_period_key ?? null,
+    historyStart: catalog?.history_start ?? null,
+    reports: Array.isArray(catalog?.reports)
+      ? catalog.reports.map(normalizePeriodItem).filter(Boolean)
+      : [],
+    timezone: catalog?.timezone ?? 'UTC',
+    types,
+  }
+}
+
 export function normalizeAnalyticsDashboard(payload) {
   if (!payload?.dashboard?.key || !payload?.period?.start || !payload?.period?.end) {
     throw new Error('Analytics Dashboard API returned an invalid dashboard payload.')
@@ -83,10 +119,12 @@ export function normalizeAnalyticsDashboard(payload) {
     explanations: normalizeDashboardExplanations(payload.explanations),
     period: {
       end: payload.period.end,
+      key: payload.period.key ?? null,
       start: payload.period.start,
       timezone: payload.period.timezone ?? 'UTC',
       type: payload.period.type ?? 'week',
     },
+    periodCatalog: normalizePeriodCatalog(payload.period_catalog),
     sourceWatermarks: payload.source_watermarks ?? {},
     permissions: {
       canEditExplanations: payload.permissions?.can_edit_explanations === true,
