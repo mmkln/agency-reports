@@ -22,6 +22,8 @@ const legacyHashRouteMap = Object.freeze({
   '#settings': ROUTE_PATHS.portalGrowthReview,
   '#client-settings': ROUTE_PATHS.portalGrowthReview,
   '#dashboard': ROUTE_PATHS.portalGrowthReview,
+  '#executive': ROUTE_PATHS.portalExecutive,
+  '#executive-dashboard': ROUTE_PATHS.portalExecutive,
   '#performance': ROUTE_PATHS.portalGrowthReview,
   '#performance-dashboard': ROUTE_PATHS.portalGrowthReview,
 })

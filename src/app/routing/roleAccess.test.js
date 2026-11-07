@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { AGENCY_CAPABILITIES } from '../../entities/agency-membership'
 import { CLINIC_REPORTING_CAPABILITIES } from '../../entities/profile'
+import { WORKSPACE_CAPABILITIES } from '../../entities/workspace-membership'
 import { routeAccessMetadataById } from './routeAccessMetadata'
 import { canAccessRouteWithContext, filterRoutesForNavigation, NAVIGATION_SCOPES } from './roleAccess'
 
@@ -108,6 +109,60 @@ describe('canAccessRouteWithContext', () => {
     })).toBe(false)
   })
 
+  it('allows portal workspace executive by workspace path param', () => {
+    const viewer = createViewer({
+      workspaceCapabilities: [CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW],
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-executive'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-executive'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('allows the weekly lead report only for the requested dashboard workspace', () => {
+    const viewer = createViewer({
+      workspaceCapabilities: [WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS],
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-lead-report'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['portal-workspace-lead-report'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('requires a managed workspace relationship for agency lead report access', () => {
+    const viewer = createViewer({
+      agencyCapabilities: [AGENCY_CAPABILITIES.VIEW_DASHBOARDS],
+      managedWorkspaceId: WORKSPACE_ID,
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-lead-report'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-lead-report'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
+  it('allows agency workspace executive only through managed workspace relationships', () => {
+    const viewer = createViewer({
+      agencyCapabilities: [AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW],
+      managedWorkspaceId: WORKSPACE_ID,
+    })
+
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-executive'], {
+      routeParams: { workspaceId: WORKSPACE_ID },
+    })).toBe(true)
+    expect(canAccessRouteWithContext(viewer, routeAccessMetadataById['agency-workspace-executive'], {
+      routeParams: { workspaceId: OTHER_WORKSPACE_ID },
+    })).toBe(false)
+  })
+
 })
 
 describe('filterRoutesForNavigation', () => {
@@ -117,6 +172,7 @@ describe('filterRoutesForNavigation', () => {
     })
     const routes = [
       routeAccessMetadataById['dental-growth-review'],
+      routeAccessMetadataById['executive-dashboard'],
       routeAccessMetadataById['client-settings'],
     ].map((route) => ({
       ...route,
@@ -127,6 +183,6 @@ describe('filterRoutesForNavigation', () => {
       routeParams: { clientId: WORKSPACE_ID },
       routes,
       viewer,
-    }).map((route) => route.id)).toEqual(['dental-growth-review'])
+    }).map((route) => route.id)).toEqual(['dental-growth-review', 'executive-dashboard'])
   })
 })

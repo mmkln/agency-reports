@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createBackendApiClient } from './backendApiClient'
 import { createBearerAuthInterceptor } from './httpInterceptors'
 
-function createJsonResponse(payload = {}) {
+function createJsonResponse(payload = {}, { ok = true, status = 200 } = {}) {
   return {
     headers: {
       get(name) {
@@ -11,8 +11,8 @@ function createJsonResponse(payload = {}) {
       },
     },
     json: () => Promise.resolve(payload),
-    ok: true,
-    status: 200,
+    ok,
+    status,
   }
 }
 
@@ -96,5 +96,30 @@ describe('createBackendApiClient', () => {
 
     expect(options).not.toHaveProperty('credentials')
     expect(options.headers).not.toHaveProperty('Authorization')
+  })
+
+  it('uses the API validation summary as the error message and preserves issues', async () => {
+    const payload = {
+      code: 'review_mapping_invalid',
+      message: 'Some mappings need attention.',
+      issues: [{
+        code: 'tag_not_found',
+        message: 'This GHL tag is no longer available.',
+        path: 'signals.0.expected_values',
+      }],
+    }
+    const client = createBackendApiClient({
+      baseUrl: 'https://mxllagency.pythonanywhere.com',
+      fetchImpl: vi.fn(() => Promise.resolve(createJsonResponse(payload, {
+        ok: false,
+        status: 422,
+      }))),
+    })
+
+    await expect(client.post('/api/validate/', {})).rejects.toMatchObject({
+      message: 'Some mappings need attention.',
+      payload,
+      status: 422,
+    })
   })
 })

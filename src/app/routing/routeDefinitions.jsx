@@ -7,9 +7,16 @@ import { AcceptInvitePage } from '../../pages/auth/accept-invite/AcceptInvitePag
 import { AdminClientsPageHeader } from '../../pages/admin/clients/AdminClientsPageHeader'
 import { AdminWorkspacesPageHeader } from '../../pages/admin/workspaces/AdminWorkspacesPageHeader'
 import { DentalGrowthReviewPageHeader } from '../../pages/dashboards/dental-growth-review/DentalGrowthReviewPageHeader'
+import { ExecutiveDashboardPageHeader } from '../../pages/dashboards/executive/ExecutiveDashboardPageHeader'
+import { WeeklyLeadReportPageHeader } from '../../pages/dashboards/weekly-lead-report/WeeklyLeadReportPageHeader'
+import { ForgotPasswordPage } from '../../pages/auth/forgot-password/ForgotPasswordPage'
 import { LoginPage } from '../../pages/auth/login/LoginPage'
+import { PluginConnectPage } from '../../pages/auth/plugin-connect/PluginConnectPage'
+import { ResetPasswordPage } from '../../pages/auth/reset-password/ResetPasswordPage'
 import { AccessDeniedPage } from '../../pages/system/access-denied/AccessDeniedPage'
+import { CampaignLevelLandingPage } from '../../pages/public/campaign-level/CampaignLevelLandingPage'
 import { AuthLayout } from '../layout/AuthLayout'
+import { siteDefinition } from '../config/siteDefinition'
 import { AuthenticatedRedirectRoute } from './AuthenticatedRedirectRoute'
 import { NAVIGATION_SCOPES, ROUTE_ACCESS_SCOPES } from './roleAccess'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -18,15 +25,22 @@ import {
   AccountSettingsPageRoute,
   AgencyWorkspaceAccessPageRoute,
   AgencyWorkspaceDataPageRoute,
+  AgencyWorkspaceExecutivePageRoute,
+  AgencyWorkspaceLeadReportPageRoute,
   AgencyWorkspaceReviewPageRoute,
   AgencyWorkspaceReviewSetupPageRoute,
   AgencyWorkspaceSetupPageRoute,
+  AgencyWorkspaceTagCatalogPageRoute,
   AdminClientAccessPageRoute,
   AdminClientDetailPageRoute,
   AdminClientsPageRoute,
   AdminWorkspacesPageRoute,
   ClientSettingsPageRoute,
   DentalGrowthReviewPageRoute,
+  ExecutiveDashboardPageRoute,
+  WeeklyLeadReportPageRoute,
+  PortalWorkspaceExecutivePageRoute,
+  PortalWorkspaceLeadReportPageRoute,
   PortalWorkspaceReviewPageRoute,
 } from './RoutePages'
 import { useAuth } from '../providers/auth/useAuth'
@@ -58,7 +72,9 @@ export const routeDefinitions = [
     redirectAuthenticated: routeAccessMetadataById.landing.redirectAuthenticated,
     access: routeAccessMetadataById.landing.access,
     showInNav: false,
-    element: <Navigate replace to="/login" />,
+    element: siteDefinition.landingEnabled
+      ? <CampaignLevelLandingPage />
+      : <Navigate replace to="/login" />,
   },
   {
     path: '/accept-invite',
@@ -70,6 +86,24 @@ export const routeDefinitions = [
     element: <AcceptInvitePage />,
   },
   {
+    path: '/forgot-password',
+    id: 'forgot-password',
+    label: 'Forgot Password',
+    layout: 'auth',
+    access: routeAccessMetadataById['forgot-password'].access,
+    showInNav: false,
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    id: 'reset-password',
+    label: 'Reset Password',
+    layout: 'auth',
+    access: routeAccessMetadataById['reset-password'].access,
+    showInNav: false,
+    element: <ResetPasswordPage />,
+  },
+  {
     path: '/login',
     id: 'login',
     label: 'Login',
@@ -78,6 +112,15 @@ export const routeDefinitions = [
     access: routeAccessMetadataById.login.access,
     showInNav: false,
     element: <LoginPage />,
+  },
+  {
+    path: ROUTE_PATHS.pluginConnect,
+    id: 'plugin-connect',
+    label: 'Connect AI assistant',
+    layout: 'auth',
+    access: routeAccessMetadataById['plugin-connect'].access,
+    showInNav: false,
+    element: <PluginConnectPage />,
   },
   {
     path: '/access-denied',
@@ -187,6 +230,19 @@ export const routeDefinitions = [
     element: <AgencyWorkspaceDataPageRoute />,
   },
   {
+    path: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+    id: 'agency-workspace-tag-catalog',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Tag Catalog',
+    pageTitle: 'Tag Catalog',
+    access: routeAccessMetadataById['agency-workspace-tag-catalog'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'tag',
+    showInNav: false,
+    element: <AgencyWorkspaceTagCatalogPageRoute />,
+  },
+  {
     path: ROUTE_PATHS.agencyWorkspaceReviewSetup,
     id: 'agency-workspace-review-setup',
     activeNavigationId: 'admin-workspaces',
@@ -211,6 +267,32 @@ export const routeDefinitions = [
     iconName: 'trendingUp',
     showInNav: false,
     element: <AgencyWorkspaceReviewPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceExecutive,
+    id: 'agency-workspace-executive',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['agency-workspace-executive'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'barChart',
+    showInNav: false,
+    element: <AgencyWorkspaceExecutivePageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.agencyWorkspaceLeadReport,
+    id: 'agency-workspace-lead-report',
+    activeNavigationId: 'admin-workspaces',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['agency-workspace-lead-report'].access,
+    fullBleedContent: true,
+    hidePageHeader: true,
+    iconName: 'barChart',
+    showInNav: false,
+    element: <AgencyWorkspaceLeadReportPageRoute />,
   },
   {
     path: ROUTE_PATHS.agencyWorkspaceAccess,
@@ -260,6 +342,36 @@ export const routeDefinitions = [
     element: <PortalWorkspaceReviewPageRoute />,
   },
   {
+    path: ROUTE_PATHS.portalWorkspaceExecutive,
+    id: 'portal-workspace-executive',
+    activeNavigationId: 'executive-dashboard',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['portal-workspace-executive'].access,
+    contentWidth: 'content',
+    header: ExecutiveDashboardPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Executive',
+    navigationScope: CLIENT_PORTAL,
+    showInNav: false,
+    element: <PortalWorkspaceExecutivePageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalWorkspaceLeadReport,
+    id: 'portal-workspace-lead-report',
+    activeNavigationId: 'weekly-lead-report',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['portal-workspace-lead-report'].access,
+    contentWidth: 'content',
+    header: WeeklyLeadReportPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Lead Report',
+    navigationScope: CLIENT_PORTAL,
+    showInNav: false,
+    element: <PortalWorkspaceLeadReportPageRoute />,
+  },
+  {
     path: ROUTE_PATHS.portalGrowthReview,
     id: 'dental-growth-review',
     label: 'Growth Review',
@@ -272,6 +384,34 @@ export const routeDefinitions = [
     navigationScope: CLIENT_PORTAL,
     navOrder: 10,
     element: <DentalGrowthReviewPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalExecutive,
+    id: 'executive-dashboard',
+    label: 'Executive',
+    pageTitle: 'Executive',
+    access: routeAccessMetadataById['executive-dashboard'].access,
+    contentWidth: 'content',
+    header: ExecutiveDashboardPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Executive',
+    navigationScope: CLIENT_PORTAL,
+    navOrder: 12,
+    element: <ExecutiveDashboardPageRoute />,
+  },
+  {
+    path: ROUTE_PATHS.portalLeadReport,
+    id: 'weekly-lead-report',
+    label: 'Lead Report',
+    pageTitle: 'Lead Report',
+    access: routeAccessMetadataById['weekly-lead-report'].access,
+    contentWidth: 'content',
+    header: WeeklyLeadReportPageHeader,
+    iconName: 'barChart',
+    navLabel: 'Lead Report',
+    navigationScope: CLIENT_PORTAL,
+    navOrder: 11,
+    element: <WeeklyLeadReportPageRoute />,
   },
   {
     path: ROUTE_PATHS.portalSettings,

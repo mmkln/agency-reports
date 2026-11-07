@@ -1,0 +1,1 @@
+export { ContactCollectionAction } from './ContactCollectionAction'

@@ -11,6 +11,12 @@ function resolveWorkspaceId({ routeParams = {}, runtime }) {
     ?? null
 }
 
+function resolveCampaignId(routeParams = {}) {
+  return routeParams.campaign
+    ?? routeParams.campaignId
+    ?? ''
+}
+
 function createErrorPage(error, errorInfo) {
   const normalizedErrorInfo = errorInfo ?? {
     kind: 'failure',
@@ -34,18 +40,21 @@ export function useGrowthReviewReadModel({
 }) {
   const resolvedApiClient = apiClient ?? runtime.apiClient
   const workspaceId = resolveWorkspaceId({ routeParams, runtime })
+  const campaignId = resolveCampaignId(routeParams)
   const source = routeParams.preview === 'draft' ? 'draft' : 'published'
   const dependencyKey = [
     runtime.viewer?.userId ?? '',
     'dental-growth-review',
     GROWTH_REVIEW_DATA_SOURCE,
     workspaceId ?? '',
+    campaignId,
     source,
   ].join(':')
   const resource = useAsyncResource({
     dependencyKey,
     load: () => getGrowthReviewDashboardPageFromApi({
       apiClient: resolvedApiClient,
+      campaignId,
       routeParams,
       viewer: runtime.viewer,
       workspaceId,
@@ -56,6 +65,7 @@ export function useGrowthReviewReadModel({
     ...resource,
     dataSource: GROWTH_REVIEW_DATA_SOURCE,
     page: resource.status === 'error' ? createErrorPage(resource.error, resource.errorInfo) : resource.data,
+    campaignId: resource.data?.campaignId || campaignId,
     workspaceId,
   }
 }

@@ -1,5 +1,5 @@
 import { AdminClientWorkspaceFrame } from '@/features/admin-client-workspace'
-import { GrowthReviewSetupWorkspace } from '@/features/growth-review-setup'
+import { GrowthReviewReviewManagement } from '@/features/growth-review-review-management'
 
 export function AgencyWorkspaceReviewSetupPage({ routeParams = {}, runtime }) {
   return (
@@ -10,7 +10,7 @@ export function AgencyWorkspaceReviewSetupPage({ routeParams = {}, runtime }) {
       width="content"
     >
       {({ workspaceId }) => (
-        <GrowthReviewSetupWorkspace
+        <GrowthReviewReviewManagement
           apiClient={runtime.apiClient}
           workspaceId={workspaceId}
         />

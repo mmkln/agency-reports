@@ -534,6 +534,23 @@ export const iconRegistry = {
       </>
     ),
   },
+  tag: {
+    defaultSize: 18,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path
+          d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <circle cx="7.5" cy="7.5" fill="currentColor" r="1.25" />
+      </>
+    ),
+  },
   trendUp: {
     defaultSize: 18,
     viewBox: '0 0 24 24',
@@ -1263,6 +1280,18 @@ export const iconRegistry = {
       />
     ),
   },
+  trash: {
+    defaultSize: 24,
+    viewBox: '0 0 24 24',
+    paths: (
+      <>
+        <path d="M3 6h18" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+        <path d="M8 6V4h8v2" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+        <path d="m19 6-1 14H6L5 6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+        <path d="M10 11v5M14 11v5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+      </>
+    ),
+  },
   figmaMark: {
     defaultSize: 24,
     viewBox: '0 0 24 24',
@@ -1289,6 +1318,34 @@ export const iconRegistry = {
       />
     ),
   },
+  chevronLeft: {
+    defaultSize: 24,
+    viewBox: '0 0 24 24',
+    paths: (
+      <path
+        d="m15 18-6-6 6-6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    ),
+  },
+  chevronRight: {
+    defaultSize: 24,
+    viewBox: '0 0 24 24',
+    paths: (
+      <path
+        d="m9 18 6-6-6-6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    ),
+  },
   helpCircle: {
     defaultSize: 16,
     viewBox: '0 0 16 16',
@@ -1297,6 +1354,17 @@ export const iconRegistry = {
         d="M8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2m0 1a5 5 0 1 0 0 10A5 5 0 0 0 8 3m-.143 6.902a.64.64 0 0 1 .461.19l.086.102a.64.64 0 0 1 .112.367.64.64 0 0 1-.091.329.7.7 0 0 1-.234.24l-.08.04a.65.65 0 0 1-.719-.14l-.003-.005a.65.65 0 0 1-.19-.463c0-.18.064-.34.192-.467l.002-.002a.65.65 0 0 1 .464-.19m.157-5.122c.349 0 .668.072.949.226h-.001a1.68 1.68 0 0 1 .892 1.521q.001.327-.107.613a1.6 1.6 0 0 1-.322.513h-.001a2.5 2.5 0 0 1-.494.413v.001a2 2 0 0 0-.359.297.75.75 0 0 0-.162.29 1.7 1.7 0 0 0-.06.457.404.404 0 0 1-.404.399h-.208a.404.404 0 0 1-.403-.404v-.002c.002-.313.037-.586.113-.808.075-.218.188-.41.341-.567a3 3 0 0 1 .516-.412l.17-.124q.078-.062.136-.125a.8.8 0 0 0 .17-.256V6.81a.8.8 0 0 0 .053-.222l.004-.083A.74.74 0 0 0 8.73 6.1v-.002a.7.7 0 0 0-.289-.264l-.002-.001a.9.9 0 0 0-.308-.093l-.117-.007a.9.9 0 0 0-.42.098v.001a.76.76 0 0 0-.303.276H7.29a.8.8 0 0 0-.1.252c-.05.228-.246.453-.535.453-.28 0-.554-.241-.496-.57l.037-.168a1.7 1.7 0 0 1 .202-.458l.067-.097q.244-.332.616-.523V5q.426-.22.933-.219"
         fill="currentColor"
       />
+    ),
+  },
+  infoCircle: {
+    defaultSize: 16,
+    viewBox: '0 0 16 16',
+    paths: (
+      <>
+        <circle cx="8" cy="8" fill="none" r="6" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M8 7.15v4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.25" />
+        <circle cx="8" cy="4.65" fill="currentColor" r=".75" />
+      </>
     ),
   },
   google: {

@@ -20,6 +20,7 @@ export function AgencyWorkspaceReviewPage({ routeParams = {}, runtime }) {
       width="full"
     >
       <DentalGrowthReviewPage
+        configurationHref={reviewSetupHref}
         funnelEmptyAction={workspaceId ? (
           <Button asChild size="sm" variant="secondary">
             <Link to={reviewSetupHref}>Open Review Setup</Link>

@@ -2,9 +2,12 @@ export {
   getDefaultWorkspaceAdminPath,
   getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
+  getWorkspaceExecutivePath,
+  getWorkspaceLeadReportPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
   resolveRouteWorkspaceId,
 } from './adminWorkspacePaths'
 export {
@@ -16,4 +19,6 @@ export {
   getClientWorkspaceSectionHref,
   getClientWorkspaceSidebarItems,
   getVisibleClientWorkspaceSections,
+  getWorkspaceActiveNavigationId,
+  getWorkspaceNavigationPages,
 } from './clientWorkspaceNavigation'

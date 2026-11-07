@@ -28,11 +28,29 @@ export const routeAccessMetadata = Object.freeze([
     access: { scope: PUBLIC },
   },
   {
+    id: 'forgot-password',
+    layout: 'auth',
+    path: '/forgot-password',
+    access: { scope: PUBLIC },
+  },
+  {
+    id: 'reset-password',
+    layout: 'auth',
+    path: '/reset-password',
+    access: { scope: PUBLIC },
+  },
+  {
     id: 'login',
     layout: 'auth',
     path: '/login',
     redirectAuthenticated: true,
     access: { scope: PUBLIC },
+  },
+  {
+    id: 'plugin-connect',
+    layout: 'auth',
+    path: ROUTE_PATHS.pluginConnect,
+    access: { scope: ACCOUNT },
   },
   {
     id: 'access-denied',
@@ -102,6 +120,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-workspace-tag-catalog',
+    path: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.MANAGE_INTEGRATIONS,
+      scope: WORKSPACE,
+    },
+  },
+  {
     id: 'agency-workspace-review-setup',
     path: ROUTE_PATHS.agencyWorkspaceReviewSetup,
     access: {
@@ -112,6 +138,22 @@ export const routeAccessMetadata = Object.freeze([
   {
     id: 'agency-workspace-review',
     path: ROUTE_PATHS.agencyWorkspaceReview,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-lead-report',
+    path: ROUTE_PATHS.agencyWorkspaceLeadReport,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+    },
+  },
+  {
+    id: 'agency-workspace-executive',
+    path: ROUTE_PATHS.agencyWorkspaceExecutive,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,
@@ -147,8 +189,42 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'portal-workspace-lead-report',
+    path: ROUTE_PATHS.portalWorkspaceLeadReport,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
+    },
+  },
+  {
+    id: 'portal-workspace-executive',
+    path: ROUTE_PATHS.portalWorkspaceExecutive,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+    },
+  },
+  {
     id: 'dental-growth-review',
     path: ROUTE_PATHS.portalGrowthReview,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
+      scope: WORKSPACE,
+      workspaceCapability: CLINIC_REPORTING_CAPABILITIES.DENTAL_GROWTH_REVIEW_VIEW,
+    },
+  },
+  {
+    id: 'weekly-lead-report',
+    path: ROUTE_PATHS.portalLeadReport,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
+    },
+  },
+  {
+    id: 'executive-dashboard',
+    path: ROUTE_PATHS.portalExecutive,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_GROWTH_REVIEW,
       scope: WORKSPACE,

@@ -1,0 +1,142 @@
+import { Icon } from '@/shared/icons'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Switch,
+} from '@/shared/ui'
+
+function MoveButton({
+  children,
+  disabled,
+  direction,
+  onClick,
+}) {
+  return (
+    <Button
+      aria-label={children}
+      className="text-text-muted hover:text-text-primary"
+      disabled={disabled}
+      onClick={onClick}
+      size="icon-sm"
+      type="button"
+      variant="ghost"
+    >
+      <Icon
+        className={direction === 'up' ? 'rotate-180' : ''}
+        name="chevronDown"
+        size={16}
+      />
+    </Button>
+  )
+}
+
+export function GrowthReviewLayoutModal({ editor }) {
+  return (
+    <Dialog open={editor.isOpen} onOpenChange={(open) => {
+      if (!open) {
+        editor.close()
+      }
+    }}>
+      <DialogContent className="max-w-modal-md">
+        <DialogHeader>
+          <DialogTitle>Customize Review</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-item">
+          <Label htmlFor="growth-review-name">Review name</Label>
+          <Input
+            aria-invalid={Boolean(editor.nameError)}
+            disabled={editor.isSaving}
+            id="growth-review-name"
+            maxLength={255}
+            onChange={(event) => editor.setName(event.target.value)}
+            required
+            value={editor.draftName}
+          />
+          {editor.nameError ? (
+            <p className="text-label text-destructive" role="alert">{editor.nameError}</p>
+          ) : null}
+        </div>
+
+        <div className="grid gap-tag">
+          <h3 className="text-ui font-semibold text-text-primary">Dashboard sections</h3>
+          {editor.draftItems.map((item, index) => {
+            const isFirst = index === 0
+            const isLast = index === editor.draftItems.length - 1
+
+            return (
+              <div
+                className="flex min-h-target items-center justify-between gap-control border-b border-separator py-item last:border-b-0"
+                key={item.widgetKey}
+              >
+                <span className={`min-w-0 text-ui font-medium ${item.isVisible ? 'text-text-primary' : 'text-text-muted'}`}>
+                  {item.label}
+                </span>
+                <span className="flex shrink-0 items-center gap-tag">
+                  <Switch
+                    aria-label={`${item.isVisible ? 'Hide' : 'Show'} ${item.label}`}
+                    checked={item.isVisible}
+                    disabled={editor.isSaving}
+                    onCheckedChange={(checked) => editor.setVisibility(item.widgetKey, checked)}
+                  />
+                  <MoveButton
+                    disabled={isFirst || editor.isSaving}
+                    direction="up"
+                    onClick={() => editor.moveUp(item.widgetKey)}
+                  >
+                    Move up
+                  </MoveButton>
+                  <MoveButton
+                    disabled={isLast || editor.isSaving}
+                    direction="down"
+                    onClick={() => editor.moveDown(item.widgetKey)}
+                  >
+                    Move down
+                  </MoveButton>
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {editor.error ? (
+          <p className="text-label font-medium text-destructive">{editor.error}</p>
+        ) : null}
+
+        <DialogFooter className="items-center justify-between gap-control sm:justify-between">
+          <Button
+            disabled={editor.isSaving}
+            onClick={editor.resetToDefault}
+            type="button"
+            variant="ghost"
+          >
+            Restore Defaults
+          </Button>
+          <div className="flex items-center gap-control">
+            <Button
+              disabled={editor.isSaving}
+              onClick={editor.close}
+              type="button"
+              variant="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={editor.isSaving || !editor.draftName.trim()}
+              onClick={editor.save}
+              type="button"
+            >
+              {editor.isSaving ? 'Saving' : 'Done'}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

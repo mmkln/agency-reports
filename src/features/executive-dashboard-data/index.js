@@ -1,0 +1,1 @@
+export { useExecutiveDashboardReadModel } from './useExecutiveDashboardReadModel'

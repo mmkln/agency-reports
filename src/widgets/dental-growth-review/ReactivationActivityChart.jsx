@@ -117,10 +117,11 @@ function WeekBoundaryLines({ weekBoundaryLines }) {
       aria-hidden="true"
       className="pointer-events-none absolute"
       style={{
-        bottom: 36,
+        bottom: activityChartLayout.xAxisHeight + activityChartLayout.margin.bottom,
         left: activityChartLayout.leftAxisWidth,
         right: activityChartLayout.rightAxisWidth + activityChartLayout.margin.right,
         top: activityChartLayout.margin.top,
+        zIndex: 1,
       }}
     >
       {weekBoundaryLines.map((boundary) => {
@@ -145,31 +146,44 @@ function WeekBoundaryLines({ weekBoundaryLines }) {
 }
 
 function createWeekTickLabel(weekTicks) {
-  const labelsByValue = new Map(weekTicks.map((tick) => [tick.value, tick.label]))
+  const ticksByValue = new Map(weekTicks.map((tick) => [tick.value, tick]))
 
   return function WeekTickLabel({ x, y, payload }) {
-    const label = labelsByValue.get(payload?.value)
+    const tick = ticksByValue.get(payload?.value)
 
-    if (!label || !Number.isFinite(x) || !Number.isFinite(y)) {
+    if (!tick || !Number.isFinite(x) || !Number.isFinite(y)) {
       return null
     }
 
     return (
       <text
-        fill={semanticColors.textMuted}
-        fontSize={12}
-        fontWeight={700}
         textAnchor="middle"
         x={x}
         y={y}
       >
-        {label}
+        <tspan
+          fill={semanticColors.textMuted}
+          fontSize={12}
+          fontWeight={700}
+          x={x}
+        >
+          {tick.label}
+        </tspan>
+        <tspan
+          dy={15}
+          fill={semanticColors.textQuaternary}
+          fontSize={11}
+          fontWeight={500}
+          x={x}
+        >
+          {tick.rangeLabel}
+        </tspan>
       </text>
     )
   }
 }
 
-export function ReactivationActivityChart({ chart }) {
+export function ReactivationActivityChart({ chart, explanation, explanationEditor }) {
   const model = buildActivityChartModel(chart)
 
   if (!model) {
@@ -188,6 +202,9 @@ export function ReactivationActivityChart({ chart }) {
 
   return (
     <ReactivationChartPanel
+      explanationKey="chart.reactivation_activity"
+      explanation={explanation}
+      explanationEditor={explanationEditor}
       rightSlot={legend}
       title={model.title}
     >
@@ -217,6 +234,7 @@ export function ReactivationActivityChart({ chart }) {
             <XAxis
               axisLine={false}
               dataKey="label"
+              height={activityChartLayout.xAxisHeight}
               interval={0}
               tick={createWeekTickLabel(model.weekTicks)}
               tickLine={false}
@@ -236,6 +254,7 @@ export function ReactivationActivityChart({ chart }) {
               yAxisId="touches"
             />
             <YAxis
+              allowDecimals={false}
               axisLine={false}
               domain={[0, model.rightAxisMax]}
               orientation="right"
@@ -251,6 +270,7 @@ export function ReactivationActivityChart({ chart }) {
             <Tooltip
               content={<TooltipContent />}
               cursor={{ fill: semanticColors.fillQuaternary }}
+              wrapperStyle={{ zIndex: 2 }}
             />
             {touchSeries.map((item) => (
               <Bar

@@ -4,9 +4,12 @@ import { ROUTE_PATHS } from '../../../domain/navigation/routePaths'
 import {
   getWorkspaceAccessPath,
   getWorkspaceDataSourcesPath,
+  getWorkspaceExecutivePath,
+  getWorkspaceLeadReportPath,
   getWorkspaceReviewPath,
   getWorkspaceReviewSetupPath,
   getWorkspaceSetupPath,
+  getWorkspaceTagCatalogPath,
 } from './adminWorkspacePaths'
 
 export const clientWorkspaceSections = [
@@ -31,18 +34,22 @@ export const clientWorkspaceSections = [
         to: getWorkspaceDataSourcesPath,
       },
       {
+        id: 'tag-catalog',
+        iconName: 'tag',
+        label: 'Tag Catalog',
+        navigationParentId: 'data',
+        route: ROUTE_PATHS.agencyWorkspaceTagCatalog,
+        showInWorkspaceNavigation: false,
+        to: getWorkspaceTagCatalogPath,
+      },
+      {
         id: 'review-setup',
         iconName: 'settings',
         label: 'Review Setup',
+        navigationParentId: 'review',
         route: ROUTE_PATHS.agencyWorkspaceReviewSetup,
+        showInWorkspaceNavigation: false,
         to: getWorkspaceReviewSetupPath,
-      },
-      {
-        id: 'review',
-        iconName: 'trendingUp',
-        label: 'Review',
-        route: ROUTE_PATHS.agencyWorkspaceReview,
-        to: getWorkspaceReviewPath,
       },
       {
         id: 'access',
@@ -50,6 +57,30 @@ export const clientWorkspaceSections = [
         label: 'Access',
         route: ROUTE_PATHS.agencyWorkspaceAccess,
         to: getWorkspaceAccessPath,
+      },
+      {
+        group: 'review',
+        id: 'review',
+        iconName: 'trendingUp',
+        label: 'Review',
+        route: ROUTE_PATHS.agencyWorkspaceReview,
+        to: getWorkspaceReviewPath,
+      },
+      {
+        group: 'review',
+        id: 'lead-report',
+        iconName: 'barChart',
+        label: 'Lead Report',
+        route: ROUTE_PATHS.agencyWorkspaceLeadReport,
+        to: getWorkspaceLeadReportPath,
+      },
+      {
+        group: 'review',
+        id: 'executive',
+        iconName: 'barChart',
+        label: 'Executive',
+        route: ROUTE_PATHS.agencyWorkspaceExecutive,
+        to: getWorkspaceExecutivePath,
       },
     ],
   },
@@ -62,6 +93,20 @@ export function getVisibleClientWorkspaceSections() {
       pages: section.pages,
     }))
     .filter((section) => section.pages.length > 0)
+}
+
+export function getWorkspaceNavigationPages(sections) {
+  return sections
+    .flatMap((section) => section.pages)
+    .filter((page) => page.showInWorkspaceNavigation !== false)
+}
+
+export function getWorkspaceActiveNavigationId(sections, currentPage) {
+  const currentPageConfig = sections
+    .flatMap((section) => section.pages)
+    .find((page) => page.id === currentPage)
+
+  return currentPageConfig?.navigationParentId ?? currentPage
 }
 
 export function getClientWorkspacePageLabel(page) {
@@ -101,16 +146,20 @@ export function getClientWorkspacePageIdByRoutePath(path) {
 export function getClientWorkspaceSidebarItems(client, clientId) {
   const sections = getVisibleClientWorkspaceSections(client)
 
-  return sections.map((section) => ({
-    children: section.pages.map((page) => ({
-      iconName: page.iconName ?? section.iconName,
-      id: page.id,
-      label: getClientWorkspacePageLabel(page, client),
-      path: getClientWorkspacePageHref(page, clientId),
-      type: 'route',
-    })),
-    id: section.id,
-    label: section.label,
-    type: 'section',
-  }))
+  return sections
+    .map((section) => ({
+      children: section.pages
+        .filter((page) => page.showInWorkspaceNavigation !== false)
+        .map((page) => ({
+          iconName: page.iconName ?? section.iconName,
+          id: page.id,
+          label: getClientWorkspacePageLabel(page, client),
+          path: getClientWorkspacePageHref(page, clientId),
+          type: 'route',
+        })),
+      id: section.id,
+      label: section.label,
+      type: 'section',
+    }))
+    .filter((section) => section.children.length > 0)
 }

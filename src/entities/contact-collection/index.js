@@ -1,0 +1,1 @@
+export { normalizeContactCollection } from './apiContract'

@@ -10,6 +10,18 @@ export function acceptInvitation(apiClient, token, payload, options = {}) {
   return apiClient.post(`/api/invitations/${encodePathValue(token)}/accept/`, payload, options)
 }
 
+export function requestInvitationEmailCode(apiClient, payload, options = {}) {
+  return apiClient.post('/api/invitations/email-code/request/', payload, options)
+}
+
+export function verifyInvitationEmailCode(apiClient, payload, options = {}) {
+  return apiClient.post('/api/invitations/email-code/verify/', payload, options)
+}
+
+export function acceptInvitationWithEmailCode(apiClient, payload, options = {}) {
+  return apiClient.post('/api/invitations/email-code/accept/', payload, options)
+}
+
 export function listWorkspaceInvitations(apiClient, workspaceId, options = {}) {
   return apiClient.get(`/api/workspaces/${encodePathValue(workspaceId)}/invitations/`, options)
 }

@@ -16,8 +16,21 @@ export {
 export { ChartLegend } from './ChartLegend'
 export { ChartPanel } from './ChartPanel'
 export { Checkbox } from '@/components/ui/checkbox'
+export {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 export { ChecklistItem } from './ChecklistItem'
 export { CodeValue } from './CodeValue'
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 export {
   Command,
   CommandEmpty,
@@ -31,6 +44,8 @@ export {
 export { ConfirmationDialog } from './ConfirmationDialog'
 export { ContentToolbar } from './ContentToolbar'
 export { DashboardSectionGrid } from './DashboardSectionGrid'
+export { DashboardSettingsMenu } from './DashboardSettingsMenu'
+export { DashboardToolbarActions } from './DashboardToolbarActions'
 export { DetailRow } from './DetailRow'
 export { DataTable } from './DataTable'
 export { DataTableSurface } from './DataTableSurface'
@@ -86,6 +101,14 @@ export { NativeSelect, NativeSelect as Select } from './NativeSelect'
 export { NumberField } from './NumberField'
 export { OverlayBody, OverlayFooter, OverlayHeader } from './Overlay'
 export { FoundationPageHeader } from './FoundationPageHeader'
+export {
+  FullscreenDialog,
+  FullscreenDialogBody,
+  FullscreenDialogContent,
+  FullscreenDialogFooter,
+  FullscreenDialogHeader,
+  FullscreenDialogTrigger,
+} from './FullscreenDialog'
 export { PageHeader } from './PageHeader'
 export { PagePrimaryAction } from './PagePrimaryAction'
 export { PageShell } from './PageShell'
@@ -117,6 +140,7 @@ export { ResourceState } from './ResourceState'
 export { SearchField } from './SearchField'
 export { SectionJumpNav } from './SectionJumpNav'
 export { SectionNav } from './SectionNav'
+export { SectionRailNav } from './SectionRailNav'
 export { Separator } from '@/components/ui/separator'
 export {
   Sheet,
@@ -137,6 +161,7 @@ export { statusToneClasses } from './statusToneClasses'
 export { Skeleton } from '@/components/ui/skeleton'
 export { Switch } from '@/components/ui/switch'
 export { TableBadge, TablePanel } from './TablePanel'
+export { TablePagination } from './TablePagination'
 export {
   Table,
   TableBody,
@@ -152,6 +177,7 @@ export { TaskItem } from './TaskItem'
 export { Textarea } from '@/components/ui/textarea'
 export { Timeline, TimelineItem } from './Timeline'
 export { ToggleGroup } from './ToggleGroup'
+export { usePagination } from './usePagination'
 export { ViewModeToggle } from './ViewModeToggle'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip'
 export { TooltipIconButton } from './TooltipIconButton'

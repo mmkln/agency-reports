@@ -5,6 +5,7 @@ import {
   DENTAL_GROWTH_REVIEW_STATUSES,
   normalizeDentalGrowthReviewPeriod,
 } from './model'
+import { normalizeDashboardExplanations } from '@/entities/dashboard-explanation'
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -40,6 +41,10 @@ function formatSigned(value, suffix = '') {
 
 function normalizeMetricSource(value) {
   return Array.isArray(value) ? value.join(', ') : normalizeText(value)
+}
+
+export function normalizeGrowthReviewDashboardExplanations(value = {}) {
+  return normalizeDashboardExplanations(value)
 }
 
 function normalizeMetricSeriesPoints(source = {}) {
@@ -329,6 +334,7 @@ function normalizeReactivationActivityCard(card = {}) {
   const source = isPlainObject(card) ? card : {}
 
   return {
+    caption: normalizeText(source.caption ?? source.helper),
     displayValue: normalizeText(source.display_value ?? source.displayValue),
     key: normalizeText(source.key),
     label: normalizeText(source.label),
@@ -410,6 +416,149 @@ function normalizeWeeklyActivitySection(section = {}) {
   }
 }
 
+function normalizeAcceptedTreatmentValueCard(card = {}) {
+  const source = isPlainObject(card) ? card : {}
+
+  return {
+    key: normalizeText(source.key),
+    label: normalizeText(source.label),
+    value: source.value ?? '0.00',
+  }
+}
+
+function normalizeAcceptedTreatmentValueRow(row = {}) {
+  const source = isPlainObject(row) ? row : {}
+  const rawValues = isPlainObject(source.raw_values)
+    ? source.raw_values
+    : isPlainObject(source.rawValues)
+      ? source.rawValues
+      : {}
+
+  return {
+    contactId: normalizeText(source.contact_id ?? source.contactId),
+    contactName: normalizeText(source.contact_name ?? source.contactName),
+    expectedValue: source.expected_value ?? source.expectedValue ?? '0.00',
+    firstTimeValue: source.first_time_value ?? source.firstTimeValue ?? '0.00',
+    id: normalizeText(source.id),
+    lifetimeValue: source.lifetime_value ?? source.lifetimeValue ?? '0.00',
+    openValue: source.open_value ?? source.openValue ?? '0.00',
+    opportunityId: normalizeText(source.opportunity_id ?? source.opportunityId),
+    opportunityName: normalizeText(source.opportunity_name ?? source.opportunityName),
+    paidValue: source.paid_value ?? source.paidValue ?? '0.00',
+    pendingProcedureTotalFee: source.pending_procedure_total_fee
+      ?? source.pendingProcedureTotalFee
+      ?? '0.00',
+    rawValues,
+    track: normalizeText(source.track),
+    trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+    totalExpectedValue: source.total_expected_value ?? source.totalExpectedValue ?? '0.00',
+    valueFromIstart: source.value_from_istart ?? source.valueFromIstart ?? '0.00',
+  }
+}
+
+function normalizeAcceptedTreatmentValueBreakdown(chart = {}) {
+  const source = isPlainObject(chart) ? chart : {}
+  const summary = isPlainObject(source.summary) ? source.summary : {}
+
+  return {
+    available: source.available === true,
+    currency: normalizeText(source.currency || 'USD'),
+    reason: normalizeText(source.reason),
+    summary: {
+      cards: normalizeArray(summary.cards).map(normalizeAcceptedTreatmentValueCard),
+      rawTotals: isPlainObject(summary.raw_totals)
+        ? summary.raw_totals
+        : isPlainObject(summary.rawTotals)
+          ? summary.rawTotals
+          : {},
+      rows: normalizeArray(summary.rows).map(normalizeAcceptedTreatmentValueRow),
+      totals: isPlainObject(summary.totals) ? summary.totals : {},
+    },
+    title: normalizeText(source.title) || 'Accepted Treatment Value Breakdown',
+    type: normalizeText(source.type),
+  }
+}
+
+function normalizeBookedAppointmentsByReplyChannelRow(row = {}) {
+  const source = isPlainObject(row) ? row : {}
+
+  return {
+    email: Number(source.email ?? 0) || 0,
+    percentOfTotal: Number(source.percent_of_total ?? source.percentOfTotal ?? 0) || 0,
+    sms: Number(source.sms ?? 0) || 0,
+    total: Number(source.total ?? 0) || 0,
+    track: normalizeText(source.track),
+    trackLabel: normalizeText(source.track_label ?? source.trackLabel),
+  }
+}
+
+function normalizeBookedAppointmentsByReplyChannel(chart = {}) {
+  const source = isPlainObject(chart) ? chart : {}
+  const totals = isPlainObject(source.totals) ? source.totals : {}
+
+  return {
+    available: source.available === true,
+    channels: normalizeArray(source.channels).map((channel) => ({
+      key: normalizeText(channel?.key),
+      label: normalizeText(channel?.label),
+    })),
+    reason: normalizeText(source.reason),
+    rows: normalizeArray(source.rows).map(normalizeBookedAppointmentsByReplyChannelRow),
+    title: normalizeText(source.title) || 'Booked Appointments by Reply Channel',
+    totals: {
+      email: Number(totals.email ?? 0) || 0,
+      percentOfTotal: Number(totals.percent_of_total ?? totals.percentOfTotal ?? 0) || 0,
+      sms: Number(totals.sms ?? 0) || 0,
+      total: Number(totals.total ?? 0) || 0,
+      unattributed: Number(totals.unattributed ?? 0) || 0,
+    },
+    type: normalizeText(source.type),
+  }
+}
+
+export const DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS = [
+  { isVisible: true, label: 'Accepted Treatment Value Breakdown', widgetKey: 'accepted_treatment_value_breakdown' },
+  { isVisible: true, label: 'Reactivation Activity', widgetKey: 'reactivation_activity' },
+  { isVisible: true, label: 'Breakdown by Track', widgetKey: 'booked_appointments_by_reply_channel' },
+  { isVisible: true, label: 'Weekly Activity', widgetKey: 'weekly_track_activity' },
+  { isVisible: true, label: 'Bookings by Track', widgetKey: 'bookings_by_track' },
+  { isVisible: true, label: 'Reactivation Lifecycle', widgetKey: 'reactivation_lifecycle' },
+]
+
+function normalizeLayoutItem(item = {}, index = 0) {
+  const source = isPlainObject(item) ? item : {}
+  const widgetKey = normalizeText(source.widget_key ?? source.widgetKey ?? source.key)
+
+  return {
+    isVisible: source.is_visible !== false && source.isVisible !== false,
+    label: normalizeText(source.label),
+    position: Number(source.position ?? (index + 1) * 10),
+    widgetKey,
+  }
+}
+
+export function normalizeGrowthReviewDashboardLayout(layout = {}) {
+  const source = isPlainObject(layout) ? layout : {}
+  const rawItems = normalizeArray(source.items)
+  const items = rawItems.length
+    ? rawItems.map(normalizeLayoutItem).filter((item) => item.widgetKey)
+    : DEFAULT_GROWTH_REVIEW_LAYOUT_ITEMS.map((item, index) => ({
+      ...item,
+      position: (index + 1) * 10,
+    }))
+
+  return {
+    campaignId: normalizeText(source.campaign_id ?? source.campaignId),
+    dashboardType: normalizeText(source.dashboard_type ?? source.dashboardType) || 'growth_review_reactivation',
+    isDefault: source.is_default === true || source.isDefault === true,
+    items,
+    layoutVersion: Number(source.layout_version ?? source.layoutVersion ?? 1) || 1,
+    updatedAt: normalizeText(source.updated_at ?? source.updatedAt),
+    updatedBy: normalizeText(source.updated_by ?? source.updatedBy),
+    workspaceId: normalizeText(source.workspace_id ?? source.workspaceId),
+  }
+}
+
 export function normalizeGrowthReviewWeeklyReportingReadModel(payload = {}) {
   const source = isPlainObject(payload) ? payload : {}
   const weeklyReporting = isPlainObject(source.weekly_reporting)
@@ -445,6 +594,13 @@ export function normalizeGrowthReviewChartsReadModel(payload = {}) {
   return {
     calculated_at: normalizeText(source.calculated_at),
     calculation_version: normalizeText(source.calculation_version),
+    acceptedTreatmentValueBreakdown: normalizeAcceptedTreatmentValueBreakdown(
+      charts.accepted_treatment_value_breakdown ?? charts.acceptedTreatmentValueBreakdown,
+    ),
+    bookedAppointmentsByReplyChannel: normalizeBookedAppointmentsByReplyChannel(
+      charts.booked_appointments_by_reply_channel ?? charts.bookedAppointmentsByReplyChannel,
+    ),
+    layout: normalizeGrowthReviewDashboardLayout(source.layout),
     metrics: normalizedMetrics,
     funnel: normalizeFunnelChart(funnel),
     reactivationActivity: normalizeReactivationActivityChart(

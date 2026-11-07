@@ -2,6 +2,8 @@ import {
   DENTAL_GROWTH_REVIEW_PERIOD_TYPES,
   DENTAL_GROWTH_REVIEW_ZONES,
   getDentalGrowthReviewPresetForViewer,
+  normalizeGrowthReviewDashboardLayout,
+  normalizeGrowthReviewDashboardExplanations,
   normalizeGrowthReviewChartsReadModel,
   normalizeGrowthReviewReadModel,
   normalizeGrowthReviewWeeklyReportingReadModel,
@@ -238,12 +240,65 @@ function normalizeCampaignMetadata(payload) {
     activityStartDate: campaign.activity_start_date ?? campaign.activityStartDate ?? '',
     id: campaign.id ?? '',
     name: campaign.name ?? campaign.label ?? '',
+    status: campaign.status ?? '',
+    type: campaign.type ?? '',
     value: campaign.value ?? campaign.campaign_value ?? campaign.campaignValue ?? '',
+  }
+}
+
+function buildCampaignQuery(campaignId) {
+  if (!campaignId) {
+    return ''
+  }
+
+  const params = new URLSearchParams()
+  params.set('campaign_id', campaignId)
+
+  return `?${params.toString()}`
+}
+
+function normalizeGrowthReviewCampaignOption(campaign = {}) {
+  return {
+    activityStartDate: campaign.activity_start_date ?? campaign.activityStartDate ?? '',
+    campaignValue: campaign.campaign_value ?? campaign.campaignValue ?? campaign.value ?? '',
+    hasCompletedCalculation: Boolean(
+      campaign.has_completed_calculation ?? campaign.hasCompletedCalculation,
+    ),
+    id: campaign.id ?? '',
+    isDefault: Boolean(campaign.is_default ?? campaign.isDefault),
+    lastCalculatedAt: campaign.last_calculated_at ?? campaign.lastCalculatedAt ?? '',
+    name: campaign.name ?? campaign.label ?? '',
+    pipelineId: campaign.pipeline_id ?? campaign.pipelineId ?? '',
+    sourceConnectionId: campaign.source_connection_id ?? campaign.sourceConnectionId ?? '',
+    status: campaign.status ?? '',
+    type: campaign.type ?? '',
+  }
+}
+
+export async function getGrowthReviewCampaignsFromApi({
+  apiClient,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    return {
+      campaigns: [],
+      defaultCampaignId: '',
+    }
+  }
+
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/campaigns/`)
+
+  return {
+    campaigns: Array.isArray(payload?.campaigns)
+      ? payload.campaigns.map(normalizeGrowthReviewCampaignOption)
+      : [],
+    defaultCampaignId: payload?.default_campaign_id ?? payload?.defaultCampaignId ?? '',
   }
 }
 
 export async function getGrowthReviewDashboardPageFromApi({
   apiClient,
+  campaignId,
   now = new Date(),
   viewer,
   workspaceId,
@@ -255,7 +310,7 @@ export async function getGrowthReviewDashboardPageFromApi({
     }
   }
 
-  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/`)
+  const payload = await apiClient.get(`/api/workspaces/${workspaceId}/growth-review/${buildCampaignQuery(campaignId)}`)
   const readModel = normalizeGrowthReviewReadModel({
     ...payload,
     workspace_id: payload?.workspace_id ?? workspaceId,
@@ -268,7 +323,11 @@ export async function getGrowthReviewDashboardPageFromApi({
   return {
     calculationMeta: null,
     campaign: normalizeCampaignMetadata(payload),
+    campaignId: campaignId || payload?.campaign?.id || '',
     charts,
+    dashboardExplanations: normalizeGrowthReviewDashboardExplanations(
+      payload?.dashboard_explanations ?? payload?.chart_explanations,
+    ),
     client: {
       id: workspaceId,
       name: payload?.workspace?.name ?? payload?.client?.name ?? 'Workspace',
@@ -276,6 +335,13 @@ export async function getGrowthReviewDashboardPageFromApi({
     },
     period: readModel.period,
     periodOptions: periodOptions.periodOptions,
+    layout: charts.layout,
+    permissions: {
+      canCustomizeLayout: payload?.permissions?.can_customize_layout === true,
+      canEditDashboardExplanations:
+        payload?.permissions?.can_edit_dashboard_explanations === true
+        || payload?.permissions?.can_edit_chart_explanations === true,
+    },
     preset,
     previousPeriod: null,
     reason: null,
@@ -286,4 +352,109 @@ export async function getGrowthReviewDashboardPageFromApi({
     weeklyReporting,
     zones: mapZoneState(preset),
   }
+}
+
+export async function updateGrowthReviewDashboardExplanation({
+  apiClient,
+  campaignId,
+  explanationKey,
+  explanation,
+  workspaceId,
+}) {
+  if (!workspaceId || !campaignId || !explanationKey) {
+    throw new Error('Workspace, campaign, and dashboard item are required to update an explanation.')
+  }
+
+  const payload = await apiClient.request(
+    `/api/workspaces/${workspaceId}/growth-review/dashboard-explanations/${encodeURIComponent(explanationKey)}/`,
+    {
+      body: {
+        additional_note: explanation.additionalNote,
+        calculation_explanation: explanation.calculationExplanation,
+        campaign_id: campaignId,
+        definition: explanation.definition,
+        label: explanation.label,
+        source: explanation.source,
+      },
+      method: 'PUT',
+    },
+  )
+
+  return normalizeGrowthReviewDashboardExplanations({
+    [explanationKey]: payload.explanation,
+  })[explanationKey]
+}
+
+export async function resetGrowthReviewDashboardExplanation({
+  apiClient,
+  campaignId,
+  explanationKey,
+  workspaceId,
+}) {
+  if (!workspaceId || !campaignId || !explanationKey) {
+    throw new Error('Workspace, campaign, and dashboard item are required to reset an explanation.')
+  }
+
+  const query = new URLSearchParams({ campaign_id: campaignId })
+  const payload = await apiClient.request(
+    `/api/workspaces/${workspaceId}/growth-review/dashboard-explanations/${encodeURIComponent(explanationKey)}/?${query}`,
+    { method: 'DELETE' },
+  )
+
+  return normalizeGrowthReviewDashboardExplanations({
+    [explanationKey]: payload.explanation,
+  })[explanationKey]
+}
+
+export async function updateGrowthReviewDashboardLayout({
+  apiClient,
+  campaignId,
+  items,
+  reset = false,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    throw new Error('workspaceId is required to update Growth Review layout.')
+  }
+
+  if (!campaignId) {
+    throw new Error('campaignId is required to update Growth Review layout.')
+  }
+
+  const payload = await apiClient.request(`/api/workspaces/${workspaceId}/growth-review/layout/`, {
+    body: reset
+      ? { campaign_id: campaignId, reset: true }
+      : {
+        campaign_id: campaignId,
+        items: items.map((item, index) => ({
+          is_visible: item.isVisible !== false,
+          position: (index + 1) * 10,
+          widget_key: item.widgetKey ?? item.widget_key,
+        })),
+      },
+    method: 'PUT',
+  })
+
+  return normalizeGrowthReviewDashboardLayout(payload.layout)
+}
+
+export async function getAcceptedTreatmentDrilldownFromApi({
+  apiClient,
+  campaignId,
+  workspaceId,
+}) {
+  if (!workspaceId) {
+    return {
+      available: false,
+      items: [],
+      reason: 'workspace_not_found',
+      stage: {
+        count: 0,
+        key: 'treatment_accepted',
+        label: 'Treatment Accepted',
+      },
+    }
+  }
+
+  return apiClient.get(`/api/workspaces/${workspaceId}/growth-review/drilldowns/accepted-treatment/${buildCampaignQuery(campaignId)}`)
 }

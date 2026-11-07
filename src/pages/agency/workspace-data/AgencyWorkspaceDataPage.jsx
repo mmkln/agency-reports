@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { AdminClientWorkspaceFrame } from '@/features/admin-client-workspace'
+import {
+  AdminClientWorkspaceFrame,
+  WorkspaceDataNavigation,
+} from '@/features/admin-client-workspace'
 import { normalizeResourceError } from '@/shared/data/resourceError'
 import {
   Button,
@@ -178,7 +181,12 @@ export function AgencyWorkspaceDataPage({ routeParams = {}, runtime }) {
     >
       {({ workspaceId }) => (
         workspaceId
-          ? <SourceConnectionsContent apiClient={runtime.apiClient} workspaceId={workspaceId} />
+          ? (
+              <div className="grid gap-card">
+                <WorkspaceDataNavigation currentPage="data" workspaceId={workspaceId} />
+                <SourceConnectionsContent apiClient={runtime.apiClient} workspaceId={workspaceId} />
+              </div>
+            )
           : <ErrorBlock title="Workspace missing">Choose a workspace before managing data sources.</ErrorBlock>
       )}
     </AdminClientWorkspaceFrame>

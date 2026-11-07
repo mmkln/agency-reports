@@ -1,0 +1,115 @@
+import { useMemo, useState } from 'react'
+
+function createDraft(explanation = {}) {
+  return {
+    additionalNote: explanation.additionalNote ?? '',
+    calculationExplanation: explanation.calculationExplanation ?? '',
+    definition: explanation.definition ?? '',
+    label: explanation.label ?? '',
+    source: explanation.source ?? '',
+  }
+}
+
+function draftsMatch(left, right) {
+  return left.additionalNote === right.additionalNote
+    && left.calculationExplanation === right.calculationExplanation
+    && left.definition === right.definition
+    && left.label === right.label
+    && left.source === right.source
+}
+
+export function useDashboardExplanationEditor({
+  explanation,
+  explanationKey,
+  onReset,
+  onSave,
+}) {
+  const [savedExplanation, setSavedExplanation] = useState(null)
+  const [draft, setDraft] = useState(() => createDraft(explanation))
+  const [error, setError] = useState('')
+  const [isOpen, setIsOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [mode, setMode] = useState('view')
+  const currentExplanation = savedExplanation ?? explanation
+  const initialDraft = useMemo(() => createDraft(currentExplanation), [currentExplanation])
+  const isDirty = !draftsMatch(draft, initialDraft)
+
+  function setOpen(nextOpen) {
+    if (!nextOpen && mode === 'edit' && isDirty) return
+
+    setIsOpen(nextOpen)
+    if (!nextOpen) {
+      setMode('view')
+      setError('')
+      setDraft(createDraft(currentExplanation))
+    }
+  }
+
+  function edit() {
+    setDraft(createDraft(currentExplanation))
+    setError('')
+    setMode('edit')
+  }
+
+  function cancel() {
+    setDraft(createDraft(currentExplanation))
+    setError('')
+    setMode('view')
+  }
+
+  function updateField(field, value) {
+    setDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  async function save() {
+    setIsSaving(true)
+    setError('')
+    try {
+      const saved = await onSave?.({ explanation: draft, explanationKey })
+      if (!saved) throw new Error('Could not save this dashboard explanation.')
+      setSavedExplanation(saved)
+      setDraft(createDraft(saved))
+      setMode('view')
+      return saved
+    } catch (requestError) {
+      setError(requestError?.message || 'Could not save this dashboard explanation.')
+      return null
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function reset() {
+    setIsSaving(true)
+    setError('')
+    try {
+      const saved = await onReset?.({ explanationKey })
+      if (!saved) throw new Error('Could not restore the default explanation.')
+      setSavedExplanation(saved)
+      setDraft(createDraft(saved))
+      setMode('view')
+      return saved
+    } catch (requestError) {
+      setError(requestError?.message || 'Could not restore the default explanation.')
+      return null
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return {
+    cancel,
+    currentExplanation,
+    draft,
+    edit,
+    error,
+    isDirty,
+    isOpen,
+    isSaving,
+    mode,
+    reset,
+    save,
+    setOpen,
+    updateField,
+  }
+}

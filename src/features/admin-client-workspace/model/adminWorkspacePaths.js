@@ -1,9 +1,12 @@
 import {
   getAgencyWorkspaceAccessPath,
   getAgencyWorkspaceDataPath,
+  getAgencyWorkspaceExecutivePath,
+  getAgencyWorkspaceLeadReportPath,
   getAgencyWorkspaceReviewPath,
   getAgencyWorkspaceReviewSetupPath,
   getAgencyWorkspaceSetupPath,
+  getAgencyWorkspaceTagCatalogPath,
 } from '../../../domain/navigation/routePaths'
 
 function getWorkspaceId(workspaceOrId) {
@@ -18,8 +21,20 @@ export function getWorkspaceDataSourcesPath(workspaceOrId) {
   return getAgencyWorkspaceDataPath(getWorkspaceId(workspaceOrId))
 }
 
+export function getWorkspaceTagCatalogPath(workspaceOrId) {
+  return getAgencyWorkspaceTagCatalogPath(getWorkspaceId(workspaceOrId))
+}
+
 export function getWorkspaceReviewPath(workspaceOrId) {
   return getAgencyWorkspaceReviewPath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceExecutivePath(workspaceOrId) {
+  return getAgencyWorkspaceExecutivePath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceLeadReportPath(workspaceOrId) {
+  return getAgencyWorkspaceLeadReportPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {

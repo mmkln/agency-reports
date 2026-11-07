@@ -1,0 +1,161 @@
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it } from 'vitest'
+
+import { AnalyticsBreakdownWidget } from './AnalyticsBreakdownWidget'
+
+describe('AnalyticsBreakdownWidget', () => {
+  it('renders lead volume, patient mix, and source distribution', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsBreakdownWidget
+        data={{
+          cumulative: {
+            label: 'All-time',
+            rows: [
+              { key: 'meta', percentage: 60, value: 30 },
+              { key: 'website', percentage: 10, value: 5 },
+            ],
+            summary: { new_patient: 40, returning_patient: 10, value: 50 },
+            total: 50,
+          },
+          key: 'leads.volume_by_source',
+          summary: {
+            comparison: {
+              delta: -1,
+              delta_percent: -5.6,
+              label: 'vs prior week',
+              prior_value: 18,
+            },
+            new_patient: 16,
+            returning_patient: 1,
+            value: 17,
+          },
+          rows: [
+            {
+              details: [{ label: '$199 Offer', value: 7 }, { label: 'Veteran Offer 2', value: 2 }],
+              key: 'meta',
+              label: 'Meta Ads',
+              percentage: 52.9,
+              tone: 'accent',
+              value: 9,
+            },
+            {
+              details: [],
+              key: 'website',
+              label: 'Website',
+              percentage: 11.8,
+              tone: 'neutral',
+              value: 2,
+            },
+          ],
+          total: 17,
+        }}
+        explanations={{
+          'leads.volume_by_source': {
+            definition: 'Lead volume by source.',
+            explanationKey: 'leads.volume_by_source',
+            kind: 'chart',
+            label: 'Lead Volume and Sources',
+          },
+          'leads.volume_by_source.new_patient': {
+            definition: 'Leads without a patient ID.',
+            explanationKey: 'leads.volume_by_source.new_patient',
+            kind: 'metric',
+            label: 'New patients',
+          },
+          'leads.volume_by_source.returning_patient': {
+            definition: 'Leads with a patient ID.',
+            explanationKey: 'leads.volume_by_source.returning_patient',
+            kind: 'metric',
+            label: 'Returning patients',
+          },
+          'leads.volume_by_source.sources.meta': {
+            definition: 'Leads attributed to Meta Ads.',
+            explanationKey: 'leads.volume_by_source.sources.meta',
+            kind: 'metric',
+            label: 'Meta Ads',
+          },
+          'leads.volume_by_source.sources.website': {
+            definition: 'Leads attributed to Website.',
+            explanationKey: 'leads.volume_by_source.sources.website',
+            kind: 'metric',
+            label: 'Website',
+          },
+        }}
+        title="Lead Volume and Sources"
+      />,
+    )
+
+    expect(html).toContain('Lead Volume and Sources')
+    expect(html).toContain('Last week')
+    expect(html).toContain('17')
+    expect(html).toContain('-1 (-5.6%)')
+    expect(html).toContain('vs prior week (18)')
+    expect(html).toContain('All-time 50')
+    expect(html).toContain('All-time 40')
+    expect(html).toContain('All-time 30')
+    expect(html).toContain('All-time 60%')
+    expect(html).toContain('16')
+    expect(html).toContain('new patients')
+    expect(html).toContain('Meta Ads')
+    expect(html).toContain('$199 Offer · Veteran Offer 2')
+    expect(html).toContain('53%')
+    expect(html).not.toContain('Lead source distribution')
+    expect(html).toContain('aria-label="About Lead Volume and Sources"')
+    expect(html).toContain('aria-label="About New patients"')
+    expect(html).toContain('aria-label="About Returning patients"')
+    expect(html).toContain('aria-label="About Meta Ads"')
+    expect(html).toContain('aria-label="About Website"')
+  })
+
+  it('uses explanation display names for the chart and summary metrics', () => {
+    const html = renderToStaticMarkup(
+      <AnalyticsBreakdownWidget
+        data={{
+          key: 'leads.volume_by_source',
+          rows: [{
+            details: [],
+            key: 'meta',
+            label: 'Meta Ads',
+            percentage: 100,
+            tone: 'accent',
+            value: 10,
+          }],
+          summary: { new_patient: 8, returning_patient: 2, value: 10 },
+          total: 10,
+        }}
+        explanations={{
+          'leads.volume_by_source': {
+            definition: 'Lead volume by source.',
+            isLabelCustomized: true,
+            label: 'Leads by Acquisition Channel',
+          },
+          'leads.volume_by_source.new_patient': {
+            definition: 'Leads without a patient ID.',
+            isLabelCustomized: true,
+            label: 'First-time patients',
+          },
+          'leads.volume_by_source.returning_patient': {
+            definition: 'Leads with a patient ID.',
+            isLabelCustomized: true,
+            label: 'Existing patients',
+          },
+          'leads.volume_by_source.sources.meta': {
+            definition: 'Leads attributed to Meta Ads.',
+            isLabelCustomized: true,
+            label: 'Paid Social',
+          },
+        }}
+        title="Lead Volume and Sources"
+      />,
+    )
+
+    expect(html).toContain('Leads by Acquisition Channel')
+    expect(html).toContain('First-time patients')
+    expect(html).toContain('Existing patients')
+    expect(html).toContain('Paid Social')
+    expect(html).not.toContain('>Lead Volume and Sources<')
+    expect(html).not.toContain('>new patients<')
+    expect(html).not.toContain('>returning patients<')
+    expect(html).not.toContain('>Meta Ads<')
+  })
+})

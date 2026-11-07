@@ -65,6 +65,7 @@ export function buildCampaignKpiCardsModel(funnelChart) {
 
   return [
     {
+      explanationKey: 'summary.patient_replies',
       helper: `${formatPercent(repliesCount, cohortCount)} reply rate`,
       iconName: 'messageSquare',
       id: 'patient-replies',
@@ -73,6 +74,7 @@ export function buildCampaignKpiCardsModel(funnelChart) {
       value: formatInteger(repliesCount),
     },
     {
+      explanationKey: 'summary.reply_to_booking',
       helper: `${formatInteger(bookedCount)} of ${formatInteger(repliesCount)} replies booked`,
       iconName: 'trendingUp',
       id: 'reply-to-booking',

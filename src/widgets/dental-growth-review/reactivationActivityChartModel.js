@@ -19,13 +19,14 @@ export const activityChartLayout = {
   chartHeightClassName: 'h-[340px]',
   leftAxisWidth: 38,
   margin: {
-    bottom: 4,
+    bottom: 8,
     left: 0,
     right: 8,
     top: 16,
   },
   maxBarSize: 42,
   rightAxisWidth: 32,
+  xAxisHeight: 46,
   xTickMargin: 12,
 }
 
@@ -50,6 +51,38 @@ function formatDateLabel(value) {
     month: 'short',
     timeZone: 'UTC',
   })
+}
+
+function formatWeekRangeLabel(startValue, endValue) {
+  const startDate = parseUtcDate(startValue)
+  const endDate = parseUtcDate(endValue)
+
+  if (!startDate || !endDate) {
+    return [formatDateLabel(startValue), formatDateLabel(endValue)].filter(Boolean).join('-')
+  }
+
+  const startMonth = startDate.toLocaleDateString('en-US', {
+    month: 'short',
+    timeZone: 'UTC',
+  })
+  const endMonth = endDate.toLocaleDateString('en-US', {
+    month: 'short',
+    timeZone: 'UTC',
+  })
+  const startDay = startDate.toLocaleDateString('en-US', {
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+  const endDay = endDate.toLocaleDateString('en-US', {
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}`
+  }
+
+  return `${startMonth} ${startDay}-${endMonth} ${endDay}`
 }
 
 function parseUtcDate(value) {
@@ -122,14 +155,17 @@ function buildWeekBoundaryLines(series) {
 function appendWeekTick(ticks, series, weekIndex, startIndex, endIndex) {
   const centerIndex = Math.floor((startIndex + endIndex) / 2)
   const centerPoint = series[centerIndex]
+  const startPoint = series[startIndex]
+  const endPoint = series[endIndex]
 
-  if (!centerPoint?.label) {
+  if (!centerPoint?.label || !startPoint?.date || !endPoint?.date) {
     return
   }
 
   ticks.push({
     id: `campaign-week-${weekIndex + 1}`,
     label: `W${weekIndex + 1}`,
+    rangeLabel: formatWeekRangeLabel(startPoint.date, endPoint.date),
     value: centerPoint.label,
   })
 }

@@ -21,6 +21,7 @@ import {
   LoadingInviteState,
   LoginRequiredState,
 } from './AcceptWorkspaceInvitationViews'
+import { EmailCodeInviteRecovery } from './EmailCodeInviteRecovery'
 
 export function AcceptWorkspaceInvitation({ auth, token }) {
   const navigate = useNavigate()
@@ -152,7 +153,11 @@ export function AcceptWorkspaceInvitation({ auth, token }) {
   }
 
   function renderBody() {
-    if (!token || status === 'invalid') {
+    if (!token) {
+      return <EmailCodeInviteRecovery auth={auth} />
+    }
+
+    if (status === 'invalid') {
       return <InvalidInviteState />
     }
 

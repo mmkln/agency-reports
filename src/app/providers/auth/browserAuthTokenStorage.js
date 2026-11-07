@@ -1,11 +1,15 @@
 const AUTH_TOKENS_STORAGE_KEY = 'agency-reports.authTokens'
 
-function getSessionStorage() {
+function getBrowserStorage(storageName) {
   if (typeof window === 'undefined') {
     return null
   }
 
-  return window.sessionStorage ?? null
+  try {
+    return window[storageName] ?? null
+  } catch {
+    return null
+  }
 }
 
 function normalizeTokens(tokens) {
@@ -24,35 +28,85 @@ function normalizeTokens(tokens) {
   }
 }
 
+function removeStoredTokens(storage, storageKey) {
+  try {
+    storage?.removeItem(storageKey)
+  } catch {
+    // Storage can be unavailable in restricted browser contexts.
+  }
+}
+
+function readStoredTokens(storage, storageKey) {
+  let rawValue
+
+  try {
+    rawValue = storage?.getItem(storageKey) ?? null
+  } catch {
+    return null
+  }
+
+  if (!rawValue) {
+    return null
+  }
+
+  try {
+    return normalizeTokens(JSON.parse(rawValue))
+  } catch {
+    removeStoredTokens(storage, storageKey)
+    return null
+  }
+}
+
+function writeStoredTokens(storage, storageKey, tokens) {
+  try {
+    storage?.setItem(storageKey, JSON.stringify(tokens))
+    return storage != null
+  } catch {
+    return false
+  }
+}
+
 export function createBrowserAuthTokenStorage({
-  storage = getSessionStorage(),
+  legacyStorage = getBrowserStorage('sessionStorage'),
+  storage = getBrowserStorage('localStorage'),
   storageKey = AUTH_TOKENS_STORAGE_KEY,
 } = {}) {
   return {
     clear() {
-      storage?.removeItem(storageKey)
+      removeStoredTokens(storage, storageKey)
+      removeStoredTokens(legacyStorage, storageKey)
     },
     read() {
-      const rawValue = storage?.getItem(storageKey)
-      if (!rawValue) {
+      const persistedTokens = readStoredTokens(storage, storageKey)
+      if (persistedTokens) {
+        return persistedTokens
+      }
+
+      const legacyTokens = readStoredTokens(legacyStorage, storageKey)
+      if (!legacyTokens) {
         return null
       }
 
-      try {
-        return normalizeTokens(JSON.parse(rawValue))
-      } catch {
-        storage?.removeItem(storageKey)
-        return null
+      if (writeStoredTokens(storage, storageKey, legacyTokens)) {
+        removeStoredTokens(legacyStorage, storageKey)
       }
+
+      return legacyTokens
     },
     write(tokens) {
       const normalizedTokens = normalizeTokens(tokens)
       if (!normalizedTokens) {
-        storage?.removeItem(storageKey)
+        removeStoredTokens(storage, storageKey)
+        removeStoredTokens(legacyStorage, storageKey)
         return null
       }
 
-      storage?.setItem(storageKey, JSON.stringify(normalizedTokens))
+      if (writeStoredTokens(storage, storageKey, normalizedTokens)) {
+        removeStoredTokens(legacyStorage, storageKey)
+      } else {
+        writeStoredTokens(legacyStorage, storageKey, normalizedTokens)
+      }
+
       return normalizedTokens
     },
   }
