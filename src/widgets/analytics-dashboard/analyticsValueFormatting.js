@@ -4,6 +4,12 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
+const periodDateFormatter = new Intl.DateTimeFormat('en-US', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+})
+
 export function formatAnalyticsValue(value, unit = 'count') {
   if (unit === 'percent') {
     return `${Number(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
@@ -12,6 +18,30 @@ export function formatAnalyticsValue(value, unit = 'count') {
     return currencyFormatter.format(Number(value) || 0)
   }
   return Number(value ?? 0).toLocaleString()
+}
+
+export function formatAnalyticsPeriodRange(period, fallback = '') {
+  function formatDate(value) {
+    if (!value) {
+      return ''
+    }
+
+    const date = new Date(`${String(value).slice(0, 10)}T00:00:00.000Z`)
+    return Number.isNaN(date.getTime()) ? '' : periodDateFormatter.format(date)
+  }
+
+  const start = formatDate(period?.start)
+  const end = formatDate(period?.end)
+
+  return start && end ? `${start} – ${end}` : fallback
+}
+
+export function formatAnalyticsValuePair(value, percentage) {
+  if (value == null || percentage == null) {
+    return '—'
+  }
+
+  return `${formatAnalyticsValue(value)} · ${formatAnalyticsValue(percentage, 'percent')}`
 }
 
 export function formatAnalyticsCumulativeLabel(cumulative, unit = 'count') {

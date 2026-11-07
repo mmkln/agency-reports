@@ -49,6 +49,7 @@ describe('AnalyticsBreakdownWidget', () => {
           ],
           total: 17,
         }}
+        period={{ end: '2026-11-01', start: '2026-10-26', type: 'week' }}
         explanations={{
           'leads.volume_by_source': {
             definition: 'Lead volume by source.',
@@ -88,17 +89,19 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('Lead Volume and Sources')
     expect(html).toContain('Last week')
     expect(html).toContain('17')
+    expect(html).toContain('leads')
     expect(html).toContain('-1 (-5.6%)')
     expect(html).toContain('vs prior week (18)')
     expect(html).toContain('All-time 50')
-    expect(html).toContain('All-time 40')
-    expect(html).toContain('All-time 30')
-    expect(html).toContain('All-time 60%')
+    expect(html).toContain('Period distribution')
+    expect(html).toContain('Oct 26 – Nov 1')
+    expect(html).toContain('9 · 52.9%')
+    expect(html).toContain('30 · 60%')
     expect(html).toContain('16')
-    expect(html).toContain('new patients')
+    expect(html).toContain('new')
     expect(html).toContain('Meta Ads')
     expect(html).toContain('$199 Offer · Veteran Offer 2')
-    expect(html).toContain('53%')
+    expect(html).toContain('52.9%')
     expect(html).not.toContain('Lead source distribution')
     expect(html).toContain('aria-label="About Lead Volume and Sources"')
     expect(html).toContain('aria-label="About New patients"')
@@ -153,6 +156,7 @@ describe('AnalyticsBreakdownWidget', () => {
     expect(html).toContain('First-time patients')
     expect(html).toContain('Existing patients')
     expect(html).toContain('Paid Social')
+    expect(html).not.toContain('>All-time<')
     expect(html).not.toContain('>Lead Volume and Sources<')
     expect(html).not.toContain('>new patients<')
     expect(html).not.toContain('>returning patients<')

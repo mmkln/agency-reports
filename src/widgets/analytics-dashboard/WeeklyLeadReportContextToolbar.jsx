@@ -10,6 +10,8 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 
+import { formatAnalyticsPeriodRange } from './analyticsValueFormatting'
+
 const refreshStatusLabel = {
   completed: 'Updated',
   completed_with_warnings: 'Updated with warnings',
@@ -28,34 +30,6 @@ const refreshStatusClass = {
   queued: 'text-premium-blue',
   running: 'text-premium-blue',
   skipped: 'text-text-muted',
-}
-
-function formatPeriodDate(value) {
-  if (!value) {
-    return ''
-  }
-
-  const date = new Date(`${String(value).slice(0, 10)}T00:00:00.000Z`)
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-
-  return date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
-}
-
-function formatPeriodRange(period) {
-  const start = formatPeriodDate(period?.start)
-  const end = formatPeriodDate(period?.end)
-
-  if (!start || !end) {
-    return 'Choose reporting period'
-  }
-
-  return `${start} – ${end}`
 }
 
 function formatUpdatedAt(value) {
@@ -88,7 +62,7 @@ function ReportingPeriodControl({ onPeriodEndChange, onPeriodTypeChange, period,
           type="button"
           variant="ghost"
         >
-          {formatPeriodRange(period)}
+          {formatAnalyticsPeriodRange(period, 'Choose reporting period')}
           <Icon className="text-text-quaternary" name="chevronDown" size={14} />
         </Button>
       </PopoverTrigger>

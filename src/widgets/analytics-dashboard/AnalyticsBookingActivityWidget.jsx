@@ -6,27 +6,7 @@ import {
   AnalyticsBookingActivityTable,
 } from './AnalyticsBookingActivitySections'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
-
-function formatPeriodDate(value) {
-  if (!value) {
-    return ''
-  }
-  const date = new Date(`${String(value).slice(0, 10)}T00:00:00.000Z`)
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-  return date.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
-}
-
-function formatPeriodRange(period) {
-  const start = formatPeriodDate(period?.start)
-  const end = formatPeriodDate(period?.end)
-  return start && end ? `${start} – ${end}` : ''
-}
+import { formatAnalyticsPeriodRange } from './analyticsValueFormatting'
 
 export function AnalyticsBookingActivityWidget({
   data,
@@ -69,7 +49,7 @@ export function AnalyticsBookingActivityWidget({
         explanationKey={explanationKey}
         explanations={explanations}
         title={title}
-        trailing={formatPeriodRange(period)}
+        trailing={formatAnalyticsPeriodRange(period)}
       />
       <PanelBody className="pt-item">
         <AnalyticsBookingActivitySummary

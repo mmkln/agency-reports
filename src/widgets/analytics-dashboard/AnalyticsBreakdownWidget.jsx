@@ -2,18 +2,10 @@ import { cn } from '@/lib/utils'
 import { resolveDashboardDisplayName } from '@/entities/dashboard-explanation'
 import { Panel, PanelBody } from '@/shared/ui'
 
+import { AnalyticsBreakdownTable } from './AnalyticsBreakdownTable'
 import { AnalyticsExplanationPopover } from './AnalyticsExplanationPopover'
 import { AnalyticsCumulativeValue } from './AnalyticsCumulativeValue'
 import { AnalyticsWidgetHeader } from './AnalyticsWidgetHeader'
-import { getAnalyticsToneColor } from './analyticsWidgetColors'
-
-function formatPercent(value) {
-  return `${Math.round(Number(value) || 0)}%`
-}
-
-function formatSourceDetails(details = []) {
-  return details.map((detail) => detail.label).filter(Boolean).join(' · ')
-}
 
 function formatPeriodLabel(period) {
   if (period?.type === 'month_to_date') {
@@ -54,7 +46,6 @@ function SummaryComparison({ comparison }) {
 }
 
 function SummaryMetric({
-  cumulative,
   explanationEditor,
   explanationKey,
   explanations,
@@ -67,77 +58,18 @@ function SummaryMetric({
   )
 
   return (
-    <span className="inline-grid gap-micro">
-      <span className="inline-flex items-center gap-micro">
-        <strong className="font-semibold text-text-primary">
-          {Number(value ?? 0).toLocaleString()}
-        </strong>
-        <span>{displayLabel}</span>
-        <AnalyticsExplanationPopover
-          explanationEditor={explanationEditor}
-          explanationKey={explanationKey}
-          explanations={explanations}
-          triggerSize="xs"
-        />
-      </span>
-      <AnalyticsCumulativeValue cumulative={cumulative} />
+    <span className="inline-flex items-center gap-micro">
+      <strong className="font-semibold text-text-primary">
+        {Number(value ?? 0).toLocaleString()}
+      </strong>
+      <span>{displayLabel}</span>
+      <AnalyticsExplanationPopover
+        explanationEditor={explanationEditor}
+        explanationKey={explanationKey}
+        explanations={explanations}
+        triggerSize="xs"
+      />
     </span>
-  )
-}
-
-function SourceRow({
-  explanationEditor,
-  explanationKey,
-  explanations,
-  row,
-  cumulative,
-}) {
-  const detail = formatSourceDetails(row.details)
-  const displayLabel = resolveDashboardDisplayName(
-    explanations?.[explanationKey],
-    row.label,
-  )
-
-  return (
-    <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-item border-t border-separator py-component md:grid-cols-[minmax(180px,1fr)_minmax(240px,3fr)_auto_auto]">
-      <div className="col-span-3 flex min-w-0 items-start gap-item md:col-span-1">
-        <span
-          aria-hidden="true"
-          className="mt-micro size-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: getAnalyticsToneColor(row.tone) }}
-        />
-        <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-micro">
-            <p className="truncate font-semibold text-text-primary">{displayLabel}</p>
-            <AnalyticsExplanationPopover
-              explanationEditor={explanationEditor}
-              explanationKey={explanationKey}
-              explanations={explanations}
-              triggerSize="xs"
-            />
-          </div>
-          {detail ? <p className="truncate text-label text-text-muted" title={detail}>{detail}</p> : null}
-        </div>
-      </div>
-
-      <div className="h-2 overflow-hidden rounded-full bg-fill-secondary">
-        <div
-          className="h-full rounded-full"
-          style={{
-            backgroundColor: getAnalyticsToneColor(row.tone),
-            width: `${row.percentage}%`,
-          }}
-        />
-      </div>
-      <div className="w-16 text-right">
-        <p className="font-semibold tabular-nums text-text-primary">{row.value.toLocaleString()}</p>
-        <AnalyticsCumulativeValue cumulative={cumulative?.value} />
-      </div>
-      <div className="w-16 text-right">
-        <p className="tabular-nums text-text-muted">{formatPercent(row.percentage)}</p>
-        <AnalyticsCumulativeValue cumulative={cumulative?.percentage} unit="percent" />
-      </div>
-    </li>
   )
 }
 
@@ -156,14 +88,15 @@ export function AnalyticsBreakdownWidget({
     cumulative: (() => {
       const cumulativeRow = cumulativeRows.get(row.key)
       return cumulativeRow ? {
-        percentage: cumulativeValue(cumulative, cumulativeRow.percentage),
-        value: cumulativeValue(cumulative, cumulativeRow.value),
+        percentage: Number(cumulativeRow.percentage) || 0,
+        value: Math.max(Number(cumulativeRow.value) || 0, 0),
       } : null
     })(),
     percentage: Number(row.percentage) || 0,
     value: Math.max(Number(row.value) || 0, 0),
   }))
   const summary = data?.summary ?? {}
+  const summaryLabel = summary.label ?? data?.unit_label ?? 'leads'
 
   return (
     <Panel>
@@ -175,51 +108,43 @@ export function AnalyticsBreakdownWidget({
         trailing={formatPeriodLabel(period)}
       />
       <PanelBody className="pt-item">
-        <div className="flex flex-wrap items-end gap-x-component gap-y-tag">
-          <div>
-            <p className="text-[44px] font-semibold leading-none tabular-nums text-text-primary">
-              {Number(summary.value ?? total).toLocaleString()}
-            </p>
-            <AnalyticsCumulativeValue
-              className="mt-micro"
-              cumulative={cumulativeValue(cumulative, cumulative?.summary?.value)}
+        <div className="flex flex-wrap items-center gap-x-component gap-y-tag">
+          <p className="text-[44px] font-semibold leading-none tabular-nums text-text-primary">
+            {Number(summary.value ?? total).toLocaleString()}
+            <span className="ml-tag text-heading">{summaryLabel}</span>
+          </p>
+          <SummaryComparison comparison={summary.comparison} />
+          <div className="flex flex-wrap items-center gap-tag text-ui text-text-muted">
+            <SummaryMetric
+              explanationEditor={explanationEditor}
+              explanationKey={`${data?.key}.new_patient`}
+              explanations={explanations}
+              label="new"
+              value={summary.new_patient}
+            />
+            <span aria-hidden="true">·</span>
+            <SummaryMetric
+              explanationEditor={explanationEditor}
+              explanationKey={`${data?.key}.returning_patient`}
+              explanations={explanations}
+              label="returning"
+              value={summary.returning_patient}
             />
           </div>
-          <SummaryComparison comparison={summary.comparison} />
         </div>
-        <div className="mt-tag flex flex-wrap items-center gap-x-control gap-y-micro text-ui text-text-muted">
-          <SummaryMetric
-            cumulative={cumulativeValue(cumulative, cumulative?.summary?.new_patient)}
-            explanationEditor={explanationEditor}
-            explanationKey={`${data?.key}.new_patient`}
-            explanations={explanations}
-            label="new patients"
-            value={summary.new_patient}
-          />
-          <SummaryMetric
-            cumulative={cumulativeValue(cumulative, cumulative?.summary?.returning_patient)}
-            explanationEditor={explanationEditor}
-            explanationKey={`${data?.key}.returning_patient`}
-            explanations={explanations}
-            label="returning patients"
-            value={summary.returning_patient}
-          />
-        </div>
-
-        <div className="mt-component">
-          <ul>
-            {rows.map((row) => (
-              <SourceRow
-                cumulative={row.cumulative}
-                explanationEditor={explanationEditor}
-                explanationKey={`${data?.key}.sources.${row.key}`}
-                explanations={explanations}
-                key={row.key}
-                row={row}
-              />
-            ))}
-          </ul>
-        </div>
+        <AnalyticsCumulativeValue
+          className="mt-micro"
+          cumulative={cumulativeValue(cumulative, cumulative?.summary?.value)}
+        />
+        <AnalyticsBreakdownTable
+          cumulativeLabel={cumulative?.label}
+          explanationEditor={explanationEditor}
+          explanations={explanations}
+          keyPrefix={data?.key}
+          period={period}
+          rows={rows}
+          showCumulative={Boolean(cumulative)}
+        />
       </PanelBody>
     </Panel>
   )
