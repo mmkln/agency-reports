@@ -7,9 +7,11 @@
     "start": "vite --mode remote",
     "start:local": "vite",
     "build": "vite build",
-    "build:campaign-level-pages": "vite build --mode campaign-level-pages",
+    "build:campaign-level-pages": "vite build --mode campaign-level-pages && node scripts/remove-campaign-level-cname.mjs",
     "build:github-pages": "vite build --mode github-pages",
-    "go": "npm run build:github-pages && gh-pages -d dist",
+    "deploy:campaign-level-pages": "npm run build:campaign-level-pages && gh-pages -d dist -r https://github.com/mmkln/Campaign-Level.git",
+    "deploy:github-pages": "npm run build:github-pages && gh-pages -d dist",
+    "go": "npm run deploy:github-pages && npm run deploy:campaign-level-pages",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
