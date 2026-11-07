@@ -78,22 +78,22 @@ function PeriodRow({
   return (
     <div
       className={cn(
-        'flex min-h-target items-center gap-item rounded-item px-item transition-colors duration-motion-fast',
+        'flex min-h-control-small items-center gap-tag rounded-item px-tag transition-colors duration-motion-fast',
         selected ? 'bg-control-selected' : 'hover:bg-control-hover',
       )}
     >
       <Button
         aria-current={selected ? 'true' : undefined}
-        className="h-auto min-h-target min-w-0 flex-1 justify-start gap-item rounded-item px-0 py-0 text-left hover:bg-transparent"
+        className="h-auto min-h-control-small min-w-0 flex-1 justify-start gap-tag rounded-item px-0 py-0 text-left hover:bg-transparent"
         onClick={() => onSelect(period)}
         size="sm"
         type="button"
         variant="ghost"
       >
         <span className="inline-flex w-component shrink-0 justify-center">
-          {selected ? <Icon className="text-text-primary" name="checkCircle2" size={15} /> : null}
+          {selected ? <Icon className="text-text-primary" name="check" size={15} /> : null}
         </span>
-        <span className="min-w-0 flex-1 truncate text-ui font-medium text-text-primary">
+        <span className="min-w-0 flex-1 truncate text-label font-medium text-text-primary">
           {label ?? formatPeriodLabel(period)}
         </span>
         <span className="shrink-0 text-label font-normal text-text-muted">

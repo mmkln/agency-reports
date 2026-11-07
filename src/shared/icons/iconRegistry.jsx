@@ -1216,6 +1216,20 @@ export const iconRegistry = {
       />
     ),
   },
+  check: {
+    defaultSize: 20,
+    viewBox: '0 0 24 24',
+    paths: (
+      <path
+        d="m20 6-11 11-5-5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    ),
+  },
   checkCircle2: {
     defaultSize: 20,
     viewBox: '0 0 24 24',
