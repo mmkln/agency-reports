@@ -4,6 +4,26 @@ import { describe, expect, it } from 'vitest'
 import { AnalyticsMetricGrid } from './AnalyticsMetricGrid'
 
 describe('AnalyticsMetricGrid', () => {
+  it.each([
+    [0, ['grid-cols-1']],
+    [1, ['grid-cols-1']],
+    [2, ['grid-cols-1', 'md:grid-cols-2']],
+    [3, ['grid-cols-1', 'md:grid-cols-2', 'xl:grid-cols-3']],
+    [4, ['grid-cols-1', 'md:grid-cols-2', 'xl:grid-cols-4']],
+    [5, ['grid-cols-1', 'md:grid-cols-2', 'xl:grid-cols-4']],
+  ])('sizes the grid for %i visible metrics', (count, expectedColumns) => {
+    const metrics = Array.from({ length: count }, (_, index) => ({
+      key: `metric-${index}`,
+      label: `Metric ${index}`,
+      unit: 'count',
+      value: index,
+    }))
+    const html = renderToStaticMarkup(<AnalyticsMetricGrid metrics={metrics} />)
+    const classes = html.match(/class="([^"]*)"/)[1].split(' ')
+
+    expect(classes.filter((name) => name.includes('grid-cols-'))).toEqual(expectedColumns)
+  })
+
   it('renders configured presentation and metric-specific supporting context', () => {
     const html = renderToStaticMarkup(
       <AnalyticsMetricGrid

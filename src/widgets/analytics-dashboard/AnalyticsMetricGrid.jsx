@@ -76,7 +76,7 @@ export function AnalyticsMetricGrid({
   runtime,
 }) {
   return (
-    <MetricGrid variant="comfortable">
+    <MetricGrid columns={Math.max(1, Math.min(metrics.length, 4))} variant="comfortable">
       {metrics.map((metric) => {
         const delta = Number(metric.comparison?.delta ?? 0)
         const helperTone = metric.temporal?.kind === 'point_in_time' || metric.supporting
