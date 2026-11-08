@@ -1,1 +1,0 @@
-export { ClinicSuggestedActionButtons } from './ClinicSuggestedActionButtons'

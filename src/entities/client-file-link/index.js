@@ -1,7 +1,0 @@
-export {
-  CLIENT_FILE_LINK_STATUSES,
-  CLIENT_FILE_LINK_STATUS_META,
-  CLIENT_FILE_LINK_TYPES,
-  CLIENT_FILE_LINK_TYPE_META,
-  normalizeClientFileLink,
-} from './model'

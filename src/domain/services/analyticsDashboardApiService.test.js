@@ -89,6 +89,7 @@ describe('analyticsDashboardApiService', () => {
     }
     const apiClient = {
       get: vi.fn().mockResolvedValue({ settings }),
+      post: vi.fn(),
       request: vi.fn().mockResolvedValue({ impact: 'display_only', settings }),
     }
     const patch = {
@@ -120,6 +121,8 @@ describe('analyticsDashboardApiService', () => {
         method: 'PATCH',
       },
     )
+    expect(apiClient.request).toHaveBeenCalledTimes(1)
+    expect(apiClient.post).not.toHaveBeenCalled()
     expect(loaded).toEqual(settings)
     expect(updated).toEqual({ impact: 'display_only', settings })
   })

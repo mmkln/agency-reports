@@ -1,1 +1,0 @@
-export { AcceptClientInvitation } from './AcceptClientInvitation'

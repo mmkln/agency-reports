@@ -1,1 +1,0 @@
-export { AdminClinicSetupWorkspace } from './AdminClinicSetupWorkspace'

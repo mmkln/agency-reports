@@ -1,1 +1,0 @@
-export { RecentClientActivityPanel } from './components'

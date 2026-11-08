@@ -17,6 +17,9 @@ Primary code sources:
 - `src/features/admin-client-workspace/model/clientWorkspaceNavigation.js`
 - Backend app URL modules in `client_portal`
 
+For the verified runtime layers, module dependencies, source-to-dashboard flows
+and retained-code inventory, see [Current System Architecture](architecture/README.md).
+
 ## 1. Product Containers
 
 ```mermaid

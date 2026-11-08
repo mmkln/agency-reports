@@ -25,4 +25,3 @@ export {
   getWorkspaceNavigationPages,
   resolveRouteWorkspaceId,
 } from './model'
-export { useAdminRouteClient } from './useAdminRouteClient'

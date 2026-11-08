@@ -1,1 +1,0 @@
-export { AdminClinicMetricsWorkspace } from './components'

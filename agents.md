@@ -27,7 +27,7 @@
 - Before changing code under `src`, read the nearest layer `AGENTS.md` file. Layer-local instructions define ownership and import boundaries for `app`, `pages`, `widgets`, `features`, `entities`, `shared`, and primitives.
 - Keep domain behavior in services and policies; page components should orchestrate data and compose UI.
 - Access persisted data through repository adapters, not direct browser storage calls from pages, widgets, or domain code.
-- Route pages should prefer `runtime.dataClient.read/write` around domain services for API-like loading/error behavior; keep direct repository access inside adapters and domain service boundaries.
+- Route pages should compose API-backed feature workflows using `runtime.apiClient` through owning API adapters. Keep loading and mutation state in feature hooks; do not reintroduce local repository adapters or `runtime.dataClient`.
 - Keep persistence schema/version validation and reset/reseed behavior inside repository adapters and implementation docs; do not add page-level storage repair logic.
 - Keep entity identifiers stable string IDs in fixtures, repositories, and tests.
 - Add product pages deliberately from a use case or requested workflow, not as placeholder shells.

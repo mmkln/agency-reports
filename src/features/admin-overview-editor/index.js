@@ -1,1 +1,0 @@
-export { AdminClientOverviewEditor } from './components'

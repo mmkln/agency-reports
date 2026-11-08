@@ -1,7 +1,0 @@
-export { AdminPerformanceDashboardEditor } from './AdminPerformanceDashboardEditor'
-export { EmptyPerformanceDashboardsState } from './EmptyPerformanceDashboardsState'
-export { PerformanceDashboardCreateMethodDialog } from './PerformanceDashboardCreateMethodDialog'
-export { PerformanceDashboardJsonImportModal } from './PerformanceDashboardJsonImportModal'
-export { PerformanceDashboardPeriodModal } from './PerformanceDashboardPeriodModal'
-export { PerformanceDashboardsTable } from './PerformanceDashboardsTable'
-export { PerformanceDashboardsTableSkeleton } from './PerformanceDashboardsTableSkeleton'
