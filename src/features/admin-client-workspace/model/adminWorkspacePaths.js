@@ -3,6 +3,7 @@ import {
   getAgencyWorkspaceDataPath,
   getAgencyWorkspaceExecutivePath,
   getAgencyWorkspaceLeadReportPath,
+  getAgencyWorkspaceNewLeadReportingPath,
   getAgencyWorkspaceReviewPath,
   getAgencyWorkspaceReviewSetupPath,
   getAgencyWorkspaceSetupPath,
@@ -35,6 +36,10 @@ export function getWorkspaceExecutivePath(workspaceOrId) {
 
 export function getWorkspaceLeadReportPath(workspaceOrId) {
   return getAgencyWorkspaceLeadReportPath(getWorkspaceId(workspaceOrId))
+}
+
+export function getWorkspaceNewLeadReportingPath(workspaceOrId) {
+  return getAgencyWorkspaceNewLeadReportingPath(getWorkspaceId(workspaceOrId))
 }
 
 export function getWorkspaceReviewSetupPath(workspaceOrId) {

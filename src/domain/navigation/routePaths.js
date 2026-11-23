@@ -13,16 +13,19 @@ export const ROUTE_PATHS = Object.freeze({
   agencyWorkspaceReviewSetup: '/agency/workspaces/:workspaceId/review-setup',
   agencyWorkspaceReview: '/agency/workspaces/:workspaceId/review',
   agencyWorkspaceLeadReport: '/agency/workspaces/:workspaceId/lead-report',
+  agencyWorkspaceNewLeadReporting: '/agency/workspaces/:workspaceId/new-lead-reporting',
   agencyWorkspaceExecutive: '/agency/workspaces/:workspaceId/executive',
   agencyWorkspaceAccess: '/agency/workspaces/:workspaceId/access',
 
   portalHome: '/portal',
   portalGrowthReview: '/portal/growth-review',
   portalLeadReport: '/portal/lead-report',
+  portalNewLeadReporting: '/portal/new-lead-reporting',
   portalExecutive: '/portal/executive',
   portalWorkspaceDetail: '/portal/workspaces/:workspaceId',
   portalWorkspaceReview: '/portal/workspaces/:workspaceId/review',
   portalWorkspaceLeadReport: '/portal/workspaces/:workspaceId/lead-report',
+  portalWorkspaceNewLeadReporting: '/portal/workspaces/:workspaceId/new-lead-reporting',
   portalWorkspaceExecutive: '/portal/workspaces/:workspaceId/executive',
   portalSettings: '/portal/settings',
 })
@@ -75,6 +78,10 @@ export function getAgencyWorkspaceLeadReportPath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceLeadReport, { workspaceId })
 }
 
+export function getAgencyWorkspaceNewLeadReportingPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.agencyWorkspaceNewLeadReporting, { workspaceId })
+}
+
 export function getAgencyWorkspaceExecutivePath(workspaceId) {
   return buildPath(ROUTE_PATHS.agencyWorkspaceExecutive, { workspaceId })
 }
@@ -89,6 +96,10 @@ export function getPortalWorkspaceReviewPath(workspaceId) {
 
 export function getPortalWorkspaceLeadReportPath(workspaceId) {
   return buildPath(ROUTE_PATHS.portalWorkspaceLeadReport, { workspaceId })
+}
+
+export function getPortalWorkspaceNewLeadReportingPath(workspaceId) {
+  return buildPath(ROUTE_PATHS.portalWorkspaceNewLeadReporting, { workspaceId })
 }
 
 export function getPortalWorkspaceExecutivePath(workspaceId) {

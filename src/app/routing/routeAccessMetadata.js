@@ -152,6 +152,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'agency-workspace-new-lead-reporting',
+    path: ROUTE_PATHS.agencyWorkspaceNewLeadReporting,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+    },
+  },
+  {
     id: 'agency-workspace-executive',
     path: ROUTE_PATHS.agencyWorkspaceExecutive,
     access: {
@@ -197,6 +205,14 @@ export const routeAccessMetadata = Object.freeze([
     },
   },
   {
+    id: 'portal-workspace-new-lead-reporting',
+    path: ROUTE_PATHS.portalWorkspaceNewLeadReporting,
+    access: {
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
+    },
+  },
+  {
     id: 'portal-workspace-executive',
     path: ROUTE_PATHS.portalWorkspaceExecutive,
     access: {
@@ -216,6 +232,15 @@ export const routeAccessMetadata = Object.freeze([
   {
     id: 'weekly-lead-report',
     path: ROUTE_PATHS.portalLeadReport,
+    access: {
+      agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
+      scope: WORKSPACE,
+      workspaceCapability: WORKSPACE_CAPABILITIES.VIEW_DASHBOARDS,
+    },
+  },
+  {
+    id: 'new-lead-reporting',
+    path: ROUTE_PATHS.portalNewLeadReporting,
     access: {
       agencyCapability: AGENCY_CAPABILITIES.VIEW_DASHBOARDS,
       scope: WORKSPACE,
