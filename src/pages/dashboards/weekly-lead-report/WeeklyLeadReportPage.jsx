@@ -22,18 +22,18 @@ import {
   Skeleton,
 } from '@/shared/ui'
 
-const DASHBOARD_KEY = 'weekly-lead-report'
+const DEFAULT_DASHBOARD_KEY = 'weekly-lead-report'
 
-export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
+export function WeeklyLeadReportPage({ dashboardKey = DEFAULT_DASHBOARD_KEY, routeParams = {}, runtime }) {
   const workspaceId = routeParams.workspaceId ?? routeParams.clientId ?? runtime.defaultClientId ?? runtime.viewer?.activeWorkspaceId
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsSection, setSettingsSection] = useState('data')
   const periodSelection = useAnalyticsDashboardPeriodSelection({
-    dashboardKey: DASHBOARD_KEY,
+    dashboardKey: dashboardKey,
     workspaceId,
   })
   const readModel = useAnalyticsDashboardReadModel({
-    dashboardKey: DASHBOARD_KEY,
+    dashboardKey: dashboardKey,
     periodKey: periodSelection.periodKey,
     runtime,
     workspaceId,
@@ -43,7 +43,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
   )
   const explanationActions = useAnalyticsDashboardExplanationActions({
     apiClient: runtime.apiClient,
-    dashboardKey: DASHBOARD_KEY,
+    dashboardKey: dashboardKey,
     onSaved: readModel.reload,
     workspaceId,
   })
@@ -72,7 +72,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
       <PageShell className="pb-section pt-card" width="wide">
         <AnalyticsDashboardSetupState
           canManage={canManageSettings}
-          dashboardKey={DASHBOARD_KEY}
+          dashboardKey={dashboardKey}
           onCreated={async () => {
             await readModel.reload()
             setSettingsSection('data')
@@ -164,7 +164,7 @@ export function WeeklyLeadReportPage({ routeParams = {}, runtime }) {
 
       {dashboard.permissions?.canManageSettings ? (
         <AnalyticsDashboardSettingsDialog
-          dashboardKey={DASHBOARD_KEY}
+          dashboardKey={dashboardKey}
           initialSection={settingsSection}
           onOpenChange={setSettingsOpen}
           onSaved={readModel.reload}

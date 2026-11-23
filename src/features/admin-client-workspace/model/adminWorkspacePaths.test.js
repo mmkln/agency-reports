@@ -38,6 +38,7 @@ describe('admin workspace paths', () => {
       '/agency/workspaces/workspace_1/access',
       '/agency/workspaces/workspace_1/review',
       '/agency/workspaces/workspace_1/lead-report',
+      '/agency/workspaces/workspace_1/new-lead-reporting',
       '/agency/workspaces/workspace_1/executive',
     ])
     expect(tabHrefs.some((href) => href.startsWith('/portal/'))).toBe(false)
